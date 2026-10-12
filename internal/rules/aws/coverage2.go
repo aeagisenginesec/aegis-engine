@@ -322,7 +322,7 @@ func (s3NoPublicAccessBlock) CheckAll(resources []ir.Resource) []ir.Finding {
 				break
 			}
 		}
-		if protected || uncertain || logTargets[b.Address()] {
+		if protected || uncertain || logTargets[scopeKey(b)] {
 			continue
 		}
 		out = append(out, ir.Finding{

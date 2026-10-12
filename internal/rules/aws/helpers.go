@@ -8,10 +8,35 @@
 package aws
 
 import (
+	"path/filepath"
 	"strings"
 
 	"aegis/internal/ir"
 )
+
+// scopeKey returns a directory-scoped identity for companion correlation.
+// In Terraform, each directory is an independent module/state: aws_s3_bucket.logs
+// in /a/main.tf and /b/main.tf are DIFFERENT buckets. Correlating companions
+// (logging, versioning, encryption configs) by bare type.name across directories
+// silently suppresses findings when two scanned projects reuse resource names.
+// Keying by source directory keeps same-directory cross-file refs working while
+// preventing cross-project contamination. Empty span file falls back to the
+// bare address (fail-safe: no silent unlinking of resolvable companions).
+func scopeKey(r ir.Resource) string {
+	if r.Span.File == "" {
+		return r.Address()
+	}
+	return filepath.Dir(r.Span.File) + "\x00" + r.Address()
+}
+
+// sameScope reports whether two resources come from the same source directory
+// (i.e. the same Terraform module), the unit within which references resolve.
+func sameScope(a, b ir.Resource) bool {
+	if a.Span.File == "" || b.Span.File == "" {
+		return true // cannot determine scope: fail-safe, allow correlation
+	}
+	return filepath.Dir(a.Span.File) == filepath.Dir(b.Span.File)
+}
 
 // getBool classifies a boolean attribute into a tri-state.
 // present=false means the attribute key is absent.
@@ -208,14 +233,25 @@ func companionLinkUncertain(resources []ir.Resource, companionType, linkAttr str
 // linkedBucketAddr resolves which aws_s3_bucket a standalone config resource
 // (encryption configuration, versioning, logging, etc.) targets via its
 // `bucket` attribute: a reference or a known name matched against the bucket
-// set. Unresolvable -> false.
+// set. Correlation is directory-scoped: only buckets from the same source
+// directory (Terraform module) are candidates, so same-named buckets in
+// different scanned projects never cross-contaminate. Unresolvable -> false.
 func linkedBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 	v, ok := r.Attributes["bucket"]
 	if !ok {
 		return "", false
 	}
 	if v.IsRef() {
-		return refAddrOf(v.Ref)
+		addr, ok := refAddrOf(v.Ref)
+		if !ok {
+			return "", false
+		}
+		for _, b := range resources {
+			if b.Address() == addr && sameScope(r, b) {
+				return scopeKey(b), true
+			}
+		}
+		return "", false
 	}
 	name, ok := v.AsString()
 	if !ok {
@@ -226,11 +262,14 @@ func linkedBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 		if b.Type != "aws_s3_bucket" {
 			continue
 		}
+		if !sameScope(r, b) {
+			continue
+		}
 		if b.Name == name {
-			return b.Address(), true
+			return scopeKey(b), true
 		}
 		if bn, _, _, known := getString(b, "bucket"); known && strings.TrimSpace(bn) == name {
-			return b.Address(), true
+			return scopeKey(b), true
 		}
 	}
 	return "", false
@@ -257,15 +296,26 @@ func logDeliveryBuckets(resources []ir.Resource) map[string]bool {
 }
 
 // linkedTargetBucketAddr resolves the target_bucket attribute of an
-// aws_s3_bucket_logging resource to the destination bucket's address.
-// Used by s3NoAccessLogging to skip log-delivery buckets.
+// aws_s3_bucket_logging resource to the destination bucket's scoped address.
+// Directory-scoped like linkedBucketAddr: a logging config only exempts
+// buckets in its own source directory. Used by s3NoAccessLogging to skip
+// log-delivery buckets.
 func linkedTargetBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 	v, ok := r.Attributes["target_bucket"]
 	if !ok {
 		return "", false
 	}
 	if v.IsRef() {
-		return refAddrOf(v.Ref)
+		addr, ok := refAddrOf(v.Ref)
+		if !ok {
+			return "", false
+		}
+		for _, b := range resources {
+			if b.Address() == addr && sameScope(r, b) {
+				return scopeKey(b), true
+			}
+		}
+		return "", false
 	}
 	name, ok := v.AsString()
 	if !ok {
@@ -276,11 +326,14 @@ func linkedTargetBucketAddr(r ir.Resource, resources []ir.Resource) (string, boo
 		if b.Type != "aws_s3_bucket" {
 			continue
 		}
+		if !sameScope(r, b) {
+			continue
+		}
 		if b.Name == name {
-			return b.Address(), true
+			return scopeKey(b), true
 		}
 		if bn, _, _, known := getString(b, "bucket"); known && strings.TrimSpace(bn) == name {
-			return b.Address(), true
+			return scopeKey(b), true
 		}
 	}
 	return "", false

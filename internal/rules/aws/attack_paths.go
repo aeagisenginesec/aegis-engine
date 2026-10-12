@@ -353,7 +353,7 @@ func (s3ExfiltrationPath) CheckAll(resources []ir.Resource) []ir.Finding {
 		if b.Type != "aws_s3_bucket" {
 			continue
 		}
-		if f := checkBucketExfiltration(b, policies[b.Address()], acls[b.Address()]); f != nil {
+		if f := checkBucketExfiltration(b, policies[scopeKey(b)], acls[scopeKey(b)]); f != nil {
 			out = append(out, *f)
 		}
 	}
@@ -371,7 +371,16 @@ func policyBucketAddr(r ir.Resource, buckets []ir.Resource) (string, bool) {
 		return "", false
 	}
 	if v.IsRef() {
-		return refAddrOf(v.Ref)
+		addr, ok := refAddrOf(v.Ref)
+		if !ok {
+			return "", false
+		}
+		for _, b := range buckets {
+			if b.Address() == addr && sameScope(r, b) {
+				return scopeKey(b), true
+			}
+		}
+		return "", false
 	}
 	name, ok := v.AsString()
 	if !ok {
@@ -382,11 +391,14 @@ func policyBucketAddr(r ir.Resource, buckets []ir.Resource) (string, bool) {
 		if b.Type != "aws_s3_bucket" {
 			continue
 		}
+		if !sameScope(r, b) {
+			continue
+		}
 		if b.Name == name {
-			return b.Address(), true
+			return scopeKey(b), true
 		}
 		if bn, _, _, known := getString(b, "bucket"); known && strings.TrimSpace(bn) == name {
-			return b.Address(), true
+			return scopeKey(b), true
 		}
 	}
 	return "", false

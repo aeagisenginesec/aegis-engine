@@ -49,7 +49,7 @@ func (s3Encryption) CheckAll(resources []ir.Resource) []ir.Finding {
 			continue
 		}
 		for _, f := range (s3Encryption{}).Check(r) {
-			if !encrypted[r.Address()] && !logTargets[r.Address()] {
+			if !encrypted[scopeKey(r)] && !logTargets[scopeKey(r)] {
 				out = append(out, f)
 			}
 		}
@@ -316,7 +316,7 @@ func (s3Versioning) CheckAll(resources []ir.Resource) []ir.Finding {
 			continue
 		}
 		for _, f := range (s3Versioning{}).Check(r) {
-			if !versioned[r.Address()] && !logTargets[r.Address()] {
+			if !versioned[scopeKey(r)] && !logTargets[scopeKey(r)] {
 				out = append(out, f)
 			}
 		}
