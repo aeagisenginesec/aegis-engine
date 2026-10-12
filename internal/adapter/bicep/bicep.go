@@ -726,7 +726,33 @@ func (p *parser) parseIdentOrCall() (tval, bool) {
 	}
 	p.skipWSAndComments()
 	if p.peek() == '(' {
-		return p.parseCall(name)
+		call, ok := p.parseCall(name)
+		if !ok {
+			return tval{}, false
+		}
+		// Function call: convert to fragment and continue with suffixes
+		// (.prop, [n]) instead of returning immediately.
+		frag := toFrag(call.v)
+		// suffixes: .prop, [n], ['k']
+		for {
+			p.skipWSAndComments()
+			if p.peek() == '.' {
+				p.pos++
+				prop := p.parseIdent()
+				if prop == "" {
+					return tval{}, false
+				}
+				// strip ARM brackets for chaining: [f()] -> f().location
+				inner := frag
+				if strings.HasPrefix(inner, "[") && strings.HasSuffix(inner, "]") {
+					inner = inner[1 : len(inner)-1]
+				}
+				frag = "[" + inner + "." + prop + "]"
+			} else {
+				break
+			}
+		}
+		return expr(frag), true
 	}
 	frag := p.identFrag(name)
 	// suffixes: .prop, [n], ['k']

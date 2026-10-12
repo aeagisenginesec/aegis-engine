@@ -841,6 +841,74 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 		}
 		res.Attributes[name] = c.eval(v)
 	}
+	// Promote nested encryption.requireInfrastructureEncryption to the
+	// top-level infrastructure_encryption_enabled the Azure rules expect.
+	// ARM nests it as properties.encryption.requireInfrastructureEncryption.
+	if res.Type == "azurerm_storage_account" {
+		if _, exists := res.Attributes["infrastructure_encryption_enabled"]; !exists {
+			if enc, ok := res.Attributes["encryption"]; ok {
+				if m, ok := enc.AsMap(); ok {
+					for ek, ev := range m {
+						if ek == "requireInfrastructureEncryption" || ek == "require_infrastructure_encryption" {
+							res.Attributes["infrastructure_encryption_enabled"] = ev
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+	// Convert ARM publicNetworkAccess enum to boolean for mssql servers.
+	// ARM uses "Enabled"/"Disabled", TF rules expect a boolean.
+	if res.Type == "azurerm_mssql_server" {
+		if v, ok := res.Attributes["public_network_access_enabled"]; ok {
+			if s, ok := v.AsString(); ok {
+				switch s {
+				case "Enabled":
+					res.Attributes["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
+				case "Disabled":
+					res.Attributes["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
+				}
+			}
+		}
+	}
+	// Flatten ARM securityRules: [{name, properties: {access, ...}}]
+	// into TF-style security_rule: [{name, access, ...}].
+	if res.Type == "azurerm_network_security_group" {
+		if sr, ok := res.Attributes["security_rule"]; ok {
+			if list, ok := sr.AsList(); ok {
+				flat := make([]ir.Value, 0, len(list))
+				for _, item := range list {
+					if m, ok := item.AsMap(); ok {
+						nm := map[string]ir.Value{}
+						for k, v := range m {
+							nm[k] = v
+						}
+						// Merge nested properties up.
+						if pv, ok := m["properties"]; ok {
+							if pm, ok := pv.AsMap(); ok {
+								renames := propertyRenames("azurerm_network_security_rule")
+								for pk, pv2 := range pm {
+									name := pk
+									if rn, ok := renames[pk]; ok {
+										name = rn
+									} else {
+										name = snake(pk)
+									}
+									nm[name] = pv2
+								}
+							}
+							delete(nm, "properties")
+						}
+						flat = append(flat, ir.Value{Raw: nm, Known: true, Span: item.Span})
+					} else {
+						flat = append(flat, item)
+					}
+				}
+				res.Attributes["security_rule"] = ir.Value{Raw: flat, Known: true, Span: sr.Span}
+			}
+		}
+	}
 	_ = span
 }
 

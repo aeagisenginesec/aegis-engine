@@ -293,8 +293,9 @@ func TestSQLVulnerable(t *testing.T) {
 	if got := mustString(t, r, "minimum_tls_version"); got != "1.0" {
 		t.Errorf("minimum_tls_version = %q, want 1.0", got)
 	}
-	if got := mustString(t, r, "public_network_access_enabled"); got != "Enabled" {
-		t.Errorf("public_network_access_enabled = %q, want Enabled", got)
+	// publicNetworkAccess "Enabled" is converted to boolean true.
+	if got := mustBool(t, r, "public_network_access_enabled"); got != true {
+		t.Errorf("public_network_access_enabled = %v, want true", got)
 	}
 }
 

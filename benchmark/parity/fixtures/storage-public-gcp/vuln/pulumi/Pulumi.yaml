@@ -1,0 +1,14 @@
+name: parity-storage-public
+runtime: yaml
+resources:
+  bucket:
+    type: gcp:storage:Bucket
+    properties:
+      name: parity-public-bucket
+      location: EU
+  pub:
+    type: gcp:storage:BucketIAMBinding
+    properties:
+      bucket: ${bucket.name}
+      role: roles/storage.objectViewer
+      members: ["allUsers"]

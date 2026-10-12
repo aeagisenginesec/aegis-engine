@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  DBPasswordParam:
+    Type: String
+    NoEcho: true
+    Description: Database master password (no default; must be supplied at deploy time)
+Resources:
+  ParityDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: parity-db
+      Engine: postgres
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: "20"
+      MasterUsername: admin
+      MasterUserPassword: !Ref DBPasswordParam
+      PubliclyAccessible: false
+      SkipFinalSnapshot: true

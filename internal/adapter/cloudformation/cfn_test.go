@@ -351,12 +351,12 @@ Resources:
 		t.Fatalf("expected 1 resource, got %d", len(resources))
 	}
 	attrs := resources[0].Attributes
-	bn, ok := attrs["bucket_name"]
+	bn, ok := attrs["bucket"]
 	if !ok {
-		t.Fatalf("bucket_name missing")
+		t.Fatalf("bucket missing")
 	}
 	if s, ok := bn.AsString(); !ok || s != "prod" {
-		t.Errorf("bucket_name = %v, want prod (parameter default)", bn.Raw)
+		t.Errorf("bucket = %v, want prod (parameter default)", bn.Raw)
 	}
 	tags, ok := attrs["tags"]
 	if !ok {
@@ -397,8 +397,8 @@ Resources:
 		t.Fatal(err)
 	}
 	attrs := resources[0].Attributes
-	if s, ok := attrs["bucket_name"].AsString(); !ok || s != "myapp-prod" {
-		t.Errorf("bucket_name = %v, want myapp-prod", attrs["bucket_name"].Raw)
+	if s, ok := attrs["bucket"].AsString(); !ok || s != "myapp-prod" {
+		t.Errorf("bucket = %v, want myapp-prod", attrs["bucket"].Raw)
 	}
 	tags, _ := attrs["tags"].AsList()
 	m, _ := tags[0].AsMap()

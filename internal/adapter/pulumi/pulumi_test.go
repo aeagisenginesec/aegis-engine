@@ -203,10 +203,10 @@ resources:
 	if fn == nil {
 		t.Fatal("resource fn not found")
 	}
-	// Resource reference -> unknown with Ref.
+	// Resource reference -> unknown with qualified Ref (type.name.attr).
 	rv, ok := fn.Attributes["role"]
-	if !ok || rv.Known || rv.Ref != "role.arn" {
-		t.Errorf("role ref: known=%v ref=%q, want unknown with ref role.arn", rv.Known, rv.Ref)
+	if !ok || rv.Known || rv.Ref != "aws_iam_role.role.arn" {
+		t.Errorf("role ref: known=%v ref=%q, want unknown with ref aws_iam_role.role.arn", rv.Known, rv.Ref)
 	}
 	env, ok := fn.Attributes["environment"].AsMap()
 	if !ok {

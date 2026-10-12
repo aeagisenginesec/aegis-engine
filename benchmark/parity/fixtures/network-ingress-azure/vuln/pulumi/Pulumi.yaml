@@ -1,0 +1,19 @@
+name: parity-network-ingress
+runtime: yaml
+resources:
+  nsg:
+    type: azure-native:network:NetworkSecurityGroup
+    properties:
+      resourceGroupName: parity-rg
+      networkSecurityGroupName: parity-nsg
+      location: westeurope
+      securityRules:
+        - name: allow-all-inbound
+          priority: 100
+          direction: Inbound
+          access: Allow
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'

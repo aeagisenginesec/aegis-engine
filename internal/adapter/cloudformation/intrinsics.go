@@ -308,6 +308,88 @@ func jsonString(path string, n *yaml.Node, t *template) ir.Value {
 	return ir.Value{Raw: string(b), Known: true, Span: span}
 }
 
+// jsonStringPreserveCase is like jsonString but preserves the original
+// YAML key casing. Used for embedded JSON documents (IAM policy documents)
+// where key casing is semantically significant and must not be snake_cased.
+func jsonStringPreserveCase(path string, n *yaml.Node, t *template) ir.Value {
+	span := nodeSpan(path, n)
+	native := yamlToNativePreserveCase(n, t, span)
+	if native == nil {
+		return unknownRef(span, "cfn.jsonencode")
+	}
+	b, err := json.Marshal(native)
+	if err != nil {
+		return unknownRef(span, "cfn.jsonencode")
+	}
+	return ir.Value{Raw: string(b), Known: true, Span: span}
+}
+
+// yamlToNativePreserveCase converts a YAML node to Go natives without
+// transforming key casing. Returns nil if any part is unresolvable.
+func yamlToNativePreserveCase(n *yaml.Node, t *template, span ir.Span) any {
+	// Handle intrinsic tags first
+	if len(n.Tag) > 1 && n.Tag[0] == '!' && n.Tag[1] != '!' {
+		if v, ok := t.resolveTag(n.Tag[1:], n, span); ok {
+			if !v.Known {
+				return nil
+			}
+			return valueToNative(v)
+		}
+	}
+	switch n.Kind {
+	case yaml.ScalarNode:
+		v := scalarValue(t.path, n)
+		if !v.Known {
+			return nil
+		}
+		return v.Raw
+	case yaml.SequenceNode:
+		out := make([]any, 0, len(n.Content))
+		for _, item := range n.Content {
+			nv := yamlToNativePreserveCase(item, t, span)
+			if nv == nil {
+				return nil
+			}
+			out = append(out, nv)
+		}
+		return out
+	case yaml.MappingNode:
+		// Check for intrinsic
+		if len(n.Content) == 2 && n.Content[0].Kind == yaml.ScalarNode {
+			if v, ok := t.resolveIntrinsic(n.Content[0].Value, n.Content[1], span); ok {
+				if !v.Known {
+					return nil
+				}
+				return valueToNative(v)
+			}
+			if isIntrinsicKey(n.Content[0].Value) {
+				return nil
+			}
+		}
+		m := make(map[string]any, len(n.Content)/2)
+		for i := 0; i+1 < len(n.Content); i += 2 {
+			k := n.Content[i]
+			if k.Kind != yaml.ScalarNode {
+				continue
+			}
+			// PRESERVE original key casing (no snakeCase)
+			v := yamlToNativePreserveCase(n.Content[i+1], t, span)
+			if v == nil {
+				return nil
+			}
+			m[k.Value] = v
+		}
+		return m
+	case yaml.AliasNode:
+		if n.Alias != nil {
+			return yamlToNativePreserveCase(n.Alias, t, span)
+		}
+		return nil
+	default:
+		return nil
+	}
+}
+
 // yamlToNative converts a YAML node to Go natives, resolving intrinsics.
 // Returns nil if any part is unresolvable.
 func yamlToNative(n *yaml.Node, t *template, span ir.Span) any {
@@ -338,12 +420,28 @@ func valueToNative(v ir.Value) any {
 }
 
 // snakeCase converts PascalCase / camelCase to snake_case.
+// It handles acronym runs: KMSMasterKeyID -> kms_master_key_id,
+// VPCId -> vpc_id, SSEAlgorithm -> sse_algorithm.
 func snakeCase(s string) string {
 	var sb strings.Builder
-	for i, r := range s {
+	runes := []rune(s)
+	for i, r := range runes {
 		if r >= 'A' && r <= 'Z' {
 			if i > 0 {
-				sb.WriteByte('_')
+				prev := runes[i-1]
+				prevIsLower := prev >= 'a' && prev <= 'z'
+				prevIsDigit := prev >= '0' && prev <= '9'
+				// Start of acronym run after lowercase/digit: "masterKey" -> "master_key"
+				// End of acronym run before lowercase: "KMSMaster" -> "kms_master"
+				var nextIsLower bool
+				if i+1 < len(runes) {
+					n := runes[i+1]
+					nextIsLower = n >= 'a' && n <= 'z'
+				}
+				prevIsUpper := prev >= 'A' && prev <= 'Z'
+				if prevIsLower || prevIsDigit || (prevIsUpper && nextIsLower) {
+					sb.WriteByte('_')
+				}
 			}
 			sb.WriteRune(r - 'A' + 'a')
 		} else {

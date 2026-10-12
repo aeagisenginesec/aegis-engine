@@ -118,6 +118,9 @@ type parser struct {
 	vars map[string]*yaml.Node
 	// resourceNames is the set of logical resource names for Ref resolution.
 	resourceNames map[string]bool
+	// resourceTypes maps logical resource name -> canonical TF type,
+	// for qualifying Refs in the type.name.attr form rules expect.
+	resourceTypes map[string]string
 }
 
 // collectVars indexes variables: and configuration: defaults for ${...}
@@ -125,6 +128,7 @@ type parser struct {
 func (p *parser) collectVars(root *yaml.Node) {
 	p.vars = map[string]*yaml.Node{}
 	p.resourceNames = map[string]bool{}
+	p.resourceTypes = map[string]string{}
 	if v := nodeField(root, "variables"); v != nil && v.Kind == yaml.MappingNode {
 		for _, k := range sortedKeys(v) {
 			p.vars[k] = nodeField(v, k)
@@ -150,6 +154,14 @@ func (p *parser) collectVars(root *yaml.Node) {
 	if r := nodeField(root, "resources"); r != nil && r.Kind == yaml.MappingNode {
 		for _, k := range sortedKeys(r) {
 			p.resourceNames[k] = true
+			// Record canonical type for Ref qualification.
+			if rn := nodeField(r, k); rn != nil {
+				if ts := nodeScalar(nodeField(rn, "type")); ts != "" {
+					if tfType, _ := normalizeType(ts); tfType != "" {
+						p.resourceTypes[k] = tfType
+					}
+				}
+			}
 		}
 	}
 }
@@ -174,6 +186,51 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 	}
 	// options.protect / options.ignoreChanges are metadata, not security
 	// signals; they are intentionally not mapped to attributes.
+	// Promote nested encryption.requireInfrastructureEncryption for Azure
+	// storage accounts (same as ARM adapter).
+	if tfType == "azurerm_storage_account" {
+		if _, exists := attrs["infrastructure_encryption_enabled"]; !exists {
+			if enc, ok := attrs["encryption"]; ok {
+				if m, ok := enc.AsMap(); ok {
+					for ek, ev := range m {
+						if ek == "requireInfrastructureEncryption" || ek == "require_infrastructure_encryption" {
+							attrs["infrastructure_encryption_enabled"] = ev
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+	// Rename securityRules -> security_rule for NSGs (TF attribute name).
+	if tfType == "azurerm_network_security_group" {
+		if v, ok := attrs["security_rules"]; ok {
+			attrs["security_rule"] = v
+			delete(attrs, "security_rules")
+		}
+	}
+	// Rename allows -> allow for GCP firewalls (TF attribute name).
+	if tfType == "google_compute_firewall" {
+		if v, ok := attrs["allows"]; ok {
+			attrs["allow"] = v
+			delete(attrs, "allows")
+		}
+	}
+	// Convert publicNetworkAccess enum to boolean for MSSQL servers.
+	// Pulumi uses public_network_access; TF rules expect public_network_access_enabled.
+	if tfType == "azurerm_mssql_server" {
+		if v, ok := attrs["public_network_access"]; ok {
+			if s, ok := v.AsString(); ok {
+				switch s {
+				case "Enabled":
+					attrs["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
+				case "Disabled":
+					attrs["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
+				}
+			}
+			delete(attrs, "public_network_access")
+		}
+	}
 	return ir.Resource{
 		Type:       tfType,
 		Name:       name,
@@ -268,6 +325,11 @@ func (p *parser) resolveRef(ref string, span ir.Span) ir.Value {
 		return p.value(v, span)
 	}
 	if p.resourceNames[head] {
+		// Qualify with canonical type for cross-adapter Ref compatibility:
+		// "logBucket.id" -> "aws_s3_bucket.logBucket.id"
+		if tfType, ok := p.resourceTypes[head]; ok && tfType != "" {
+			return ir.Value{Known: false, Span: span, Ref: tfType + "." + ref}
+		}
 		return ir.Value{Known: false, Span: span, Ref: ref}
 	}
 	// Unknown name: explicit unknown with the ref recorded.

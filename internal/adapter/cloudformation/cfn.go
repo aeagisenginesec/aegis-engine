@@ -400,7 +400,10 @@ func scalarValue(path string, n *yaml.Node) ir.Value {
 		}
 		return ir.Value{Raw: f, Known: true, Span: span}
 	case "!!null":
-		return ir.Value{Raw: nil, Known: true, Span: span}
+		// YAML null means "not set": align with terraform/planjson where
+		// null becomes Unknown, never a known-nil value rules might
+		// misinterpret as an explicit setting.
+		return ir.Value{Known: false, Span: span}
 	default:
 		return ir.Value{Raw: n.Value, Known: true, Span: span}
 	}

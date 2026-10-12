@@ -1,6 +1,8 @@
 package cloudformation
 
 import (
+	"strings"
+
 	"gopkg.in/yaml.v3"
 
 	"aegis/internal/ir"
@@ -31,6 +33,61 @@ var specialConverters = map[string]specialConverter{
 	"AWS::Elasticsearch::Domain":         convertOpenSearch,
 }
 
+// propertyRenames maps CloudFormation property names (PascalCase) to the
+// Terraform attribute names the rule pack expects, for cases where generic
+// snake_case conversion produces the wrong name. Keyed by CFN resource type;
+// a "*" key applies to all types.
+var propertyRenames = map[string]map[string]string{
+	"*": {
+		// Common cross-type renames
+	},
+	"AWS::S3::Bucket": {
+		"AccessControl": "acl",
+		"BucketName":    "bucket",
+	},
+	"AWS::RDS::DBInstance": {
+		"DBInstanceIdentifier": "identifier",
+		"DBInstanceClass":      "instance_class",
+		"MasterUsername":       "username",
+		"MasterUserPassword":   "password",
+		"AllocatedStorage":     "allocated_storage",
+		"Engine":               "engine",
+		"PubliclyAccessible":   "publicly_accessible",
+		"SkipFinalSnapshot":    "skip_final_snapshot",
+		"StorageEncrypted":     "storage_encrypted",
+	},
+	"AWS::IAM::ManagedPolicy": {
+		"PolicyDocument":    "policy",
+		"ManagedPolicyName": "name",
+		"Description":       "description",
+	},
+	"AWS::IAM::Policy": {
+		"PolicyDocument": "policy",
+		"PolicyName":     "name",
+	},
+	"AWS::EC2::SecurityGroup": {
+		"GroupName":        "name",
+		"GroupDescription": "description",
+		"VpcId":            "vpc_id",
+	},
+}
+
+// renameProperty returns the TF attribute name for a CFN property,
+// consulting the rename table before falling back to snakeCase.
+func renameProperty(cfnType, cfnProp string) string {
+	if m, ok := propertyRenames[cfnType]; ok {
+		if tf, ok := m[cfnProp]; ok {
+			return tf
+		}
+	}
+	if m, ok := propertyRenames["*"]; ok {
+		if tf, ok := m[cfnProp]; ok {
+			return tf
+		}
+	}
+	return snakeCase(cfnProp)
+}
+
 // convertProperties converts a CFN Properties mapping to TF-style
 // attributes: generic recursive snake_case conversion, then the
 // type-specific special converter if one exists.
@@ -44,7 +101,7 @@ func (t *template) convertProperties(cfnType, tfType string, props *yaml.Node) m
 		if k.Kind != yaml.ScalarNode {
 			continue
 		}
-		name := snakeCase(k.Value)
+		name := renameProperty(cfnType, k.Value)
 		v := t.resolveValue(props.Content[i+1])
 		// Preserve a useful span: point at the property key.
 		if v.Known {
@@ -57,6 +114,19 @@ func (t *template) convertProperties(cfnType, tfType string, props *yaml.Node) m
 
 // --- special converters ---
 
+// cfnACLToTF maps CloudFormation AccessControl enum values to the
+// Terraform acl values the S3 rules expect.
+var cfnACLToTF = map[string]string{
+	"Private":               "private",
+	"PublicRead":            "public-read",
+	"PublicReadWrite":       "public-read-write",
+	"AuthenticatedRead":     "authenticated-read",
+	"LogDeliveryWrite":      "log-delivery-write",
+	"BucketOwnerRead":       "bucket-owner-read",
+	"BucketOwnerFullControl": "bucket-owner-full-control",
+	"AwsExecRead":           "aws-exec-read",
+}
+
 // convertS3Bucket reshapes BucketEncryption, VersioningConfiguration and
 // LoggingConfiguration into the Terraform shapes rules expect, and
 // synthesizes an aws_s3_bucket_public_access_block companion when the
@@ -66,6 +136,16 @@ func convertS3Bucket(t *template, logicalID, tfType string, attrs map[string]ir.
 	var companions []ir.Resource
 	if props == nil {
 		return attrs, nil
+	}
+
+	// AccessControl enum -> TF acl value (PublicRead -> public-read).
+	if v, ok := attrs["acl"]; ok && v.Known {
+		if s, ok := v.AsString(); ok {
+			if tf, ok := cfnACLToTF[s]; ok {
+				v.Raw = tf
+				attrs["acl"] = v
+			}
+		}
 	}
 
 	// BucketEncryption -> server_side_encryption_configuration (TF shape).
@@ -88,22 +168,44 @@ func convertS3Bucket(t *template, logicalID, tfType string, attrs map[string]ir.
 		delete(attrs, "versioning_configuration")
 	}
 
-	// LoggingConfiguration -> logging [{target_bucket, target_prefix}].
+	// LoggingConfiguration -> companion aws_s3_bucket_logging resource
+	// (the shape the S3 logging rules expect), plus inline logging attr.
 	if lc := mappingGet(props, "LoggingConfiguration"); lc != nil {
 		m := map[string]ir.Value{}
 		if d := mappingGet(lc, "DestinationBucketName"); d != nil {
-			m["target_bucket"] = t.resolveValue(d)
+			tv := t.resolveValue(d)
+			// If it's a Ref to a known resource logical ID, use the ID
+			// string so linkedTargetBucketAddr can match by resource Name.
+			if tv.IsRef() && strings.HasPrefix(tv.Ref, "cfn.resource.") {
+				lid := strings.TrimPrefix(tv.Ref, "cfn.resource.")
+				tv = ir.Value{Raw: lid, Known: true, Span: tv.Span}
+			}
+			m["target_bucket"] = tv
 		}
 		if p := mappingGet(lc, "LogFilePrefix"); p != nil {
 			m["target_prefix"] = t.resolveValue(p)
 		}
 		attrs["logging"] = blockList(t.path, lc, m)
 		delete(attrs, "logging_configuration")
+		// Synthesize companion so cross-resource rules (logDeliveryBuckets,
+		// s3NoAccessLogging) recognize the logging link.
+		cattrs := map[string]ir.Value{
+			"bucket": {Raw: logicalID, Known: true, Span: nodeSpan(t.path, lc)},
+		}
+		for k, v := range m {
+			cattrs[k] = v
+		}
+		companions = append(companions, ir.Resource{
+			Type:       "aws_s3_bucket_logging",
+			Name:       logicalID + "-logging",
+			Provider:   "aws",
+			Attributes: cattrs,
+			Span:       nodeSpan(t.path, lc),
+		})
 	}
 
 	// PublicAccessBlockConfiguration -> companion aws_s3_bucket_public_access_block.
-	if pab := mappingGet(props, "PublicAccessBlockConfiguration"); pab != nil && pab.Kind == yaml.MappingNode {
-		cattrs := map[string]ir.Value{
+	if pab := mappingGet(props, "PublicAccessBlockConfiguration"); pab != nil && pab.Kind == yaml.MappingNode {		cattrs := map[string]ir.Value{
 			"bucket": {Raw: logicalID, Known: true, Span: nodeSpan(t.path, pab)},
 		}
 		for _, k := range []string{"BlockPublicAcls", "BlockPublicPolicy", "IgnorePublicAcls", "RestrictPublicBuckets"} {
@@ -204,7 +306,7 @@ func convertIAMRole(t *template, logicalID, tfType string, attrs map[string]ir.V
 		return attrs, nil
 	}
 	if d := mappingGet(props, "AssumeRolePolicyDocument"); d != nil {
-		attrs["assume_role_policy"] = jsonString(t.path, d, t)
+		attrs["assume_role_policy"] = jsonStringPreserveCase(t.path, d, t)
 		delete(attrs, "assume_role_policy_document")
 	}
 	if pa := mappingGet(props, "ManagedPolicyArns"); pa != nil {
@@ -246,7 +348,8 @@ func convertIAMPolicy(t *template, logicalID, tfType string, attrs map[string]ir
 		return attrs, nil
 	}
 	if pd := mappingGet(props, "PolicyDocument"); pd != nil {
-		attrs["policy"] = jsonString(t.path, pd, t)
+		// Preserve IAM policy key casing (Statement, Action, etc.)
+		attrs["policy"] = jsonStringPreserveCase(t.path, pd, t)
 		delete(attrs, "policy_document")
 	}
 	for _, k := range []string{"Roles", "Users", "Groups"} {
