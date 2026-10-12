@@ -271,7 +271,7 @@ func (dataFactoryPublicNet) Description() string {
 		"default) exposes the data factory endpoints to the internet. " +
 		"Disable public network access and use private endpoints."
 }
-func (dataFactoryPublicNet) Severity() ir.Severity { return ir.SeverityMedium }
+func (dataFactoryPublicNet) Severity() ir.Severity { return ir.SeverityHigh }
 
 func (dataFactoryPublicNet) AppliesTo(resType string) bool {
 	return resType == "azurerm_data_factory"

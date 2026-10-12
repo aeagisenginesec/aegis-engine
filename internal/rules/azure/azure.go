@@ -297,7 +297,7 @@ func (keyVaultPurgeProtection) Description() string {
 	return "purge_protection_enabled guards against permanent, irrecoverable " +
 		"deletion of keys and secrets. It should be enabled on every vault."
 }
-func (keyVaultPurgeProtection) Severity() ir.Severity { return ir.SeverityMedium }
+func (keyVaultPurgeProtection) Severity() ir.Severity { return ir.SeverityHigh }
 
 func (keyVaultPurgeProtection) AppliesTo(resType string) bool {
 	return resType == "azurerm_key_vault"

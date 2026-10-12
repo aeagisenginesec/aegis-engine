@@ -19,13 +19,10 @@ import (
 func Azure9Rules() []ir.Rule {
 	return []ir.Rule{
 		storageNestedItemsPublic{}, // AEGIS-AZURE-119
-		storageQueueNoLogging2{},   // AEGIS-AZURE-120
 		storageMinTLS2{},           // AEGIS-AZURE-121
 		storageBlobPublic2{},       // AEGIS-AZURE-122
-		storageSharedKey2{},        // AEGIS-AZURE-123
 		storageNoPrivateEndpoint{}, // AEGIS-AZURE-124
 		storageNoSasPolicy{},       // AEGIS-AZURE-125
-		storageBlobSoftDelete2{},   // AEGIS-AZURE-126
 	}
 }
 
@@ -81,44 +78,6 @@ func (s storageNestedItemsPublic) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-120: Storage account without queue logging (strict)
-// ---------------------------------------------------------------------------
-
-type storageQueueNoLogging2 struct{}
-
-func (storageQueueNoLogging2) ID() string { return "AEGIS-AZURE-120" }
-func (storageQueueNoLogging2) Title() string {
-	return "Storage account without queue logging"
-}
-func (storageQueueNoLogging2) Description() string {
-	return "azurerm_storage_account queue_properties without a logging " +
-		"block loses the audit trail for queue operations. Enable queue " +
-		"logging with read, write and delete coverage."
-}
-func (storageQueueNoLogging2) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageQueueNoLogging2) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageQueueNoLogging2) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "queue_properties")
-	if !present {
-		return []ir.Finding{mkFinding(s, r, "queue_properties.logging",
-			evidenceSpan(ir.Span{}, r.Span), "absent",
-			"queue_properties { logging { read = true write = true delete = true } }")}
-	}
-	if !known {
-		return nil
-	}
-	for _, b := range blks {
-		if len(blockList(b, "logging")) > 0 {
-			return nil
-		}
-	}
-	return []ir.Finding{mkFinding(s, r, "queue_properties.logging",
-		evidenceSpan(ir.Span{}, r.Span), "absent",
-		"logging { read = true write = true delete = true }")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-121: Storage account not using latest TLS (strict)
@@ -199,41 +158,6 @@ func (s storageBlobPublic2) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-123: Storage account with shared key access (strict)
-// ---------------------------------------------------------------------------
-
-type storageSharedKey2 struct{}
-
-func (storageSharedKey2) ID() string { return "AEGIS-AZURE-123" }
-func (storageSharedKey2) Title() string {
-	return "Storage account allows shared key access"
-}
-func (storageSharedKey2) Description() string {
-	return "azurerm_storage_account with shared_access_key_enabled = true " +
-		"(the provider default) permits storage account key " +
-		"authentication. Prefer Microsoft Entra ID and disable shared key access."
-}
-func (storageSharedKey2) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageSharedKey2) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageSharedKey2) Check(r ir.Resource) []ir.Finding {
-	shared, span, present, known := getBool(r, "shared_access_key_enabled")
-	if !present {
-		return []ir.Finding{mkFinding(s, r, "shared_access_key_enabled",
-			evidenceSpan(ir.Span{}, r.Span), "absent (default true)",
-			"shared_access_key_enabled = false")}
-	}
-	if !known {
-		return nil
-	}
-	if shared {
-		return []ir.Finding{mkFinding(s, r, "shared_access_key_enabled", span,
-			"true", "shared_access_key_enabled = false")}
-	}
-	return nil
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-124: Storage account without private endpoint
@@ -333,64 +257,3 @@ func (s storageNoSasPolicy) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-126: Storage account without blob soft delete (strict)
-// ---------------------------------------------------------------------------
-
-type storageBlobSoftDelete2 struct{}
-
-func (storageBlobSoftDelete2) ID() string { return "AEGIS-AZURE-126" }
-func (storageBlobSoftDelete2) Title() string {
-	return "Storage account without blob soft delete"
-}
-func (storageBlobSoftDelete2) Description() string {
-	return "azurerm_storage_account blob_properties without " +
-		"delete_retention_policy enabled cannot recover accidentally " +
-		"deleted blobs. Enable soft delete with a retention period."
-}
-func (storageBlobSoftDelete2) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageBlobSoftDelete2) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageBlobSoftDelete2) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "blob_properties")
-	if !present || !known || len(blks) == 0 {
-		return []ir.Finding{mkFinding(s, r, "blob_properties.delete_retention_policy",
-			evidenceSpan(ir.Span{}, r.Span), "absent",
-			"blob_properties { delete_retention_policy { days = 7 } }")}
-	}
-	drp, ok := blks[0]["delete_retention_policy"]
-	if !ok || !drp.Known {
-		return []ir.Finding{mkFinding(s, r, "blob_properties.delete_retention_policy",
-			evidenceSpan(ir.Span{}, r.Span), "absent",
-			"delete_retention_policy { days = 7 }")}
-	}
-	m, mok := drp.AsMap()
-	if !mok {
-		if l, lok := drp.AsList(); lok && len(l) > 0 {
-			m, mok = l[0].AsMap()
-		}
-	}
-	if !mok {
-		return nil
-	}
-	dv, ok := m["days"]
-	if !ok || !dv.Known {
-		return []ir.Finding{mkFinding(s, r, "blob_properties.delete_retention_policy.days",
-			drp.Span, "absent", "days = 7")}
-	}
-	var days float64
-	switch n := dv.Raw.(type) {
-	case float64:
-		days = n
-	case int:
-		days = float64(n)
-	default:
-		return nil
-	}
-	if days > 0 {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "blob_properties.delete_retention_policy.days",
-		dv.Span, "0", "days = 7")}
-}

@@ -14,16 +14,18 @@ func TestAzure21RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	for n := 298; n <= 313; n++ {
+	// 298,312 removed as post-audit duplicates.
+	want := []int{299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 313}
+	for i, n := range want {
 		id := "AEGIS-AZURE-" + strconv.Itoa(n)
-		i, ok := idx[id]
+		pos, ok := idx[id]
 		if !ok {
 			t.Fatalf("rule %s not registered", id)
 		}
-		if n > 298 {
-			prev := "AEGIS-AZURE-" + strconv.Itoa(n-1)
-			if idx[prev] != i-1 {
-				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, i)
+		if i > 0 {
+			prev := "AEGIS-AZURE-" + strconv.Itoa(want[i-1])
+			if idx[prev] != pos-1 {
+				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, pos)
 			}
 		}
 	}
@@ -34,16 +36,16 @@ func adfRes(attrs map[string]ir.Value) ir.Resource {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-298..300: Data Factory family
+// AEGIS-AZURE-155..300: Data Factory family
 // ---------------------------------------------------------------------------
 
-func TestAZURE298_300(t *testing.T) {
-	f := mustFinding(t, runRule(adfPublicNet{}, adfRes(nil)), "AEGIS-AZURE-298")
+func TestAZURE155_300(t *testing.T) {
+	f := mustFinding(t, runRule(dataFactoryPublicNet{}, adfRes(nil)), "AEGIS-AZURE-155")
 	if f.Severity != ir.SeverityHigh {
-		t.Fatalf("298: wrong severity %s", f.Severity)
+		t.Fatalf("155: wrong severity %s", f.Severity)
 	}
 	r := adfRes(map[string]ir.Value{"public_network_enabled": kv(false, 3)})
-	if f := runRule(adfPublicNet{}, r); len(f) != 0 {
+	if f := runRule(dataFactoryPublicNet{}, r); len(f) != 0 {
 		t.Fatalf("298: disabled must not fire")
 	}
 
@@ -168,14 +170,14 @@ func TestAZURE309_311(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-312/313: Redis family
+// AEGIS-AZURE-020/313: Redis family
 // ---------------------------------------------------------------------------
 
-func TestAZURE312_313(t *testing.T) {
-	mustFinding(t, runRule(redisMinTLS{}, res("azurerm_redis_cache", "r", map[string]ir.Value{"minimum_tls_version": ks("1.0", 3)})), "AEGIS-AZURE-312")
+func TestAZURE020_313(t *testing.T) {
+	mustFinding(t, runRule(redisWeakTLS{}, res("azurerm_redis_cache", "r", map[string]ir.Value{"minimum_tls_version": ks("1.0", 3)})), "AEGIS-AZURE-020")
 	r := res("azurerm_redis_cache", "r", map[string]ir.Value{"minimum_tls_version": ks("1.2", 3)})
-	if f := runRule(redisMinTLS{}, r); len(f) != 0 {
-		t.Fatalf("312: 1.2 must not fire")
+	if f := runRule(redisWeakTLS{}, r); len(f) != 0 {
+		t.Fatalf("020: 1.2 must not fire")
 	}
 
 	f := mustFinding(t, runRule(redisPublicNet{}, res("azurerm_redis_cache", "r", nil)), "AEGIS-AZURE-313")

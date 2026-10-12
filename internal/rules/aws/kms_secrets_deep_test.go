@@ -57,7 +57,7 @@ func Test781_DefaultQuiet(t *testing.T) {
 func Test782_PublicPrincipalFires(t *testing.T) {
 	doc := `{"Statement":[{"Sid":"open","Effect":"Allow","Principal":"*","Action":"kms:*","Resource":"*"}]}`
 	r := res("aws_kms_key", "k", map[string]ir.Value{"policy": ks(doc, 3)})
-	fs := runRule(kmsKeyPolicyPublicPrincipal{}, r)
+	fs := runRule(kmsKeyPolicyPublic{}, r)
 	if len(fs) != 1 {
 		t.Fatalf("got %d findings, want 1", len(fs))
 	}
@@ -69,7 +69,7 @@ func Test782_PublicPrincipalFires(t *testing.T) {
 func Test782_ScopedPrincipalQuiet(t *testing.T) {
 	doc := `{"Statement":[{"Sid":"root","Effect":"Allow","Principal":{"AWS":"arn:aws:iam::123:root"},"Action":"kms:*","Resource":"*"}]}`
 	r := res("aws_kms_key", "k", map[string]ir.Value{"policy": ks(doc, 3)})
-	if fs := runRule(kmsKeyPolicyPublicPrincipal{}, r); len(fs) != 0 {
+	if fs := runRule(kmsKeyPolicyPublic{}, r); len(fs) != 0 {
 		t.Fatalf("got %d findings, want 0", len(fs))
 	}
 }

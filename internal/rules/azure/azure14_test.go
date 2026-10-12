@@ -14,16 +14,18 @@ func TestAzure14RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	for n := 170; n <= 185; n++ {
+	// 170-185 except 178 (removed as post-audit duplicate of 062).
+	want := []int{170, 171, 172, 173, 174, 175, 176, 177, 179, 180, 181, 182, 183, 184, 185}
+	for i, n := range want {
 		id := "AEGIS-AZURE-" + strconv.Itoa(n)
-		i, ok := idx[id]
+		pos, ok := idx[id]
 		if !ok {
 			t.Fatalf("rule %s not registered", id)
 		}
-		if n > 170 {
-			prev := "AEGIS-AZURE-" + strconv.Itoa(n-1)
-			if idx[prev] != i-1 {
-				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, i)
+		if i > 0 {
+			prev := "AEGIS-AZURE-" + strconv.Itoa(want[i-1])
+			if idx[prev] != pos-1 {
+				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, pos)
 			}
 		}
 	}
@@ -162,7 +164,6 @@ func identityCases() []struct {
 		typ  string
 	}{
 		{apimNoIdentity{}, "AEGIS-AZURE-177", "azurerm_api_management"},
-		{appServiceNoIdentity{}, "AEGIS-AZURE-178", "azurerm_app_service"},
 		{linuxWebAppNoIdentity{}, "AEGIS-AZURE-179", "azurerm_linux_web_app"},
 		{mssqlServerNoIdentity{}, "AEGIS-AZURE-180", "azurerm_mssql_server"},
 		{storageNoIdentity{}, "AEGIS-AZURE-181", "azurerm_storage_account"},

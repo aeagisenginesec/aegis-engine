@@ -26,7 +26,6 @@ func Azure17Rules() []ir.Rule {
 		aksRunCommandOn{},        // AEGIS-AZURE-231
 		aksLBNotStandard{},       // AEGIS-AZURE-232
 		aksNoEphemeralDisk{},     // AEGIS-AZURE-233
-		aksNoOIDCIssuer{},        // AEGIS-AZURE-234
 		nsgFlowLogDisabled{},     // AEGIS-AZURE-235
 		firewallThreatIntelOff{}, // AEGIS-AZURE-236
 		bastionClipboardOn{},     // AEGIS-AZURE-237
@@ -35,7 +34,6 @@ func Azure17Rules() []ir.Rule {
 		appGWTLSBelow12{},        // AEGIS-AZURE-240
 		publicIPBasicSKU{},       // AEGIS-AZURE-241
 		lbBasicSKU{},             // AEGIS-AZURE-242
-		vnetNoDDoSPlan{},         // AEGIS-AZURE-243
 		nsgInlineOpenRule{},      // AEGIS-AZURE-244
 		aksLocalAccounts{},       // AEGIS-AZURE-245
 	}
@@ -381,29 +379,6 @@ func (s aksNoEphemeralDisk) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-234: AKS without OIDC issuer
-// ---------------------------------------------------------------------------
-
-type aksNoOIDCIssuer struct{}
-
-func (aksNoOIDCIssuer) ID() string { return "AEGIS-AZURE-234" }
-func (aksNoOIDCIssuer) Title() string {
-	return "AKS cluster without OIDC issuer"
-}
-func (aksNoOIDCIssuer) Description() string {
-	return "azurerm_kubernetes_cluster without oidc_issuer_enabled = " +
-		"true cannot issue federated tokens, which workload identity " +
-		"requires. Enable the OIDC issuer alongside workload identity."
-}
-func (aksNoOIDCIssuer) Severity() ir.Severity { return ir.SeverityLow }
-
-func (aksNoOIDCIssuer) AppliesTo(resType string) bool {
-	return resType == "azurerm_kubernetes_cluster"
-}
-
-func (s aksNoOIDCIssuer) Check(r ir.Resource) []ir.Finding {
-	return absentInsecureFalse(s, r, "oidc_issuer_enabled",
-		"oidc_issuer_enabled = true")
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-235: NSG flow log disabled
@@ -712,46 +687,6 @@ func (s lbBasicSKU) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-243: Virtual network without DDoS protection
-// ---------------------------------------------------------------------------
-
-type vnetNoDDoSPlan struct{}
-
-func (vnetNoDDoSPlan) ID() string { return "AEGIS-AZURE-243" }
-func (vnetNoDDoSPlan) Title() string {
-	return "Virtual network without DDoS protection plan"
-}
-func (vnetNoDDoSPlan) Description() string {
-	return "azurerm_virtual_network without a ddos_protection_plan " +
-		"block lacks DDoS Network Protection for public endpoints in the " +
-		"VNet. Attach a DDoS protection plan for internet-facing " +
-		"workloads (note: this is a paid feature)."
-}
-func (vnetNoDDoSPlan) Severity() ir.Severity { return ir.SeverityLow }
-
-func (vnetNoDDoSPlan) AppliesTo(resType string) bool {
-	return resType == "azurerm_virtual_network"
-}
-
-func (s vnetNoDDoSPlan) Check(r ir.Resource) []ir.Finding {
-	blks, span, present, known := getBlocks(r, "ddos_protection_plan")
-	if present && !known {
-		return nil
-	}
-	if present && len(blks) > 0 {
-		for _, b := range blks {
-			en, _, p, k := blockBool(b, "enable")
-			if p && !k {
-				return nil
-			}
-			if p && en {
-				return nil
-			}
-		}
-	}
-	return []ir.Finding{mkFinding(s, r, "ddos_protection_plan",
-		evidenceSpan(span, r.Span), "absent or not enabled",
-		"ddos_protection_plan { id = \"...\", enable = true }")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-244: NSG inline rule open to the internet

@@ -16,14 +16,12 @@ import (
 // Azure16Rules returns SQL & App Service hardening rules in ID order.
 func Azure16Rules() []ir.Rule {
 	return []ir.Rule{
-		mssqlMinTLS{},                // AEGIS-AZURE-206
 		mssqlFirewallWorldOpen{},     // AEGIS-AZURE-207
 		sqlFirewallOpenLegacy{},      // AEGIS-AZURE-208
 		mssqlMIPublicEndpoint{},      // AEGIS-AZURE-209
 		mssqlMIMinTLS{},              // AEGIS-AZURE-210
 		appServiceFTPS{},             // AEGIS-AZURE-211
 		appServiceNoHTTP2{},          // AEGIS-AZURE-212
-		appServiceMinTLS{},           // AEGIS-AZURE-213
 		appServiceNoIPRestrict{},     // AEGIS-AZURE-214
 		appServiceNoClientCert{},     // AEGIS-AZURE-215
 		appServiceSlotNoHTTPS{},      // AEGIS-AZURE-216
@@ -41,36 +39,6 @@ func Azure16Rules() []ir.Rule {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-206: SQL server below TLS 1.2
-// ---------------------------------------------------------------------------
-
-type mssqlMinTLS struct{}
-
-func (mssqlMinTLS) ID() string { return "AEGIS-AZURE-206" }
-func (mssqlMinTLS) Title() string {
-	return "SQL server below TLS 1.2"
-}
-func (mssqlMinTLS) Description() string {
-	return "azurerm_mssql_server with minimum_tls_version other than " +
-		"\"1.2\" permits weaker protocol versions for database " +
-		"connections. Enforce TLS 1.2."
-}
-func (mssqlMinTLS) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (mssqlMinTLS) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
-}
-
-func (s mssqlMinTLS) Check(r ir.Resource) []ir.Finding {
-	ver, span, present, known := getString(r, "minimum_tls_version")
-	if !present || !known {
-		return nil
-	}
-	if ver == "1.2" {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "minimum_tls_version", span,
-		ver, "minimum_tls_version = \"1.2\"")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-207/208: SQL firewall rule open to the world
@@ -309,28 +277,6 @@ func absentInsecureFalseSiteConfig(rule ir.Rule, r ir.Resource, attr, expected s
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-213: App Service below TLS 1.2
-// ---------------------------------------------------------------------------
-
-type appServiceMinTLS struct{}
-
-func (appServiceMinTLS) ID() string { return "AEGIS-AZURE-213" }
-func (appServiceMinTLS) Title() string {
-	return "App Service below TLS 1.2"
-}
-func (appServiceMinTLS) Description() string {
-	return "azurerm_app_service site_config with minimum_tls_version " +
-		"other than \"1.2\" permits weak protocol versions. Enforce " +
-		"TLS 1.2."
-}
-func (appServiceMinTLS) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (appServiceMinTLS) AppliesTo(resType string) bool {
-	return resType == "azurerm_app_service"
-}
-
-func (s appServiceMinTLS) Check(r ir.Resource) []ir.Finding {
-	return minTLSCheck(s, r)
-}
 
 func minTLSCheck(rule ir.Rule, r ir.Resource) []ir.Finding {
 	ver, span, present, known := siteConfigString(r, "minimum_tls_version")

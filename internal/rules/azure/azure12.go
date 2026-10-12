@@ -25,9 +25,7 @@ import (
 // Azure12Rules returns storage hardening rules in ID order.
 func Azure12Rules() []ir.Rule {
 	return []ir.Rule{
-		storageInfraEncryption{}, // AEGIS-AZURE-144
 		storageCrossTenantRepl{}, // AEGIS-AZURE-145
-		storageNoVersioning{},    // AEGIS-AZURE-146
 		storageNoChangeFeed{},    // AEGIS-AZURE-147
 		storagePublicNetStrict{}, // AEGIS-AZURE-148
 		storageNoNetworkRules{},  // AEGIS-AZURE-149
@@ -36,42 +34,6 @@ func Azure12Rules() []ir.Rule {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-144: Storage account without infrastructure encryption
-// ---------------------------------------------------------------------------
-
-type storageInfraEncryption struct{}
-
-func (storageInfraEncryption) ID() string { return "AEGIS-AZURE-144" }
-func (storageInfraEncryption) Title() string {
-	return "Storage account without infrastructure encryption"
-}
-func (storageInfraEncryption) Description() string {
-	return "azurerm_storage_account without infrastructure_encryption_enabled " +
-		"= true encrypts data once at the service level. Infrastructure " +
-		"(double) encryption encrypts a second time at the hardware level " +
-		"with a different key. Enable it for defense in depth."
-}
-func (storageInfraEncryption) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageInfraEncryption) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageInfraEncryption) Check(r ir.Resource) []ir.Finding {
-	enc, span, present, known := getBool(r, "infrastructure_encryption_enabled")
-	if present && !known {
-		return nil
-	}
-	if present && enc {
-		return nil
-	}
-	actual := "absent (default false)"
-	if present {
-		actual = "false"
-	}
-	return []ir.Finding{mkFinding(s, r, "infrastructure_encryption_enabled",
-		evidenceSpan(span, r.Span), actual,
-		"infrastructure_encryption_enabled = true")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-145: Storage account allows cross-tenant replication
@@ -114,48 +76,6 @@ func (s storageCrossTenantRepl) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-146: Storage account without blob versioning
-// ---------------------------------------------------------------------------
-
-type storageNoVersioning struct{}
-
-func (storageNoVersioning) ID() string { return "AEGIS-AZURE-146" }
-func (storageNoVersioning) Title() string {
-	return "Storage account without blob versioning"
-}
-func (storageNoVersioning) Description() string {
-	return "azurerm_storage_account blob_properties without " +
-		"versioning_enabled = true keeps no prior blob versions, so " +
-		"ransomware or accidental overwrites cannot be rolled back. Enable " +
-		"blob versioning. (Soft delete: AEGIS-AZURE-126.)"
-}
-func (storageNoVersioning) Severity() ir.Severity { return ir.SeverityLow }
-
-func (storageNoVersioning) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageNoVersioning) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "blob_properties")
-	if !present || !known || len(blks) == 0 {
-		return []ir.Finding{mkFinding(s, r, "blob_properties.versioning_enabled",
-			evidenceSpan(ir.Span{}, r.Span), "absent (default false)",
-			"blob_properties { versioning_enabled = true }")}
-	}
-	ver, _, vpresent, vknown := blockBool(blks[0], "versioning_enabled")
-	if vpresent && !vknown {
-		return nil
-	}
-	if vpresent && ver {
-		return nil
-	}
-	actual := "absent (default false)"
-	if vpresent {
-		actual = "false"
-	}
-	return []ir.Finding{mkFinding(s, r, "blob_properties.versioning_enabled",
-		evidenceSpan(ir.Span{}, r.Span), actual,
-		"versioning_enabled = true")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-147: Storage account without blob change feed

@@ -418,44 +418,6 @@
     }
   },
   {
-    "rule_id": "AEGIS-AWS-701",
-    "title": "RDS instance without enhanced monitoring",
-    "description": "monitoring_interval is absent or 0, so enhanced monitoring is disabled: OS-level metrics that catch host problems are missing. Set monitoring_interval between 1 and 60 seconds.",
-    "severity": "low",
-    "resource": "aws_db_instance.legacy",
-    "evidence": {
-      "attribute": "monitoring_interval",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 5,
-        "start_col": 1,
-        "end_line": 18,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: 0, disabled)",
-      "expected": "monitoring_interval between 1 and 60"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-701",
-    "title": "RDS instance without enhanced monitoring",
-    "description": "monitoring_interval is absent or 0, so enhanced monitoring is disabled: OS-level metrics that catch host problems are missing. Set monitoring_interval between 1 and 60 seconds.",
-    "severity": "low",
-    "resource": "aws_db_instance.orders",
-    "evidence": {
-      "attribute": "monitoring_interval",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 20,
-        "start_col": 1,
-        "end_line": 32,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: 0, disabled)",
-      "expected": "monitoring_interval between 1 and 60"
-    }
-  },
-  {
     "rule_id": "AEGIS-AWS-702",
     "title": "RDS instance snapshots do not copy tags",
     "description": "copy_tags_to_snapshot is absent or false, so automated snapshots lose the instance's tags (owner, environment, cost center), which breaks tag-based access control and cost allocation on restores.",
@@ -548,44 +510,6 @@
       },
       "actual": "[REDACTED] (plaintext password in config, no rotation)",
       "expected": "manage_master_user_password = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-718",
-    "title": "RDS instance without Performance Insights",
-    "description": "performance_insights_enabled is absent or false, so query-level telemetry is unavailable when investigating slow queries or suspicious database activity. Enable it for production instances.",
-    "severity": "low",
-    "resource": "aws_db_instance.legacy",
-    "evidence": {
-      "attribute": "performance_insights_enabled",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 5,
-        "start_col": 1,
-        "end_line": 18,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: false)",
-      "expected": "performance_insights_enabled = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-718",
-    "title": "RDS instance without Performance Insights",
-    "description": "performance_insights_enabled is absent or false, so query-level telemetry is unavailable when investigating slow queries or suspicious database activity. Enable it for production instances.",
-    "severity": "low",
-    "resource": "aws_db_instance.orders",
-    "evidence": {
-      "attribute": "performance_insights_enabled",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 20,
-        "start_col": 1,
-        "end_line": 32,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: false)",
-      "expected": "performance_insights_enabled = true"
     }
   }
 ]

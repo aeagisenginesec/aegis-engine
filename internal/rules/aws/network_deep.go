@@ -29,7 +29,6 @@ func NetworkDeepRules() []ir.Rule {
 		route53WeightedNoHealthCheck{}, // AEGIS-AWS-749
 		acmEmailValidation{},           // AEGIS-AWS-750
 		apiGwRestApiPublicPolicy{},     // AEGIS-AWS-751
-		cfNoLogging{},                  // AEGIS-AWS-752
 		cfS3NoOAC{},                    // AEGIS-AWS-753
 		cfWeakViewerCertTls{},          // AEGIS-AWS-754
 		apiGwStageNoXray{},             // AEGIS-AWS-755
@@ -639,40 +638,6 @@ func (apiGwRestApiPublicPolicy) Check(r ir.Resource) []ir.Finding {
 			Expected:  "resource policy restricted to intended principals",
 		},
 	}}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-752: CloudFront distribution without access logging
-// ---------------------------------------------------------------------------
-
-type cfNoLogging struct{}
-
-func (cfNoLogging) ID() string { return "AEGIS-AWS-752" }
-func (cfNoLogging) Title() string {
-	return "CloudFront distribution without access logging"
-}
-func (cfNoLogging) Description() string {
-	return "An aws_cloudfront_distribution without a logging_config block " +
-		"emits no access logs, leaving no record of who requested what " +
-		"through the CDN during incident response. Enable standard logging " +
-		"to an S3 bucket."
-}
-func (cfNoLogging) Severity() ir.Severity { return ir.SeverityMedium }
-func (cfNoLogging) AppliesTo(resType string) bool {
-	return resType == "aws_cloudfront_distribution"
-}
-func (cfNoLogging) Check(r ir.Resource) []ir.Finding {
-	s := cfNoLogging{}
-	_, _, present, known := getBlocks(r, "logging_config")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if !present {
-		return absentInsecureDefault(s, r, "logging_config",
-			"absent (no access logs emitted)",
-			"logging_config { bucket = <log bucket> }")
-	}
-	return nil
 }
 
 // ---------------------------------------------------------------------------

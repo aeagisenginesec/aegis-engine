@@ -36,11 +36,11 @@ func TestDBInstanceNoEnhancedMon(t *testing.T) {
 		"monitoring_interval": num(30, 2),
 	})
 	for _, r := range []ir.Resource{absent, explicit} {
-		if got := runRule(dbInstanceNoEnhancedMon{}, r); len(got) != 1 {
+		if got := runRule(rdsNoEnhancedMonitoring{}, r); len(got) != 1 {
 			t.Fatalf("expected 1 finding, got %d", len(got))
 		}
 	}
-	if got := runRule(dbInstanceNoEnhancedMon{}, quiet); len(got) != 0 {
+	if got := runRule(rdsNoEnhancedMonitoring{}, quiet); len(got) != 0 {
 		t.Fatalf("expected quiet, got %d", len(got))
 	}
 }
@@ -291,11 +291,11 @@ func TestElasticacheNoAtRestEncryption(t *testing.T) {
 		"at_rest_encryption_enabled": kv(true, 2),
 	})
 	for _, r := range []ir.Resource{absent, explicit} {
-		if got := runRule(elasticacheNoAtRestEncryption{}, r); len(got) != 1 {
+		if got := runRule(elasticacheNoAtRestEnc{}, r); len(got) != 1 {
 			t.Fatalf("expected 1 finding, got %d", len(got))
 		}
 	}
-	if got := runRule(elasticacheNoAtRestEncryption{}, quiet); len(got) != 0 {
+	if got := runRule(elasticacheNoAtRestEnc{}, quiet); len(got) != 0 {
 		t.Fatalf("expected quiet, got %d", len(got))
 	}
 }
@@ -357,11 +357,11 @@ func TestDBInstanceNoPerfInsights(t *testing.T) {
 		"performance_insights_enabled": kv(true, 2),
 	})
 	for _, r := range []ir.Resource{absent, explicit} {
-		if got := runRule(dbInstanceNoPerfInsights{}, r); len(got) != 1 {
+		if got := runRule(rdsNoPerfInsights{}, r); len(got) != 1 {
 			t.Fatalf("expected 1 finding, got %d", len(got))
 		}
 	}
-	if got := runRule(dbInstanceNoPerfInsights{}, quiet); len(got) != 0 {
+	if got := runRule(rdsNoPerfInsights{}, quiet); len(got) != 0 {
 		t.Fatalf("expected quiet, got %d", len(got))
 	}
 }
@@ -375,25 +375,31 @@ func TestNeptuneNoDeletionProtection(t *testing.T) {
 		"deletion_protection": kv(true, 2),
 	})
 	for _, r := range []ir.Resource{absent, explicit} {
-		if got := runRule(neptuneNoDeletionProtection{}, r); len(got) != 1 {
+		if got := runRule(neptuneNoDelProtect{}, r); len(got) != 1 {
 			t.Fatalf("expected 1 finding, got %d", len(got))
 		}
 	}
-	if got := runRule(neptuneNoDeletionProtection{}, quiet); len(got) != 0 {
+	if got := runRule(neptuneNoDelProtect{}, quiet); len(got) != 0 {
 		t.Fatalf("expected quiet, got %d", len(got))
 	}
 }
 
-// TestDatabasesDeepRuleIDs asserts the 700-719 ID range is fully covered.
+// TestDatabasesDeepRuleIDs asserts the 700-719 ID range is covered
+// (minus 701, 715, 718, 719 removed as post-audit duplicates).
 func TestDatabasesDeepRuleIDs(t *testing.T) {
 	rules := DatabasesDeepRules()
-	if len(rules) != 20 {
-		t.Fatalf("expected 20 rules, got %d", len(rules))
+	wantIDs := []string{
+		"AEGIS-AWS-700", "AEGIS-AWS-702", "AEGIS-AWS-703", "AEGIS-AWS-704",
+		"AEGIS-AWS-705", "AEGIS-AWS-706", "AEGIS-AWS-707", "AEGIS-AWS-708",
+		"AEGIS-AWS-709", "AEGIS-AWS-710", "AEGIS-AWS-711", "AEGIS-AWS-712",
+		"AEGIS-AWS-713", "AEGIS-AWS-714", "AEGIS-AWS-716", "AEGIS-AWS-717",
+	}
+	if len(rules) != len(wantIDs) {
+		t.Fatalf("expected %d rules, got %d", len(wantIDs), len(rules))
 	}
 	for i, r := range rules {
-		want := "AEGIS-AWS-" + itoa(700+i)
-		if r.ID() != want {
-			t.Fatalf("rule %d has ID %q, want %q", i, r.ID(), want)
+		if r.ID() != wantIDs[i] {
+			t.Fatalf("rule %d has ID %q, want %q", i, r.ID(), wantIDs[i])
 		}
 		if r.Title() == "" || r.Description() == "" {
 			t.Fatalf("rule %s has empty metadata", r.ID())

@@ -16,7 +16,6 @@ import (
 // Azure8Rules returns App Service hardening rules in ID order.
 func Azure8Rules() []ir.Rule {
 	return []ir.Rule{
-		appSvcNoAuth2{},        // AEGIS-AZURE-109
 		appSvcNoClientCert{},   // AEGIS-AZURE-110
 		appSvcNoDetailedErr{},  // AEGIS-AZURE-111
 		appSvcNoFailedReq{},    // AEGIS-AZURE-112
@@ -24,7 +23,6 @@ func Azure8Rules() []ir.Rule {
 		appSvcNoHTTPLogging{},  // AEGIS-AZURE-114
 		appSvcNoHTTP2{},        // AEGIS-AZURE-115
 		appSvcNoIdentity2{},    // AEGIS-AZURE-116
-		appSvcNoHealthCheck2{}, // AEGIS-AZURE-117
 		appSvcNoStorageMount{}, // AEGIS-AZURE-118
 	}
 }
@@ -60,47 +58,6 @@ func logsBoolEnabled(r ir.Resource, block string, names ...string) bool {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-109: App Service without authentication (strict)
-// ---------------------------------------------------------------------------
-
-type appSvcNoAuth2 struct{}
-
-func (appSvcNoAuth2) ID() string { return "AEGIS-AZURE-109" }
-func (appSvcNoAuth2) Title() string {
-	return "App Service without authentication"
-}
-func (appSvcNoAuth2) Description() string {
-	return "Web app without auth_settings { enabled = true } allows " +
-		"anonymous access. Enable App Service authentication (Microsoft " +
-		"Entra ID, Google, or another identity provider)."
-}
-func (appSvcNoAuth2) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (appSvcNoAuth2) AppliesTo(resType string) bool { return appSvcTypes(resType) }
-
-func (s appSvcNoAuth2) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "auth_settings")
-	if !present {
-		return []ir.Finding{mkFinding(s, r, "auth_settings",
-			evidenceSpan(ir.Span{}, r.Span), "absent",
-			"auth_settings { enabled = true }")}
-	}
-	if !known || len(blks) == 0 {
-		return nil
-	}
-	en, espan, ep, ek := blockString(blks[0], "enabled")
-	if !ep {
-		return []ir.Finding{mkFinding(s, r, "auth_settings.enabled",
-			evidenceSpan(ir.Span{}, r.Span), "absent", "enabled = true")}
-	}
-	if !ek {
-		return nil
-	}
-	if strings.EqualFold(en, "true") {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "auth_settings.enabled", espan,
-		en, "enabled = true")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-110: App Service without client certificates
@@ -365,40 +322,6 @@ func (s appSvcNoIdentity2) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-117: App Service without health check (strict)
-// ---------------------------------------------------------------------------
-
-type appSvcNoHealthCheck2 struct{}
-
-func (appSvcNoHealthCheck2) ID() string { return "AEGIS-AZURE-117" }
-func (appSvcNoHealthCheck2) Title() string {
-	return "App Service without health check path"
-}
-func (appSvcNoHealthCheck2) Description() string {
-	return "Web app site_config without health_check_path misses " +
-		"unhealthy-instance detection and removal from rotation. " +
-		"Configure a health check endpoint."
-}
-func (appSvcNoHealthCheck2) Severity() ir.Severity { return ir.SeverityLow }
-
-func (appSvcNoHealthCheck2) AppliesTo(resType string) bool { return appSvcTypes(resType) }
-
-func (s appSvcNoHealthCheck2) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "site_config")
-	if present && known {
-		for _, b := range blks {
-			hp, _, p, k := blockString(b, "health_check_path")
-			if p && !k {
-				return nil // unresolved: cannot decide
-			}
-			if p && strings.TrimSpace(hp) != "" {
-				return nil
-			}
-		}
-	}
-	return []ir.Finding{mkFinding(s, r, "site_config.health_check_path",
-		evidenceSpan(ir.Span{}, r.Span), "absent",
-		"health_check_path = \"/health\"")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-118: App Service without Azure Files storage mount

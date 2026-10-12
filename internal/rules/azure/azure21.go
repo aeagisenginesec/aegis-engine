@@ -20,7 +20,6 @@ import (
 // Azure21Rules returns data platform & AI services rules in ID order.
 func Azure21Rules() []ir.Rule {
 	return []ir.Rule{
-		adfPublicNet{},       // AEGIS-AZURE-298
 		adfNoCMK{},           // AEGIS-AZURE-299
 		adfNoManagedVNet{},   // AEGIS-AZURE-300
 		synapseDataExfil{},   // AEGIS-AZURE-301
@@ -34,49 +33,12 @@ func Azure21Rules() []ir.Rule {
 		cognitiveNetACLs{},   // AEGIS-AZURE-309
 		cognitiveNoCMK{},     // AEGIS-AZURE-310
 		cognitiveLocalAuth{}, // AEGIS-AZURE-311
-		redisMinTLS{},        // AEGIS-AZURE-312
 		redisPublicNet{},      // AEGIS-AZURE-313
 	}
 }
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-298: Data Factory with public network access
-// ---------------------------------------------------------------------------
-
-type adfPublicNet struct{}
-
-func (adfPublicNet) ID() string { return "AEGIS-AZURE-298" }
-func (adfPublicNet) Title() string {
-	return "Data Factory with public network access enabled"
-}
-func (adfPublicNet) Description() string {
-	return "azurerm_data_factory with public_network_enabled (the " +
-		"provider default) accepts pipeline and data-plane traffic " +
-		"over the public internet. Disable it and use managed private " +
-		"endpoints."
-}
-func (adfPublicNet) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (adfPublicNet) AppliesTo(resType string) bool {
-	return resType == "azurerm_data_factory"
-}
-
-func (s adfPublicNet) Check(r ir.Resource) []ir.Finding {
-	en, span, present, known := getBool(r, "public_network_enabled")
-	if present && !known {
-		return nil
-	}
-	if present && !en {
-		return nil
-	}
-	actual := "true"
-	if !present {
-		actual = "absent (provider default: enabled)"
-	}
-	return []ir.Finding{mkFinding(s, r, "public_network_enabled",
-		evidenceSpan(span, r.Span), actual,
-		"public_network_enabled = false")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-299: Data Factory without customer-managed key
@@ -537,36 +499,6 @@ func (s cognitiveLocalAuth) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-312: Redis cache below TLS 1.2
-// ---------------------------------------------------------------------------
-
-type redisMinTLS struct{}
-
-func (redisMinTLS) ID() string { return "AEGIS-AZURE-312" }
-func (redisMinTLS) Title() string {
-	return "Redis cache below TLS 1.2"
-}
-func (redisMinTLS) Description() string {
-	return "azurerm_redis_cache with minimum_tls_version other than " +
-		"\"1.2\" permits weaker protocol versions for cache clients. " +
-		"Enforce TLS 1.2."
-}
-func (redisMinTLS) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (redisMinTLS) AppliesTo(resType string) bool {
-	return resType == "azurerm_redis_cache"
-}
-
-func (s redisMinTLS) Check(r ir.Resource) []ir.Finding {
-	ver, span, present, known := getString(r, "minimum_tls_version")
-	if !present || !known {
-		return nil
-	}
-	if ver == "1.2" {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "minimum_tls_version", span,
-		ver, "minimum_tls_version = \"1.2\"")}
-}
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------

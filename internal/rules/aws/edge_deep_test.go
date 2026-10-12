@@ -120,52 +120,6 @@ func TestApigwV2CorsWildcard_PassesOnSpecificOrigin(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-830
-// ---------------------------------------------------------------------------
-
-func TestApigwV2NoAccessLogs_FiresWhenAbsent(t *testing.T) {
-	r := res("aws_api_gatewayv2_stage", "x", map[string]ir.Value{})
-	if f := runRule(apigwV2NoAccessLogs{}, r); len(f) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(f))
-	}
-}
-
-func TestApigwV2NoAccessLogs_PassesWithSettings(t *testing.T) {
-	r := res("aws_api_gatewayv2_stage", "x",
-		map[string]ir.Value{"access_log_settings": blks(2, blk("destination_arn", ks("arn:aws:logs:..", 3)))})
-	if f := runRule(apigwV2NoAccessLogs{}, r); len(f) != 0 {
-		t.Fatalf("expected no findings, got %d", len(f))
-	}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-831
-// ---------------------------------------------------------------------------
-
-func TestApigwV2RouteNoAuth_FiresOnNone(t *testing.T) {
-	r := res("aws_api_gatewayv2_route", "x",
-		map[string]ir.Value{"authorization_type": ks("NONE", 2)})
-	if f := runRule(apigwV2RouteNoAuth{}, r); len(f) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(f))
-	}
-}
-
-func TestApigwV2RouteNoAuth_FiresWhenAbsent(t *testing.T) {
-	r := res("aws_api_gatewayv2_route", "x", map[string]ir.Value{})
-	if f := runRule(apigwV2RouteNoAuth{}, r); len(f) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(f))
-	}
-}
-
-func TestApigwV2RouteNoAuth_PassesOnJWT(t *testing.T) {
-	r := res("aws_api_gatewayv2_route", "x",
-		map[string]ir.Value{"authorization_type": ks("JWT", 2)})
-	if f := runRule(apigwV2RouteNoAuth{}, r); len(f) != 0 {
-		t.Fatalf("expected no findings, got %d", len(f))
-	}
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AWS-832
 // ---------------------------------------------------------------------------
 
@@ -579,8 +533,8 @@ func TestTransferServerFTP_UnknownEntryNoFinding(t *testing.T) {
 
 func TestEdgeDeepRules_AllIDs(t *testing.T) {
 	rules := EdgeDeepRules()
-	if len(rules) != 25 {
-		t.Fatalf("expected 25 rules, got %d", len(rules))
+	if len(rules) != 23 {
+		t.Fatalf("expected 23 rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	prev := ""

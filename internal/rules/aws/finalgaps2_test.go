@@ -97,9 +97,9 @@ func Test548_SilentWhenUnknown(t *testing.T) {
 // AEGIS-AWS-549: ElastiCache without at-rest encryption
 // ---------------------------------------------------------------------------
 
-func Test549_FiresWhenAbsent(t *testing.T) {
+func Test321_FiresWhenAbsent(t *testing.T) {
 	r := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{})
-	fs := runRule(elasticacheNoAtRest{}, r)
+	fs := runRule(elasticacheNoAtRestEnc{}, r)
 	if len(fs) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(fs))
 	}
@@ -112,7 +112,7 @@ func Test549_FiresWhenFalse(t *testing.T) {
 	r := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{
 		"at_rest_encryption_enabled": kv(false, 3),
 	})
-	if fs := runRule(elasticacheNoAtRest{}, r); len(fs) != 1 {
+	if fs := runRule(elasticacheNoAtRestEnc{}, r); len(fs) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(fs))
 	}
 }
@@ -121,18 +121,18 @@ func Test549_SilentWhenTrue(t *testing.T) {
 	r := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{
 		"at_rest_encryption_enabled": kv(true, 3),
 	})
-	if fs := runRule(elasticacheNoAtRest{}, r); len(fs) != 0 {
+	if fs := runRule(elasticacheNoAtRestEnc{}, r); len(fs) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(fs))
 	}
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-550: ElastiCache without transit encryption
+// AEGIS-AWS-320: ElastiCache without transit encryption
 // ---------------------------------------------------------------------------
 
-func Test550_FiresWhenAbsent(t *testing.T) {
+func Test320_FiresWhenAbsent(t *testing.T) {
 	r := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{})
-	fs := runRule(elasticacheNoTransit{}, r)
+	fs := runRule(elasticacheNoTransitEnc{}, r)
 	if len(fs) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(fs))
 	}
@@ -145,7 +145,7 @@ func Test550_FiresWhenFalse(t *testing.T) {
 	r := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{
 		"transit_encryption_enabled": kv(false, 3),
 	})
-	if fs := runRule(elasticacheNoTransit{}, r); len(fs) != 1 {
+	if fs := runRule(elasticacheNoTransitEnc{}, r); len(fs) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(fs))
 	}
 }
@@ -154,7 +154,7 @@ func Test550_SilentWhenTrue(t *testing.T) {
 	r := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{
 		"transit_encryption_enabled": kv(true, 3),
 	})
-	if fs := runRule(elasticacheNoTransit{}, r); len(fs) != 0 {
+	if fs := runRule(elasticacheNoTransitEnc{}, r); len(fs) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(fs))
 	}
 }
@@ -214,9 +214,10 @@ func Test551_SilentWhenUnknown(t *testing.T) {
 
 func TestFinalGap2_InIDOrder(t *testing.T) {
 	rules := FinalGap2Rules()
+	// 549, 550 removed as post-audit duplicates of 321, 320.
 	want := []string{
 		"AEGIS-AWS-546", "AEGIS-AWS-547", "AEGIS-AWS-548",
-		"AEGIS-AWS-549", "AEGIS-AWS-550", "AEGIS-AWS-551",
+		"AEGIS-AWS-551",
 	}
 	if len(rules) != len(want) {
 		t.Fatalf("expected %d rules, got %d", len(want), len(rules))

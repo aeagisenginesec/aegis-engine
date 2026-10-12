@@ -120,8 +120,9 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	// - 4 AWS rules removed by the concurrent Phase-4 refactor (incl. AEGIS-AWS-558).
 	// + 144 Azure expansion (AEGIS-AZURE-170..313) + concurrent AWS/GCP deep packs.
 	// + 200 AWS deep expansion (AEGIS-AWS-650..849).
-	if len(all) != 1185 {
-		t.Fatalf("default registry should wire 1185 rules, got %d", len(all))
+	// - 39 duplicate rules removed by post-audit dedup (46 pairs consolidated).
+	if len(all) != 1146 {
+		t.Fatalf("default registry should wire 1146 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {

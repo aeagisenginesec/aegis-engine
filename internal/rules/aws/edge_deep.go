@@ -32,8 +32,6 @@ func EdgeDeepRules() []ir.Rule {
 		cloudfrontPriceClassAll{},    // AEGIS-AWS-827
 		cloudfrontStaging{},          // AEGIS-AWS-828
 		apigwV2CorsWildcard{},        // AEGIS-AWS-829
-		apigwV2NoAccessLogs{},        // AEGIS-AWS-830
-		apigwV2RouteNoAuth{},         // AEGIS-AWS-831
 		apigwV2DomainWeakTLS{},       // AEGIS-AWS-832
 		route53ZoneForceDestroy{},    // AEGIS-AWS-833
 		backupVaultLockShortRet{},    // AEGIS-AWS-834
@@ -235,75 +233,6 @@ func (s apigwV2CorsWildcard) Check(r ir.Resource) []ir.Finding {
 	return []ir.Finding{sdFinding(s, r, "cors_configuration.allow_origins",
 		ir.Span{}, "contains \"*\"",
 		"allow_origins = [\"https://app.example.com\"]")}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-830: API Gateway v2 stage without access logging
-// ---------------------------------------------------------------------------
-
-type apigwV2NoAccessLogs struct{}
-
-func (apigwV2NoAccessLogs) ID() string { return "AEGIS-AWS-830" }
-func (apigwV2NoAccessLogs) Title() string {
-	return "API Gateway v2 stage without access logging"
-}
-func (apigwV2NoAccessLogs) Description() string {
-	return "An API Gateway v2 stage with no access_log_settings block writes " +
-		"no request logs, leaving API abuse and data exfiltration invisible. " +
-		"Add access_log_settings pointing at a CloudWatch log group."
-}
-func (apigwV2NoAccessLogs) Severity() ir.Severity { return ir.SeverityMedium }
-func (apigwV2NoAccessLogs) AppliesTo(resType string) bool {
-	return resType == "aws_api_gatewayv2_stage"
-}
-
-func (s apigwV2NoAccessLogs) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "access_log_settings")
-	if present && !known {
-		return nil
-	}
-	if present && len(blks) > 0 {
-		return nil
-	}
-	return absentInsecureDefault(s, r, "access_log_settings",
-		"absent (no API access logs)",
-		"access_log_settings { destination_arn = <log group> ... }")
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-831: API Gateway v2 route without authorization
-// ---------------------------------------------------------------------------
-
-type apigwV2RouteNoAuth struct{}
-
-func (apigwV2RouteNoAuth) ID() string { return "AEGIS-AWS-831" }
-func (apigwV2RouteNoAuth) Title() string {
-	return "API Gateway v2 route without authorization"
-}
-func (apigwV2RouteNoAuth) Description() string {
-	return "An API Gateway v2 route whose authorization_type is absent or " +
-		"\"NONE\" accepts unauthenticated requests. Require JWT, IAM or a " +
-		"Lambda authorizer unless the route is intentionally public."
-}
-func (apigwV2RouteNoAuth) Severity() ir.Severity { return ir.SeverityHigh }
-func (apigwV2RouteNoAuth) AppliesTo(resType string) bool {
-	return resType == "aws_api_gatewayv2_route"
-}
-
-func (s apigwV2RouteNoAuth) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getString(r, "authorization_type")
-	if present && !known {
-		return nil
-	}
-	if !present {
-		return absentInsecureDefault(s, r, "authorization_type",
-			"absent (provider default: NONE)", "authorization_type = \"JWT\"")
-	}
-	if val == "NONE" {
-		return []ir.Finding{sdFinding(s, r, "authorization_type", span,
-			"\"NONE\"", "authorization_type = \"JWT\"")}
-	}
-	return nil
 }
 
 // ---------------------------------------------------------------------------

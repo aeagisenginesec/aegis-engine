@@ -19,7 +19,7 @@ func TestHygieneRulesInIDOrder(t *testing.T) {
 		"AEGIS-AWS-610", "AEGIS-AWS-611", "AEGIS-AWS-612",
 		"AEGIS-AWS-613", "AEGIS-AWS-614", "AEGIS-AWS-615",
 		"AEGIS-AWS-617", "AEGIS-AWS-618",
-		"AEGIS-AWS-620", "AEGIS-AWS-621", "AEGIS-AWS-622",
+		"AEGIS-AWS-620", "AEGIS-AWS-622",
 		"AEGIS-AWS-623", "AEGIS-AWS-624", "AEGIS-AWS-625",
 		"AEGIS-AWS-626",
 	}
@@ -299,7 +299,7 @@ func Test620_MQNoGeneralLogging(t *testing.T) {
 }
 
 func Test621_RedshiftNoLogging(t *testing.T) {
-	rule := redshiftNoLogging{}
+	rule := redshiftNoAuditLog{}
 	vuln := res("aws_redshift_cluster", "rs", map[string]ir.Value{})
 	if got := runRule(rule, vuln); len(got) != 1 {
 		t.Errorf("vulnerable: want 1 finding, got %d", len(got))

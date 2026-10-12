@@ -11,13 +11,13 @@ func saRes(attrs map[string]ir.Value) ir.Resource {
 }
 
 // AEGIS-AZURE-144: infrastructure encryption
-func TestAZURE144_AbsentFires(t *testing.T) {
-	mustFinding(t, runRule(storageInfraEncryption{}, saRes(nil)), "AEGIS-AZURE-144")
+func TestAZURE032_AbsentFires(t *testing.T) {
+	mustFinding(t, runRule(storageNoInfraEncryption{}, saRes(nil)), "AEGIS-AZURE-032")
 }
 
-func TestAZURE144_EnabledQuiet(t *testing.T) {
+func TestAZURE032_EnabledQuiet(t *testing.T) {
 	r := saRes(map[string]ir.Value{"infrastructure_encryption_enabled": kv(true, 3)})
-	if len(runRule(storageInfraEncryption{}, r)) != 0 {
+	if len(runRule(storageNoInfraEncryption{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
@@ -39,16 +39,16 @@ func TestAZURE145_DisabledQuiet(t *testing.T) {
 	}
 }
 
-// AEGIS-AZURE-146: blob versioning
-func TestAZURE146_AbsentFires(t *testing.T) {
-	mustFinding(t, runRule(storageNoVersioning{}, saRes(nil)), "AEGIS-AZURE-146")
+// AEGIS-AZURE-028: blob versioning
+func TestAZURE028_AbsentFires(t *testing.T) {
+	mustFinding(t, runRule(storageNoBlobVersioning{}, saRes(nil)), "AEGIS-AZURE-028")
 }
 
-func TestAZURE146_EnabledQuiet(t *testing.T) {
+func TestAZURE028_EnabledQuiet(t *testing.T) {
 	r := saRes(map[string]ir.Value{
 		"blob_properties": blks(3, blk("versioning_enabled", kv(true, 4))),
 	})
-	if len(runRule(storageNoVersioning{}, r)) != 0 {
+	if len(runRule(storageNoBlobVersioning{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
@@ -109,10 +109,11 @@ func TestAZURE149_AllowQuiet(t *testing.T) {
 // Azure12Rules returns all 6 in ID order.
 func TestAzure12RulesInIDOrder(t *testing.T) {
 	rules := Azure12Rules()
-	if len(rules) != 6 {
-		t.Fatalf("expected 6 rules, got %d", len(rules))
+	// 4 rules after post-audit dedup removed 144, 146 (duplicates of 032, 028).
+	if len(rules) != 4 {
+		t.Fatalf("expected 4 rules, got %d", len(rules))
 	}
-	if rules[0].ID() != "AEGIS-AZURE-144" || rules[5].ID() != "AEGIS-AZURE-149" {
-		t.Fatalf("ID order broken: %s .. %s", rules[0].ID(), rules[5].ID())
+	if rules[0].ID() != "AEGIS-AZURE-145" || rules[3].ID() != "AEGIS-AZURE-149" {
+		t.Fatalf("ID order broken: %s .. %s", rules[0].ID(), rules[3].ID())
 	}
 }

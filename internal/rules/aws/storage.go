@@ -365,7 +365,7 @@ func (elasticacheNoTransitEnc) Description() string {
 	return "With transit_encryption_enabled absent or false, data in transit " +
 		"between the application and the cache is unencrypted."
 }
-func (elasticacheNoTransitEnc) Severity() ir.Severity { return ir.SeverityMedium }
+func (elasticacheNoTransitEnc) Severity() ir.Severity { return ir.SeverityHigh }
 
 func (elasticacheNoTransitEnc) AppliesTo(resType string) bool {
 	return resType == "aws_elasticache_replication_group"
@@ -387,7 +387,7 @@ func (elasticacheNoTransitEnc) Check(r ir.Resource) []ir.Finding {
 		RuleID:      "AEGIS-AWS-320",
 		Title:       (elasticacheNoTransitEnc{}).Title(),
 		Description: (elasticacheNoTransitEnc{}).Description(),
-		Severity:    ir.SeverityMedium,
+		Severity:    (elasticacheNoTransitEnc{}).Severity(),
 		Resource:    r.Address(),
 		Evidence: ir.Evidence{
 			Attribute: "transit_encryption_enabled",
@@ -412,7 +412,7 @@ func (elasticacheNoAtRestEnc) Description() string {
 	return "With at_rest_encryption_enabled absent or false, cached data " +
 		"and snapshots are stored unencrypted."
 }
-func (elasticacheNoAtRestEnc) Severity() ir.Severity { return ir.SeverityMedium }
+func (elasticacheNoAtRestEnc) Severity() ir.Severity { return ir.SeverityHigh }
 
 func (elasticacheNoAtRestEnc) AppliesTo(resType string) bool {
 	return resType == "aws_elasticache_replication_group"
@@ -434,7 +434,7 @@ func (elasticacheNoAtRestEnc) Check(r ir.Resource) []ir.Finding {
 		RuleID:      "AEGIS-AWS-321",
 		Title:       (elasticacheNoAtRestEnc{}).Title(),
 		Description: (elasticacheNoAtRestEnc{}).Description(),
-		Severity:    ir.SeverityMedium,
+		Severity:    (elasticacheNoAtRestEnc{}).Severity(),
 		Resource:    r.Address(),
 		Evidence: ir.Evidence{
 			Attribute: "at_rest_encryption_enabled",

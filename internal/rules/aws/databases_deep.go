@@ -18,7 +18,6 @@ import (
 func DatabasesDeepRules() []ir.Rule {
 	return []ir.Rule{
 		auroraPerfInsightsNoCMK{},      // AEGIS-AWS-700
-		dbInstanceNoEnhancedMon{},      // AEGIS-AWS-701
 		dbInstanceNoCopyTagsSnapshot{}, // AEGIS-AWS-702
 		auroraSkipFinalSnapshot{},      // AEGIS-AWS-703
 		auroraNoAutomatedBackup{},      // AEGIS-AWS-704
@@ -32,11 +31,8 @@ func DatabasesDeepRules() []ir.Rule {
 		redshiftShortSnapshotRet{},    // AEGIS-AWS-712
 		redshiftNoCopyTagsSnapshot{},  // AEGIS-AWS-713
 		elasticacheNoSnapRetention{},  // AEGIS-AWS-714
-		elasticacheNoAtRestEncryption{}, // AEGIS-AWS-715
 		elasticacheNoAutoFailover{},   // AEGIS-AWS-716
 		elasticacheRGNoSnapRetention{}, // AEGIS-AWS-717
-		dbInstanceNoPerfInsights{},    // AEGIS-AWS-718
-		neptuneNoDeletionProtection{}, // AEGIS-AWS-719
 	}
 }
 
@@ -86,54 +82,6 @@ func (auroraPerfInsightsNoCMK) Check(r ir.Resource) []ir.Finding {
 			Span:      r.Span,
 			Actual:    "absent (AWS-managed key)",
 			Expected:  "performance_insights_kms_key_id set",
-		},
-	}}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-701: RDS instance without enhanced monitoring (low)
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-636 covers aws_rds_cluster; this is the aws_db_instance
-// counterpart.
-
-type dbInstanceNoEnhancedMon struct{}
-
-func (dbInstanceNoEnhancedMon) ID() string { return "AEGIS-AWS-701" }
-func (dbInstanceNoEnhancedMon) Title() string {
-	return "RDS instance without enhanced monitoring"
-}
-func (dbInstanceNoEnhancedMon) Description() string {
-	return "monitoring_interval is absent or 0, so enhanced monitoring is " +
-		"disabled: OS-level metrics that catch host problems are missing. " +
-		"Set monitoring_interval between 1 and 60 seconds."
-}
-func (dbInstanceNoEnhancedMon) Severity() ir.Severity { return ir.SeverityLow }
-func (dbInstanceNoEnhancedMon) AppliesTo(resType string) bool {
-	return resType == "aws_db_instance"
-}
-func (dbInstanceNoEnhancedMon) Check(r ir.Resource) []ir.Finding {
-	mi, span, present, known := getNumber(r, "monitoring_interval")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present && mi > 0 {
-		return nil
-	}
-	actual := "absent (provider default: 0, disabled)"
-	if present {
-		actual = "0 (disabled)"
-	}
-	return []ir.Finding{{
-		RuleID:      "AEGIS-AWS-701",
-		Title:       (dbInstanceNoEnhancedMon{}).Title(),
-		Description: (dbInstanceNoEnhancedMon{}).Description(),
-		Severity:    ir.SeverityLow,
-		Resource:    r.Address(),
-		Evidence: ir.Evidence{
-			Attribute: "monitoring_interval",
-			Span:      evidenceSpan(span, r.Span),
-			Actual:    actual,
-			Expected:  "monitoring_interval between 1 and 60",
 		},
 	}}
 }
@@ -757,53 +705,6 @@ func (elasticacheNoSnapRetention) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-715: ElastiCache replication group without at-rest encryption (high)
-// ---------------------------------------------------------------------------
-
-type elasticacheNoAtRestEncryption struct{}
-
-func (elasticacheNoAtRestEncryption) ID() string { return "AEGIS-AWS-715" }
-func (elasticacheNoAtRestEncryption) Title() string {
-	return "ElastiCache replication group without at-rest encryption"
-}
-func (elasticacheNoAtRestEncryption) Description() string {
-	return "at_rest_encryption_enabled is absent or false, so cached data " +
-		"(often including sessions and tokens) sits unencrypted on disk. " +
-		"Set at_rest_encryption_enabled = true."
-}
-func (elasticacheNoAtRestEncryption) Severity() ir.Severity { return ir.SeverityHigh }
-func (elasticacheNoAtRestEncryption) AppliesTo(resType string) bool {
-	return resType == "aws_elasticache_replication_group"
-}
-func (elasticacheNoAtRestEncryption) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getBool(r, "at_rest_encryption_enabled")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present && val {
-		return nil
-	}
-	if !present {
-		return absentInsecureDefault(elasticacheNoAtRestEncryption{}, r,
-			"at_rest_encryption_enabled",
-			"absent (provider default: false)",
-			"at_rest_encryption_enabled = true")
-	}
-	return []ir.Finding{{
-		RuleID:      "AEGIS-AWS-715",
-		Title:       (elasticacheNoAtRestEncryption{}).Title(),
-		Description: (elasticacheNoAtRestEncryption{}).Description(),
-		Severity:    ir.SeverityHigh,
-		Resource:    r.Address(),
-		Evidence: ir.Evidence{
-			Attribute: "at_rest_encryption_enabled",
-			Span:      evidenceSpan(span, r.Span),
-			Actual:    "false",
-			Expected:  "at_rest_encryption_enabled = true",
-		},
-	}}
-}
-
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-716: ElastiCache replication group without automatic failover (medium)
 // ---------------------------------------------------------------------------
@@ -901,98 +802,3 @@ func (elasticacheRGNoSnapRetention) Check(r ir.Resource) []ir.Finding {
 	}}
 }
 
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-718: RDS instance without Performance Insights (low)
-// ---------------------------------------------------------------------------
-
-type dbInstanceNoPerfInsights struct{}
-
-func (dbInstanceNoPerfInsights) ID() string { return "AEGIS-AWS-718" }
-func (dbInstanceNoPerfInsights) Title() string {
-	return "RDS instance without Performance Insights"
-}
-func (dbInstanceNoPerfInsights) Description() string {
-	return "performance_insights_enabled is absent or false, so query-level " +
-		"telemetry is unavailable when investigating slow queries or " +
-		"suspicious database activity. Enable it for production instances."
-}
-func (dbInstanceNoPerfInsights) Severity() ir.Severity { return ir.SeverityLow }
-func (dbInstanceNoPerfInsights) AppliesTo(resType string) bool {
-	return resType == "aws_db_instance"
-}
-func (dbInstanceNoPerfInsights) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getBool(r, "performance_insights_enabled")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present && val {
-		return nil
-	}
-	if !present {
-		return absentInsecureDefault(dbInstanceNoPerfInsights{}, r,
-			"performance_insights_enabled",
-			"absent (provider default: false)",
-			"performance_insights_enabled = true")
-	}
-	return []ir.Finding{{
-		RuleID:      "AEGIS-AWS-718",
-		Title:       (dbInstanceNoPerfInsights{}).Title(),
-		Description: (dbInstanceNoPerfInsights{}).Description(),
-		Severity:    ir.SeverityLow,
-		Resource:    r.Address(),
-		Evidence: ir.Evidence{
-			Attribute: "performance_insights_enabled",
-			Span:      evidenceSpan(span, r.Span),
-			Actual:    "false",
-			Expected:  "performance_insights_enabled = true",
-		},
-	}}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-719: Neptune cluster without deletion protection (high)
-// ---------------------------------------------------------------------------
-
-type neptuneNoDeletionProtection struct{}
-
-func (neptuneNoDeletionProtection) ID() string { return "AEGIS-AWS-719" }
-func (neptuneNoDeletionProtection) Title() string {
-	return "Neptune cluster without deletion protection"
-}
-func (neptuneNoDeletionProtection) Description() string {
-	return "deletion_protection is absent or false, so the graph database " +
-		"can be deleted by an accidental or malicious API call with no " +
-		"guardrail. Set deletion_protection = true on production clusters."
-}
-func (neptuneNoDeletionProtection) Severity() ir.Severity { return ir.SeverityHigh }
-func (neptuneNoDeletionProtection) AppliesTo(resType string) bool {
-	return resType == "aws_neptune_cluster"
-}
-func (neptuneNoDeletionProtection) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getBool(r, "deletion_protection")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present && val {
-		return nil
-	}
-	if !present {
-		return absentInsecureDefault(neptuneNoDeletionProtection{}, r,
-			"deletion_protection",
-			"absent (provider default: false)",
-			"deletion_protection = true")
-	}
-	return []ir.Finding{{
-		RuleID:      "AEGIS-AWS-719",
-		Title:       (neptuneNoDeletionProtection{}).Title(),
-		Description: (neptuneNoDeletionProtection{}).Description(),
-		Severity:    ir.SeverityHigh,
-		Resource:    r.Address(),
-		Evidence: ir.Evidence{
-			Attribute: "deletion_protection",
-			Span:      evidenceSpan(span, r.Span),
-			Actual:    "false",
-			Expected:  "deletion_protection = true",
-		},
-	}}
-}

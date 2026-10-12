@@ -42,7 +42,6 @@ func ServicesDeepRules() []ir.Rule {
 		opensearchNoLogPublishing{},   // AEGIS-AWS-812
 		neptuneSkipFinalSnapshot{},    // AEGIS-AWS-813
 		neptuneNoCopyTags{},           // AEGIS-AWS-814
-		docdbNoDeletionProt{},         // AEGIS-AWS-815
 		apprunnerNoEncryption{},       // AEGIS-AWS-816
 		apprunnerRootHealthCheck{},    // AEGIS-AWS-817
 		batchJobPrivileged{},          // AEGIS-AWS-818
@@ -653,41 +652,6 @@ func (s neptuneNoCopyTags) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-815: DocumentDB cluster without deletion protection
-// ---------------------------------------------------------------------------
-
-type docdbNoDeletionProt struct{}
-
-func (docdbNoDeletionProt) ID() string { return "AEGIS-AWS-815" }
-func (docdbNoDeletionProt) Title() string {
-	return "DocumentDB cluster without deletion protection"
-}
-func (docdbNoDeletionProt) Description() string {
-	return "A DocumentDB cluster with deletion_protection = false (the " +
-		"default) can be destroyed by a single API call or a mistaken " +
-		"terraform destroy. Set deletion_protection = true on production " +
-		"clusters."
-}
-func (docdbNoDeletionProt) Severity() ir.Severity { return ir.SeverityHigh }
-func (docdbNoDeletionProt) AppliesTo(resType string) bool {
-	return resType == "aws_docdb_cluster"
-}
-
-func (s docdbNoDeletionProt) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getBool(r, "deletion_protection")
-	if present && !known {
-		return nil
-	}
-	if present && val {
-		return nil
-	}
-	if !present {
-		return absentInsecureDefault(s, r, "deletion_protection",
-			"absent (provider default: false)", "deletion_protection = true")
-	}
-	return []ir.Finding{sdFinding(s, r, "deletion_protection",
-		span, "false", "deletion_protection = true")}
-}
-
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-816: App Runner service without encryption configuration
 // ---------------------------------------------------------------------------

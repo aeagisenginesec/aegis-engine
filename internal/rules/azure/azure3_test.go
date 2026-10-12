@@ -62,15 +62,15 @@ func TestAZURE031_NoSharedKeyQuiet(t *testing.T) {
 	}
 }
 
-// TestAZURE036_NoPurgeProtectionFires verifies Key Vault purge protection.
-func TestAZURE036_NoPurgeProtectionFires(t *testing.T) {
+// TestAZR005_NoPurgeProtectionFires verifies Key Vault purge protection.
+func TestAZR005_NoPurgeProtectionFires(t *testing.T) {
 	r := res("azurerm_key_vault", "v", map[string]ir.Value{"purge_protection_enabled": kv(false, 3)})
-	mustFinding(t, runRule(keyVaultNoPurgeProtection{}, r), "AEGIS-AZURE-036")
+	mustFinding(t, runRule(keyVaultPurgeProtection{}, r), "AEGIS-AZR-005")
 }
 
-func TestAZURE036_PurgeQuiet(t *testing.T) {
+func TestAZR005_PurgeQuiet(t *testing.T) {
 	r := res("azurerm_key_vault", "v", map[string]ir.Value{"purge_protection_enabled": kv(true, 3)})
-	if len(runRule(keyVaultNoPurgeProtection{}, r)) != 0 {
+	if len(runRule(keyVaultPurgeProtection{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }

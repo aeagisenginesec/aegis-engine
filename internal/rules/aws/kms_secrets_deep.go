@@ -88,41 +88,6 @@ func (kmsDeletionWindowShort) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-782: KMS key policy allows public principal
-// ---------------------------------------------------------------------------
-
-type kmsKeyPolicyPublicPrincipal struct{}
-
-func (kmsKeyPolicyPublicPrincipal) ID() string { return "AEGIS-AWS-782" }
-func (kmsKeyPolicyPublicPrincipal) Title() string {
-	return "KMS key policy allows public principal"
-}
-func (kmsKeyPolicyPublicPrincipal) Description() string {
-	return "A KMS key policy Allow statement with Principal \"*\" grants " +
-		"anonymous key use to the world. Key policies should name " +
-		"specific AWS principals."
-}
-func (kmsKeyPolicyPublicPrincipal) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (kmsKeyPolicyPublicPrincipal) AppliesTo(resType string) bool {
-	return resType == "aws_kms_key"
-}
-
-func (kmsKeyPolicyPublicPrincipal) Check(r ir.Resource) []ir.Finding {
-	rule := kmsKeyPolicyPublicPrincipal{}
-	doc, span, present, known := getString(r, "policy")
-	if !present || !known {
-		return nil // absent or unresolved: cannot decide
-	}
-	if policyAllowsPublicPrincipal(doc) {
-		return msgFinding(rule, r, "policy", span,
-			"Allow statement with Principal \"*\"",
-			"Principal scoped to specific AWS principals")
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AWS-783: KMS key without description
 // ---------------------------------------------------------------------------
 
@@ -834,7 +799,6 @@ func KMSSecretsDeepRules() []ir.Rule {
 	return []ir.Rule{
 		kmsRotationPeriodLong{},            // AEGIS-AWS-780
 		kmsDeletionWindowShort{},           // AEGIS-AWS-781
-		kmsKeyPolicyPublicPrincipal{},      // AEGIS-AWS-782
 		kmsKeyNoDescription{},              // AEGIS-AWS-783
 		kmsExternalKeyNoExpiry{},           // AEGIS-AWS-784
 		kmsBypassLockoutSafetyCheck{},      // AEGIS-AWS-785

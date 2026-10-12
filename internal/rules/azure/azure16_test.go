@@ -14,16 +14,18 @@ func TestAzure16RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	for n := 206; n <= 225; n++ {
+	// 206,213 removed as post-audit duplicates.
+	want := []int{207, 208, 209, 210, 211, 212, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225}
+	for i, n := range want {
 		id := "AEGIS-AZURE-" + strconv.Itoa(n)
-		i, ok := idx[id]
+		pos, ok := idx[id]
 		if !ok {
 			t.Fatalf("rule %s not registered", id)
 		}
-		if n > 206 {
-			prev := "AEGIS-AZURE-" + strconv.Itoa(n-1)
-			if idx[prev] != i-1 {
-				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, i)
+		if i > 0 {
+			prev := "AEGIS-AZURE-" + strconv.Itoa(want[i-1])
+			if idx[prev] != pos-1 {
+				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, pos)
 			}
 		}
 	}
@@ -37,11 +39,11 @@ func siteCfg(pairs ...any) map[string]ir.Value {
 // AEGIS-AZURE-206: SQL server below TLS 1.2
 // ---------------------------------------------------------------------------
 
-func TestAZURE206(t *testing.T) {
-	id := "AEGIS-AZURE-206"
-	mustFinding(t, runRule(mssqlMinTLS{}, res("azurerm_mssql_server", "s", map[string]ir.Value{"minimum_tls_version": ks("1.0", 3)})), id)
+func TestAZURE025(t *testing.T) {
+	id := "AEGIS-AZURE-025"
+	mustFinding(t, runRule(sqlServerWeakTLS{}, res("azurerm_mssql_server", "s", map[string]ir.Value{"minimum_tls_version": ks("1.0", 3)})), id)
 	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"minimum_tls_version": ks("1.2", 3)})
-	if f := runRule(mssqlMinTLS{}, r); len(f) != 0 {
+	if f := runRule(sqlServerWeakTLS{}, r); len(f) != 0 {
 		t.Fatalf("TLS 1.2 must not fire, got %d", len(f))
 	}
 }
@@ -136,17 +138,17 @@ func TestAZURE212_HTTP2(t *testing.T) {
 	}
 }
 
-func TestAZURE213_MinTLS(t *testing.T) {
-	id := "AEGIS-AZURE-213"
-	f := mustFinding(t, runRule(appServiceMinTLS{}, res("azurerm_app_service", "a", siteCfg("minimum_tls_version", ks("1.0", 3)))), id)
+func TestAZURE012_MinTLS(t *testing.T) {
+	id := "AEGIS-AZURE-012"
+	f := mustFinding(t, runRule(appServiceWeakTLS{}, res("azurerm_app_service", "a", siteCfg("min_tls_version", ks("1.0", 3)))), id)
 	if f.Severity != ir.SeverityHigh {
 		t.Fatalf("wrong severity %s", f.Severity)
 	}
-	r := res("azurerm_app_service", "a", siteCfg("minimum_tls_version", ks("1.2", 3)))
-	if f := runRule(appServiceMinTLS{}, r); len(f) != 0 {
+	r := res("azurerm_app_service", "a", siteCfg("min_tls_version", ks("1.2", 3)))
+	if f := runRule(appServiceWeakTLS{}, r); len(f) != 0 {
 		t.Fatalf("TLS 1.2 must not fire, got %d", len(f))
 	}
-	if f := runRule(appServiceMinTLS{}, res("azurerm_app_service", "a", siteCfg())); len(f) != 0 {
+	if f := runRule(appServiceWeakTLS{}, res("azurerm_app_service", "a", siteCfg())); len(f) != 0 {
 		t.Fatalf("absent must not fire, got %d", len(f))
 	}
 }
@@ -209,7 +211,7 @@ func TestAZURE220_222(t *testing.T) {
 	mustFinding(t, runRule(linuxWebAppFTPS{}, res("azurerm_linux_web_app", "l", siteCfg())), "AEGIS-AZURE-220")
 	mustFinding(t, runRule(linuxWebAppMinTLS{}, res("azurerm_linux_web_app", "l", siteCfg("minimum_tls_version", ks("1.1", 3)))), "AEGIS-AZURE-221")
 	mustFinding(t, runRule(linuxWebAppNoIPRestrict{}, res("azurerm_linux_web_app", "l", siteCfg())), "AEGIS-AZURE-222")
-	r := res("azurerm_linux_web_app", "l", siteCfg("minimum_tls_version", ks("1.2", 3), "ftps_state", ks("Disabled", 3)))
+	r := res("azurerm_linux_web_app", "l", siteCfg("min_tls_version", ks("1.2", 3), "ftps_state", ks("Disabled", 3)))
 	if f := runRule(linuxWebAppMinTLS{}, r); len(f) != 0 {
 		t.Fatalf("221: hardened must not fire")
 	}

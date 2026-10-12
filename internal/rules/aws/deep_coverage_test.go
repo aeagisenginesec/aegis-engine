@@ -20,8 +20,8 @@ func TestDeepRulesCoverage(t *testing.T) {
 	rules = append(rules, KMSSecretsDeepRules()...)
 	rules = append(rules, ServicesDeepRules()...)
 	rules = append(rules, EdgeDeepRules()...)
-	if len(rules) != 200 {
-		t.Fatalf("expected 200 deep rules, got %d", len(rules))
+	if len(rules) != 191 {
+		t.Fatalf("expected 191 deep rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	for _, r := range rules {

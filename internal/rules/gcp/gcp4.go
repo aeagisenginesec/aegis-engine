@@ -22,15 +22,15 @@ func GCP4Rules() []ir.Rule {
 		sqlNoLogLockWaits{}, sqlNoLogDuration{}, sqlNoPgAudit{},
 		sqlLogMinMessages{},
 		// GKE cluster 108-115
-		gkeNoMetadataServer{}, gkeBinaryAuthDisabled{}, gkeLegacyABACGap{},
-		gkeNoNetworkPolicyGap{}, gkeNoPrivateClusterGap{}, gkePublicControlPlane{},
+		gkeNoMetadataServer{}, gkeBinaryAuthDisabled{},
+		gkeNoNetworkPolicyGap{}, gkePublicControlPlane{},
 		gkeNoReleaseChannel{}, gkeNoStackdriverLogging{},
 		// GKE node pool 116-117
 		nodePoolNoAutoRepair{}, nodePoolNoAutoUpgrade{},
-		// Compute 118-120
-		instanceIPForwarding{}, instanceSerialPortAccess{}, subnetworkNoFlowLogs{},
-		// Storage 121-122
-		bucketNoUniformAccessGap{}, bucketPAPNotEnforced{},
+		// Compute 120 (118-119 removed as duplicates of 057/058)
+		subnetworkNoFlowLogs{},
+		// Storage 122 (121 removed as duplicate of 005)
+		bucketPAPNotEnforced{},
 	}
 }
 
@@ -370,31 +370,6 @@ func (s gkeBinaryAuthDisabled) Check(r ir.Resource) []ir.Finding {
 }
 
 // AEGIS-GCP-110: GKE with legacy ABAC enabled
-type gkeLegacyABACGap struct{}
-
-func (gkeLegacyABACGap) ID() string { return "AEGIS-GCP-110" }
-func (gkeLegacyABACGap) Title() string {
-	return "GKE cluster with legacy ABAC enabled"
-}
-func (gkeLegacyABACGap) Description() string {
-	return "google_container_cluster with enable_legacy_abac = true grants " +
-		"all service accounts cluster-admin, bypassing RBAC entirely."
-}
-func (gkeLegacyABACGap) Severity() ir.Severity { return ir.SeverityHigh }
-func (gkeLegacyABACGap) AppliesTo(t string) bool {
-	return t == "google_container_cluster"
-}
-func (s gkeLegacyABACGap) Check(r ir.Resource) []ir.Finding {
-	v, span, present, known := getBool(r, "enable_legacy_abac")
-	if !present || !known {
-		return nil // provider default is false
-	}
-	if v {
-		return []ir.Finding{mkFinding(s, r, "enable_legacy_abac", span,
-			"true", "false (or omitted)")}
-	}
-	return nil
-}
 
 // AEGIS-GCP-111: GKE without network policy
 type gkeNoNetworkPolicyGap struct{}
@@ -436,43 +411,6 @@ func (s gkeNoNetworkPolicyGap) Check(r ir.Resource) []ir.Finding {
 }
 
 // AEGIS-GCP-112: GKE not a private cluster
-type gkeNoPrivateClusterGap struct{}
-
-func (gkeNoPrivateClusterGap) ID() string { return "AEGIS-GCP-112" }
-func (gkeNoPrivateClusterGap) Title() string {
-	return "GKE cluster is not a private cluster"
-}
-func (gkeNoPrivateClusterGap) Description() string {
-	return "google_container_cluster with private_cluster_config." +
-		"enable_private_nodes not true assigns public IPs to nodes."
-}
-func (gkeNoPrivateClusterGap) Severity() ir.Severity { return ir.SeverityMedium }
-func (gkeNoPrivateClusterGap) AppliesTo(t string) bool {
-	return t == "google_container_cluster"
-}
-func (s gkeNoPrivateClusterGap) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "private_cluster_config")
-	if present && !known {
-		return nil
-	}
-	if !present || len(blks) == 0 {
-		return []ir.Finding{mkFinding(s, r, "private_cluster_config", r.Span,
-			"absent", "private_cluster_config { enable_private_nodes = true }")}
-	}
-	en, span, p, k := blockBool(blks[0], "enable_private_nodes")
-	if !p {
-		return []ir.Finding{mkFinding(s, r, "private_cluster_config.enable_private_nodes",
-			r.Span, "absent", "enable_private_nodes = true")}
-	}
-	if !k {
-		return nil
-	}
-	if !en {
-		return []ir.Finding{mkFinding(s, r, "private_cluster_config.enable_private_nodes",
-			span, "false", "true")}
-	}
-	return nil
-}
 
 // AEGIS-GCP-113: GKE control plane publicly reachable
 type gkePublicControlPlane struct{}
@@ -672,85 +610,8 @@ func (s nodePoolNoAutoUpgrade) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // Compute: AEGIS-GCP-118..120
-// ---------------------------------------------------------------------------
-
-// AEGIS-GCP-118: Compute instance with IP forwarding
-type instanceIPForwarding struct{}
-
-func (instanceIPForwarding) ID() string { return "AEGIS-GCP-118" }
-func (instanceIPForwarding) Title() string {
-	return "Compute instance with IP forwarding enabled"
-}
-func (instanceIPForwarding) Description() string {
-	return "google_compute_instance with can_ip_forward = true can route " +
-		"traffic for other hosts, enabling MITM positioning."
-}
-func (instanceIPForwarding) Severity() ir.Severity { return ir.SeverityMedium }
-func (instanceIPForwarding) AppliesTo(t string) bool {
-	return t == "google_compute_instance"
-}
-func (s instanceIPForwarding) Check(r ir.Resource) []ir.Finding {
-	v, span, present, known := getBool(r, "can_ip_forward")
-	if !present || !known {
-		return nil
-	}
-	if v {
-		return []ir.Finding{mkFinding(s, r, "can_ip_forward", span,
-			"true", "false (or omitted)")}
-	}
-	return nil
-}
 
 // AEGIS-GCP-119: Compute instance with serial port access enabled
-type instanceSerialPortAccess struct{}
-
-func (instanceSerialPortAccess) ID() string { return "AEGIS-GCP-119" }
-func (instanceSerialPortAccess) Title() string {
-	return "Compute instance with serial port access enabled"
-}
-func (instanceSerialPortAccess) Description() string {
-	return "google_compute_instance metadata serial-port-enable = TRUE " +
-		"exposes an interactive serial console."
-}
-func (instanceSerialPortAccess) Severity() ir.Severity { return ir.SeverityMedium }
-func (instanceSerialPortAccess) AppliesTo(t string) bool {
-	return t == "google_compute_instance"
-}
-func (s instanceSerialPortAccess) Check(r ir.Resource) []ir.Finding {
-	check := func(m map[string]ir.Value) []ir.Finding {
-		v, ok := m["serial-port-enable"]
-		if !ok || !v.Known {
-			return nil
-		}
-		if sv, ok := v.AsString(); ok && strings.ToLower(sv) == "true" {
-			return []ir.Finding{mkFinding(s, r, "metadata.serial-port-enable", v.Span,
-				sv, "false (or omitted)")}
-		}
-		if bv, ok := v.AsBool(); ok && bv {
-			return []ir.Finding{mkFinding(s, r, "metadata.serial-port-enable", v.Span,
-				"true", "false (or omitted)")}
-		}
-		return nil
-	}
-	blks, _, present, known := getBlocks(r, "metadata")
-	if present && !known {
-		return nil
-	}
-	if !present {
-		if v, ok := r.Attributes["metadata"]; ok && v.Known {
-			if m, ok := v.AsMap(); ok {
-				return check(m)
-			}
-		}
-		return nil
-	}
-	for _, b := range blks {
-		if f := check(b); f != nil {
-			return f
-		}
-	}
-	return nil
-}
 
 // AEGIS-GCP-120: Compute subnetwork without flow logs
 type subnetworkNoFlowLogs struct{}
@@ -783,38 +644,6 @@ func (s subnetworkNoFlowLogs) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // Storage: AEGIS-GCP-121..122
-// ---------------------------------------------------------------------------
-
-// AEGIS-GCP-121: GCS bucket without uniform bucket-level access
-type bucketNoUniformAccessGap struct{}
-
-func (bucketNoUniformAccessGap) ID() string { return "AEGIS-GCP-121" }
-func (bucketNoUniformAccessGap) Title() string {
-	return "GCS bucket without uniform bucket-level access"
-}
-func (bucketNoUniformAccessGap) Description() string {
-	return "google_storage_bucket with uniform_bucket_level_access not true " +
-		"keeps legacy per-object ACLs that can grant unexpected access."
-}
-func (bucketNoUniformAccessGap) Severity() ir.Severity { return ir.SeverityMedium }
-func (bucketNoUniformAccessGap) AppliesTo(t string) bool {
-	return t == "google_storage_bucket"
-}
-func (s bucketNoUniformAccessGap) Check(r ir.Resource) []ir.Finding {
-	v, span, present, known := getBool(r, "uniform_bucket_level_access")
-	if !present {
-		return []ir.Finding{mkFinding(s, r, "uniform_bucket_level_access", r.Span,
-			"absent", "uniform_bucket_level_access = true")}
-	}
-	if !known {
-		return nil
-	}
-	if !v {
-		return []ir.Finding{mkFinding(s, r, "uniform_bucket_level_access", span,
-			"false", "true")}
-	}
-	return nil
-}
 
 // AEGIS-GCP-122: GCS bucket without enforced public access prevention
 type bucketPAPNotEnforced struct{}

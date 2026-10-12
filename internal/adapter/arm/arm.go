@@ -253,7 +253,7 @@ func (c *evalCtx) eval(v any) ir.Value {
 	case map[string]any:
 		out := make(map[string]ir.Value, len(tv))
 		for k, e := range tv {
-			out[k] = c.eval(e)
+			out[snake(k)] = c.eval(e)
 		}
 		return ir.Value{Raw: out, Known: true, Span: span}
 	default:

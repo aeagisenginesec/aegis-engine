@@ -905,15 +905,20 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 			completeness.Files = append(completeness.Files, st)
 			continue
 		}
-		// Skipped: no adapter handled the file, or it was excluded
-		// (diagnostic indicates this).
+		// Skipped: file was excluded by --exclude pattern, no adapter handles
+		// it, or the adapter could not parse it (e.g., unrecognized document).
+		// Warnings from successful parses (e.g., unresolvable for_each where
+		// resources ARE produced) do NOT mark the file as skipped.
 		isSkipped := false
 		var skipReason string
-		for _, d := range pr.diags {
-			if d.Level == "warning" {
-				isSkipped = true
-				skipReason = d.Message
-				break
+		hasResources := pr.mod != nil || len(pr.resources) > 0
+		if !hasResources {
+			for _, d := range pr.diags {
+				if d.Level == "warning" {
+					isSkipped = true
+					skipReason = d.Message
+					break
+				}
 			}
 		}
 		if isSkipped {

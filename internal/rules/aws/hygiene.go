@@ -714,37 +714,6 @@ func (mqNoGeneralLogging) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-621: Redshift cluster without logging (CKV_AWS_71)
-// ---------------------------------------------------------------------------
-
-type redshiftNoLogging struct{}
-
-func (redshiftNoLogging) ID() string { return "AEGIS-AWS-621" }
-func (redshiftNoLogging) Title() string {
-	return "Redshift cluster without audit logging"
-}
-func (redshiftNoLogging) Description() string {
-	return "Hygiene: Redshift clusters should log to S3 for audit " +
-		"trails. Add a logging block with a bucket."
-}
-func (redshiftNoLogging) Severity() ir.Severity { return ir.SeverityLow }
-func (redshiftNoLogging) AppliesTo(resType string) bool {
-	return resType == "aws_redshift_cluster"
-}
-func (redshiftNoLogging) Check(r ir.Resource) []ir.Finding {
-	blks, span, present, known := getBlocks(r, "logging")
-	if present && !known {
-		return nil
-	}
-	if !present || len(blks) == 0 {
-		return []ir.Finding{hygieneFinding("AEGIS-AWS-621",
-			(redshiftNoLogging{}).Title(), (redshiftNoLogging{}).Description(),
-			r, "logging", span, "absent", "logging block with S3 bucket")}
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AWS-622: MSK cluster without logging (CKV_AWS_80)
 // ---------------------------------------------------------------------------
 
@@ -944,7 +913,6 @@ func HygieneRules() []ir.Rule {
 		codebuildNoLogging{},      // AEGIS-AWS-617
 		esNoAuditLogging{},        // AEGIS-AWS-618
 		mqNoGeneralLogging{},      // AEGIS-AWS-620
-		redshiftNoLogging{},       // AEGIS-AWS-621
 		mskNoLogging{},            // AEGIS-AWS-622
 		esNoDomainLogging{},       // AEGIS-AWS-623
 		docdbNoLogging{},          // AEGIS-AWS-624

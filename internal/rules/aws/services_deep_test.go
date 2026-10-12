@@ -355,12 +355,12 @@ func TestNeptuneNoCopyTags_PassesWhenTrue(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-815
+// AEGIS-AWS-430
 // ---------------------------------------------------------------------------
 
 func TestDocdbNoDeletionProt_FiresWhenAbsent(t *testing.T) {
 	r := res("aws_docdb_cluster", "x", map[string]ir.Value{})
-	if f := runRule(docdbNoDeletionProt{}, r); len(f) != 1 {
+	if f := runRule(docdbNoDeletionProtection{}, r); len(f) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(f))
 	}
 }
@@ -368,7 +368,7 @@ func TestDocdbNoDeletionProt_FiresWhenAbsent(t *testing.T) {
 func TestDocdbNoDeletionProt_PassesWhenTrue(t *testing.T) {
 	r := res("aws_docdb_cluster", "x",
 		map[string]ir.Value{"deletion_protection": kv(true, 2)})
-	if f := runRule(docdbNoDeletionProt{}, r); len(f) != 0 {
+	if f := runRule(docdbNoDeletionProtection{}, r); len(f) != 0 {
 		t.Fatalf("expected no findings, got %d", len(f))
 	}
 }
@@ -607,8 +607,8 @@ func TestTimestreamQueryReportNoKMS_PassesWithoutErrorReports(t *testing.T) {
 
 func TestServicesDeepRules_AllIDs(t *testing.T) {
 	rules := ServicesDeepRules()
-	if len(rules) != 25 {
-		t.Fatalf("expected 25 rules, got %d", len(rules))
+	if len(rules) != 24 {
+		t.Fatalf("expected 24 rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	prev := ""

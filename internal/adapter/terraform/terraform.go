@@ -587,13 +587,14 @@ func resourceFromBlock(path string, b *hclsyntax.Block, diags *[]ir.Diagnostic) 
 	attributesFromBody(path, b.Body, r.Attributes, diags)
 	// count/for_each decide how many instances a block creates. A static
 	// value is fine (one logical instance is analyzed); an unresolvable
-	// expression means the instance count is unknown — say so instead of
-	// silently analyzing a single instance.
+	// expression means the instance count is unknown — the block is
+	// analyzed as a single instance, but findings may not cover all
+	// actual instances. The warning propagates this uncertainty.
 	for _, meta := range []string{"count", "for_each"} {
 		if v, ok := r.Attributes[meta]; ok && !v.Known {
 			*diags = append(*diags, ir.Diagnostic{
 				Level:   "warning",
-				Message: fmt.Sprintf("terraform: %s uses %q with an unresolvable expression; analyzed as a single instance", r.Address(), meta),
+				Message: fmt.Sprintf("terraform: %s uses %q with an unresolvable expression; analyzed as a single instance (instance count unknown, findings may be incomplete)", r.Address(), meta),
 				Span:    v.Span,
 			})
 		}

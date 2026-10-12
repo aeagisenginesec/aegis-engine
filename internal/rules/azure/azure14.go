@@ -27,7 +27,6 @@ func Azure14Rules() []ir.Rule {
 		policyAssignmentNoEnforce{}, // AEGIS-AZURE-175
 		aadUserHardcodedPassword{},  // AEGIS-AZURE-176
 		apimNoIdentity{},            // AEGIS-AZURE-177
-		appServiceNoIdentity{},      // AEGIS-AZURE-178
 		linuxWebAppNoIdentity{},     // AEGIS-AZURE-179
 		mssqlServerNoIdentity{},     // AEGIS-AZURE-180
 		storageNoIdentity{},         // AEGIS-AZURE-181
@@ -367,25 +366,6 @@ func (apimNoIdentity) AppliesTo(resType string) bool {
 	return resType == "azurerm_api_management"
 }
 func (s apimNoIdentity) Check(r ir.Resource) []ir.Finding {
-	return identityAbsent(s, r, "identity { type = \"SystemAssigned\" }")
-}
-
-type appServiceNoIdentity struct{}
-
-func (appServiceNoIdentity) ID() string { return "AEGIS-AZURE-178" }
-func (appServiceNoIdentity) Title() string {
-	return "App Service without managed identity"
-}
-func (appServiceNoIdentity) Description() string {
-	return "azurerm_app_service without an identity block cannot use " +
-		"managed identities for Key Vault references or database access. " +
-		"Enable a system-assigned identity."
-}
-func (appServiceNoIdentity) Severity() ir.Severity { return ir.SeverityMedium }
-func (appServiceNoIdentity) AppliesTo(resType string) bool {
-	return resType == "azurerm_app_service"
-}
-func (s appServiceNoIdentity) Check(r ir.Resource) []ir.Finding {
 	return identityAbsent(s, r, "identity { type = \"SystemAssigned\" }")
 }
 

@@ -586,12 +586,27 @@ func (vnetNoDDoS) AppliesTo(resType string) bool {
 }
 
 func (s vnetNoDDoS) Check(r ir.Resource) []ir.Finding {
-	_, _, present, _ := getBlocks(r, "ddos_protection_plan")
+	blks, span, present, known := getBlocks(r, "ddos_protection_plan")
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if present && len(blks) > 0 {
+		for _, b := range blks {
+			en, _, p, k := blockBool(b, "enable")
+			if p && !k {
+				return nil // unresolved: cannot decide
+			}
+			if p && en {
+				return nil // enabled
+			}
+		}
+	}
+	actual := "absent"
 	if present {
-		return nil
+		actual = "not enabled"
 	}
 	return []ir.Finding{mkFinding(s, r, "ddos_protection_plan",
-		evidenceSpan(ir.Span{}, r.Span), "absent", "ddos_protection_plan block with id and enable = true")}
+		evidenceSpan(span, r.Span), actual, "ddos_protection_plan { id = \"...\", enable = true }")}
 }
 
 // ---------------------------------------------------------------------------

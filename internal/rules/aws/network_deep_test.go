@@ -373,19 +373,19 @@ func TestApiGwRestApiPublicPolicyUnknownQuiet(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-752
+// AEGIS-AWS-625
 // ---------------------------------------------------------------------------
 
 func TestCfNoLoggingFires(t *testing.T) {
-	f := runRule(cfNoLogging{},
+	f := runRule(cloudfrontNoLogging{},
 		res("aws_cloudfront_distribution", "d", map[string]ir.Value{}))
-	if len(f) != 1 || f[0].RuleID != "AEGIS-AWS-752" {
-		t.Fatalf("expected 1 finding for 752, got %d", len(f))
+	if len(f) != 1 || f[0].RuleID != "AEGIS-AWS-625" {
+		t.Fatalf("expected 1 finding for 625, got %d", len(f))
 	}
 }
 
 func TestCfNoLoggingQuiet(t *testing.T) {
-	f := runRule(cfNoLogging{},
+	f := runRule(cloudfrontNoLogging{},
 		res("aws_cloudfront_distribution", "d", map[string]ir.Value{
 			"logging_config": blks(3, blk("bucket", ks("logs.s3.amazonaws.com", 4))),
 		}))

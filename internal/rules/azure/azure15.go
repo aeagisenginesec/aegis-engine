@@ -21,22 +21,15 @@ func Azure15Rules() []ir.Rule {
 	return []ir.Rule{
 		kvSoftDeleteRetention{},   // AEGIS-AZURE-186
 		kvNetworkAclsOpen{},       // AEGIS-AZURE-187
-		kvNoRbacAuth{},            // AEGIS-AZURE-188
 		kvKeyNotHSM{},             // AEGIS-AZURE-189
-		kvSecretNoExpiry{},        // AEGIS-AZURE-190
 		storageSharedKeyEnabled{}, // AEGIS-AZURE-191
 		storageNoOAuthDefault{},   // AEGIS-AZURE-192
-		storageBlobSoftDelete{},   // AEGIS-AZURE-193
 		storageSasNotBlocked{},    // AEGIS-AZURE-194
 		storageNestedPublic{},     // AEGIS-AZURE-195
-		storageNoInfraEncrypt{},   // AEGIS-AZURE-196
 		storageContainerPublic{},  // AEGIS-AZURE-197
-		storageContainerSoftDel{}, // AEGIS-AZURE-198
 		storageNetRulesOpen{},     // AEGIS-AZURE-199
 		kvKeyNearExpiry{},         // AEGIS-AZURE-200
 		storageStaticWebsite{},    // AEGIS-AZURE-201
-		kvCertNoAutoRenew{},       // AEGIS-AZURE-202
-		storageBlobNoVersioning{}, // AEGIS-AZURE-203
 		storageSFTPEnabled{},      // AEGIS-AZURE-204
 		kvNoFirewallRules{},       // AEGIS-AZURE-205
 	}
@@ -139,30 +132,6 @@ func (s kvNetworkAclsOpen) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-188: Key Vault not using RBAC authorization
-// ---------------------------------------------------------------------------
-
-type kvNoRbacAuth struct{}
-
-func (kvNoRbacAuth) ID() string { return "AEGIS-AZURE-188" }
-func (kvNoRbacAuth) Title() string {
-	return "Key Vault not using RBAC authorization"
-}
-func (kvNoRbacAuth) Description() string {
-	return "azurerm_key_vault without enable_rbac_authorization = true " +
-		"uses legacy access policies, which lack centralized audit and " +
-		"Privileged Identity Management integration. Migrate to Azure " +
-		"RBAC data-plane roles."
-}
-func (kvNoRbacAuth) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (kvNoRbacAuth) AppliesTo(resType string) bool {
-	return resType == "azurerm_key_vault"
-}
-
-func (s kvNoRbacAuth) Check(r ir.Resource) []ir.Finding {
-	return absentInsecureFalse(s, r, "enable_rbac_authorization",
-		"enable_rbac_authorization = true")
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-189: Key Vault key not HSM-backed
@@ -201,41 +170,6 @@ func (s kvKeyNotHSM) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-190: Key Vault secret without expiration date
-// ---------------------------------------------------------------------------
-
-type kvSecretNoExpiry struct{}
-
-func (kvSecretNoExpiry) ID() string { return "AEGIS-AZURE-190" }
-func (kvSecretNoExpiry) Title() string {
-	return "Key Vault secret without expiration date"
-}
-func (kvSecretNoExpiry) Description() string {
-	return "azurerm_key_vault_secret without expiration_date never " +
-		"rotates, so a leaked secret stays valid indefinitely. Set an " +
-		"expiration date and automate rotation."
-}
-func (kvSecretNoExpiry) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (kvSecretNoExpiry) AppliesTo(resType string) bool {
-	return resType == "azurerm_key_vault_secret"
-}
-
-func (s kvSecretNoExpiry) Check(r ir.Resource) []ir.Finding {
-	v, ok := r.Attributes["expiration_date"]
-	if !ok {
-		return []ir.Finding{mkFinding(s, r, "expiration_date", r.Span,
-			"absent (never expires)", "expiration_date = \"<rfc3339>\"")}
-	}
-	if !v.Known {
-		return nil
-	}
-	sv, kok := v.AsString()
-	if !kok || strings.TrimSpace(sv) == "" {
-		return []ir.Finding{mkFinding(s, r, "expiration_date", v.Span,
-			"empty", "expiration_date = \"<rfc3339>\"")}
-	}
-	return nil
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-191: Storage account with shared key access enabled
@@ -305,49 +239,6 @@ func (s storageNoOAuthDefault) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-193: Storage account without blob soft delete
-// ---------------------------------------------------------------------------
-
-type storageBlobSoftDelete struct{}
-
-func (storageBlobSoftDelete) ID() string { return "AEGIS-AZURE-193" }
-func (storageBlobSoftDelete) Title() string {
-	return "Storage account without blob soft delete"
-}
-func (storageBlobSoftDelete) Description() string {
-	return "azurerm_storage_account blob_properties without a " +
-		"delete_retention_policy (days > 0) permanently deletes blobs on " +
-		"removal, preventing recovery from ransomware or accidents. " +
-		"Enable blob soft delete."
-}
-func (storageBlobSoftDelete) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageBlobSoftDelete) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageBlobSoftDelete) Check(r ir.Resource) []ir.Finding {
-	bps, span, present, known := getBlocks(r, "blob_properties")
-	if !present || !known {
-		return nil
-	}
-	for _, bp := range bps {
-		drps := blockList(bp, "delete_retention_policy")
-		if len(drps) == 0 {
-			return []ir.Finding{mkFinding(s, r, "blob_properties",
-				evidenceSpan(span, r.Span), "no delete_retention_policy",
-				"blob_properties { delete_retention_policy { days = 7 } }")}
-		}
-		for _, drp := range drps {
-			days := blockDays(drp, "days")
-			if days <= 0 {
-				return []ir.Finding{mkFinding(s, r, "blob_properties",
-					evidenceSpan(span, r.Span), "delete_retention days <= 0",
-					"blob_properties { delete_retention_policy { days = 7 } }")}
-			}
-		}
-	}
-	return nil
-}
 
 // blockDays extracts a numeric day count from a block map; -1 when absent
 // or undecidable.
@@ -453,30 +344,6 @@ func (s storageNestedPublic) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-196: Storage account without infrastructure encryption
-// ---------------------------------------------------------------------------
-
-type storageNoInfraEncrypt struct{}
-
-func (storageNoInfraEncrypt) ID() string { return "AEGIS-AZURE-196" }
-func (storageNoInfraEncrypt) Title() string {
-	return "Storage account without infrastructure encryption"
-}
-func (storageNoInfraEncrypt) Description() string {
-	return "azurerm_storage_account without " +
-		"infrastructure_encryption_enabled = true encrypts data once at " +
-		"the service level. Enable infrastructure encryption for a " +
-		"second, platform-managed encryption layer."
-}
-func (storageNoInfraEncrypt) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageNoInfraEncrypt) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageNoInfraEncrypt) Check(r ir.Resource) []ir.Finding {
-	return absentInsecureFalse(s, r, "infrastructure_encryption_enabled",
-		"infrastructure_encryption_enabled = true")
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-197: Storage container not private
@@ -513,48 +380,6 @@ func (s storageContainerPublic) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-198: Storage account without container soft delete
-// ---------------------------------------------------------------------------
-
-type storageContainerSoftDel struct{}
-
-func (storageContainerSoftDel) ID() string { return "AEGIS-AZURE-198" }
-func (storageContainerSoftDel) Title() string {
-	return "Storage account without container soft delete"
-}
-func (storageContainerSoftDel) Description() string {
-	return "azurerm_storage_account blob_properties without a " +
-		"container_delete_retention_policy (days > 0) permanently " +
-		"deletes containers on removal. Enable container soft delete " +
-		"for recovery."
-}
-func (storageContainerSoftDel) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageContainerSoftDel) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageContainerSoftDel) Check(r ir.Resource) []ir.Finding {
-	bps, span, present, known := getBlocks(r, "blob_properties")
-	if !present || !known {
-		return nil
-	}
-	for _, bp := range bps {
-		cdrps := blockList(bp, "container_delete_retention_policy")
-		if len(cdrps) == 0 {
-			return []ir.Finding{mkFinding(s, r, "blob_properties",
-				evidenceSpan(span, r.Span), "no container_delete_retention_policy",
-				"blob_properties { container_delete_retention_policy { days = 7 } }")}
-		}
-		for _, cdrp := range cdrps {
-			if blockDays(cdrp, "days") <= 0 {
-				return []ir.Finding{mkFinding(s, r, "blob_properties",
-					evidenceSpan(span, r.Span), "container_delete_retention days <= 0",
-					"blob_properties { container_delete_retention_policy { days = 7 } }")}
-			}
-		}
-	}
-	return nil
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-199: Storage network rules allow public traffic
@@ -664,81 +489,9 @@ func (s storageStaticWebsite) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-202: Key Vault certificate without lifetime actions
-// ---------------------------------------------------------------------------
-
-type kvCertNoAutoRenew struct{}
-
-func (kvCertNoAutoRenew) ID() string { return "AEGIS-AZURE-202" }
-func (kvCertNoAutoRenew) Title() string {
-	return "Key Vault certificate without auto-renewal policy"
-}
-func (kvCertNoAutoRenew) Description() string {
-	return "azurerm_key_vault_certificate without " +
-		"certificate_policy.lifetime_action misses renewal reminders and " +
-		"auto-renewal, risking expired certificates in production. " +
-		"Configure lifetime actions for notification and auto-renew."
-}
-func (kvCertNoAutoRenew) Severity() ir.Severity { return ir.SeverityLow }
-
-func (kvCertNoAutoRenew) AppliesTo(resType string) bool {
-	return resType == "azurerm_key_vault_certificate"
-}
-
-func (s kvCertNoAutoRenew) Check(r ir.Resource) []ir.Finding {
-	pols, span, present, known := getBlocks(r, "certificate_policy")
-	if !present || !known {
-		return nil
-	}
-	for _, p := range pols {
-		if len(blockList(p, "lifetime_action")) == 0 {
-			return []ir.Finding{mkFinding(s, r, "certificate_policy",
-				evidenceSpan(span, r.Span), "no lifetime_action",
-				"certificate_policy { lifetime_action { ... } }")}
-		}
-	}
-	return nil
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-203: Storage blob without versioning
-// ---------------------------------------------------------------------------
-
-type storageBlobNoVersioning struct{}
-
-func (storageBlobNoVersioning) ID() string { return "AEGIS-AZURE-203" }
-func (storageBlobNoVersioning) Title() string {
-	return "Storage account without blob versioning"
-}
-func (storageBlobNoVersioning) Description() string {
-	return "azurerm_storage_account without blob_properties.versioning_enabled " +
-		"= true cannot recover previous blob versions after ransomware " +
-		"or accidental overwrite. Enable blob versioning alongside soft " +
-		"delete."
-}
-func (storageBlobNoVersioning) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageBlobNoVersioning) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageBlobNoVersioning) Check(r ir.Resource) []ir.Finding {
-	bps, span, present, known := getBlocks(r, "blob_properties")
-	if !present || !known {
-		return nil
-	}
-	for _, bp := range bps {
-		en, _, p, k := blockBool(bp, "versioning_enabled")
-		if p && !k {
-			return nil
-		}
-		if !p || !en {
-			return []ir.Finding{mkFinding(s, r, "blob_properties",
-				evidenceSpan(span, r.Span), "versioning not enabled",
-				"blob_properties { versioning_enabled = true }")}
-		}
-	}
-	return nil
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-204: Storage account with SFTP enabled

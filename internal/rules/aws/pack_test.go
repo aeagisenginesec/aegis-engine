@@ -7,8 +7,8 @@ import (
 func TestPack_HasExpectedRulesWithUniqueIDs(t *testing.T) {
 	rules := Rules()
 	// 482: 282 baseline + 200 deep-expansion rules (650-849).
-	if len(rules) != 482 {
-		t.Fatalf("expected 482 rules, got %d", len(rules))
+	if len(rules) != 470 {
+		t.Fatalf("expected 470 rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	var prev string

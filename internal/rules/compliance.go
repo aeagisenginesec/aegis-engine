@@ -300,7 +300,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 		ref(nist, "AC-3"), ref(pci, "1.4.1"),
 	},
 	"AEGIS-AWS-420": { // KMS key policy allows public principal
-		ref(nist, "AC-3"),
+		ref(nist, "AC-3"), ref(nist, "IA-5"), ref(nist, "SC-12"), ref(nist, "SC-7"),
 	},
 	"AEGIS-AWS-421": { // Cognito identity pool allows unauthenticated identities
 		ref(nist, "IA-2"),
@@ -581,7 +581,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-AWS-700": { // Aurora Performance Insights without customer-managed KMS key
 		ref(nist, "SC-12"),
 	},
-	"AEGIS-AWS-701": { // RDS instance without enhanced monitoring
+	"AEGIS-AWS-605": { // RDS instance without enhanced monitoring
 		ref(nist, "AU-2"),
 	},
 	"AEGIS-AWS-702": { // RDS instance snapshots do not copy tags
@@ -611,13 +611,13 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-AWS-714": { // ElastiCache cluster without snapshot retention
 		ref(nist, "CP-9"),
 	},
-	"AEGIS-AWS-715": { // ElastiCache replication group without at-rest encryption
+	"AEGIS-AWS-321": { // ElastiCache replication group without at-rest encryption
 		ref(nist, "SC-12"),
 	},
 	"AEGIS-AWS-717": { // ElastiCache replication group without snapshot retention
 		ref(nist, "CP-9"),
 	},
-	"AEGIS-AWS-719": { // Neptune cluster without deletion protection
+	"AEGIS-AWS-440": { // Neptune cluster without deletion protection
 		ref(nist, "CP-9"),
 	},
 	"AEGIS-AWS-720": { // Lambda async invoke config without a failure destination
@@ -662,7 +662,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-AWS-751": { // API Gateway REST API with a public resource policy
 		ref(nist, "IA-5"), ref(nist, "SC-7"),
 	},
-	"AEGIS-AWS-752": { // CloudFront distribution without access logging
+	"AEGIS-AWS-625": { // CloudFront distribution without access logging
 		ref(nist, "AU-2"),
 	},
 	"AEGIS-AWS-754": { // CloudFront viewer certificate with TLS 1.0 minimum
@@ -728,9 +728,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-AWS-781": { // KMS key with short deletion window
 		ref(nist, "SC-12"),
 	},
-	"AEGIS-AWS-782": { // KMS key policy allows public principal
-		ref(nist, "IA-5"), ref(nist, "SC-12"), ref(nist, "SC-7"),
-	},
+
 	"AEGIS-AWS-783": { // KMS key without description
 		ref(nist, "SC-12"),
 	},
@@ -812,7 +810,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-AWS-814": { // Neptune cluster not copying tags to snapshots
 		ref(nist, "CP-9"),
 	},
-	"AEGIS-AWS-815": { // DocumentDB cluster without deletion protection
+	"AEGIS-AWS-430": { // DocumentDB cluster without deletion protection
 		ref(nist, "CP-9"),
 	},
 	"AEGIS-AWS-816": { // App Runner service without encryption configuration
@@ -836,7 +834,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-AWS-826": { // CloudFront distribution without a response headers policy
 		ref(nist, "IA-5"),
 	},
-	"AEGIS-AWS-830": { // API Gateway v2 stage without access logging
+	"AEGIS-AWS-332": { // API Gateway v2 stage without access logging
 		ref(nist, "AU-2"),
 	},
 	"AEGIS-AWS-832": { // API Gateway v2 domain name with TLS 1.0 security policy

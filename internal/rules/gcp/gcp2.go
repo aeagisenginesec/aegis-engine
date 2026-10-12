@@ -71,8 +71,12 @@ func (bucketNoUniformAccess) AppliesTo(resType string) bool {
 
 func (s bucketNoUniformAccess) Check(r ir.Resource) []ir.Finding {
 	uni, span, present, known := getBool(r, "uniform_bucket_level_access")
-	if !present || !known {
-		return nil // absent or unresolved: cannot decide
+	if !present {
+		return []ir.Finding{mkFinding(s, r, "uniform_bucket_level_access", r.Span,
+			"absent", "uniform_bucket_level_access = true")}
+	}
+	if !known {
+		return nil // unresolved: cannot decide
 	}
 	if uni {
 		return nil
@@ -299,12 +303,24 @@ func (s gkeNoPrivateCluster) Check(r ir.Resource) []ir.Finding {
 	if present && !known {
 		return nil // unresolved: cannot decide
 	}
-	if present && len(blks) > 0 {
-		return nil // private cluster configured
+	if !present || len(blks) == 0 {
+		// Absent: nodes get public IPs. Documented insecure default.
+		return []ir.Finding{mkFinding(s, r, "private_cluster_config", r.Span,
+			"absent", "private_cluster_config { enable_private_nodes = true }")}
 	}
-	// Absent: nodes get public IPs. Documented insecure default.
-	return []ir.Finding{mkFinding(s, r, "private_cluster_config", r.Span,
-		"absent", "private_cluster_config { enable_private_nodes = true }")}
+	en, span, p, k := blockBool(blks[0], "enable_private_nodes")
+	if !p {
+		return []ir.Finding{mkFinding(s, r, "private_cluster_config.enable_private_nodes",
+			r.Span, "absent", "enable_private_nodes = true")}
+	}
+	if !k {
+		return nil // unresolved: cannot decide
+	}
+	if !en {
+		return []ir.Finding{mkFinding(s, r, "private_cluster_config.enable_private_nodes",
+			span, "false", "true")}
+	}
+	return nil
 }
 
 // ---------------------------------------------------------------------------

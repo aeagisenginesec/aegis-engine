@@ -115,7 +115,7 @@ func publicNetCases() []struct {
 		sev  ir.Severity
 	}{
 		{apimPublicNet{}, "AEGIS-AZURE-154", "azurerm_api_management", "public_network_access_enabled", ir.SeverityMedium},
-		{dataFactoryPublicNet{}, "AEGIS-AZURE-155", "azurerm_data_factory", "public_network_enabled", ir.SeverityMedium},
+		{dataFactoryPublicNet{}, "AEGIS-AZURE-155", "azurerm_data_factory", "public_network_enabled", ir.SeverityHigh},
 		{databricksPublicNet{}, "AEGIS-AZURE-159", "azurerm_databricks_workspace", "public_network_access_enabled", ir.SeverityMedium},
 		{eventGridPublicNet{}, "AEGIS-AZURE-160", "azurerm_eventgrid_topic", "public_network_access_enabled", ir.SeverityMedium},
 		{mlWorkspacePublicNet{}, "AEGIS-AZURE-162", "azurerm_machine_learning_workspace", "public_network_access_enabled", ir.SeverityHigh},

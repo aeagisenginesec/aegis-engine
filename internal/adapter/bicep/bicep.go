@@ -194,6 +194,9 @@ func isIdentChar(ch byte) bool { return isIdentStart(ch) || (ch >= '0' && ch <= 
 
 func (p *parser) parseKeyword() string {
 	p.skipWSAndComments()
+	if p.pos >= len(p.src) {
+		return ""
+	}
 	start := p.pos
 	for p.pos < len(p.src) && isIdentChar(p.src[p.pos]) {
 		p.pos++
@@ -255,7 +258,10 @@ func (p *parser) skipBicepString() {
 		for p.pos < len(p.src) && !strings.HasPrefix(p.src[p.pos:], "'''") {
 			p.pos++
 		}
-		p.pos += 3
+		if p.pos < len(p.src) {
+			p.pos += 3 // consume closing '''
+		}
+		// If unterminated, p.pos is at EOF; caller must handle bounds.
 		return
 	}
 	p.pos++ // '

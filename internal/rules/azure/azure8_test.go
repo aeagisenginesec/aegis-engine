@@ -10,23 +10,18 @@ func appSvcRes(attrs map[string]ir.Value) ir.Resource {
 	return res("azurerm_app_service", "a", attrs)
 }
 
-// TestAZURE109_NoAuthFires verifies auth detection (strict).
-func TestAZURE109_NoAuthFires(t *testing.T) {
-	mustFinding(t, runRule(appSvcNoAuth2{}, appSvcRes(nil)), "AEGIS-AZURE-109")
-}
-
-func TestAZURE109_AuthDisabledFires(t *testing.T) {
+func TestAZURE061_AuthDisabledFires(t *testing.T) {
 	r := appSvcRes(map[string]ir.Value{
 		"auth_settings": blks(3, blk("enabled", ks("false", 4))),
 	})
-	mustFinding(t, runRule(appSvcNoAuth2{}, r), "AEGIS-AZURE-109")
+	mustFinding(t, runRule(appSvcNoAuth{}, r), "AEGIS-AZURE-061")
 }
 
 func TestAZURE109_AuthEnabledQuiet(t *testing.T) {
 	r := appSvcRes(map[string]ir.Value{
 		"auth_settings": blks(3, blk("enabled", ks("true", 4))),
 	})
-	if len(runRule(appSvcNoAuth2{}, r)) != 0 {
+	if len(runRule(appSvcNoAuth{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
@@ -35,7 +30,7 @@ func TestAZURE109_UnknownQuiet(t *testing.T) {
 	r := appSvcRes(map[string]ir.Value{
 		"auth_settings": blks(3, blk("enabled", ku(4))),
 	})
-	if len(runRule(appSvcNoAuth2{}, r)) != 0 {
+	if len(runRule(appSvcNoAuth{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
@@ -194,19 +189,19 @@ func TestAZURE116_CombinedQuiet(t *testing.T) {
 
 // TestAZURE117_NoHealthCheckFires verifies health check path.
 func TestAZURE117_NoHealthCheckFires(t *testing.T) {
-	mustFinding(t, runRule(appSvcNoHealthCheck2{}, appSvcRes(nil)), "AEGIS-AZURE-117")
+	mustFinding(t, runRule(appSvcNoHealthCheck{}, appSvcRes(nil)), "AEGIS-AZURE-066")
 }
 
 func TestAZURE117_SiteConfigWithoutPathFires(t *testing.T) {
 	r := appSvcRes(map[string]ir.Value{"site_config": blks(3, blk())})
-	mustFinding(t, runRule(appSvcNoHealthCheck2{}, r), "AEGIS-AZURE-117")
+	mustFinding(t, runRule(appSvcNoHealthCheck{}, r), "AEGIS-AZURE-066")
 }
 
 func TestAZURE117_PathQuiet(t *testing.T) {
 	r := appSvcRes(map[string]ir.Value{
 		"site_config": blks(3, blk("health_check_path", ks("/health", 4))),
 	})
-	if len(runRule(appSvcNoHealthCheck2{}, r)) != 0 {
+	if len(runRule(appSvcNoHealthCheck{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }

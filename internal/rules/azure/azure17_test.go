@@ -14,16 +14,18 @@ func TestAzure17RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	for n := 226; n <= 245; n++ {
+	// 234,243 removed as post-audit duplicates.
+	want := []int{226, 227, 228, 229, 230, 231, 232, 233, 235, 236, 237, 238, 239, 240, 241, 242, 244, 245}
+	for i, n := range want {
 		id := "AEGIS-AZURE-" + strconv.Itoa(n)
-		i, ok := idx[id]
+		pos, ok := idx[id]
 		if !ok {
 			t.Fatalf("rule %s not registered", id)
 		}
-		if n > 226 {
-			prev := "AEGIS-AZURE-" + strconv.Itoa(n-1)
-			if idx[prev] != i-1 {
-				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, i)
+		if i > 0 {
+			prev := "AEGIS-AZURE-" + strconv.Itoa(want[i-1])
+			if idx[prev] != pos-1 {
+				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, pos)
 			}
 		}
 	}
@@ -44,7 +46,7 @@ func TestAZURE226_228_231_234_245(t *testing.T) {
 		attr string
 		sev  ir.Severity
 	}{
-		{aksNoOIDCIssuer{}, "AEGIS-AZURE-234", "oidc_issuer_enabled", ir.SeverityLow},
+		{aksNoOIDCIssuerStrict{}, "AEGIS-AZURE-136", "oidc_issuer_enabled", ir.SeverityLow},
 		{aksLocalAccounts{}, "AEGIS-AZURE-245", "local_account_disabled", ir.SeverityMedium},
 	}
 	for _, c := range cases {
@@ -305,16 +307,16 @@ func TestAZURE241_242(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-243: VNet DDoS plan
+// AEGIS-AZURE-057: VNet DDoS plan
 // ---------------------------------------------------------------------------
 
-func TestAZURE243(t *testing.T) {
-	id := "AEGIS-AZURE-243"
-	mustFinding(t, runRule(vnetNoDDoSPlan{}, res("azurerm_virtual_network", "v", nil)), id)
+func TestAZURE057(t *testing.T) {
+	id := "AEGIS-AZURE-057"
+	mustFinding(t, runRule(vnetNoDDoS{}, res("azurerm_virtual_network", "v", nil)), id)
 	r := res("azurerm_virtual_network", "v", map[string]ir.Value{
 		"ddos_protection_plan": blks(3, blk("id", ks("x", 4), "enable", kv(true, 4))),
 	})
-	if f := runRule(vnetNoDDoSPlan{}, r); len(f) != 0 {
+	if f := runRule(vnetNoDDoS{}, r); len(f) != 0 {
 		t.Fatalf("enabled plan must not fire, got %d", len(f))
 	}
 }

@@ -19,16 +19,18 @@ func TestAzure15RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	for n := 186; n <= 205; n++ {
+	// 188,190,193,196,198,202,203 removed as post-audit duplicates.
+	want := []int{186, 187, 189, 191, 192, 194, 195, 197, 199, 200, 201, 204, 205}
+	for i, n := range want {
 		id := "AEGIS-AZURE-" + strconv.Itoa(n)
-		i, ok := idx[id]
+		pos, ok := idx[id]
 		if !ok {
 			t.Fatalf("rule %s not registered", id)
 		}
-		if n > 186 {
-			prev := "AEGIS-AZURE-" + strconv.Itoa(n-1)
-			if idx[prev] != i-1 {
-				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, i)
+		if i > 0 {
+			prev := "AEGIS-AZURE-" + strconv.Itoa(want[i-1])
+			if idx[prev] != pos-1 {
+				t.Fatalf("rules out of order: %s at %d, %s at %d", prev, idx[prev], id, pos)
 			}
 		}
 	}
@@ -73,12 +75,12 @@ func TestAZURE187(t *testing.T) {
 // AEGIS-AZURE-188: Key Vault not using RBAC authorization
 // ---------------------------------------------------------------------------
 
-func TestAZURE188(t *testing.T) {
-	id := "AEGIS-AZURE-188"
-	mustFinding(t, runRule(kvNoRbacAuth{}, res("azurerm_key_vault", "v", nil)), id)
-	mustFinding(t, runRule(kvNoRbacAuth{}, res("azurerm_key_vault", "v", map[string]ir.Value{"enable_rbac_authorization": kv(false, 3)})), id)
+func TestAZURE038(t *testing.T) {
+	id := "AEGIS-AZURE-038"
+	mustFinding(t, runRule(keyVaultNoRBAC{}, res("azurerm_key_vault", "v", nil)), id)
+	mustFinding(t, runRule(keyVaultNoRBAC{}, res("azurerm_key_vault", "v", map[string]ir.Value{"enable_rbac_authorization": kv(false, 3)})), id)
 	r := res("azurerm_key_vault", "v", map[string]ir.Value{"enable_rbac_authorization": kv(true, 3)})
-	if f := runRule(kvNoRbacAuth{}, r); len(f) != 0 {
+	if f := runRule(keyVaultNoRBAC{}, r); len(f) != 0 {
 		t.Fatalf("RBAC enabled must not fire, got %d", len(f))
 	}
 }
@@ -97,16 +99,19 @@ func TestAZURE189(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-190: Key Vault secret without expiration date
+// AEGIS-AZURE-040: Key Vault secret without expiration date (consolidated from 190)
 // ---------------------------------------------------------------------------
 
-func TestAZURE190(t *testing.T) {
-	id := "AEGIS-AZURE-190"
-	mustFinding(t, runRule(kvSecretNoExpiry{}, res("azurerm_key_vault_secret", "s", nil)), id)
+func TestAZURE040(t *testing.T) {
+	id := "AEGIS-AZURE-040"
+	mustFinding(t, runRule(keyVaultSecretNoExpiry{}, res("azurerm_key_vault_secret", "s", nil)), id)
 	r := res("azurerm_key_vault_secret", "s", map[string]ir.Value{"expiration_date": ks("2027-01-01T00:00:00Z", 3)})
-	if f := runRule(kvSecretNoExpiry{}, r); len(f) != 0 {
+	if f := runRule(keyVaultSecretNoExpiry{}, r); len(f) != 0 {
 		t.Fatalf("dated secret must not fire, got %d", len(f))
 	}
+	// Empty string also fires (ported from 190)
+	e := res("azurerm_key_vault_secret", "s", map[string]ir.Value{"expiration_date": ks("", 3)})
+	mustFinding(t, runRule(keyVaultSecretNoExpiry{}, e), id)
 }
 
 // ---------------------------------------------------------------------------
@@ -125,7 +130,7 @@ func TestAZURE191_193_195_196(t *testing.T) {
 		{storageSharedKeyEnabled{}, "AEGIS-AZURE-191", "shared_access_key_enabled", true, true},
 		{storageNoOAuthDefault{}, "AEGIS-AZURE-192", "default_to_oauth_authentication", false, true},
 		{storageNestedPublic{}, "AEGIS-AZURE-195", "allow_nested_items_to_be_public", true, true},
-		{storageNoInfraEncrypt{}, "AEGIS-AZURE-196", "infrastructure_encryption_enabled", false, true},
+		{storageNoInfraEncryption{}, "AEGIS-AZURE-032", "infrastructure_encryption_enabled", false, true},
 		{storageSFTPEnabled{}, "AEGIS-AZURE-204", "sftp_enabled", true, false},
 	}
 	for _, c := range cases {
@@ -145,26 +150,25 @@ func TestAZURE191_193_195_196(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-193: Storage account without blob soft delete
+// AEGIS-AZURE-029: Storage account without blob soft delete
 // ---------------------------------------------------------------------------
 
-func TestAZURE193(t *testing.T) {
-	id := "AEGIS-AZURE-193"
-	mustFinding(t, runRule(storageBlobSoftDelete{}, res("azurerm_storage_account", "s", map[string]ir.Value{
+func TestAZURE029(t *testing.T) {
+	id := "AEGIS-AZURE-029"
+	mustFinding(t, runRule(storageNoBlobSoftDelete{}, res("azurerm_storage_account", "s", map[string]ir.Value{
 		"blob_properties": blks(3, blk()),
 	})), id)
-	mustFinding(t, runRule(storageBlobSoftDelete{}, res("azurerm_storage_account", "s", map[string]ir.Value{
+	mustFinding(t, runRule(storageNoBlobSoftDelete{}, res("azurerm_storage_account", "s", map[string]ir.Value{
 		"blob_properties": blks(3, blk("delete_retention_policy", blks(4, blk("days", kn(0, 5))))),
 	})), id)
 	r := res("azurerm_storage_account", "s", map[string]ir.Value{
 		"blob_properties": blks(3, blk("delete_retention_policy", blks(4, blk("days", kn(7, 5))))),
 	})
-	if f := runRule(storageBlobSoftDelete{}, r); len(f) != 0 {
+	if f := runRule(storageNoBlobSoftDelete{}, r); len(f) != 0 {
 		t.Fatalf("soft delete enabled must not fire, got %d", len(f))
 	}
-	if f := runRule(storageBlobSoftDelete{}, res("azurerm_storage_account", "s", nil)); len(f) != 0 {
-		t.Fatalf("absent blob_properties must not fire, got %d", len(f))
-	}
+	// Absent blob_properties fires (soft delete not configured).
+	mustFinding(t, runRule(storageNoBlobSoftDelete{}, res("azurerm_storage_account", "s", nil)), "AEGIS-AZURE-029")
 }
 
 // ---------------------------------------------------------------------------
@@ -206,18 +210,18 @@ func TestAZURE197(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-198: Storage account without container soft delete
+// AEGIS-AZURE-030: Storage account without container soft delete
 // ---------------------------------------------------------------------------
 
-func TestAZURE198(t *testing.T) {
-	id := "AEGIS-AZURE-198"
-	mustFinding(t, runRule(storageContainerSoftDel{}, res("azurerm_storage_account", "s", map[string]ir.Value{
+func TestAZURE030(t *testing.T) {
+	id := "AEGIS-AZURE-030"
+	mustFinding(t, runRule(storageNoContainerDelete{}, res("azurerm_storage_account", "s", map[string]ir.Value{
 		"blob_properties": blks(3, blk()),
 	})), id)
 	r := res("azurerm_storage_account", "s", map[string]ir.Value{
 		"blob_properties": blks(3, blk("container_delete_retention_policy", blks(4, blk("days", kn(7, 5))))),
 	})
-	if f := runRule(storageContainerSoftDel{}, r); len(f) != 0 {
+	if f := runRule(storageNoContainerDelete{}, r); len(f) != 0 {
 		t.Fatalf("container soft delete must not fire, got %d", len(f))
 	}
 }
@@ -266,32 +270,32 @@ func TestAZURE201(t *testing.T) {
 // AEGIS-AZURE-202: Key Vault certificate without lifetime actions
 // ---------------------------------------------------------------------------
 
-func TestAZURE202(t *testing.T) {
-	id := "AEGIS-AZURE-202"
-	mustFinding(t, runRule(kvCertNoAutoRenew{}, res("azurerm_key_vault_certificate", "c", map[string]ir.Value{
+func TestAZURE042(t *testing.T) {
+	id := "AEGIS-AZURE-042"
+	mustFinding(t, runRule(keyVaultCertNoAutoRenew{}, res("azurerm_key_vault_certificate", "c", map[string]ir.Value{
 		"certificate_policy": blks(3, blk()),
 	})), id)
 	r := res("azurerm_key_vault_certificate", "c", map[string]ir.Value{
-		"certificate_policy": blks(3, blk("lifetime_action", blks(4, blk("action", ks("EmailContacts", 5))))),
+		"certificate_policy": blks(3, blk("lifetime_action", blks(4, blk("action", ks("AutoRenew", 5))))),
 	})
-	if f := runRule(kvCertNoAutoRenew{}, r); len(f) != 0 {
-		t.Fatalf("lifetime_action present must not fire, got %d", len(f))
+	if f := runRule(keyVaultCertNoAutoRenew{}, r); len(f) != 0 {
+		t.Fatalf("AutoRenew present must not fire, got %d", len(f))
 	}
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-203: Storage blob without versioning
+// AEGIS-AZURE-028: Storage blob without versioning
 // ---------------------------------------------------------------------------
 
-func TestAZURE203(t *testing.T) {
-	id := "AEGIS-AZURE-203"
-	mustFinding(t, runRule(storageBlobNoVersioning{}, res("azurerm_storage_account", "s", map[string]ir.Value{
+func TestAZURE028b(t *testing.T) {
+	id := "AEGIS-AZURE-028"
+	mustFinding(t, runRule(storageNoBlobVersioning{}, res("azurerm_storage_account", "s", map[string]ir.Value{
 		"blob_properties": blks(3, blk()),
 	})), id)
 	r := res("azurerm_storage_account", "s", map[string]ir.Value{
 		"blob_properties": blks(3, blk("versioning_enabled", kv(true, 4))),
 	})
-	if f := runRule(storageBlobNoVersioning{}, r); len(f) != 0 {
+	if f := runRule(storageNoBlobVersioning{}, r); len(f) != 0 {
 		t.Fatalf("versioning enabled must not fire, got %d", len(f))
 	}
 }
