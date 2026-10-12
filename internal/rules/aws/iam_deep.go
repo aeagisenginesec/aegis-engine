@@ -659,18 +659,59 @@ func (iamAttachmentAdminAccess) Description() string {
 }
 func (iamAttachmentAdminAccess) Severity() ir.Severity { return ir.SeverityHigh }
 func (iamAttachmentAdminAccess) AppliesTo(resType string) bool {
-	return resType == "aws_iam_policy_attachment"
+	// D1 fix: cover every managed-policy attachment vector, not just the
+	// standalone aws_iam_policy_attachment resource.
+	switch resType {
+	case "aws_iam_policy_attachment",
+		"aws_iam_role_policy_attachment",
+		"aws_iam_user_policy_attachment",
+		"aws_iam_group_policy_attachment",
+		"aws_iam_role",
+		"aws_iam_user",
+		"aws_iam_group":
+		return true
+	}
+	return false
 }
 func (r iamAttachmentAdminAccess) Check(res ir.Resource) []ir.Finding {
-	arn, span, present, known := getString(res, "policy_arn")
-	if !present || !known {
+	// Attachment resources carry a single policy_arn.
+	if arn, span, present, known := getString(res, "policy_arn"); present {
+		if !known {
+			return nil // unresolved: cannot decide
+		}
+		if isAdministratorAccessArn(arn) {
+			return iamDeepFinding(r, res, "policy_arn", span,
+				"attaches AdministratorAccess", "scoped least-privilege policy")
+		}
 		return nil
 	}
-	if !strings.Contains(strings.ToLower(arn), "administratoraccess") {
-		return nil
+	// Roles, users, and groups attach managed policies via managed_policy_arns.
+	if v, ok := res.Attributes["managed_policy_arns"]; ok {
+		if !v.Known {
+			return nil // unresolved: cannot decide
+		}
+		arns, ok := v.AsList()
+		if !ok {
+			return nil // unexpected shape: never panic, never flag
+		}
+		for _, item := range arns {
+			s, ok := item.AsString()
+			if !ok {
+				continue // unknown element: cannot confirm; skip, no FP
+			}
+			if isAdministratorAccessArn(s) {
+				return iamDeepFinding(r, res, "managed_policy_arns", item.Span,
+					"attaches AdministratorAccess", "scoped least-privilege policy")
+			}
+		}
 	}
-	return iamDeepFinding(r, res, "policy_arn", span,
-		"attaches AdministratorAccess", "scoped least-privilege policy")
+	return nil
+}
+
+// isAdministratorAccessArn reports whether a managed-policy ARN is the
+// AWS-managed AdministratorAccess policy (name match, case-insensitive).
+func isAdministratorAccessArn(arn string) bool {
+	return strings.Contains(strings.ToLower(arn), "administratoraccess")
 }
 
 // ---------------------------------------------------------------------------

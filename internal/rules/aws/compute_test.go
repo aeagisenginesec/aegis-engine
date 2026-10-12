@@ -274,10 +274,12 @@ func Test307_NoKMSFires(t *testing.T) {
 }
 
 func Test307_WithKMSQuiet(t *testing.T) {
+	// D2: kms_key_arn is a TOP-LEVEL argument of aws_lambda_function, not
+	// nested inside the environment block (provider schema).
 	r := res("aws_lambda_function", "fn", map[string]ir.Value{
+		"kms_key_arn": ks("arn:aws:kms:us-east-1:123:key/abc", 7),
 		"environment": blks(3, map[string]ir.Value{
-			"variables":   mapVal(5, map[string]ir.Value{"DB_PASSWORD": ks("secret", 6)}),
-			"kms_key_arn": ks("arn:aws:kms:us-east-1:123:key/abc", 7),
+			"variables": mapVal(5, map[string]ir.Value{"DB_PASSWORD": ks("secret", 6)}),
 		}),
 	})
 	if f := runRule(lambdaEnvNoKMS{}, r); len(f) != 0 {
@@ -303,13 +305,40 @@ func Test307_NoVariablesQuiet(t *testing.T) {
 
 func Test307_UnknownKMSQuiet(t *testing.T) {
 	r := res("aws_lambda_function", "fn", map[string]ir.Value{
+		"kms_key_arn": ku(7),
 		"environment": blks(3, map[string]ir.Value{
-			"variables":   mapVal(5, map[string]ir.Value{"DB_PASSWORD": ks("secret", 6)}),
-			"kms_key_arn": ku(7),
+			"variables": mapVal(5, map[string]ir.Value{"DB_PASSWORD": ks("secret", 6)}),
 		}),
 	})
 	if f := runRule(lambdaEnvNoKMS{}, r); len(f) != 0 {
 		t.Fatalf("expected 0 findings for unknown KMS key, got %d", len(f))
+	}
+}
+
+// D2 regression: nested environment.kms_key_arn must NOT silence the rule —
+// that attribute does not exist in the provider schema.
+func Test307_NestedKMSIgnored(t *testing.T) {
+	r := res("aws_lambda_function", "fn", map[string]ir.Value{
+		"environment": blks(3, map[string]ir.Value{
+			"variables":   mapVal(5, map[string]ir.Value{"DB_PASSWORD": ks("secret", 6)}),
+			"kms_key_arn": ks("arn:aws:kms:us-east-1:123:key/abc", 7),
+		}),
+	})
+	if f := runRule(lambdaEnvNoKMS{}, r); len(f) != 1 {
+		t.Fatalf("nested kms_key_arn is not the real schema: expected 1 finding, got %d", len(f))
+	}
+}
+
+// D2 regression: empty top-level kms_key_arn still fires.
+func Test307_EmptyKMSFires(t *testing.T) {
+	r := res("aws_lambda_function", "fn", map[string]ir.Value{
+		"kms_key_arn": ks("", 7),
+		"environment": blks(3, map[string]ir.Value{
+			"variables": mapVal(5, map[string]ir.Value{"DB_PASSWORD": ks("secret", 6)}),
+		}),
+	})
+	if f := runRule(lambdaEnvNoKMS{}, r); len(f) != 1 {
+		t.Fatalf("expected 1 finding for empty kms_key_arn, got %d", len(f))
 	}
 }
 

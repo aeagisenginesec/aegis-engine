@@ -386,7 +386,7 @@ func (lambdaEnvNoKMS) Check(r ir.Resource) []ir.Finding {
 		if !ok || len(vars) == 0 {
 			continue // no variables: nothing to protect
 		}
-		key, _, kpresent, kknown := blockString(e, "kms_key_arn")
+		key, _, kpresent, kknown := getString(r, "kms_key_arn")
 		if kpresent && !kknown {
 			return nil // unresolved: cannot decide
 		}
@@ -404,7 +404,7 @@ func (lambdaEnvNoKMS) Check(r ir.Resource) []ir.Finding {
 			Severity:    ir.SeverityHigh,
 			Resource:    r.Address(),
 			Evidence: ir.Evidence{
-				Attribute: "environment.kms_key_arn",
+				Attribute: "kms_key_arn",
 				Span:      evidenceSpan(span, r.Span),
 				Actual:    actual,
 				Expected:  "kms_key_arn set to a customer-managed key",

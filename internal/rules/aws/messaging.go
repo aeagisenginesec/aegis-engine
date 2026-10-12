@@ -138,16 +138,56 @@ func (snsPolicyPublic) AppliesTo(resType string) bool { return resType == "aws_s
 
 func (snsPolicyPublic) Check(r ir.Resource) []ir.Finding {
 	rule := snsPolicyPublic{}
-	doc, span, present, known := getString(r, "policy")
-	if !present || !known {
-		return nil // absent or unresolved: cannot decide
+	v, ok := r.Attributes["policy"]
+	if !ok {
+		return nil // absent: cannot decide
 	}
-	if policyAllowsPublicPrincipal(doc) {
-		return msgFinding(rule, r, "policy", span,
-			"Allow statement with Principal \"*\"",
-			"Principal scoped to specific AWS principals")
+	if v.Known {
+		doc, kok := v.AsString()
+		if !kok {
+			return nil // unexpected shape: cannot decide
+		}
+		if policyAllowsPublicPrincipal(doc) {
+			return msgFinding(rule, r, "policy", v.Span,
+				"Allow statement with Principal \"*\"",
+				"Principal scoped to specific AWS principals")
+		}
+		return nil
+	}
+	// D3 fix: present but unresolved. If a reference blocked evaluation
+	// (direct Ref, or a jsonencode() whose parts could not be resolved),
+	// say so explicitly instead of silently skipping — the
+	// explicit-uncertainty contract. A bare unknown with no ref info stays
+	// quiet (nothing to point at).
+	if v.Ref != "" || v.EncodeJSON {
+		return uncertainPolicyFinding(rule, r, v)
 	}
 	return nil
+}
+
+// uncertainPolicyFinding builds the explicit UNCERTAIN diagnostic finding
+// for a policy document that could not be fully evaluated. Info severity:
+// visible, but never counted as an actionable vulnerability.
+func uncertainPolicyFinding(rule ir.Rule, r ir.Resource, v ir.Value) []ir.Finding {
+	ref := v.Ref
+	if ref == "" {
+		ref = "unresolvable jsonencode() parts"
+	}
+	return []ir.Finding{{
+		RuleID: rule.ID(),
+		Title:  rule.Title(),
+		Description: "The policy document contains a reference that could not be " +
+			"resolved statically (" + ref + "), so public-principal evaluation is " +
+			"UNCERTAIN. Review the policy manually.",
+		Severity: ir.SeverityInfo,
+		Resource: r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "policy",
+			Span:      evidenceSpan(v.Span, r.Span),
+			Actual:    "UNCERTAIN: unresolvable reference " + ref,
+			Expected:  "fully resolvable policy document",
+		},
+	}}
 }
 
 type sqsPolicyPublic struct{}
@@ -164,14 +204,25 @@ func (sqsPolicyPublic) AppliesTo(resType string) bool { return resType == "aws_s
 
 func (sqsPolicyPublic) Check(r ir.Resource) []ir.Finding {
 	rule := sqsPolicyPublic{}
-	doc, span, present, known := getString(r, "policy")
-	if !present || !known {
-		return nil // absent or unresolved: cannot decide
+	v, ok := r.Attributes["policy"]
+	if !ok {
+		return nil // absent: cannot decide
 	}
-	if policyAllowsPublicPrincipal(doc) {
-		return msgFinding(rule, r, "policy", span,
-			"Allow statement with Principal \"*\"",
-			"Principal scoped to specific AWS principals")
+	if v.Known {
+		doc, kok := v.AsString()
+		if !kok {
+			return nil // unexpected shape: cannot decide
+		}
+		if policyAllowsPublicPrincipal(doc) {
+			return msgFinding(rule, r, "policy", v.Span,
+				"Allow statement with Principal \"*\"",
+				"Principal scoped to specific AWS principals")
+		}
+		return nil
+	}
+	// D3 fix: explicit UNCERTAIN instead of silent skip (see snsPolicyPublic).
+	if v.Ref != "" || v.EncodeJSON {
+		return uncertainPolicyFinding(rule, r, v)
 	}
 	return nil
 }

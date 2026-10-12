@@ -486,9 +486,15 @@ func TestUnknownNeverFires_Check(t *testing.T) {
 			}
 			r := allUnknownResource(typ)
 			fs := rule.Check(r)
-			if len(fs) != 0 {
-				t.Errorf("%s on %s with all-unknown attributes: got %d findings, want 0 (first: %q)",
-					rule.ID(), typ, len(fs), fs[0].Title)
+			for _, f := range fs {
+				// Info-severity findings are explicit-uncertainty diagnostics
+				// (e.g. D3: unresolvable policy references), not vulnerability
+				// claims. Only low-and-above findings must never fire on
+				// unknown values.
+				if f.Severity != ir.SeverityInfo {
+					t.Errorf("%s on %s with all-unknown attributes: got finding %q (%s), want 0",
+						rule.ID(), typ, f.Title, f.Severity)
+				}
 			}
 		}
 	}

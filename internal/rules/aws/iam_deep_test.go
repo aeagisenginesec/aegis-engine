@@ -378,6 +378,77 @@ func Test666_OtherPolicyQuiet(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// D1 regression: AdministratorAccess via every attachment vector
+// ---------------------------------------------------------------------------
+
+func Test666_ManagedPolicyArnsFires(t *testing.T) {
+	for _, typ := range []string{"aws_iam_role", "aws_iam_user", "aws_iam_group"} {
+		r := res(typ, "x", map[string]ir.Value{
+			"managed_policy_arns": strList(4,
+				"arn:aws:iam::aws:policy/ReadOnlyAccess",
+				"arn:aws:iam::aws:policy/AdministratorAccess"),
+		})
+		if got := runRule(iamAttachmentAdminAccess{}, r); len(got) != 1 {
+			t.Fatalf("%s: expected 1 finding, got %d", typ, len(got))
+		}
+	}
+}
+
+func Test666_AttachmentResourcesFires(t *testing.T) {
+	for _, typ := range []string{
+		"aws_iam_role_policy_attachment",
+		"aws_iam_user_policy_attachment",
+		"aws_iam_group_policy_attachment",
+	} {
+		r := res(typ, "x", map[string]ir.Value{
+			"policy_arn": ks("arn:aws:iam::aws:policy/AdministratorAccess", 4),
+		})
+		if got := runRule(iamAttachmentAdminAccess{}, r); len(got) != 1 {
+			t.Fatalf("%s: expected 1 finding, got %d", typ, len(got))
+		}
+	}
+}
+
+func Test666_ScopedManagedPoliciesQuiet(t *testing.T) {
+	// D1 must not generalize: scoped policies via the same vectors stay quiet.
+	r := res("aws_iam_role", "x", map[string]ir.Value{
+		"managed_policy_arns": strList(4, "arn:aws:iam::aws:policy/ReadOnlyAccess"),
+	})
+	if got := runRule(iamAttachmentAdminAccess{}, r); len(got) != 0 {
+		t.Fatalf("scoped managed policies: expected 0 findings, got %d", len(got))
+	}
+	r2 := res("aws_iam_role_policy_attachment", "x", map[string]ir.Value{
+		"policy_arn": ks("arn:aws:iam::aws:policy/PowerUserAccess", 4),
+	})
+	if got := runRule(iamAttachmentAdminAccess{}, r2); len(got) != 0 {
+		t.Fatalf("scoped attachment: expected 0 findings, got %d", len(got))
+	}
+	// Unknown list or unknown element: cannot decide, no finding.
+	unk := res("aws_iam_role", "x", map[string]ir.Value{"managed_policy_arns": ku(4)})
+	if got := runRule(iamAttachmentAdminAccess{}, unk); len(got) != 0 {
+		t.Fatalf("unknown list: expected 0 findings, got %d", len(got))
+	}
+	mixed := res("aws_iam_role", "x", map[string]ir.Value{
+		"managed_policy_arns": ir.Value{Raw: []ir.Value{
+			{Raw: "arn:aws:iam::aws:policy/ReadOnlyAccess", Known: true, Span: spanAt(4)},
+			{Known: false, Span: spanAt(5)},
+		}, Known: true, Span: spanAt(4)},
+	})
+	if got := runRule(iamAttachmentAdminAccess{}, mixed); len(got) != 0 {
+		t.Fatalf("unknown element: expected 0 findings, got %d", len(got))
+	}
+}
+
+func Test666_CaseInsensitiveArn(t *testing.T) {
+	r := res("aws_iam_role", "x", map[string]ir.Value{
+		"managed_policy_arns": strList(4, "arn:aws:iam::123456789012:policy/administratoraccess-custom"),
+	})
+	if got := runRule(iamAttachmentAdminAccess{}, r); len(got) != 1 {
+		t.Fatalf("case-insensitive match: expected 1 finding, got %d", len(got))
+	}
+}
+
+// ---------------------------------------------------------------------------
 // 667: role without permissions boundary
 // ---------------------------------------------------------------------------
 
