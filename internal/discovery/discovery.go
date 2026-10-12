@@ -8,9 +8,11 @@
 package discovery
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -41,6 +43,48 @@ func effectiveMaxFileBytes() int64 {
 	return MaxFileBytes
 }
 
+// excludePatterns, when non-empty, skip files whose path matches any glob.
+// Set via SetExcludePatterns (wired to the CLI --exclude flag). Patterns
+// use KICS-style glob syntax: * matches within a path segment, ** crosses
+// segment boundaries, ? matches one character. A pattern is tested against
+// the full slash-normalized path and against the base file name, so both
+// "vendor/**" and "*.tfvars" work as users expect.
+var excludePatterns []string
+
+// SetExcludePatterns replaces the active --exclude glob list.
+func SetExcludePatterns(pats []string) {
+	excludePatterns = append([]string(nil), pats...)
+}
+
+// IsExcluded reports whether path matches any active exclude pattern.
+// A pattern without a leading slash matches at any directory depth
+// (gitignore-style), so "vendor/**" excludes vendor/ anywhere.
+func IsExcluded(path string) bool {
+	if len(excludePatterns) == 0 {
+		return false
+	}
+	slash := filepath.ToSlash(path)
+	base := filepath.Base(slash)
+	for _, pat := range excludePatterns {
+		if matchGlob(pat, slash) || matchGlob(pat, base) {
+			return true
+		}
+		if !strings.HasPrefix(pat, "/") && matchGlob("**/"+pat, slash) {
+			return true
+		}
+	}
+	return false
+}
+
+// matchGlob matches a glob with ** support against a slash-separated path.
+func matchGlob(pat, s string) bool {
+	re, err := globToRegex(pat)
+	if err != nil {
+		return false
+	}
+	return re.MatchString(s)
+}
+
 var skipDirs = map[string]bool{
 	".git": true, ".terraform": true, ".terragrunt-cache": true,
 	"node_modules": true, ".hg": true, ".svn": true, "__pycache__": true,
@@ -51,6 +95,9 @@ var tfExts = map[string]bool{".tf": true, ".tfvars": true}
 // manifestExts covers Kubernetes YAML and CloudFormation templates.
 // .plan.json is claimed by the planjson adapter (matched by suffix first).
 var manifestExts = map[string]bool{".yaml": true, ".yml": true, ".json": true}
+
+// bicepExts covers Bicep files, handled by the bicep adapter.
+var bicepExts = map[string]bool{".bicep": true}
 
 // planJSONSuffix matches `terraform show -json` output files.
 const planJSONSuffix = ".plan.json"
@@ -95,7 +142,7 @@ func Discover(root string) ([]File, error) {
 			return nil
 		}
 		ext := strings.ToLower(filepath.Ext(path))
-		if !tfExts[ext] && !manifestExts[ext] &&
+		if !tfExts[ext] && !manifestExts[ext] && !bicepExts[ext] &&
 			!strings.HasSuffix(strings.ToLower(path), planJSONSuffix) &&
 			!isDockerfile(d.Name()) {
 			return nil
@@ -118,6 +165,60 @@ func Discover(root string) ([]File, error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+// globToRegex compiles a glob with ** support to a regexp.
+// **/ matches zero or more path segments, ** matches anything,
+// * matches within a segment, ? matches one non-separator character.
+func globToRegex(pat string) (*regexp.Regexp, error) {
+	var b strings.Builder
+	b.WriteByte('^')
+	i := 0
+	for i < len(pat) {
+		c := pat[i]
+		switch c {
+		case '*':
+			if i+1 < len(pat) && pat[i+1] == '*' {
+				// Consume the "**".
+				i += 2
+				// "**/" also matches zero segments.
+				if i < len(pat) && pat[i] == '/' {
+					i++
+					b.WriteString("(.*/)?")
+				} else {
+					b.WriteString(".*")
+				}
+			} else {
+				b.WriteString("[^/]*")
+				i++
+			}
+		case '?':
+			b.WriteString("[^/]")
+			i++
+		case '[':
+			// Character class: copy through to the closing bracket.
+			j := i + 1
+			if j < len(pat) && pat[j] == '^' {
+				j++
+			}
+			if j < len(pat) && pat[j] == ']' {
+				j++
+			}
+			for j < len(pat) && pat[j] != ']' {
+				j++
+			}
+			if j >= len(pat) {
+				return nil, fmt.Errorf("unterminated character class in glob %q", pat)
+			}
+			b.WriteString(pat[i : j+1])
+			i = j + 1
+		default:
+			b.WriteString(regexp.QuoteMeta(string(c)))
+			i++
+		}
+	}
+	b.WriteByte('$')
+	return regexp.Compile(b.String())
 }
 
 // Read safely reads a discovered file (re-checks size; never follows symlinks).

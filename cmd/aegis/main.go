@@ -16,16 +16,22 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"aegis/internal/adapter/arm"
+	"aegis/internal/adapter/bicep"
+	"aegis/internal/adapter/cloudformation"
 	"aegis/internal/adapter/compose"
 	"aegis/internal/adapter/dockerfile"
 	"aegis/internal/adapter/manifests"
 	"aegis/internal/adapter/planjson"
+	"aegis/internal/adapter/pulumi"
 	"aegis/internal/adapter/terraform"
 	"aegis/internal/advisories"
+	"aegis/internal/config"
 	"aegis/internal/discovery"
 	"aegis/internal/ir"
 	"aegis/internal/qualitygate"
@@ -47,7 +53,7 @@ type ruleRunner interface {
 const usageText = `aegis — Infrastructure-as-Code security scanner
 
 Usage:
-  aegis scan <dir> [--format=text|json|sarif] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict]
+  aegis scan <dir> [--format=text|json|sarif] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW] [--config=aegis.yaml] [--exclude=globs]
   aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json] [--force]
   aegis serve [--addr=127.0.0.1:8734]
   aegis quality-gate [--format=text|json] [--bench-dir=DIR] [--corpus-dir=DIR]
@@ -86,6 +92,13 @@ Flags:
                files larger than this are skipped with a diagnostic
   --timeout  scan: overall scan timeout in seconds (default 0 = no limit);
                the scan aborts with exit 2 when exceeded
+  --compliance scan: filter findings to a compliance framework and report a
+               per-control pass/fail summary (CIS-AWS-1.5, NIST-800-53, PCI-DSS-4.0)
+  --config   scan: project config YAML with severity_overrides and
+               exclude_rules (see docs/PULUMI.md for the format)
+  --exclude  scan: comma-separated glob patterns for paths to skip
+               (e.g. "vendor/**,*.tfvars"); skipped files are reported
+  --strict   scan: fail with exit 2 if any file fails to parse
 
 Exit codes:
   0  scan clean (or below --fail-on threshold) / fix dry run
@@ -98,8 +111,12 @@ Exit codes:
 // single call below if the sibling package names its constructor differently.
 func defaultAdapters() []ir.Adapter {
 	// compose.New() precedes manifests.Adapter{}: manifests claims every
-	// .yml/.yaml file, so compose files must be matched first.
-	return []ir.Adapter{terraform.New(), planjson.Adapter{}, compose.New(), manifests.Adapter{}, dockerfile.New()}
+	// .yml/.yaml file, so compose files must be matched first. pulumi.New()
+	// likewise precedes manifests: a file named Pulumi.yaml is a Pulumi
+	// program, not a generic manifest. arm.New() precedes manifests for the
+	// same reason: manifests claims every .json file, but ARM deployment
+	// templates (detected by $schema sniffing) belong to the arm adapter.
+	return []ir.Adapter{terraform.New(), planjson.Adapter{}, compose.New(), pulumi.Adapter{}, arm.New(), bicep.New(), cloudformation.New(), manifests.Adapter{}, dockerfile.New()}
 }
 
 // defaultScanFunc re-scans a directory with the production adapters and
@@ -507,6 +524,33 @@ func (f *failOnValue) Set(s string) error {
 	return nil
 }
 
+// complianceSummary builds the per-control pass/fail summary for a
+// --compliance run: every control mapped for the framework is listed;
+// controls with at least one finding fail, the rest pass.
+func complianceSummary(framework string, findings []ir.Finding) *ir.ComplianceSummary {
+	controls := rules.ComplianceControls(framework)
+	failed := map[string]bool{}
+	for _, f := range findings {
+		for _, r := range f.Compliance {
+			if r.Framework == framework {
+				failed[r.Control] = true
+			}
+		}
+	}
+	var failedList []string
+	for c := range failed {
+		failedList = append(failedList, c)
+	}
+	sort.Strings(failedList)
+	return &ir.ComplianceSummary{
+		Framework:       framework,
+		ControlsTotal:   len(controls),
+		ControlsPassing: len(controls) - len(failed),
+		ControlsFailing: len(failed),
+		FailedControls:  failedList,
+	}
+}
+
 // runScan executes `aegis scan <dir>`.
 func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("scan", flag.ContinueOnError)
@@ -518,6 +562,8 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	baselineOut := fs.String("baseline-out", "", "")
 	complianceFw := fs.String("compliance", "", "")
 	customRulesDir := fs.String("custom-rules", "", "")
+	configPath := fs.String("config", "", "")
+	exclude := fs.String("exclude", "", "")
 	attackPaths := fs.Bool("attack-paths", false, "")
 	maxFileSize := fs.Int64("max-file-size", 0, "")
 	timeoutSecs := fs.Int("timeout", 0, "")
@@ -531,6 +577,17 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	if *maxFileSize > 0 {
 		discovery.SetMaxFileBytes(*maxFileSize)
 	}
+	// --exclude is process-global in discovery; always (re)set it so
+	// repeated runScan calls (tests, serve) never leak patterns.
+	var excludePats []string
+	if *exclude != "" {
+		for _, p := range strings.Split(*exclude, ",") {
+			if p = strings.TrimSpace(p); p != "" {
+				excludePats = append(excludePats, p)
+			}
+		}
+	}
+	discovery.SetExcludePatterns(excludePats)
 	switch *format {
 	case "text", "json", "sarif":
 	default:
@@ -627,8 +684,21 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	// enrich every finding with all its mapped controls.
 	if *complianceFw != "" {
 		res.Findings = rules.FilterByCompliance(res.Findings, *complianceFw)
+		res.ComplianceSummary = complianceSummary(*complianceFw, res.Findings)
 	} else {
 		res.Findings = rules.EnrichCompliance(res.Findings)
+	}
+	// --config severity overrides / rule exclusions apply after compliance
+	// filtering so overrides see the final finding set.
+	if *configPath != "" {
+		cfg, err := config.Load(*configPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "aegis: %v\n", err)
+			return 2
+		}
+		var cdiags []ir.Diagnostic
+		res.Findings, cdiags = cfg.Apply(res.Findings)
+		res.Diagnostics = append(res.Diagnostics, cdiags...)
 	}
 	// Remediation: attach fix steps and doc links to every finding.
 	res.Findings = rules.EnrichRemediation(res.Findings)
@@ -812,13 +882,15 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 	// resources, and modules come out exactly as the sequential loop
 	// produced them.
 	results := parseFilesConcurrent(files, adapters)
-	// Build scan-completeness: every discovered file gets an explicit outcome.
+	// Build scan-completeness: every discovered file gets an explicit outcome,
+	// including which adapter (format) handled it.
 	completeness := ir.ScanCompleteness{
 		FilesDiscovered: len(files),
 	}
 	for i, pr := range results {
 		res.Diagnostics = append(res.Diagnostics, pr.diags...)
 		fpath := files[i].Path
+		st := ir.FileStatus{Path: fpath, Format: pr.adapterName}
 		if pr.failed {
 			completeness.FilesFailed++
 			reason := "parse or read failure"
@@ -828,14 +900,13 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 					break
 				}
 			}
-			completeness.Files = append(completeness.Files, ir.FileStatus{
-				Path:   fpath,
-				Status: "failed",
-				Reason: reason,
-			})
+			st.Status = "failed"
+			st.Reason = reason
+			completeness.Files = append(completeness.Files, st)
 			continue
 		}
-		// Skipped: no adapter handled the file (diagnostic indicates this)
+		// Skipped: no adapter handled the file, or it was excluded
+		// (diagnostic indicates this).
 		isSkipped := false
 		var skipReason string
 		for _, d := range pr.diags {
@@ -847,14 +918,14 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 		}
 		if isSkipped {
 			completeness.FilesSkipped++
-			completeness.Files = append(completeness.Files, ir.FileStatus{
-				Path:   fpath,
-				Status: "skipped",
-				Reason: skipReason,
-			})
+			st.Status = "skipped"
+			st.Reason = skipReason
+			completeness.Files = append(completeness.Files, st)
 			continue
 		}
 		completeness.FilesParsed++
+		st.Status = "parsed"
+		completeness.Files = append(completeness.Files, st)
 		if pr.mod != nil {
 			mods = append(mods, *pr.mod)
 			providerReqs = append(providerReqs, pr.mod.ProviderReqs...)
@@ -894,10 +965,11 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 
 // fileParseResult is the parse outcome for one discovered file.
 type fileParseResult struct {
-	diags     []ir.Diagnostic
-	mod       *terraform.Module // non-nil when the terraform adapter handled it
-	resources []ir.Resource     // for non-terraform adapters
-	failed    bool              // read or parse hard failure; diags carry the reason
+	diags       []ir.Diagnostic
+	mod         *terraform.Module // non-nil when the terraform adapter handled it
+	resources   []ir.Resource     // for non-terraform adapters
+	failed      bool              // read or parse hard failure; diags carry the reason
+	adapterName string            // adapter that handled the file ("" if none/excluded)
 }
 
 // parseFilesConcurrent parses every discovered file with a bounded worker
@@ -934,6 +1006,16 @@ func parseFilesConcurrent(files []discovery.File, adapters []ir.Adapter) []fileP
 // parseOneFile selects the adapter, reads, and parses a single file,
 // mirroring the sequential loop's diagnostic behavior exactly.
 func parseOneFile(f discovery.File, adapters []ir.Adapter) (pr fileParseResult) {
+	// --exclude patterns win over everything: the file is reported as
+	// skipped with an explicit reason, never parsed.
+	if discovery.IsExcluded(f.Path) {
+		pr.diags = append(pr.diags, ir.Diagnostic{
+			Level:   "warning",
+			Message: fmt.Sprintf("excluded by --exclude pattern; skipped"),
+			Span:    ir.Span{File: f.Path},
+		})
+		return pr
+	}
 	var ad ir.Adapter
 	for _, a := range adapters {
 		if a.Handles(f.Path) {
@@ -960,6 +1042,7 @@ func parseOneFile(f discovery.File, adapters []ir.Adapter) (pr fileParseResult) 
 		pr.failed = true
 		return pr
 	}
+	pr.adapterName = ad.Name()
 	// Terraform files go through ParseModule so the semantics layer
 	// gets variables/locals/module calls for M2 resolution.
 	if ta, ok := ad.(*terraform.Adapter); ok {

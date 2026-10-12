@@ -48,12 +48,13 @@ func redactFindings(fs []ir.Finding) []ir.Finding {
 
 // jsonEnvelope is the versioned JSON report format.
 type jsonEnvelope struct {
-	Version      string               `json:"aegis_version"`
-	Target       string               `json:"target"`
-	Resources    int                  `json:"resources_scanned"`
-	Findings     []ir.Finding         `json:"findings"`
-	Diagnostics  []ir.Diagnostic      `json:"diagnostics"`
-	Completeness ir.ScanCompleteness  `json:"scan_completeness"`
+	Version           string                `json:"aegis_version"`
+	Target            string                `json:"target"`
+	Resources         int                   `json:"resources_scanned"`
+	Findings          []ir.Finding          `json:"findings"`
+	Diagnostics       []ir.Diagnostic       `json:"diagnostics"`
+	Completeness      ir.ScanCompleteness   `json:"scan_completeness"`
+	ComplianceSummary *ir.ComplianceSummary `json:"compliance_summary,omitempty"`
 }
 
 // WriteJSON writes the versioned JSON envelope.
@@ -63,12 +64,13 @@ func WriteJSON(w io.Writer, res ir.ScanResult) error {
 		diags = []ir.Diagnostic{}
 	}
 	env := jsonEnvelope{
-		Version:      Version,
-		Target:       res.Target,
-		Resources:    res.Resources,
-		Findings:     redactFindings(res.Findings),
-		Diagnostics:  diags,
-		Completeness: res.Completeness,
+		Version:           Version,
+		Target:            res.Target,
+		Resources:         res.Resources,
+		Findings:          redactFindings(res.Findings),
+		Diagnostics:       diags,
+		Completeness:      res.Completeness,
+		ComplianceSummary: res.ComplianceSummary,
 	}
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
@@ -352,6 +354,13 @@ func WriteText(w io.Writer, res ir.ScanResult) error {
 		for _, d := range res.Diagnostics {
 			fmt.Fprintf(w, "  [%s] %s:%d — %s\n", d.Level, d.Span.File, d.Span.StartLine, d.Message)
 		}
+	}
+	if s := res.ComplianceSummary; s != nil {
+		fmt.Fprintf(w, "compliance %s: %d/%d controls passing", s.Framework, s.ControlsPassing, s.ControlsTotal)
+		if s.ControlsFailing > 0 {
+			fmt.Fprintf(w, " — FAILING: %s", strings.Join(s.FailedControls, ", "))
+		}
+		fmt.Fprintf(w, "\n")
 	}
 	return nil
 }

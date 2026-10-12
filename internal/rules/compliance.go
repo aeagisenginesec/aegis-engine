@@ -57,6 +57,26 @@ func HasComplianceFramework(framework string) bool {
 	return false
 }
 
+// ComplianceControls returns the sorted distinct control IDs mapped for the
+// given framework (e.g. all CIS-AWS-1.5 controls any rule maps to). Used
+// for the --compliance pass/fail summary.
+func ComplianceControls(framework string) []string {
+	seen := map[string]bool{}
+	for _, refs := range complianceMap {
+		for _, r := range refs {
+			if r.Framework == framework {
+				seen[r.Control] = true
+			}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for c := range seen {
+		out = append(out, c)
+	}
+	sort.Strings(out)
+	return out
+}
+
 // FilterByCompliance returns the findings that map to the given framework,
 // with each finding's Compliance field narrowed to that framework's refs.
 func FilterByCompliance(findings []ir.Finding, framework string) []ir.Finding {

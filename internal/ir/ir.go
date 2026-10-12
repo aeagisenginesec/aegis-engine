@@ -202,11 +202,23 @@ type Adapter interface {
 
 // ScanResult is the complete output of one scan.
 type ScanResult struct {
-	Target       string           `json:"target"`
-	Resources    int              `json:"resources_scanned"`
-	Findings     []Finding        `json:"findings"`
-	Diagnostics  []Diagnostic     `json:"diagnostics"`
-	Completeness ScanCompleteness `json:"scan_completeness"`
+	Target            string             `json:"target"`
+	Resources         int                `json:"resources_scanned"`
+	Findings          []Finding          `json:"findings"`
+	Diagnostics       []Diagnostic       `json:"diagnostics"`
+	Completeness      ScanCompleteness   `json:"scan_completeness"`
+	ComplianceSummary *ComplianceSummary `json:"compliance_summary,omitempty"`
+}
+
+// ComplianceSummary reports per-control pass/fail for a compliance
+// framework run via --compliance. A control "passes" when no finding maps
+// to it; it "fails" when at least one finding does.
+type ComplianceSummary struct {
+	Framework       string   `json:"framework"`
+	ControlsTotal   int      `json:"controls_total"`
+	ControlsPassing int      `json:"controls_passing"`
+	ControlsFailing int      `json:"controls_failing"`
+	FailedControls  []string `json:"failed_controls"`
 }
 
 // FileStatus describes how a single discovered file was processed.
@@ -214,6 +226,7 @@ type FileStatus struct {
 	Path   string `json:"path"`
 	Status string `json:"status"` // "parsed" | "skipped" | "failed"
 	Reason string `json:"reason,omitempty"`
+	Format string `json:"format,omitempty"` // adapter name that handled the file
 }
 
 // ScanCompleteness is the scan-completeness contract: every discovered
@@ -224,7 +237,7 @@ type ScanCompleteness struct {
 	FilesParsed     int          `json:"files_parsed"`
 	FilesSkipped    int          `json:"files_skipped"`
 	FilesFailed     int          `json:"files_failed"`
-	Files           []FileStatus `json:"files,omitempty"` // only non-parsed files
+	Files           []FileStatus `json:"files,omitempty"` // per-file outcome incl. format
 }
 
 // Complete reports whether every discovered file was parsed.
