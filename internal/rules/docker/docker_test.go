@@ -1,0 +1,183 @@
+package docker
+
+import (
+	"strings"
+	"testing"
+
+	"aegis/internal/adapter/dockerfile"
+	"aegis/internal/ir"
+)
+
+func stage(t *testing.T, src string) ir.Resource {
+	t.Helper()
+	rs, _, err := dockerfile.New().Parse("Dockerfile", []byte(src))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 stage, got %d", len(rs))
+	}
+	return rs[0]
+}
+
+func runRule(rule ir.Rule, r ir.Resource) []ir.Finding {
+	if !rule.AppliesTo(r.Type) {
+		return nil
+	}
+	return rule.Check(r)
+}
+
+func expectFinding(t *testing.T, rule ir.Rule, r ir.Resource, want int) {
+	t.Helper()
+	got := runRule(rule, r)
+	if len(got) != want {
+		t.Fatalf("%s: expected %d findings, got %d", rule.ID(), want, len(got))
+	}
+	for _, f := range got {
+		if f.RuleID != rule.ID() {
+			t.Fatalf("wrong rule id: %s", f.RuleID)
+		}
+		if strings.Contains(f.Evidence.Actual, "s3cr3t") || strings.Contains(f.Evidence.Actual, "abc123") {
+			t.Fatalf("%s: secret value leaked in evidence: %q", rule.ID(), f.Evidence.Actual)
+		}
+	}
+}
+
+func Test001_LatestTag(t *testing.T) {
+	expectFinding(t, latestTag{}, stage(t, "FROM ubuntu:latest\n"), 1)
+	expectFinding(t, latestTag{}, stage(t, "FROM ubuntu\n"), 1) // implicit latest
+	expectFinding(t, latestTag{}, stage(t, "FROM ubuntu:22.04\n"), 0)
+	expectFinding(t, latestTag{}, stage(t, "FROM ubuntu@sha256:abc123\n"), 0)
+	expectFinding(t, latestTag{}, stage(t, "FROM ubuntu:LATEST\n"), 1)
+}
+
+func Test002_RootUser(t *testing.T) {
+	expectFinding(t, noNonRootUser{}, stage(t, "FROM ubuntu:22.04\n"), 1) // no USER
+	expectFinding(t, noNonRootUser{}, stage(t, "FROM ubuntu:22.04\nUSER root\n"), 1)
+	expectFinding(t, noNonRootUser{}, stage(t, "FROM ubuntu:22.04\nUSER 0\n"), 1)
+	expectFinding(t, noNonRootUser{}, stage(t, "FROM ubuntu:22.04\nUSER appuser\n"), 0)
+	expectFinding(t, noNonRootUser{}, stage(t, "FROM ubuntu:22.04\nUSER 1001\n"), 0)
+}
+
+func Test003_EnvSecrets(t *testing.T) {
+	expectFinding(t, envSecrets{}, stage(t, "FROM ubuntu:22.04\nENV DB_PASSWORD=s3cr3t\n"), 1)
+	expectFinding(t, envSecrets{}, stage(t, "FROM ubuntu:22.04\nENV API_KEY=\"abc123\" TOKEN=$VAULT_TOKEN\n"), 1) // only API_KEY (TOKEN is expansion)
+	expectFinding(t, envSecrets{}, stage(t, "FROM ubuntu:22.04\nENV APP_ENV=production\n"), 0)
+	expectFinding(t, envSecrets{}, stage(t, "FROM ubuntu:22.04\nENV DB_PASSWORD=$DB_PASS\n"), 0) // not literal
+}
+
+func Test004_AddInsteadOfCopy(t *testing.T) {
+	expectFinding(t, addInsteadOfCopy{}, stage(t, "FROM ubuntu:22.04\nADD app.tar.gz /app/\n"), 1)
+	expectFinding(t, addInsteadOfCopy{}, stage(t, "FROM ubuntu:22.04\nCOPY app /app/\n"), 0)
+}
+
+func Test005_NoHealthcheck(t *testing.T) {
+	expectFinding(t, noHealthcheck{}, stage(t, "FROM ubuntu:22.04\n"), 1)
+	expectFinding(t, noHealthcheck{}, stage(t, "FROM ubuntu:22.04\nHEALTHCHECK CMD curl -f http://localhost/ || exit 1\n"), 0)
+	expectFinding(t, noHealthcheck{}, stage(t, "FROM ubuntu:22.04\nHEALTHCHECK NONE\n"), 1)
+}
+
+func Test006_ExposedSSH(t *testing.T) {
+	expectFinding(t, exposedSSH{}, stage(t, "FROM ubuntu:22.04\nEXPOSE 22\n"), 1)
+	expectFinding(t, exposedSSH{}, stage(t, "FROM ubuntu:22.04\nEXPOSE 22/tcp 8080\n"), 1)
+	expectFinding(t, exposedSSH{}, stage(t, "FROM ubuntu:22.04\nEXPOSE 8080\n"), 0)
+}
+
+func Test007_AptNoRecommends(t *testing.T) {
+	expectFinding(t, aptNoRecommends{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y curl\n"), 1)
+	expectFinding(t, aptNoRecommends{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y --no-install-recommends curl\n"), 0)
+	expectFinding(t, aptNoRecommends{}, stage(t, "FROM ubuntu:22.04\nRUN echo hello\n"), 0)
+}
+
+func Test008_AptUpdateNoClean(t *testing.T) {
+	expectFinding(t, aptUpdateNoClean{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y curl\n"), 1)
+	expectFinding(t, aptUpdateNoClean{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*\n"), 0)
+	expectFinding(t, aptUpdateNoClean{}, stage(t, "FROM ubuntu:22.04\nRUN echo hello\n"), 0)
+}
+
+func Test009_SudoUsage(t *testing.T) {
+	expectFinding(t, sudoUsage{}, stage(t, "FROM ubuntu:22.04\nRUN sudo apt-get update\n"), 1)
+	expectFinding(t, sudoUsage{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update\n"), 0)
+}
+
+func Test010_UntrustedRegistry(t *testing.T) {
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM ubuntu:22.04\n"), 0) // official library
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM docker.io/library/ubuntu:22.04\n"), 0)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM myuser/myapp:1.0\n"), 1) // not library
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM gcr.io/proj/app:1.0\n"), 1)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM registry.example.com/app:1.0\n"), 1)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM gcr.io/proj/app@sha256:abc123\n"), 0) // digest-pinned
+}
+
+func TestRules_IDOrder(t *testing.T) {
+	rules := Rules()
+	want := []string{
+		"AEGIS-DOCKER-001", "AEGIS-DOCKER-002", "AEGIS-DOCKER-003",
+		"AEGIS-DOCKER-004", "AEGIS-DOCKER-005", "AEGIS-DOCKER-006",
+		"AEGIS-DOCKER-007", "AEGIS-DOCKER-008", "AEGIS-DOCKER-009",
+		"AEGIS-DOCKER-010",
+	}
+	if len(rules) != len(want) {
+		t.Fatalf("want %d rules, got %d", len(want), len(rules))
+	}
+	for i, w := range want {
+		if rules[i].ID() != w {
+			t.Fatalf("want %s at %d, got %s", w, i, rules[i].ID())
+		}
+		if rules[i].Title() == "" || rules[i].Description() == "" {
+			t.Fatalf("empty metadata: %s", w)
+		}
+	}
+}
+
+func TestMultiStage_AllRules(t *testing.T) {
+	src := `FROM golang:1.21 AS builder
+ENV GO111MODULE=on
+RUN go build -o /app .
+FROM ubuntu:latest
+COPY --from=builder /app /app
+EXPOSE 22
+ADD https://example.com/data.tar.gz /data/
+RUN apt-get update && apt-get install -y curl && sudo echo done
+ENV DB_PASSWORD=s3cr3t
+`
+	rs, _, err := dockerfile.New().Parse("Dockerfile", []byte(src))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 stages, got %d", len(rs))
+	}
+	// Builder stage: latestTag fires (golang:1.21 is pinned, so no);
+	// runtime stage should fire 001, 002, 003, 004, 005, 006, 007, 008, 009.
+	runtime := rs[1]
+	fired := map[string]bool{}
+	for _, rule := range Rules() {
+		for _, f := range runRule(rule, runtime) {
+			fired[f.RuleID] = true
+		}
+	}
+	for _, want := range []string{
+		"AEGIS-DOCKER-001", "AEGIS-DOCKER-002", "AEGIS-DOCKER-003",
+		"AEGIS-DOCKER-004", "AEGIS-DOCKER-005", "AEGIS-DOCKER-006",
+		"AEGIS-DOCKER-007", "AEGIS-DOCKER-008", "AEGIS-DOCKER-009",
+	} {
+		if !fired[want] {
+			t.Errorf("expected %s to fire on runtime stage", want)
+		}
+	}
+	// Builder stage: only 002 (no USER) and 005 (no healthcheck) should fire.
+	builder := rs[0]
+	bfired := map[string]bool{}
+	for _, rule := range Rules() {
+		for _, f := range runRule(rule, builder) {
+			bfired[f.RuleID] = true
+		}
+	}
+	if !bfired["AEGIS-DOCKER-002"] || !bfired["AEGIS-DOCKER-005"] {
+		t.Error("builder stage should fire 002 and 005")
+	}
+	if bfired["AEGIS-DOCKER-001"] {
+		t.Error("builder uses pinned golang:1.21, 001 should not fire")
+	}
+}

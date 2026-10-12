@@ -1,0 +1,420 @@
+[
+  {
+    "rule_id": "AEGIS-AWS-007",
+    "title": "RDS instance without storage encryption",
+    "description": "RDS storage should be encrypted at rest. The provider default for storage_encrypted is false, so an absent attribute is a finding.",
+    "severity": "high",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "storage_encrypted",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 14,
+        "start_col": 29,
+        "end_line": 14,
+        "end_col": 34
+      },
+      "actual": "false",
+      "expected": "true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-008",
+    "title": "RDS instance without deletion protection",
+    "description": "Deletion protection guards against accidental database destruction. The provider default is false.",
+    "severity": "medium",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "deletion_protection",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 15,
+        "start_col": 29,
+        "end_line": 15,
+        "end_col": 34
+      },
+      "actual": "false",
+      "expected": "true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-011",
+    "title": "RDS instance publicly accessible",
+    "description": "A publicly accessible database accepts connections from the internet. Keep databases in private subnets with publicly_accessible false (the provider default).",
+    "severity": "high",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "publicly_accessible",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 13,
+        "start_col": 29,
+        "end_line": 13,
+        "end_col": 33
+      },
+      "actual": "true",
+      "expected": "false"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-207",
+    "title": "RDS instance without backup retention",
+    "description": "With backup_retention_period absent or 0, automated backups are disabled and point-in-time recovery is impossible after data loss.",
+    "severity": "medium",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "backup_retention_period",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 16,
+        "start_col": 29,
+        "end_line": 16,
+        "end_col": 30
+      },
+      "actual": "0",
+      "expected": "backup_retention_period \u003e 0 (e.g. 7)"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-311",
+    "title": "RDS without IAM database authentication",
+    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene.",
+    "severity": "medium",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "iam_database_authentication_enabled",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 5,
+        "start_col": 1,
+        "end_line": 18,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: disabled)",
+      "expected": "iam_database_authentication_enabled = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-311",
+    "title": "RDS without IAM database authentication",
+    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene.",
+    "severity": "medium",
+    "resource": "aws_db_instance.orders",
+    "evidence": {
+      "attribute": "iam_database_authentication_enabled",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 20,
+        "start_col": 1,
+        "end_line": 32,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: disabled)",
+      "expected": "iam_database_authentication_enabled = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-339",
+    "title": "Hardcoded credentials in resource config",
+    "description": "A database password written as a literal in Terraform config is stored in state, plan output, and version control. The same holds for a secret-like variable or local flowing into a credential attribute. Reference a secrets manager or a generated password instead. The secret value is never included in findings.",
+    "severity": "high",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "password",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 12,
+        "start_col": 29,
+        "end_line": 12,
+        "end_col": 46
+      },
+      "actual": "[REDACTED]",
+      "expected": "reference to a secrets manager or generated password"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-446",
+    "title": "RDS instance without Multi-AZ",
+    "description": "Single-AZ RDS instances have no standby for failover. Enable multi_az for production databases.",
+    "severity": "medium",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "multi_az",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 5,
+        "start_col": 1,
+        "end_line": 18,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: false)",
+      "expected": "true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-446",
+    "title": "RDS instance without Multi-AZ",
+    "description": "Single-AZ RDS instances have no standby for failover. Enable multi_az for production databases.",
+    "severity": "medium",
+    "resource": "aws_db_instance.orders",
+    "evidence": {
+      "attribute": "multi_az",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 20,
+        "start_col": 1,
+        "end_line": 32,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: false)",
+      "expected": "true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-540",
+    "title": "RDS MySQL/Postgres instance without IAM database authentication",
+    "description": "MySQL and Postgres RDS instances support IAM database authentication, which replaces long-lived passwords with short-lived IAM credentials. With iam_database_authentication_enabled absent or false, access relies on static passwords. Engine-scoped: only fires for mysql/postgres engines; aurora and unknown engines are out of scope.",
+    "severity": "high",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "iam_database_authentication_enabled",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 5,
+        "start_col": 1,
+        "end_line": 18,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: disabled)",
+      "expected": "iam_database_authentication_enabled = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-540",
+    "title": "RDS MySQL/Postgres instance without IAM database authentication",
+    "description": "MySQL and Postgres RDS instances support IAM database authentication, which replaces long-lived passwords with short-lived IAM credentials. With iam_database_authentication_enabled absent or false, access relies on static passwords. Engine-scoped: only fires for mysql/postgres engines; aurora and unknown engines are out of scope.",
+    "severity": "high",
+    "resource": "aws_db_instance.orders",
+    "evidence": {
+      "attribute": "iam_database_authentication_enabled",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 20,
+        "start_col": 1,
+        "end_line": 32,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: disabled)",
+      "expected": "iam_database_authentication_enabled = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-543",
+    "title": "RDS instance without CloudWatch log exports",
+    "description": "Hygiene: RDS instances should export database logs to CloudWatch via enabled_cloudwatch_logs_exports for auditing and troubleshooting. Without log exports, forensic analysis after an incident is limited.",
+    "severity": "low",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "enabled_cloudwatch_logs_exports",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 5,
+        "start_col": 1,
+        "end_line": 18,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "enabled_cloudwatch_logs_exports with engine log types"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-543",
+    "title": "RDS instance without CloudWatch log exports",
+    "description": "Hygiene: RDS instances should export database logs to CloudWatch via enabled_cloudwatch_logs_exports for auditing and troubleshooting. Without log exports, forensic analysis after an incident is limited.",
+    "severity": "low",
+    "resource": "aws_db_instance.orders",
+    "evidence": {
+      "attribute": "enabled_cloudwatch_logs_exports",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 20,
+        "start_col": 1,
+        "end_line": 32,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "enabled_cloudwatch_logs_exports with engine log types"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-544",
+    "title": "RDS instance without auto minor version upgrades",
+    "description": "Hygiene: RDS instances should enable auto_minor_version_upgrade so security patches are applied automatically during maintenance windows. Without it, the engine can drift behind on security fixes.",
+    "severity": "low",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "auto_minor_version_upgrade",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 5,
+        "start_col": 1,
+        "end_line": 18,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "auto_minor_version_upgrade = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-544",
+    "title": "RDS instance without auto minor version upgrades",
+    "description": "Hygiene: RDS instances should enable auto_minor_version_upgrade so security patches are applied automatically during maintenance windows. Without it, the engine can drift behind on security fixes.",
+    "severity": "low",
+    "resource": "aws_db_instance.orders",
+    "evidence": {
+      "attribute": "auto_minor_version_upgrade",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 20,
+        "start_col": 1,
+        "end_line": 32,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "auto_minor_version_upgrade = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-546",
+    "title": "RDS instance without copy_tags_to_snapshot",
+    "description": "Hygiene: RDS instances should copy tags to snapshots so backup resources inherit cost-allocation and ownership tags. Set copy_tags_to_snapshot = true.",
+    "severity": "low",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "copy_tags_to_snapshot",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 5,
+        "start_col": 1,
+        "end_line": 18,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "copy_tags_to_snapshot = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-546",
+    "title": "RDS instance without copy_tags_to_snapshot",
+    "description": "Hygiene: RDS instances should copy tags to snapshots so backup resources inherit cost-allocation and ownership tags. Set copy_tags_to_snapshot = true.",
+    "severity": "low",
+    "resource": "aws_db_instance.orders",
+    "evidence": {
+      "attribute": "copy_tags_to_snapshot",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 20,
+        "start_col": 1,
+        "end_line": 32,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "copy_tags_to_snapshot = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-605",
+    "title": "RDS instance without enhanced monitoring",
+    "description": "Hygiene: RDS instances should enable enhanced monitoring (monitoring_interval \u003e 0) for OS-level metrics that aid troubleshooting. Set monitoring_interval to 1, 5, 10, 15, 30 or 60.",
+    "severity": "low",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "monitoring_interval",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 5,
+        "start_col": 1,
+        "end_line": 18,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "monitoring_interval set to 1, 5, 10, 15, 30 or 60"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-605",
+    "title": "RDS instance without enhanced monitoring",
+    "description": "Hygiene: RDS instances should enable enhanced monitoring (monitoring_interval \u003e 0) for OS-level metrics that aid troubleshooting. Set monitoring_interval to 1, 5, 10, 15, 30 or 60.",
+    "severity": "low",
+    "resource": "aws_db_instance.orders",
+    "evidence": {
+      "attribute": "monitoring_interval",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 20,
+        "start_col": 1,
+        "end_line": 32,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "monitoring_interval set to 1, 5, 10, 15, 30 or 60"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-607",
+    "title": "RDS Postgres instance without query logging",
+    "description": "Hygiene: RDS Postgres instances should export postgresql logs to CloudWatch for query auditing. Add \"postgresql\" to enabled_cloudwatch_logs_log_exports.",
+    "severity": "low",
+    "resource": "aws_db_instance.orders",
+    "evidence": {
+      "attribute": "enabled_cloudwatch_logs_log_exports",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 20,
+        "start_col": 1,
+        "end_line": 32,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "enabled_cloudwatch_logs_log_exports including \"postgresql\""
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-608",
+    "title": "RDS instance without Performance Insights",
+    "description": "Hygiene: RDS instances should enable Performance Insights for query-level performance analysis. Set performance_insights_enabled = true.",
+    "severity": "low",
+    "resource": "aws_db_instance.legacy",
+    "evidence": {
+      "attribute": "performance_insights_enabled",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 5,
+        "start_col": 1,
+        "end_line": 18,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "performance_insights_enabled = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-608",
+    "title": "RDS instance without Performance Insights",
+    "description": "Hygiene: RDS instances should enable Performance Insights for query-level performance analysis. Set performance_insights_enabled = true.",
+    "severity": "low",
+    "resource": "aws_db_instance.orders",
+    "evidence": {
+      "attribute": "performance_insights_enabled",
+      "span": {
+        "file": "rds_mixed.tf",
+        "start_line": 20,
+        "start_col": 1,
+        "end_line": 32,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "performance_insights_enabled = true"
+    }
+  }
+]

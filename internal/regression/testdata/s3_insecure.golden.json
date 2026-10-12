@@ -1,0 +1,265 @@
+[
+  {
+    "rule_id": "AEGIS-AWS-001",
+    "title": "S3 bucket without server-side encryption",
+    "description": "S3 buckets should encrypt objects at rest. A bucket with no server_side_encryption_configuration block relies on the account default, which may not exist. Standalone aws_s3_bucket_server_side_encryption_configuration resources are acknowledged but require graph correlation to attribute.",
+    "severity": "high",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "server_side_encryption_configuration",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "server_side_encryption_configuration block with sse_algorithm set"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-002",
+    "title": "S3 bucket with public ACL",
+    "description": "Bucket ACLs granting public-read, public-read-write, or authenticated-read expose objects beyond the account.",
+    "severity": "high",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "acl",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 5,
+        "start_col": 12,
+        "end_line": 5,
+        "end_col": 25
+      },
+      "actual": "public-read",
+      "expected": "private (or omitted)"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-012",
+    "title": "S3 bucket without versioning",
+    "description": "Versioning protects against accidental deletion and overwrites and is required for reliable recovery. Provider default is disabled.",
+    "severity": "medium",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "versioning",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: disabled)",
+      "expected": "versioning { enabled = true }"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-104",
+    "title": "Public S3 exfiltration path",
+    "description": "An S3 bucket is readable by the public internet through a bucket policy granting s3:GetObject to everyone, or a public ACL: a complete path exists from the internet to the bucket's data.",
+    "severity": "critical",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "acl",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 5,
+        "start_col": 12,
+        "end_line": 5,
+        "end_col": 25
+      },
+      "actual": "bucket ACL is public-read",
+      "expected": "private ACL with public access blocked"
+    },
+    "path": [
+      {
+        "resource": "internet",
+        "detail": "anonymous requests from the public internet",
+        "span": {
+          "file": "s3_insecure.tf",
+          "start_line": 5,
+          "start_col": 12,
+          "end_line": 5,
+          "end_col": 25
+        }
+      },
+      {
+        "resource": "aws_s3_bucket.data_lake",
+        "detail": "bucket ACL grants public read",
+        "span": {
+          "file": "s3_insecure.tf",
+          "start_line": 3,
+          "start_col": 1,
+          "end_line": 11,
+          "end_col": 2
+        }
+      },
+      {
+        "resource": "aws_s3_bucket.data_lake",
+        "detail": "bucket data is readable under the public ACL",
+        "span": {
+          "file": "s3_insecure.tf",
+          "start_line": 3,
+          "start_col": 1,
+          "end_line": 11,
+          "end_col": 2
+        }
+      }
+    ]
+  },
+  {
+    "rule_id": "AEGIS-AWS-206",
+    "title": "S3 bucket without public access block",
+    "description": "Without an aws_s3_bucket_public_access_block enabling all four protections (block_public_acls, block_public_policy, ignore_public_acls, restrict_public_buckets), a single permissive ACL or policy can expose the bucket. Fail-safe: only a proven all-four-true block silences this rule.",
+    "severity": "high",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "aws_s3_bucket_public_access_block",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "absent or not all four protections enabled",
+      "expected": "public access block with all four settings = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-443",
+    "title": "S3 bucket policy does not enforce TLS (SecureTransport)",
+    "description": "Without an explicit Deny on aws:SecureTransport=false, bucket objects can be fetched over plaintext HTTP. Add a bucket policy statement denying s3:* when SecureTransport is false.",
+    "severity": "high",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "policy",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "no Deny on aws:SecureTransport=false",
+      "expected": "bucket policy denying s3:* when SecureTransport is false"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-445",
+    "title": "S3 bucket without server access logging",
+    "description": "Server access logging records requests against the bucket, which is essential for audit and incident response.",
+    "severity": "medium",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "logging",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "logging { target_bucket = ... }"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-558",
+    "title": "S3 bucket without Object Lock configuration",
+    "description": "S3 buckets holding compliance-sensitive data should enable Object Lock to prevent deletion or modification during retention. Add an aws_s3_bucket_object_lock_configuration resource.",
+    "severity": "medium",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "aws_s3_bucket_object_lock_configuration",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "object lock configuration present"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-559",
+    "title": "S3 bucket without inventory configuration",
+    "description": "Hygiene: S3 buckets should enable inventory reports for auditing object metadata at scale. Add an aws_s3_bucket_inventory resource.",
+    "severity": "low",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "aws_s3_bucket_inventory",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "inventory configuration present"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-601",
+    "title": "S3 bucket without lifecycle configuration",
+    "description": "Hygiene: S3 buckets should define lifecycle rules to transition or expire objects, controlling long-term storage costs. Add a lifecycle_rule block or an aws_s3_bucket_lifecycle_configuration resource.",
+    "severity": "low",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "lifecycle_rule",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "lifecycle_rule block or aws_s3_bucket_lifecycle_configuration"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-602",
+    "title": "S3 bucket without event notifications",
+    "description": "Hygiene: S3 buckets should configure event notifications (e.g. to Lambda or SNS) so object changes trigger downstream processing. Add an aws_s3_bucket_notification resource.",
+    "severity": "low",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "notification",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "aws_s3_bucket_notification resource linked to the bucket"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-603",
+    "title": "S3 bucket without cross-region replication",
+    "description": "Hygiene: S3 buckets holding important data should replicate to a second region for disaster recovery. Add a replication_configuration block or an aws_s3_bucket_replication_configuration resource.",
+    "severity": "low",
+    "resource": "aws_s3_bucket.data_lake",
+    "evidence": {
+      "attribute": "replication_configuration",
+      "span": {
+        "file": "s3_insecure.tf",
+        "start_line": 3,
+        "start_col": 1,
+        "end_line": 11,
+        "end_col": 2
+      },
+      "actual": "absent",
+      "expected": "replication_configuration block or aws_s3_bucket_replication_configuration"
+    }
+  }
+]

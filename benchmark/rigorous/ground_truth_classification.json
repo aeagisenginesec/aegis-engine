@@ -1,0 +1,1174 @@
+{
+  "aegis": [
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-636",
+        "severity": "medium",
+        "title": "RDS Cluster without enhanced monitoring",
+        "resource": "aws_rds_cluster.app9-rds-cluster",
+        "file": "terraform/aws/rds.tf:130",
+        "evidence_attr": "monitoring_interval",
+        "evidence_actual": "absent (provider default: 0, disabled)"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Enhanced monitoring is operational best practice, not a vulnerability per se"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-635",
+        "severity": "medium",
+        "title": "RDS Cluster without Performance Insights",
+        "resource": "aws_rds_cluster.app6-rds-cluster",
+        "file": "terraform/aws/rds.tf:81",
+        "evidence_attr": "performance_insights_enabled",
+        "evidence_actual": "absent (provider default: disabled)"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Performance Insights is observability, not a security control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-547",
+        "severity": "low",
+        "title": "Lambda function without X-Ray active tracing",
+        "resource": "aws_lambda_function.analysis_lambda",
+        "file": "terraform/aws/lambda.tf:32",
+        "evidence_attr": "tracing_config",
+        "evidence_actual": "absent"
+      },
+      "verdict": "FP",
+      "reason": "X-Ray tracing is observability, not a security vulnerability"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-103",
+        "severity": "medium",
+        "title": "MSSQL threat detection not set to all types",
+        "resource": "azurerm_mssql_server_security_alert_policy.example",
+        "file": "terraform/azure/sql.tf:37",
+        "evidence_attr": "disabled_alerts",
+        "evidence_actual": "Sql_Injection, Data_Exfiltration"
+      },
+      "verdict": "TP",
+      "reason": "Threat detection is a security control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-515",
+        "severity": "medium",
+        "title": "ECR repository without KMS encryption",
+        "resource": "aws_ecr_repository.repository",
+        "file": "terraform/aws/ecr.tf:1",
+        "evidence_attr": "encryption_configuration",
+        "evidence_actual": "absent (defaults to AES256)"
+      },
+      "verdict": "TP",
+      "reason": "KMS encryption for container images is a real security control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-560",
+        "severity": "low",
+        "title": "S3 bucket with force_destroy enabled",
+        "resource": "aws_s3_bucket.data",
+        "file": "terraform/aws/s3.tf:7",
+        "evidence_attr": "force_destroy",
+        "evidence_actual": "true"
+      },
+      "verdict": "TP",
+      "reason": "force_destroy=true verified in code - allows data destruction without backup"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-601",
+        "severity": "low",
+        "title": "S3 bucket without lifecycle configuration",
+        "resource": "aws_s3_bucket.financials",
+        "file": "terraform/aws/s3.tf:42",
+        "evidence_attr": "lifecycle_rule",
+        "evidence_actual": "absent"
+      },
+      "verdict": "FP",
+      "reason": "Lifecycle configuration is cost/operational hygiene, not a security vulnerability"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-360",
+        "severity": "medium",
+        "title": "Aurora cluster without IAM authentication",
+        "resource": "aws_rds_cluster.app7-rds-cluster",
+        "file": "terraform/aws/rds.tf:97",
+        "evidence_attr": "iam_database_authentication_enabled",
+        "evidence_actual": "absent (provider default: disabled)"
+      },
+      "verdict": "TP",
+      "reason": "IAM database auth eliminates password-based access"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-138",
+        "severity": "medium",
+        "title": "App Service SCM site without access restrictions",
+        "resource": "azurerm_app_service.app-service1",
+        "file": "terraform/azure/app_service.tf:22",
+        "evidence_attr": "site_config.scm_ip_restriction",
+        "evidence_actual": "absent (default allow all)"
+      },
+      "verdict": "TP",
+      "reason": "SCM site restrictions prevent unauthorized deployment access"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-358",
+        "severity": "medium",
+        "title": "Aurora cluster without deletion protection",
+        "resource": "aws_rds_cluster.app1-rds-cluster",
+        "file": "terraform/aws/rds.tf:1",
+        "evidence_attr": "deletion_protection",
+        "evidence_actual": "absent (provider default: disabled)"
+      },
+      "verdict": "TP",
+      "reason": "Deletion protection prevents accidental/destructive data loss"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-601",
+        "severity": "low",
+        "title": "S3 bucket without lifecycle configuration",
+        "resource": "aws_s3_bucket.flowbucket",
+        "file": "terraform/aws/ec2.tf:271",
+        "evidence_attr": "lifecycle_rule",
+        "evidence_actual": "absent"
+      },
+      "verdict": "FP",
+      "reason": "Lifecycle configuration is cost/operational hygiene, not a security vulnerability"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-125",
+        "severity": "low",
+        "title": "Storage account without SAS expiry policy",
+        "resource": "azurerm_storage_account.example",
+        "file": "terraform/azure/storage.tf:23",
+        "evidence_attr": "sas_policy",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "SAS expiry limits credential lifetime"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-635",
+        "severity": "medium",
+        "title": "RDS Cluster without Performance Insights",
+        "resource": "aws_rds_cluster.app8-rds-cluster",
+        "file": "terraform/aws/rds.tf:113",
+        "evidence_attr": "performance_insights_enabled",
+        "evidence_actual": "absent (provider default: disabled)"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Performance Insights is observability, not a security control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-063",
+        "severity": "low",
+        "title": "App Service without VNet integration",
+        "resource": "azurerm_app_service.app-service2",
+        "file": "terraform/azure/app_service.tf:43",
+        "evidence_attr": "virtual_network_subnet_id",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "VNet integration provides network isolation"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-113",
+        "severity": "medium",
+        "title": "App Service with FTP enabled",
+        "resource": "azurerm_app_service.app-service1",
+        "file": "terraform/azure/app_service.tf:22",
+        "evidence_attr": "site_config.ftps_state",
+        "evidence_actual": "absent (default AllAllowed)"
+      },
+      "verdict": "TP",
+      "reason": "FTP is plaintext protocol, disabling is a real security improvement"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-117",
+        "severity": "low",
+        "title": "App Service without health check path",
+        "resource": "azurerm_app_service.app-service1",
+        "file": "terraform/azure/app_service.tf:22",
+        "evidence_attr": "site_config.health_check_path",
+        "evidence_actual": "absent"
+      },
+      "verdict": "FP",
+      "reason": "Health check path is operational/reliability, not security"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-071",
+        "severity": "low",
+        "title": "AKS cluster without container insights",
+        "resource": "azurerm_kubernetes_cluster.k8s_cluster",
+        "file": "terraform/azure/aks.tf:1",
+        "evidence_attr": "addon_profile.oms_agent",
+        "evidence_actual": "disabled or absent"
+      },
+      "verdict": "FP",
+      "reason": "Container insights is monitoring, not a security vulnerability"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-358",
+        "severity": "medium",
+        "title": "Aurora cluster without deletion protection",
+        "resource": "aws_rds_cluster.app2-rds-cluster",
+        "file": "terraform/aws/rds.tf:17",
+        "evidence_attr": "deletion_protection",
+        "evidence_actual": "absent (provider default: disabled)"
+      },
+      "verdict": "TP",
+      "reason": "Deletion protection prevents accidental/destructive data loss"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-105",
+        "severity": "medium",
+        "title": "MSSQL server not using TLS 1.2",
+        "resource": "azurerm_mssql_server.mssql5",
+        "file": "terraform/azure/mssql.tf:96",
+        "evidence_attr": "minimum_tls_version",
+        "evidence_actual": "absent (defaults below 1.2)"
+      },
+      "verdict": "TP",
+      "reason": "TLS 1.2 enforcement is a real security control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-046",
+        "severity": "medium",
+        "title": "MSSQL server without security alert policy",
+        "resource": "azurerm_mssql_server.mssql2",
+        "file": "terraform/azure/mssql.tf:39",
+        "evidence_attr": "security_alert_policy",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "Security alert policy is a detection control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-647",
+        "severity": "low",
+        "title": "Lambda function without dead-letter queue",
+        "resource": "aws_lambda_function.analysis_lambda",
+        "file": "terraform/aws/lambda.tf:32",
+        "evidence_attr": "dead_letter_config",
+        "evidence_actual": "absent"
+      },
+      "verdict": "FP",
+      "reason": "Dead-letter queue is reliability, not security"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-123",
+        "severity": "medium",
+        "title": "Storage account allows shared key access",
+        "resource": "azurerm_storage_account.example",
+        "file": "terraform/azure/storage.tf:23",
+        "evidence_attr": "shared_access_key_enabled",
+        "evidence_actual": "[REDACTED]"
+      },
+      "verdict": "TP",
+      "reason": "Shared key access bypasses Azure AD auth"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-104",
+        "severity": "low",
+        "title": "MSSQL security alert email notifications disabled",
+        "resource": "azurerm_mssql_server_security_alert_policy.alertpolicy7",
+        "file": "terraform/azure/mssql.tf:236",
+        "evidence_attr": "email_account_admins",
+        "evidence_actual": "absent (defaults to false)"
+      },
+      "verdict": "FP",
+      "reason": "Email notifications for alerts is operational, the alert policy itself is the control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-103",
+        "severity": "medium",
+        "title": "MSSQL threat detection not set to all types",
+        "resource": "azurerm_mssql_server_security_alert_policy.alertpolicy3",
+        "file": "terraform/azure/mssql.tf:187",
+        "evidence_attr": "disabled_alerts",
+        "evidence_actual": "Sql_Injection, Data_Exfiltration"
+      },
+      "verdict": "TP",
+      "reason": "Threat detection is a security control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-558",
+        "severity": "medium",
+        "title": "S3 bucket without Object Lock configuration",
+        "resource": "aws_s3_bucket.operations",
+        "file": "terraform/aws/s3.tf:65",
+        "evidence_attr": "aws_s3_bucket_object_lock_configuration",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "Object Lock provides immutability for compliance"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-149",
+        "severity": "medium",
+        "title": "Storage account without network rules",
+        "resource": "azurerm_storage_account.example",
+        "file": "terraform/azure/storage.tf:23",
+        "evidence_attr": "network_rules",
+        "evidence_actual": "absent (default allow all)"
+      },
+      "verdict": "TP",
+      "reason": "Network rules restrict storage access"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-GCP-119",
+        "severity": "medium",
+        "title": "Compute instance with serial port access enabled",
+        "resource": "google_compute_instance.server",
+        "file": "terraform/gcp/instances.tf:19",
+        "evidence_attr": "metadata.serial-port-enable",
+        "evidence_actual": "true"
+      },
+      "verdict": "TP",
+      "reason": "Serial port access can bypass network controls"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-148",
+        "severity": "high",
+        "title": "Storage account with public network access (default)",
+        "resource": "azurerm_storage_account.example",
+        "file": "terraform/azure/storage.tf:23",
+        "evidence_attr": "public_network_access_enabled",
+        "evidence_actual": "absent (default true)"
+      },
+      "verdict": "TP",
+      "reason": "Public network access to storage is a real exposure (HIGH severity)"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-635",
+        "severity": "medium",
+        "title": "RDS Cluster without Performance Insights",
+        "resource": "aws_rds_cluster.app3-rds-cluster",
+        "file": "terraform/aws/rds.tf:33",
+        "evidence_attr": "performance_insights_enabled",
+        "evidence_actual": "absent (provider default: disabled)"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Performance Insights is observability, not a security control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-GCP-025",
+        "severity": "high",
+        "title": "GCS bucket without customer-managed encryption",
+        "resource": "google_storage_bucket.terragoat_website",
+        "file": "terraform/gcp/gcs.tf:1",
+        "evidence_attr": "encryption",
+        "evidence_actual": "absent (Google-managed keys)"
+      },
+      "verdict": "TP",
+      "reason": "CMEK for storage is a real encryption control (HIGH severity)"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-636",
+        "severity": "medium",
+        "title": "RDS Cluster without enhanced monitoring",
+        "resource": "aws_rds_cluster.app1-rds-cluster",
+        "file": "terraform/aws/rds.tf:1",
+        "evidence_attr": "monitoring_interval",
+        "evidence_actual": "absent (provider default: 0, disabled)"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Enhanced monitoring is operational best practice, not a vulnerability per se"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-GCP-068",
+        "severity": "critical",
+        "title": "Firewall allows all ports from the internet",
+        "resource": "google_compute_firewall.allow_all",
+        "file": "terraform/gcp/networks.tf:25",
+        "evidence_attr": "allow.ports",
+        "evidence_actual": "0-65535 from 0.0.0.0/0"
+      },
+      "verdict": "TP",
+      "reason": "Firewall allowing all ports from internet is critical exposure (CRITICAL, verified)"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-112",
+        "severity": "low",
+        "title": "App Service without failed request tracing",
+        "resource": "azurerm_app_service.app-service2",
+        "file": "terraform/azure/app_service.tf:43",
+        "evidence_attr": "logs.failed_request_tracing_enabled",
+        "evidence_actual": "disabled or absent"
+      },
+      "verdict": "FP",
+      "reason": "Failed request tracing is diagnostic, not security"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-558",
+        "severity": "medium",
+        "title": "S3 bucket without Object Lock configuration",
+        "resource": "aws_s3_bucket.flowbucket",
+        "file": "terraform/aws/ec2.tf:271",
+        "evidence_attr": "aws_s3_bucket_object_lock_configuration",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "Object Lock provides immutability for compliance"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-443",
+        "severity": "high",
+        "title": "S3 bucket policy does not enforce TLS (SecureTransport)",
+        "resource": "aws_s3_bucket.flowbucket",
+        "file": "terraform/aws/ec2.tf:271",
+        "evidence_attr": "policy",
+        "evidence_actual": "no Deny on aws:SecureTransport=false"
+      },
+      "verdict": "TP",
+      "reason": "TLS enforcement prevents plaintext data exposure (HIGH severity)"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-022",
+        "severity": "high",
+        "title": "Database server without SSL enforcement",
+        "resource": "azurerm_mysql_server.example",
+        "file": "terraform/azure/sql.tf:60",
+        "evidence_attr": "ssl_enforcement_enabled",
+        "evidence_actual": "false"
+      },
+      "verdict": "TP",
+      "reason": "SSL enforcement for database prevents credential interception (HIGH)"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-108",
+        "severity": "medium",
+        "title": "MSSQL server without private endpoint",
+        "resource": "azurerm_mssql_server.mssql3",
+        "file": "terraform/azure/mssql.tf:58",
+        "evidence_attr": "private_endpoint",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "Private endpoint eliminates public exposure"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-GCP-055",
+        "severity": "medium",
+        "title": "GKE cluster without shielded nodes",
+        "resource": "google_container_cluster.workload_cluster",
+        "file": "terraform/gcp/gke.tf:6",
+        "evidence_attr": "shielded_nodes",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "Shielded nodes provide boot integrity"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-101",
+        "severity": "medium",
+        "title": "MSSQL server without auditing enabled",
+        "resource": "azurerm_mssql_server.mssql6",
+        "file": "terraform/azure/mssql.tf:115",
+        "evidence_attr": "extended_auditing_policy",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "Auditing is a detection control"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-633",
+        "severity": "low",
+        "title": "RDS Cluster not configured to copy tags to snapshots",
+        "resource": "aws_rds_cluster.app3-rds-cluster",
+        "file": "terraform/aws/rds.tf:33",
+        "evidence_attr": "copy_tags_to_snapshot",
+        "evidence_actual": "absent (provider default: no tag copy)"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify from title"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-339",
+        "severity": "high",
+        "title": "Hardcoded credentials in resource config",
+        "resource": "aws_db_instance.default",
+        "file": "terraform/aws/db-app.tf:15",
+        "evidence_attr": "password",
+        "evidence_actual": "[REDACTED]"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify from title"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-121",
+        "severity": "medium",
+        "title": "Storage account not using latest TLS version",
+        "resource": "azurerm_storage_account.security_storage_account",
+        "file": "terraform/azure/mssql.tf:1",
+        "evidence_attr": "min_tls_version",
+        "evidence_actual": "absent (default TLS1_0)"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify from title"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-063",
+        "severity": "low",
+        "title": "App Service without VNet integration",
+        "resource": "azurerm_app_service.app-service1",
+        "file": "terraform/azure/app_service.tf:22",
+        "evidence_attr": "virtual_network_subnet_id",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "VNet integration provides network isolation"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-111",
+        "severity": "low",
+        "title": "App Service without detailed error messages",
+        "resource": "azurerm_app_service.app-service1",
+        "file": "terraform/azure/app_service.tf:22",
+        "evidence_attr": "logs.detailed_error_messages_enabled",
+        "evidence_actual": "disabled or absent"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify from title"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-144",
+        "severity": "medium",
+        "title": "Storage account without infrastructure encryption",
+        "resource": "azurerm_storage_account.security_storage_account",
+        "file": "terraform/azure/mssql.tf:1",
+        "evidence_attr": "infrastructure_encryption_enabled",
+        "evidence_actual": "absent (default false)"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify from title"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-040",
+        "severity": "medium",
+        "title": "Key Vault secret without expiration date",
+        "resource": "azurerm_key_vault_secret.secret",
+        "file": "terraform/azure/key_vault.tf:58",
+        "evidence_attr": "expiration_date",
+        "evidence_actual": "absent"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify from title"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-631",
+        "severity": "medium",
+        "title": "RDS Cluster without audit logging",
+        "resource": "aws_rds_cluster.app9-rds-cluster",
+        "file": "terraform/aws/rds.tf:130",
+        "evidence_attr": "enabled_cloudwatch_logs_exports",
+        "evidence_actual": "absent (provider default: no log exports)"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify from title"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-205",
+        "severity": "high",
+        "title": "Subnet auto-assigns public IPs",
+        "resource": "aws_subnet.web_subnet2",
+        "file": "terraform/aws/ec2.tf:159",
+        "evidence_attr": "map_public_ip_on_launch",
+        "evidence_actual": "true"
+      },
+      "verdict": "TP",
+      "reason": "Title indicates clear security misconfiguration"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AWS-603",
+        "severity": "low",
+        "title": "S3 bucket without cross-region replication",
+        "resource": "aws_s3_bucket.data",
+        "file": "terraform/aws/s3.tf:1",
+        "evidence_attr": "replication_configuration",
+        "evidence_actual": "absent"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify from title"
+    },
+    {
+      "finding": {
+        "rule_id": "AEGIS-AZURE-101",
+        "severity": "medium",
+        "title": "MSSQL server without auditing enabled",
+        "resource": "azurerm_mssql_server.mssql1",
+        "file": "terraform/azure/mssql.tf:20",
+        "evidence_attr": "extended_auditing_policy",
+        "evidence_actual": "absent"
+      },
+      "verdict": "TP",
+      "reason": "Auditing is a detection control"
+    }
+  ],
+  "checkov": [
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_65",
+        "check_name": "Ensure that App service enables detailed error messages",
+        "resource": "azurerm_app_service.app-service2",
+        "file": "/terraform/azure/app_service.tf:43"
+      },
+      "verdict": "FP",
+      "reason": "Detailed error messages is a debugging feature; risk is minimal in non-prod"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_66",
+        "check_name": "Ensure that App service enables failed request tracing",
+        "resource": "azurerm_app_service.app-service1",
+        "file": "/terraform/azure/app_service.tf:22"
+      },
+      "verdict": "FP",
+      "reason": "Failed request tracing is diagnostic tooling, not a vulnerability"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_133",
+        "check_name": "Ensure that RDS instances has backup policy",
+        "resource": "aws_rds_cluster.app1-rds-cluster",
+        "file": "/terraform/aws/rds.tf:1"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "RDS backup is operational resilience, not a security vulnerability per se"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_GCP_109",
+        "check_name": "Ensure the GCP PostgreSQL database log levels are set to ERROR or lower",
+        "resource": "google_sql_database_instance.master_instance",
+        "file": "/terraform/gcp/big_data.tf:1"
+      },
+      "verdict": "FP",
+      "reason": "PostgreSQL log level verbosity is not a security vulnerability"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_50",
+        "check_name": "X-Ray tracing is enabled for Lambda",
+        "resource": "aws_lambda_function.analysis_lambda",
+        "file": "/terraform/aws/lambda.tf:32"
+      },
+      "verdict": "FP",
+      "reason": "X-Ray tracing is observability, not security"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_139",
+        "check_name": "Ensure that RDS clusters have deletion protection enabled",
+        "resource": "aws_rds_cluster.app2-rds-cluster",
+        "file": "/terraform/aws/rds.tf:17"
+      },
+      "verdict": "TP",
+      "reason": "Deletion protection prevents destructive actions"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_325",
+        "check_name": "Ensure that RDS Cluster audit logging is enabled for MySQL engine",
+        "resource": "aws_rds_cluster.app4-rds-cluster",
+        "file": "/terraform/aws/rds.tf:49"
+      },
+      "verdict": "TP",
+      "reason": "Audit logging is a detection control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_5",
+        "check_name": "Ensure all data stored in the Elasticsearch is securely encrypted at rest",
+        "resource": "aws_elasticsearch_domain.monitoring-framework",
+        "file": "/terraform/aws/es.tf:1"
+      },
+      "verdict": "TP",
+      "reason": "Encryption at rest is a fundamental security control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV2_AWS_61",
+        "check_name": "Ensure that an S3 bucket has a lifecycle configuration",
+        "resource": "aws_s3_bucket.operations",
+        "file": "/terraform/aws/s3.tf:65"
+      },
+      "verdict": "FP",
+      "reason": "S3 lifecycle is cost hygiene, not security"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_3",
+        "check_name": "Ensure all data stored in the EBS is securely encrypted",
+        "resource": "aws_ebs_volume.web_host_storage",
+        "file": "/terraform/aws/ec2.tf:34"
+      },
+      "verdict": "TP",
+      "reason": "EBS encryption is a fundamental security control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_326",
+        "check_name": "Ensure that RDS Aurora Clusters have backtracking enabled",
+        "resource": "aws_rds_cluster.app4-rds-cluster",
+        "file": "/terraform/aws/rds.tf:49"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Aurora backtracking is a recovery feature, marginal security value"
+    },
+    {
+      "finding": {
+        "check_id": "CKV2_AWS_62",
+        "check_name": "Ensure S3 buckets should have event notifications enabled",
+        "resource": "aws_s3_bucket.flowbucket",
+        "file": "/terraform/aws/ec2.tf:271"
+      },
+      "verdict": "FP",
+      "reason": "S3 event notifications is an integration feature, not a vulnerability"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_14",
+        "check_name": "Ensure web app redirects all HTTP traffic to HTTPS in Azure App Service",
+        "resource": "azurerm_app_service.app-service1",
+        "file": "/terraform/azure/app_service.tf:22"
+      },
+      "verdict": "TP",
+      "reason": "HTTPS redirect prevents plaintext credential exposure"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_19",
+        "check_name": "Ensure that standard pricing tier is selected",
+        "resource": "azurerm_security_center_subscription_pricing.pricing",
+        "file": "/terraform/azure/security_center.tf:1"
+      },
+      "verdict": "FP",
+      "reason": "Security Center pricing tier is a billing choice, not a vulnerability"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_GCP_2",
+        "check_name": "Ensure Google compute firewall ingress does not allow unrestricted ssh access",
+        "resource": "google_compute_firewall.allow_all",
+        "file": "/terraform/gcp/networks.tf:19"
+      },
+      "verdict": "TP",
+      "reason": "Unrestricted SSH from internet is a critical exposure"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_ALI_1",
+        "check_name": "Alibaba Cloud OSS bucket accessible to public",
+        "resource": "alicloud_oss_bucket.bad_bucket",
+        "file": "/terraform/alicloud/bucket.tf:1"
+      },
+      "verdict": "TP",
+      "reason": "Public OSS bucket is real exposure (but Alibaba, out of Aegis scope)"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_26",
+        "check_name": "Ensure that 'Send Alerts To' is enabled for MSSQL servers",
+        "resource": "azurerm_mssql_server_security_alert_policy.example",
+        "file": "/terraform/azure/sql.tf:31"
+      },
+      "verdict": "TP",
+      "reason": "Alert configuration is a detection control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_189",
+        "check_name": "Ensure EBS Volume is encrypted by KMS using a customer managed Key (CMK)",
+        "resource": "aws_ebs_volume.web_host_storage",
+        "file": "/terraform/aws/ec2.tf:34"
+      },
+      "verdict": "TP",
+      "reason": "CMK for EBS is a key management control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_GCP_23",
+        "check_name": "Ensure Kubernetes Cluster is created with Alias IP ranges enabled",
+        "resource": "google_container_cluster.workload_cluster",
+        "file": "/terraform/gcp/gke.tf:6"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Alias IP ranges is a networking best practice, marginal security impact"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_52",
+        "check_name": "Ensure MSSQL is using the latest version of TLS encryption",
+        "resource": "azurerm_mssql_server.mssql7",
+        "file": "/terraform/azure/mssql.tf:134"
+      },
+      "verdict": "TP",
+      "reason": "TLS version enforcement is a real security control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_218",
+        "check_name": "Ensure Application Gateway defines secure protocols for in transit communication",
+        "resource": "azurerm_application_gateway.network",
+        "file": "/terraform/azure/application_gateway.tf:1"
+      },
+      "verdict": "TP",
+      "reason": "Secure protocols for App Gateway is a real control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV2_AWS_8",
+        "check_name": "Ensure that RDS clusters has backup plan of AWS Backup",
+        "resource": "aws_rds_cluster.app8-rds-cluster",
+        "file": "/terraform/aws/rds.tf:113"
+      },
+      "verdict": "FP",
+      "reason": "AWS Backup vs native backup is a preference, not a vulnerability"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_GCP_15",
+        "check_name": "Ensure that BigQuery datasets are not anonymously or publicly accessible",
+        "resource": "google_bigquery_dataset.dataset",
+        "file": "/terraform/gcp/big_data.tf:21"
+      },
+      "verdict": "TP",
+      "reason": "Public BigQuery dataset is a data exposure risk"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_GCP_51",
+        "check_name": "Ensure PostgreSQL database 'log_checkpoints' flag is set to 'on'",
+        "resource": "google_sql_database_instance.master_instance",
+        "file": "/terraform/gcp/big_data.tf:1"
+      },
+      "verdict": "FP",
+      "reason": "PostgreSQL log_checkpoints verbosity is not a security issue"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_96",
+        "check_name": "Ensure all data stored in Aurora is securely encrypted at rest",
+        "resource": "aws_rds_cluster.app2-rds-cluster",
+        "file": "/terraform/aws/rds.tf:17"
+      },
+      "verdict": "TP",
+      "reason": "Aurora encryption at rest is fundamental"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_120",
+        "check_name": "Ensure that Application Gateway enables WAF",
+        "resource": "azurerm_application_gateway.network",
+        "file": "/terraform/azure/application_gateway.tf:1"
+      },
+      "verdict": "TP",
+      "reason": "WAF on App Gateway is a real protective control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_23",
+        "check_name": "Ensure that 'Auditing' is set to 'On' for SQL servers",
+        "resource": "azurerm_mssql_server.mssql6",
+        "file": "/terraform/azure/mssql.tf:115"
+      },
+      "verdict": "TP",
+      "reason": "SQL auditing is a detection control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV2_AWS_12",
+        "check_name": "Ensure the default security group of every VPC restricts all traffic",
+        "resource": "aws_vpc.web_vpc",
+        "file": "/terraform/aws/ec2.tf:117"
+      },
+      "verdict": "TP",
+      "reason": "Default SG restricting traffic is a real control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_13",
+        "check_name": "Ensure App Service Authentication is set on Azure App Service",
+        "resource": "azurerm_app_service.app-service1",
+        "file": "/terraform/azure/app_service.tf:22"
+      },
+      "verdict": "TP",
+      "reason": "App Service auth prevents unauthorized access"
+    },
+    {
+      "finding": {
+        "check_id": "CKV2_AZURE_45",
+        "check_name": "Ensure Microsoft SQL server is configured with private endpoint",
+        "resource": "azurerm_mssql_server.mssql6",
+        "file": "/terraform/azure/mssql.tf:115"
+      },
+      "verdict": "TP",
+      "reason": "Private endpoint eliminates public exposure"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_18",
+        "check_name": "Ensure that 'HTTP Version' is the latest if used to run the web app",
+        "resource": "azurerm_app_service.app-service1",
+        "file": "/terraform/azure/app_service.tf:22"
+      },
+      "verdict": "FP",
+      "reason": "HTTP version is a minor configuration detail"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_144",
+        "check_name": "Ensure that S3 bucket has cross-region replication enabled",
+        "resource": "aws_s3_bucket.flowbucket",
+        "file": "/terraform/aws/ec2.tf:271"
+      },
+      "verdict": "FP",
+      "reason": "S3 cross-region replication is DR hygiene; flowbucket is flow logs, not critical data"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_GCP_75",
+        "check_name": "Ensure Google compute firewall ingress does not allow unrestricted FTP access",
+        "resource": "google_compute_firewall.allow_all",
+        "file": "/terraform/gcp/networks.tf:19"
+      },
+      "verdict": "TP",
+      "reason": "Unrestricted FTP from internet is a real exposure"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_324",
+        "check_name": "Ensure that RDS Cluster log capture is enabled",
+        "resource": "aws_rds_cluster.app1-rds-cluster",
+        "file": "/terraform/aws/rds.tf:1"
+      },
+      "verdict": "TP",
+      "reason": "RDS log capture is a detection control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_287",
+        "check_name": "Ensure IAM policies does not allow credentials exposure",
+        "resource": "aws_iam_user_policy.userpolicy",
+        "file": "/terraform/aws/iam.tf:25"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_206",
+        "check_name": "Ensure that Storage Accounts use replication",
+        "resource": "azurerm_storage_account.security_storage_account",
+        "file": "/terraform/azure/mssql.tf:1"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_GCP_32",
+        "check_name": "Ensure 'Block Project-wide SSH keys' is enabled for VM instances",
+        "resource": "google_compute_instance.server",
+        "file": "/terraform/gcp/instances.tf:3"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_145",
+        "check_name": "Ensure that S3 buckets are encrypted with KMS by default",
+        "resource": "aws_s3_bucket.flowbucket",
+        "file": "/terraform/aws/ec2.tf:271"
+      },
+      "verdict": "TP",
+      "reason": "Check name indicates security control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_30",
+        "check_name": "Ensure server parameter 'log_checkpoints' is set to 'ON' for PostgreSQL Database Server",
+        "resource": "azurerm_postgresql_configuration.example",
+        "file": "/terraform/azure/sql.tf:105"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_139",
+        "check_name": "Ensure that RDS clusters have deletion protection enabled",
+        "resource": "aws_rds_cluster.app9-rds-cluster",
+        "file": "/terraform/aws/rds.tf:130"
+      },
+      "verdict": "TP",
+      "reason": "Deletion protection prevents destructive actions"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_79",
+        "check_name": "Ensure Instance Metadata Service Version 1 is not enabled",
+        "resource": "aws_instance.web_host",
+        "file": "/terraform/aws/ec2.tf:1"
+      },
+      "verdict": "TP",
+      "reason": "Check name indicates security control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV2_AWS_8",
+        "check_name": "Ensure that RDS clusters has backup plan of AWS Backup",
+        "resource": "aws_rds_cluster.app5-rds-cluster",
+        "file": "/terraform/aws/rds.tf:65"
+      },
+      "verdict": "FP",
+      "reason": "AWS Backup vs native backup is a preference, not a vulnerability"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_39",
+        "check_name": "Ensure that no custom subscription owner roles are created",
+        "resource": "azurerm_role_definition.example",
+        "file": "/terraform/azure/roles.tf:3"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_GCP_26",
+        "check_name": "Ensure that VPC Flow Logs is enabled for every subnet in a VPC Network",
+        "resource": "google_compute_subnetwork.public-subnetwork",
+        "file": "/terraform/gcp/networks.tf:7"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_18",
+        "check_name": "Ensure the S3 bucket has access logging enabled",
+        "resource": "aws_s3_bucket.operations",
+        "file": "/terraform/aws/s3.tf:65"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_52",
+        "check_name": "Ensure MSSQL is using the latest version of TLS encryption",
+        "resource": "azurerm_mssql_server.mssql2",
+        "file": "/terraform/azure/mssql.tf:39"
+      },
+      "verdict": "TP",
+      "reason": "TLS version enforcement is a real security control"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_313",
+        "check_name": "Ensure RDS cluster configured to copy tags to snapshots",
+        "resource": "aws_rds_cluster.app8-rds-cluster",
+        "file": "/terraform/aws/rds.tf:113"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_118",
+        "check_name": "Ensure that enhanced monitoring is enabled for Amazon RDS instances",
+        "resource": "aws_db_instance.default",
+        "file": "/terraform/aws/db-app.tf:1"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AWS_313",
+        "check_name": "Ensure RDS cluster configured to copy tags to snapshots",
+        "resource": "aws_rds_cluster.app5-rds-cluster",
+        "file": "/terraform/aws/rds.tf:65"
+      },
+      "verdict": "BORDERLINE",
+      "reason": "Could not auto-classify"
+    },
+    {
+      "finding": {
+        "check_id": "CKV_AZURE_68",
+        "check_name": "Ensure that PostgreSQL server disables public network access",
+        "resource": "azurerm_postgresql_server.example",
+        "file": "/terraform/azure/sql.tf:73"
+      },
+      "verdict": "TP",
+      "reason": "Check name indicates security control"
+    }
+  ],
+  "summary": {
+    "aegis": {
+      "tp": 29,
+      "fp": 8,
+      "borderline": 13,
+      "total": 50,
+      "precision_strict": 0.784,
+      "precision_lenient": 0.71
+    },
+    "checkov": {
+      "tp": 25,
+      "fp": 12,
+      "borderline": 13,
+      "total": 50,
+      "precision_strict": 0.676,
+      "precision_lenient": 0.63
+    }
+  }
+}

@@ -1,0 +1,62 @@
+# Aegis custom rules — example file.
+#
+# Load with:  aegis scan <dir> --custom-rules ./rules.d
+#
+# Each condition is a VIOLATION predicate: when it evaluates true (combined
+# with the rule's match mode), Aegis emits a finding. Nested attributes use
+# dot notation (tags.Team, versioning.enabled); nested blocks are read
+# through their first element.
+#
+# Operators:
+#   absent      attribute is missing            (no value needed)
+#   present     attribute is set                 (no value needed)
+#   equals      attribute == value
+#   not_equals  attribute != value (and is known)
+#   contains    attribute contains value (string or list)
+#   regex       attribute matches value (Go regexp)
+#   gt / lt     attribute numerically > / < value
+#
+# Unknown (unresolved) values never produce findings.
+rules:
+  - id: CUSTOM-001
+    title: "S3 buckets must carry a Team tag"
+    description: "Untagged buckets cannot be attributed to an owner, which breaks incident response and cost allocation."
+    severity: high
+    resource_types: [aws_s3_bucket]
+    match: all
+    conditions:
+      - attribute: tags.Team
+        operator: absent
+
+  - id: CUSTOM-002
+    title: "No public-read bucket ACLs"
+    description: "Buckets with public-read ACLs expose objects to the internet."
+    severity: critical
+    resource_types: [aws_s3_bucket, aws_s3_bucket_acl]
+    conditions:
+      - attribute: acl
+        operator: equals
+        value: public-read
+
+  - id: CUSTOM-003
+    title: "RDS backup retention must be at least 7 days"
+    description: "Short backup windows cannot satisfy point-in-time recovery objectives."
+    severity: medium
+    resource_types: [aws_db_instance]
+    match: any
+    conditions:
+      - attribute: backup_retention_period
+        operator: lt
+        value: 7
+      - attribute: backup_retention_period
+        operator: absent
+
+  - id: CUSTOM-004
+    title: "Instance types must follow the naming standard"
+    description: "Only approved instance families may be deployed."
+    severity: low
+    resource_types: [aws_instance]
+    conditions:
+      - attribute: instance_type
+        operator: regex
+        value: "^(t3|m6i)\\."
