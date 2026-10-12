@@ -202,8 +202,32 @@ type Adapter interface {
 
 // ScanResult is the complete output of one scan.
 type ScanResult struct {
-	Target      string       `json:"target"`
-	Resources   int          `json:"resources_scanned"`
-	Findings    []Finding    `json:"findings"`
-	Diagnostics []Diagnostic `json:"diagnostics"`
+	Target       string           `json:"target"`
+	Resources    int              `json:"resources_scanned"`
+	Findings     []Finding        `json:"findings"`
+	Diagnostics  []Diagnostic     `json:"diagnostics"`
+	Completeness ScanCompleteness `json:"scan_completeness"`
+}
+
+// FileStatus describes how a single discovered file was processed.
+type FileStatus struct {
+	Path   string `json:"path"`
+	Status string `json:"status"` // "parsed" | "skipped" | "failed"
+	Reason string `json:"reason,omitempty"`
+}
+
+// ScanCompleteness is the scan-completeness contract: every discovered
+// file has an explicit processing outcome. "Zero findings" is only
+// meaningful when FilesFailed == 0.
+type ScanCompleteness struct {
+	FilesDiscovered int          `json:"files_discovered"`
+	FilesParsed     int          `json:"files_parsed"`
+	FilesSkipped    int          `json:"files_skipped"`
+	FilesFailed     int          `json:"files_failed"`
+	Files           []FileStatus `json:"files,omitempty"` // only non-parsed files
+}
+
+// Complete reports whether every discovered file was parsed.
+func (s ScanCompleteness) Complete() bool {
+	return s.FilesFailed == 0
 }

@@ -47,7 +47,7 @@ type ruleRunner interface {
 const usageText = `aegis — Infrastructure-as-Code security scanner
 
 Usage:
-  aegis scan <dir> [--format=text|json|sarif] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file]
+  aegis scan <dir> [--format=text|json|sarif] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict]
   aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json] [--force]
   aegis serve [--addr=127.0.0.1:8734]
   aegis quality-gate [--format=text|json] [--bench-dir=DIR] [--corpus-dir=DIR]
@@ -90,7 +90,7 @@ Flags:
 Exit codes:
   0  scan clean (or below --fail-on threshold) / fix dry run
   1  findings reported (scan) / patches proposed or applied (fix)
-  2  usage or scan error
+  2  usage or scan error, or --strict with unparseable files
 `
 
 // defaultAdapters returns the language adapters wired into this build.
@@ -521,6 +521,7 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	attackPaths := fs.Bool("attack-paths", false, "")
 	maxFileSize := fs.Int64("max-file-size", 0, "")
 	timeoutSecs := fs.Int("timeout", 0, "")
+	strict := fs.Bool("strict", false, "fail with exit 2 if any file fails to parse")
 	var failOn failOnValue
 	fs.Var(&failOn, "fail-on", "")
 	if err := fs.Parse(flagArgs); err != nil {
@@ -670,6 +671,12 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "aegis: report error: %v\n", werr)
 		return 2
 	}
+	// --strict: fail if any file could not be parsed (incomplete scan)
+	if *strict && !res.Completeness.Complete() {
+		fmt.Fprintf(stderr, "aegis: strict mode: %d file(s) failed to parse\n",
+			res.Completeness.FilesFailed)
+		return 2
+	}
 	for _, f := range res.Findings {
 		if severityRank(f.Severity) >= threshold {
 			return 1
@@ -805,11 +812,49 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 	// resources, and modules come out exactly as the sequential loop
 	// produced them.
 	results := parseFilesConcurrent(files, adapters)
-	for _, pr := range results {
+	// Build scan-completeness: every discovered file gets an explicit outcome.
+	completeness := ir.ScanCompleteness{
+		FilesDiscovered: len(files),
+	}
+	for i, pr := range results {
 		res.Diagnostics = append(res.Diagnostics, pr.diags...)
+		fpath := files[i].Path
 		if pr.failed {
+			completeness.FilesFailed++
+			reason := "parse or read failure"
+			for _, d := range pr.diags {
+				if d.Level == "error" {
+					reason = d.Message
+					break
+				}
+			}
+			completeness.Files = append(completeness.Files, ir.FileStatus{
+				Path:   fpath,
+				Status: "failed",
+				Reason: reason,
+			})
 			continue
 		}
+		// Skipped: no adapter handled the file (diagnostic indicates this)
+		isSkipped := false
+		var skipReason string
+		for _, d := range pr.diags {
+			if d.Level == "warning" {
+				isSkipped = true
+				skipReason = d.Message
+				break
+			}
+		}
+		if isSkipped {
+			completeness.FilesSkipped++
+			completeness.Files = append(completeness.Files, ir.FileStatus{
+				Path:   fpath,
+				Status: "skipped",
+				Reason: skipReason,
+			})
+			continue
+		}
+		completeness.FilesParsed++
 		if pr.mod != nil {
 			mods = append(mods, *pr.mod)
 			providerReqs = append(providerReqs, pr.mod.ProviderReqs...)
@@ -835,6 +880,7 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 		}
 	}
 	res.Resources = len(resources)
+	res.Completeness = completeness
 	if engine != nil {
 		if findings := engine.Run(resources); findings != nil {
 			res.Findings = findings
