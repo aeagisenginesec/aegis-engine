@@ -1,0 +1,147 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/p7-work/cases/08",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-336",
+      "title": "CloudTrail not multi-region",
+      "description": "A single-region trail misses API activity in every other region. is_multi_region_trail defaults to false.",
+      "severity": "high",
+      "resource": "aws_cloudtrail.demo",
+      "evidence": {
+        "attribute": "is_multi_region_trail",
+        "span": {
+          "file": "/tmp/p7-work/cases/08/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "absent or false (provider default: single region)",
+        "expected": "true"
+      },
+      "remediation": "Enable CloudTrail in all regions with log file validation:\nresource \"aws_cloudtrail\" \"this\" {\n  is_multi_region_trail         = true\n  enable_log_file_validation    = true\n  kms_key_id                    = aws_kms_key.cloudtrail.arn\n  s3_bucket_name                = aws_s3_bucket.trail.id\n  include_global_service_events = true\n}",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-create-and-update-a-trail.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "3.1"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AU-2"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "10.3.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-568",
+      "title": "CloudTrail trail without KMS encryption",
+      "description": "CloudTrail log files should be encrypted with a customer-managed KMS key so log integrity is under your control. Set kms_key_id on the aws_cloudtrail resource.",
+      "severity": "medium",
+      "resource": "aws_cloudtrail.demo",
+      "evidence": {
+        "attribute": "kms_key_id",
+        "span": {
+          "file": "/tmp/p7-work/cases/08/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "kms_key_id set to a customer-managed key"
+      },
+      "remediation": "Encrypt CloudTrail logs with a KMS key (see AEGIS-AWS-336 fix):\nresource \"aws_cloudtrail\" \"this\" {\n  kms_key_id = aws_kms_key.cloudtrail.arn\n}",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/encrypting-cloudtrail-log-files-with-aws-kms.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-760",
+      "title": "CloudTrail trail is not an organization trail",
+      "description": "A trail that is not an organization trail records API activity for a single account only. An organization trail centralizes audit logging across every account in the organization.",
+      "severity": "low",
+      "resource": "aws_cloudtrail.demo",
+      "evidence": {
+        "attribute": "is_organization_trail",
+        "span": {
+          "file": "/tmp/p7-work/cases/08/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "true"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "3.1"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AU-2"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-761",
+      "title": "CloudTrail trail without CloudTrail Insights",
+      "description": "CloudTrail Insights detects unusual API activity and errors automatically. A trail with no insight_selector block never benefits from anomaly detection on management events.",
+      "severity": "low",
+      "resource": "aws_cloudtrail.demo",
+      "evidence": {
+        "attribute": "insight_selector",
+        "span": {
+          "file": "/tmp/p7-work/cases/08/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "absent (Insights not enabled)",
+        "expected": "insight_selector block configured"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "3.1"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AU-2"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/p7-work/cases/08/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1229 @@
+### AEGIS-AZURE-130 [medium] AKS cluster without Microsoft Defender for Containers
+pack=azure type=aksNoDefender file=internal/rules/azure/azure10.go:157
+AppliesTo: return aksApplies(resType)
+Check head:
+
+	if _, _, present, _ := getBlocks(r, "microsoft_defender"); present {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "microsoft_defender",
+		evidenceSpan(ir.Span{}, r.Span), "absent",
+		"microsoft_defender { log_analytics_workspace_id = ... }")}
+
+### AEGIS-AWS-012 [medium] S3 bucket without versioning
+pack=aws type=s3Versioning file=internal/rules/aws/s3.go:270
+AppliesTo: return resType == "aws_s3_bucket" || resType == "aws_s3_bucket_versioning"
+Check head:
+
+	blks, span, present, known := getBlocks(r, "versioning")
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if present && len(blks) > 0 {
+		for _, b := range blks {
+			en, _, epresent, eknown := blockBool(b, "enabled")
+			if epresent && !eknown {
+				return nil // unresolved: cannot decide
+			}
+			if epresent && en {
+				return nil // versioning enabled
+			}
+		}
+	}
+	// Absent or present-but-disabled: provider default is disabled.
+	actual := "absent (provider default: disabled)"
+	if present {
+		actual = "enabled = false"
+	}
+	return []ir.Finding{{
+		RuleID:      "AEGIS-AWS-012",
+		Title:       (s3Versioning{}).Title(),
+		Description: (s3Versioning{}).Description(),
+		Severity:    ir.SeverityMedium,
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "versioning",
+			Span:      evidenceSpan(span, r.Span),
+			Actual:    actual,
+			Expected:  "versioning { 
+
+### AEGIS-K8S-024 [low] Container with interactive stdin/tty
+pack=k8s type=stdinTTY file=internal/rules/k8s/k8s2.go:956
+AppliesTo: return appliesTo(resType)
+
+### AEGIS-AWS-383 [medium] ECS cluster without Container Insights
+pack=aws type=ecsClusterNoContainerInsights file=internal/rules/aws/compute2.go:142
+AppliesTo: return resType == "aws_ecs_cluster"
+Check head:
+
+	settings, _, present, known := getBlocks(r, "setting")
+	if !present {
+		return []ir.Finding{{
+			RuleID:      "AEGIS-AWS-383",
+			Title:       (ecsClusterNoContainerInsights{}).Title(),
+			Description: (ecsClusterNoContainerInsights{}).Description(),
+			Severity:    ir.SeverityMedium,
+			Resource:    r.Address(),
+			Evidence: ir.Evidence{
+				Attribute: "setting",
+				Span:      r.Span,
+				Actual:    "absent (Container Insights disabled by default)",
+				Expected:  "setting { name = \"containerInsights\", value = \"enabled\" }",
+			},
+		}}
+	}
+	if !known {
+		return nil // unresolved: cannot decide
+	}
+	for _, s := range settings {
+		name, _, npresent, nknown := blockString(s, "name")
+		val, _, vpresent, vknown := blockString(s, "value")
+		if !npresent || !nknown || !vpresent || !vknown {
+			return nil // partially unresolved: cannot decide
+		}
+		if strings.EqualFold(strings.TrimSpace(na
+
+### AEGIS-ALI-004 [medium] OSS bucket without access logging
+pack=alibaba type=ossNoLogging file=internal/rules/alibaba/alibaba.go:276
+AppliesTo: return resType == "alicloud_oss_bucket"
+Check head:
+
+	blks, span, present, known := getBlocks(r, "logging")
+	if present && !known {
+		return nil
+	}
+	if present && len(blks) > 0 {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "logging",
+		evidenceSpan(span, r.Span), "absent (no access logging)",
+		"logging { target_bucket = \"<log-bucket>\" }")}
+
+### AEGIS-AWS-371 [medium] Load balancer without access logs
+pack=aws type=lbNoAccessLogs file=internal/rules/aws/integration.go:15
+AppliesTo: return resType == "aws_lb" || resType == "aws_alb"
+Check head:
+
+	blks, span, present, known := getBlocks(r, "access_logs")
+	if !present {
+		return lbAccessLogFinding(r, evidenceSpan(ir.Span{}, r.Span),
+			"absent (provider default: disabled)")
+	}
+	if !known {
+		return nil // unresolved: cannot decide
+	}
+	for _, b := range blks {
+		if en, _, epresent, eknown := blockBool(b, "enabled"); epresent && eknown && en {
+			return nil // at least one access_logs block enabled
+		}
+	}
+	return lbAccessLogFinding(r, evidenceSpan(span, r.Span), "disabled")
+
+### AEGIS-DOCKER-023 [low] SHELL without pipefail
+pack=docker type=shellNoPipefail file=internal/rules/docker/docker_extra.go:595
+AppliesTo: return appliesToDocker(resType)
+Check head:
+
+	rule := shellNoPipefail{}
+	sh, shspan, present, known := getString(r, "shell")
+	if !present || !known || strings.TrimSpace(sh) == "" {
+		return nil
+	}
+	if !isUnixShell(sh) || strings.Contains(sh, "pipefail") {
+		return nil
+	}
+	return []ir.Finding{finding(
+		rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+		r, "SHELL", shspan, sh,
+		`SHELL ["/bin/bash", "-o", "pipefail", "-c"]`,
+	)}
+
+### AEGIS-GCP-267 [medium] Dataflow job without private IP configuration
+pack=gcp type=dataflowPublicIPs file=internal/rules/gcp/gcp9.go:209
+AppliesTo: return resType == "google_dataflow_job"
+Check head:
+
+	blks, span, present, known := getBlocks(r, "ip_configuration")
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if present && len(blks) > 0 {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "ip_configuration",
+		evidenceSpan(span, r.Span), "absent (defaults to public IPs)",
+		"ip_configuration { ... } with private worker IPs")}
+
+### AEGIS-AZURE-297 [low] Virtual machine without boot diagnostics
+pack=azure type=vmNoBootDiag file=internal/rules/azure/azure20.go:564
+AppliesTo: return resType == "azurerm_virtual_machine" || resType == "azurerm_linux_virtual_machine" || resType == "azurerm_windows_virtual_machine"
+Check head:
+
+	blks, span, present, known := getBlocks(r, "boot_diagnostics")
+	if present && !known {
+		return nil
+	}
+	if present {
+		for _, b := range blks {
+			en, _, p, k := blockBool(b, "enabled")
+			if p && !k {
+				return nil
+			}
+			if !p || en {
+				return nil
+			}
+		}
+	}
+	return []ir.Finding{mkFinding(s, r, "boot_diagnostics",
+		evidenceSpan(span, r.Span), "absent or disabled",
+		"boot_diagnostics { storage_account_uri = \"...\" }")}
+
+### AEGIS-GCP-151 [medium] Authoritative service account IAM policy replaces all bindings
+pack=gcp type=saIamAuthoritativePolicy file=internal/rules/gcp/gcp6.go:499
+AppliesTo: return resType == "google_service_account_iam_policy"
+Check head:
+
+	return []ir.Finding{mkFinding(s, r, "resource", r.Span,
+		"google_service_account_iam_policy present (authoritative)",
+		"use google_service_account_iam_binding/member instead")}
+
+### AEGIS-AWS-419 [medium] Athena workgroup configuration not enforced
+pack=aws type=athenaWorkgroupNotEnforced file=internal/rules/aws/data2.go:386
+AppliesTo: return resType == "aws_athena_workgroup"
+Check head:
+
+	val, span, present, known := getBool(r, "enforce_workgroup_configuration")
+	if !present {
+		// Optional; the provider default is false: queries can override
+		// the workgroup's encryption and output settings.
+		return absentInsecureDefault(athenaWorkgroupNotEnforced{}, r,
+			"enforce_workgroup_configuration", "absent (provider default: false)",
+			"enforce_workgroup_configuration = true")
+	}
+	if !known {
+		return nil // unresolved: cannot decide
+	}
+	if val {
+		return nil
+	}
+	return []ir.Finding{{
+		RuleID:      "AEGIS-AWS-419",
+		Title:       (athenaWorkgroupNotEnforced{}).Title(),
+		Description: (athenaWorkgroupNotEnforced{}).Description(),
+		Severity:    ir.SeverityMedium,
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "enforce_workgroup_configuration",
+			Span:      evidenceSpan(span, r.Span),
+			Actual:    "false",
+			Expected:  "enforce_workgroup_configuration
+
+### AEGIS-AWS-723 [medium] Lambda alias pointing at $LATEST
+pack=aws type=lambdaAliasLatestVersion file=internal/rules/aws/lambda_deep.go:222
+AppliesTo: return resType == "aws_lambda_alias"
+Check head:
+
+	s := lambdaAliasLatestVersion{}
+	ver, span, present, known := getString(r, "function_version")
+	if !present || !known {
+		return nil // unresolved: cannot decide
+	}
+	if strings.TrimSpace(ver) != "$LATEST" {
+		return nil
+	}
+	return []ir.Finding{{
+		RuleID:      s.ID(),
+		Title:       s.Title(),
+		Description: s.Description(),
+		Severity:    s.Severity(),
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "function_version",
+			Span:      evidenceSpan(span, r.Span),
+			Actual:    "\"$LATEST\"",
+			Expected:  "an immutable published version number",
+		},
+	}}
+
+### AEGIS-AZURE-114 [low] App Service without HTTP logging
+pack=azure type=appSvcNoHTTPLogging file=internal/rules/azure/azure8.go:250
+AppliesTo: return appSvcTypes(resType)
+Check head:
+
+	if logsBoolEnabled(r, "logs", "http_logging_enabled") {
+		return nil
+	}
+	blks, _, present, known := getBlocks(r, "logs")
+	if present && known {
+		for _, b := range blks {
+			if len(blockList(b, "http_logs")) > 0 {
+				return nil
+			}
+		}
+	}
+	return []ir.Finding{mkFinding(s, r, "logs.http_logs",
+		evidenceSpan(ir.Span{}, r.Span), "absent",
+		"logs { http_logs { file_system { retention_in_days = 30 } } }")}
+
+### AEGIS-AWS-657 [medium] IAM group uses an inline policy
+pack=aws type=iamGroupInlinePolicy file=internal/rules/aws/iam_deep.go:321
+AppliesTo: return resType == "aws_iam_group_policy"
+
+### AEGIS-AWS-732 [low] Lambda layer version without compatible runtimes
+pack=aws type=lambdaLayerNoRuntimes file=internal/rules/aws/lambda_deep.go:647
+AppliesTo: return resType == "aws_lambda_layer_version"
+Check head:
+
+	s := lambdaLayerNoRuntimes{}
+	v, ok := r.Attributes["compatible_runtimes"]
+	if !ok {
+		return absentInsecureDefault(s, r, "compatible_runtimes",
+			"absent (layer attachable to any runtime)",
+			"compatible_runtimes listing the supported runtimes")
+	}
+	if !v.Known {
+		return nil // unresolved: cannot decide
+	}
+	return nil
+
+### AEGIS-DOCKER-016 [low] Deprecated MAINTAINER instruction
+pack=docker type=deprecatedMaintainer file=internal/rules/docker/docker_extra.go:320
+AppliesTo: return appliesToDocker(resType)
+Check head:
+
+	rule := deprecatedMaintainer{}
+	used, _, present, known := getBool(r, "uses_maintainer")
+	if !present || !known || !used {
+		return nil
+	}
+	span := r.Span
+	if v, ok := r.Attributes["maintainer_span"]; ok {
+		span = v.Span
+	}
+	return []ir.Finding{finding(
+		rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+		r, "MAINTAINER", span, "deprecated MAINTAINER instruction",
+		"LABEL maintainer=... / org.opencontainers.image.authors",
+	)}
+
+### AEGIS-DOCKER-020 [low] VOLUME declared in image
+pack=docker type=volumeDeclared file=internal/rules/docker/docker_extra.go:457
+AppliesTo: return appliesToDocker(resType)
+Check head:
+
+	rule := volumeDeclared{}
+	used, _, present, known := getBool(r, "uses_volume")
+	if !present || !known || !used {
+		return nil
+	}
+	return []ir.Finding{finding(
+		rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+		r, "VOLUME", r.Span, "VOLUME declared",
+		"declare volumes at deploy time, not in the image",
+	)}
+
+### AEGIS-AWS-736 [medium] ECS service with ECS Exec enabled
+pack=aws type=ecsServiceExecEnabled file=internal/rules/aws/lambda_deep.go:839
+AppliesTo: return resType == "aws_ecs_service"
+Check head:
+
+	s := ecsServiceExecEnabled{}
+	val, span, present, known := getBool(r, "enable_execute_command")
+	if !present || !known {
+		return nil // default false or unresolved: cannot flag
+	}
+	if !val {
+		return nil
+	}
+	return []ir.Finding{{
+		RuleID:      s.ID(),
+		Title:       s.Title(),
+		Description: s.Description(),
+		Severity:    s.Severity(),
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "enable_execute_command",
+			Span:      evidenceSpan(span, r.Span),
+			Actual:    "true",
+			Expected:  "false (or omitted)",
+		},
+	}}
+
+### AEGIS-AWS-434 [medium] Glue job without security configuration
+pack=aws type=glueJobNoSecConfig file=internal/rules/aws/final.go:176
+AppliesTo: return resType == "aws_glue_job"
+Check head:
+
+	cfg, span, present, known := getString(r, "security_configuration")
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if present && strings.TrimSpace(cfg) != "" {
+		return nil
+	}
+	return []ir.Finding{{
+		RuleID:      "AEGIS-AWS-434",
+		Title:       (glueJobNoSecConfig{}).Title(),
+		Description: (glueJobNoSecConfig{}).Description(),
+		Severity:    ir.SeverityMedium,
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "security_configuration",
+			Span:      evidenceSpan(span, r.Span),
+			Actual:    "absent",
+			Expected:  "security_configuration referencing an aws_glue_security_configuration",
+		},
+	}}
+
+### AEGIS-GCP-062 [medium] Compute instance with default service account
+pack=gcp type=instanceDefaultSA file=internal/rules/gcp/gcp3.go:1318
+AppliesTo: return t == "google_compute_instance"
+Check head:
+
+	blks, _, present, known := getBlocks(r, "service_account")
+	if !present || !known {
+		return nil
+	}
+	for _, b := range blks {
+		email, _, p, k := getString(mapRes(b), "email")
+		if !p || !k || strings.TrimSpace(email) == "" || strings.Contains(email, "default") {
+			return []ir.Finding{mkFinding(s, r, "service_account.email", r.Span,
+				"default service account", "dedicated least-privilege service account")}
+		}
+	}
+	return nil
+
+### AEGIS-DOCKER-004 [low] ADD used instead of COPY
+pack=docker type=addInsteadOfCopy file=internal/rules/docker/docker.go:230
+AppliesTo: return appliesToDocker(resType)
+Check head:
+
+	rule := addInsteadOfCopy{}
+	uses, _, present, known := getBool(r, "uses_add")
+	if !present || !known || !uses {
+		return nil
+	}
+	span := r.Span
+	if v, ok := r.Attributes["add_span"]; ok {
+		span = v.Span
+	}
+	return []ir.Finding{finding(
+		rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+		r, "ADD", span, "ADD instruction present",
+		"COPY for local files",
+	)}
+
+### AEGIS-GCP-132 [medium] Dataflow job without customer-managed encryption
+pack=gcp type=dataflowNoCMEK file=internal/rules/gcp/gcp5.go:410
+AppliesTo: return resType == "google_dataflow_job"
+Check head:
+
+	return noCMEK(s, r)
+
+### AEGIS-AWS-846 [low] Route 53 health check disabled
+pack=aws type=route53HealthCheckDisabled file=internal/rules/aws/edge_deep.go:831
+AppliesTo: return resType == "aws_route53_health_check"
+Check head:
+
+	val, span, present, known := getBool(r, "disabled")
+	if !present || !known {
+		return nil // provider default is false: absent is safe
+	}
+	if !val {
+		return nil
+	}
+	return []ir.Finding{sdFinding(s, r, "disabled", span,
+		"true", "disabled = false")}
+
+### AEGIS-AZURE-165 [medium] Automation account with public network access enabled
+pack=azure type=automationPublicNet file=internal/rules/azure/azure13.go:583
+AppliesTo: return resType == "azurerm_automation_account"
+Check head:
+
+	return publicNetOpen(s, r, "public_network_access_enabled", "azurerm_automation_account")
+
+### AEGIS-AWS-554 [medium] IAM role with max session duration over 12 hours
+pack=aws type=iamRoleLongSession file=internal/rules/aws/coveragegaps.go:137
+AppliesTo: return resType == "aws_iam_role"
+Check head:
+
+	val, span, present, known := getNumber(r, "max_session_duration")
+	if !present || !known {
+		return nil // absent (default 3600) or unresolved: cannot decide
+	}
+	if val > 43200 {
+		return []ir.Finding{{
+			RuleID:      "AEGIS-AWS-554",
+			Title:       (iamRoleLongSession{}).Title(),
+			Description: (iamRoleLongSession{}).Description(),
+			Severity:    ir.SeverityMedium,
+			Resource:    r.Address(),
+			Evidence: ir.Evidence{
+				Attribute: "max_session_duration",
+				Span:      evidenceSpan(span, r.Span),
+				Actual:    strconv.FormatFloat(val, 'f', -1, 64),
+				Expected:  "max_session_duration <= 43200",
+			},
+		}}
+	}
+	return nil
+
+### AEGIS-GCP-239 [medium] Logging exclusion excludes everything
+pack=gcp type=logExclusionOverlyBroad file=internal/rules/gcp/gcp8.go:749
+AppliesTo: return resType == "google_logging_project_exclusion" || resType == "google_logging_folder_exclusion"
+Check head:
+
+	filter, span, present, known := getString(r, "filter")
+	if !present || !known {
+		return nil
+	}
+	if strings.TrimSpace(filter) == "" {
+		return []ir.Finding{mkFinding(s, r, "filter", span,
+			"\"\" (excludes every log entry)",
+			"filter = \"<narrow exclusion filter>\"")}
+	}
+	return nil
+
+### AEGIS-AZURE-309 [medium] Cognitive Services with permissive network ACLs
+pack=azure type=cognitiveNetACLs file=internal/rules/azure/azure21.go:430
+AppliesTo: return resType == "azurerm_cognitive_account"
+Check head:
+
+	acls, span, present, known := getBlocks(r, "network_acls")
+	if !present || !known {
+		return nil
+	}
+	for _, a := range acls {
+		act, _, p, k := blockString(a, "default_action")
+		if p && !k {
+			return nil
+		}
+		if !p || !strings.EqualFold(strings.TrimSpace(act), "Deny") {
+			actual := "absent"
+			if p {
+				actual = act
+			}
+			return []ir.Finding{mkFinding(s, r, "network_acls",
+				evidenceSpan(span, r.Span), actual,
+				"network_acls { default_action = \"Deny\" }")}
+		}
+	}
+	return nil
+
+### AEGIS-AWS-571 [medium] CodeArtifact repository without upstream configuration
+pack=aws type=codeartifactNoUpstream file=internal/rules/aws/coveragegaps.go:914
+AppliesTo: return resType == "aws_codeartifact_repository"
+Check head:
+
+	blks, _, present, known := getBlocks(r, "upstream")
+	if present && !known {
+		return nil
+	}
+	if !present || len(blks) == 0 {
+		return []ir.Finding{{
+			RuleID:      "AEGIS-AWS-571",
+			Title:       (codeartifactNoUpstream{}).Title(),
+			Description: (codeartifactNoUpstream{}).Description(),
+			Severity:    ir.SeverityMedium,
+			Resource:    r.Address(),
+			Evidence: ir.Evidence{
+				Attribute: "upstream",
+				Span:      evidenceSpan(ir.Span{}, r.Span),
+				Actual:    "absent",
+				Expected:  "upstream block with repository_name",
+			},
+		}}
+	}
+	return nil
+
+### AEGIS-AWS-510 [medium] Load balancer listener without HTTP-to-HTTPS redirect
+pack=aws type=lbListenerNoRedirect file=internal/rules/aws/network_exposure.go:271
+AppliesTo: return resType == "aws_lb_listener"
+Check head:
+
+	pv, ok := r.Attr("port")
+	if !ok || !pv.Known {
+		return nil // absent or unresolved: cannot decide
+	}
+	var port float64
+	switch n := pv.Raw.(type) {
+	case float64:
+		port = n
+	case int:
+		port = float64(n)
+	case int64:
+		port = float64(n)
+	default:
+		return nil // unexpected shape: cannot decide
+	}
+	if port != 80 {
+		return nil
+	}
+	actions, span, present, known := getBlocks(r, "default_action")
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	for _, a := range actions {
+		if t, ok := a["type"]; ok && t.Known {
+			if s, ok := t.AsString(); ok && s == "redirect" {
+				return nil // redirects to HTTPS
+			}
+		}
+	}
+	return []ir.Finding{{
+		RuleID:      "AEGIS-AWS-510",
+		Title:       (lbListenerNoRedirect{}).Title(),
+		Description: (lbListenerNoRedirect{}).Description(),
+		Severity:    ir.SeverityMedium,
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute
+
+### AEGIS-AZURE-047 [medium] MSSQL server without Azure AD administrator
+pack=azure type=mssqlNoADAdmin file=internal/rules/azure/azure4.go:129
+AppliesTo: return resType == "azurerm_mssql_server"
+Check head:
+
+	_, _, present, _ := getBlocks(r, "azuread_administrator")
+	if present {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "azuread_administrator",
+		evidenceSpan(ir.Span{}, r.Span), "absent", "azuread_administrator block with login_username")}
+
+### AEGIS-AWS-791 [medium] SSM StringList parameter stores plaintext secret
+pack=aws type=ssmStringListPlaintextSecret file=internal/rules/aws/kms_secrets_deep.go:428
+AppliesTo: return resType == "aws_ssm_parameter"
+Check head:
+
+	rule := ssmStringListPlaintextSecret{}
+	typ, _, tpresent, tknown := getString(r, "type")
+	if !tpresent || !tknown || !strings.EqualFold(strings.TrimSpace(typ), "StringList") {
+		return nil // not a StringList (or unresolved): nothing to judge
+	}
+	name, span, npresent, nknown := getString(r, "name")
+	if !npresent || !nknown {
+		return nil // unresolved: cannot decide
+	}
+	if !secretLikeName(name) {
+		return nil
+	}
+	return msgFinding(rule, r, "type", evidenceSpan(span, r.Span),
+		"StringList with secret-like name (plaintext)", "type = \"SecureString\"")
+
+### AEGIS-GCP-045 [medium] Cloud SQL instance with local_infile enabled
+pack=gcp type=sqlLocalInfile file=internal/rules/gcp/gcp3.go:736
+AppliesTo: return t == "google_sql_database_instance"
+Check head:
+
+	settings, _, present, known := getBlocks(r, "settings")
+	if !present || !known {
+		return nil
+	}
+	for _, st := range settings {
+		for _, f := range blockList(st, "database_flags") {
+			name, _, np, nk := getString(mapRes(f), "name")
+			if !np || !nk || strings.ToLower(name) != "local_infile" {
+				continue
+			}
+			val, span, vp, vk := getString(mapRes(f), "value")
+			if vp && vk && (val == "on" || val == "1") {
+				return []ir.Finding{mkFinding(s, r, "database_flags.local_infile", span,
+					val, "off")}
+			}
+		}
+	}
+	return nil
+
+### AEGIS-GCP-004 [medium] GKE cluster without master authorized networks
+pack=gcp type=gkeNoAuthorizedNetworks file=internal/rules/gcp/gcp.go:319
+AppliesTo: return resType == "google_container_cluster"
+Check head:
+
+	_, _, present, known := getBlocks(r, "master_authorized_networks_config")
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if present {
+		return nil // configured (any shape counts as an explicit choice)
+	}
+	return []ir.Finding{mkFinding(s, r, "master_authorized_networks_config", ir.Span{},
+		"absent", "master_authorized_networks_config block restricting API access")}
+
+### AEGIS-GCP-207 [low] Pub/Sub topic message retention under 7 days
+pack=gcp type=pubsubShortRetention file=internal/rules/gcp/gcp7.go:1195
+AppliesTo: return resType == "google_pubsub_topic"
+Check head:
+
+	dur, span, present, known := getString(r, "message_retention_duration")
+	if !present || !known {
+		return nil
+	}
+	secs, ok := parseDurationSecs(dur)
+	if !ok {
+		return nil // unparseable: cannot decide
+	}
+	if secs >= 604800 {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "message_retention_duration", span,
+		dur, "message_retention_duration = \"604800s\"")}
+
+### AEGIS-GCP-129 [low] Cloud Run v2 service without deletion protection
+pack=gcp type=cloudRunNoDelProtect file=internal/rules/gcp/gcp5.go:304
+AppliesTo: return resType == "google_cloud_run_v2_service"
+Check head:
+
+	en, span, present, known := getBool(r, "deletion_protection")
+	if present && !known {
+		return nil
+	}
+	if present && en {
+		return nil
+	}
+	actual := "false"
+	if !present {
+		actual = "absent (provider default: false)"
+	}
+	return []ir.Finding{mkFinding(s, r, "deletion_protection",
+		evidenceSpan(span, r.Span), actual, "deletion_protection = true")}
+
+### AEGIS-AZURE-186 [low] Key Vault soft-delete retention under 90 days
+pack=azure type=kvSoftDeleteRetention file=internal/rules/azure/azure15.go:51
+AppliesTo: return resType == "azurerm_key_vault"
+Check head:
+
+	v, ok := r.Attributes["soft_delete_retention_days"]
+	if !ok || !v.Known {
+		return nil
+	}
+	var days float64
+	switch n := v.Raw.(type) {
+	case float64:
+		days = n
+	case int:
+		days = float64(n)
+	case int64:
+		days = float64(n)
+	default:
+		return nil // unexpected shape: cannot decide
+	}
+	if days >= 90 {
+		return nil
+	}
+	actual := "0"
+	if days != 0 {
+		actual = strings.TrimRight(strings.TrimRight(
+			strconv.FormatFloat(days, 'f', 1, 64), "0"), ".")
+	}
+	return []ir.Finding{mkFinding(s, r, "soft_delete_retention_days", v.Span,
+		actual, "soft_delete_retention_days = 90")}
+
+### AEGIS-GCP-087 [medium] Project without data-access audit logging
+pack=gcp type=auditNoDataRead file=internal/rules/gcp/gcp3.go:2166
+AppliesTo: return t == "google_project_iam_policy"
+Check head:
+
+	blks, _, present, known := getBlocks(r, "audit_config")
+	if !present || !known || len(blks) == 0 {
+		return nil // 079 covers absent audit_config
+	}
+	for _, b := range blks {
+		for _, lc := range blockList(b, "audit_log_configs") {
+			lt, _, p, k := getString(mapRes(lc), "log_type")
+			if p && k && strings.ToUpper(lt) == "DATA_READ" {
+				return nil
+			}
+		}
+	}
+	return []ir.Finding{mkFinding(s, r, "audit_config.audit_log_configs", r.Span,
+		"no DATA_READ log type", "audit_log_configs { log_type = \"DATA_READ\" }")}
+
+### AEGIS-AWS-398 [medium] VPC peering connection auto-accept enabled
+pack=aws type=vpcPeeringAutoAccept file=internal/rules/aws/governance.go:351
+AppliesTo: return resType == "aws_vpc_peering_connection"
+Check head:
+
+	auto, span, present, known := getBool(r, "auto_accept")
+	if !present || !known {
+		return nil // unresolved: cannot decide
+	}
+	if !auto {
+		return nil
+	}
+	return []ir.Finding{{
+		RuleID:      "AEGIS-AWS-398",
+		Title:       (vpcPeeringAutoAccept{}).Title(),
+		Description: (vpcPeeringAutoAccept{}).Description(),
+		Severity:    ir.SeverityMedium,
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "auto_accept",
+			Span:      evidenceSpan(span, r.Span),
+			Actual:    "true",
+			Expected:  "false (manual approval)",
+		},
+	}}
+
+### AEGIS-AWS-816 [medium] App Runner service without encryption configuration
+pack=aws type=apprunnerNoEncryption file=internal/rules/aws/services_deep.go:697
+AppliesTo: return resType == "aws_apprunner_service"
+Check head:
+
+	blks, _, present, known := getBlocks(r, "encryption_configuration")
+	if present && !known {
+		return nil
+	}
+	if present && len(blks) > 0 {
+		return nil
+	}
+	return absentInsecureDefault(s, r, "encryption_configuration",
+		"absent (AWS-managed key)",
+		"encryption_configuration { kms_key = <customer managed key> }")
+
+### AEGIS-GCP-199 [low] Cloud Run service on first-generation execution environment
+pack=gcp type=runGen1ExecEnv file=internal/rules/gcp/gcp7.go:840
+AppliesTo: return resType == "google_cloud_run_v2_service"
+Check head:
+
+	tblks, _, present, known := getBlocks(r, "template")
+	if !present || !known {
+		return nil
+	}
+	for _, t := range tblks {
+		ee, span, ep, ek := blockString(t, "execution_environment")
+		if ep && !ek {
+			return nil
+		}
+		if ep && strings.EqualFold(strings.TrimSpace(ee), "EXECUTION_ENVIRONMENT_GEN1") {
+			return []ir.Finding{mkFinding(s, r,
+				"template.execution_environment", span, ee,
+				"execution_environment = \"EXECUTION_ENVIRONMENT_GEN2\"")}
+		}
+	}
+	return nil
+
+### AEGIS-GCP-236 [low] Log bucket retention not locked
+pack=gcp type=logBucketRetentionUnlocked file=internal/rules/gcp/gcp8.go:634
+AppliesTo: return resType == "google_logging_project_bucket_config"
+Check head:
+
+	_, _, present, known := getNum(r, "retention_days")
+	if !present || !known {
+		return nil // AEGIS-GCP-233's scope or unresolved
+	}
+	_, lspan, lpresent, lknown := getBool(r, "locked")
+	if lpresent && !lknown {
+		return nil
+	}
+	if !lpresent {
+		return []ir.Finding{mkFinding(s, r, "locked",
+			evidenceSpan(lspan, r.Span), "absent (retention can be shortened)",
+			"locked = true")}
+	}
+	return nil // locked true, or explicit false (AEGIS-GCP-233's scope)
+
+### AEGIS-AWS-523 [medium] OpenSearch domain without fine-grained access control
+pack=aws type=opensearchNoFGAC file=internal/rules/aws/auth_supply.go:147
+AppliesTo: return resType == "aws_opensearch_domain"
+Check head:
+
+	blks, span, present, known := getBlocks(r, "advanced_security_options")
+	if !present {
+		return []ir.Finding{{
+			RuleID:      "AEGIS-AWS-523",
+			Title:       (opensearchNoFGAC{}).Title(),
+			Description: (opensearchNoFGAC{}).Description(),
+			Severity:    ir.SeverityMedium,
+			Resource:    r.Address(),
+			Evidence: ir.Evidence{
+				Attribute: "advanced_security_options",
+				Span:      evidenceSpan(span, r.Span),
+				Actual:    "absent",
+				Expected:  "advanced_security_options block with enabled = true",
+			},
+		}}
+	}
+	if !known {
+		return nil // unresolved: cannot decide
+	}
+	if len(blks) == 0 {
+		return nil // empty block list: cannot decide
+	}
+	b := blks[0]
+	enabled, asp, epresent, eknown := blockBool(b, "enabled")
+	if epresent && !eknown {
+		return nil // unresolved: cannot decide
+	}
+	if epresent && enabled {
+		return nil // fine-grained access control enabled
+	}
+	actual := "abs
+
+### AEGIS-AWS-516 [medium] EMR security configuration without in-transit encryption
+pack=aws type=emrNoTransitEncryption file=internal/rules/aws/encryption_gaps.go:181
+AppliesTo: return resType == "aws_emr_security_configuration"
+Check head:
+
+	enc, ok := emrEncryptionConfig(r)
+	if !ok {
+		return nil // absent/unparseable: cannot decide
+	}
+	val, present := emrConfigBool(enc, "EnableInTransitEncryption")
+	if present && val {
+		return nil
+	}
+	_, span, _, _ := getString(r, "configuration")
+	return []ir.Finding{{
+		RuleID:      "AEGIS-AWS-516",
+		Title:       (emrNoTransitEncryption{}).Title(),
+		Description: (emrNoTransitEncryption{}).Description(),
+		Severity:    ir.SeverityMedium,
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "configuration.EncryptionConfiguration.EnableInTransitEncryption",
+			Span:      evidenceSpan(span, r.Span),
+			Actual:    "false or absent",
+			Expected:  "EnableInTransitEncryption = true",
+		},
+	}}
+
+### AEGIS-AZURE-111 [low] App Service without detailed error messages
+pack=azure type=appSvcNoDetailedErr file=internal/rules/azure/azure8.go:148
+AppliesTo: return appSvcTypes(resType)
+Check head:
+
+	if logsBoolEnabled(r, "logs", "detailed_error_messages_enabled",
+		"detailed_error_logging_enabled") {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "logs.detailed_error_messages_enabled",
+		evidenceSpan(ir.Span{}, r.Span), "disabled or absent",
+		"logs { detailed_error_messages_enabled = true }")}
+
+### AEGIS-AZURE-194 [medium] Storage SAS policy not blocking expired tokens
+pack=azure type=storageSasNotBlocked file=internal/rules/azure/azure15.go:376
+AppliesTo: return resType == "azurerm_storage_account"
+Check head:
+
+	blks, span, present, known := getBlocks(r, "sas_policy")
+	if !present || !known {
+		return nil
+	}
+	for _, b := range blks {
+		act, _, p, k := blockString(b, "expiration_action")
+		if p && !k {
+			return nil
+		}
+		if !p || !strings.EqualFold(strings.TrimSpace(act), "Block") {
+			actual := "absent (default: Log)"
+			if p {
+				actual = act
+			}
+			return []ir.Finding{mkFinding(s, r, "sas_policy",
+				evidenceSpan(span, r.Span), actual,
+				"sas_policy { expiration_action = \"Block\" }")}
+		}
+	}
+	return nil
+
+### AEGIS-DOCKER-007 [low] apt-get install without --no-install-recommends
+pack=docker type=aptNoRecommends file=internal/rules/docker/docker.go:346
+AppliesTo: return appliesToDocker(resType)
+Check head:
+
+	rule := aptNoRecommends{}
+	var out []ir.Finding
+	for _, c := range runCommands(r) {
+		cmd, ok := c.AsString()
+		if !ok {
+			continue
+		}
+		if aptInstallWithoutNoRecommends(cmd) {
+			out = append(out, finding(
+				rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+				r, "RUN", c.Span, "apt-get install without --no-install-recommends",
+				"apt-get install --no-install-recommends",
+			))
+		}
+	}
+	return out
+
+### AEGIS-AZURE-038 [medium] Key Vault not using RBAC authorization
+pack=azure type=keyVaultNoRBAC file=internal/rules/azure/azure3.go:481
+AppliesTo: return resType == "azurerm_key_vault"
+Check head:
+
+	rbac, span, present, known := getBool(r, "enable_rbac_authorization")
+	if !present || !known {
+		return nil
+	}
+	if rbac {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "enable_rbac_authorization", span,
+		"false", "enable_rbac_authorization = true")}
+
+### AEGIS-AWS-429 [medium] Neptune cluster without backup retention
+pack=aws type=neptuneNoBackup file=internal/rules/aws/identity2.go:416
+AppliesTo: return resType == "aws_neptune_cluster"
+Check head:
+
+	n, span, present, known := getNumber(r, "backup_retention_period")
+	if !present || (known && n == 0) {
+		return []ir.Finding{{
+			RuleID:      "AEGIS-AWS-429",
+			Title:       (neptuneNoBackup{}).Title(),
+			Description: (neptuneNoBackup{}).Description(),
+			Severity:    ir.SeverityMedium,
+			Resource:    r.Address(),
+			Evidence: ir.Evidence{
+				Attribute: "backup_retention_period",
+				Span:      evidenceSpan(span, r.Span),
+				Actual:    "absent (provider default: 1) or 0",
+				Expected:  "backup_retention_period >= 1",
+			},
+		}}
+	}
+	return nil
+
+### AEGIS-AWS-817 [low] App Runner service with root-path health check
+pack=aws type=apprunnerRootHealthCheck file=internal/rules/aws/services_deep.go:730
+AppliesTo: return resType == "aws_apprunner_service"
+Check head:
+
+	blks, _, present, known := getBlocks(r, "health_check")
+	if !present || !known || len(blks) == 0 {
+		return nil
+	}
+	path, span, ppresent, pknown := blockString(blks[0], "path")
+	if !ppresent || !pknown {
+		return nil
+	}
+	if path != "/" {
+		return nil
+	}
+	return []ir.Finding{sdFinding(s, r, "health_check.path", span,
+		"\"/\"", "health_check { path = \"/healthz\" }")}
+
+### AEGIS-GCP-074 [medium] Project IAM grants Viewer to individual user
+pack=gcp type=iamViewerUser file=internal/rules/gcp/gcp3.go:1740
+AppliesTo: return t == "google_project_iam_member"
+Check head:
+
+	role, _, present, known := iamBindingRole(r)
+	if !present || !known {
+		return nil
+	}
+	if strings.ToLower(strings.TrimSpace(role)) != "roles/viewer" {
+		return nil
+	}
+	member, span, mp, mk := getString(r, "member")
+	if !mp || !mk {
+		return nil
+	}
+	if strings.HasPrefix(strings.ToLower(member), "user:") {
+		return []ir.Finding{mkFinding(s, r, "member", span,
+			member, "grant to group: identities instead")}
+	}
+	return nil
+
+### AEGIS-AWS-348 [medium] GuardDuty detector disabled
+pack=aws type=guardDutyDisabled file=internal/rules/aws/messaging.go:338
+AppliesTo: return resType == "aws_guardduty_detector"
+Check head:
+
+	rule := guardDutyDisabled{}
+	en, span, present, known := getBool(r, "enable")
+	if !present || !known {
+		return nil // absent (provider default true) or unresolved: cannot decide
+	}
+	if !en {
+		return msgFinding(rule, r, "enable", span,
+			"false", "enable = true")
+	}
+	return nil
+
+### AEGIS-AWS-008 [medium] RDS instance without deletion protection
+pack=aws type=rdsNoDeletionProtection file=internal/rules/aws/rds.go:56
+AppliesTo: return resType == "aws_db_instance"
+Check head:
+
+	prot, span, present, known := getBool(r, "deletion_protection")
+	if present && !known {
+		return nil
+	}
+	if present && prot {
+		return nil
+	}
+	actual := "false"
+	if !present {
+		actual = "absent (provider default: false)"
+	}
+	return []ir.Finding{{
+		RuleID:      "AEGIS-AWS-008",
+		Title:       (rdsNoDeletionProtection{}).Title(),
+		Description: (rdsNoDeletionProtection{}).Description(),
+		Severity:    ir.SeverityMedium,
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "deletion_protection",
+			Span:      evidenceSpan(span, r.Span),
+			Actual:    actual,
+			Expected:  "true",
+		},
+	}}
+
+### AEGIS-GCP-242 [low] Memorystore Redis without maintenance policy
+pack=gcp type=redisNoMaintenancePolicy file=internal/rules/gcp/gcp8.go:857
+AppliesTo: return resType == "google_redis_instance"
+Check head:
+
+	blks, span, present, known := getBlocks(r, "maintenance_policy")
+	if present && !known {
+		return nil
+	}
+	if present && len(blks) > 0 {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "maintenance_policy",
+		evidenceSpan(span, r.Span), "absent (uncontrolled maintenance)",
+		"maintenance_policy { weekly_maintenance_window { ... } }")}
+
+### AEGIS-AWS-570 [low] CloudTrail S3 bucket without MFA delete protection
+pack=aws type=trailBucketNoMFADelete file=internal/rules/aws/coveragegaps.go:814
+AppliesTo: return resType == "aws_cloudtrail"
+
+### AEGIS-AZURE-129 [medium] AKS cluster without Key Vault secrets provider
+pack=azure type=aksNoKVSecretsProvider file=internal/rules/azure/azure10.go:128
+AppliesTo: return aksApplies(resType)
+Check head:
+
+	if _, _, present, _ := getBlocks(r, "key_vault_secrets_provider"); present {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "key_vault_secrets_provider",
+		evidenceSpan(ir.Span{}, r.Span), "absent",
+		"key_vault_secrets_provider { secret_rotation_enabled = true }")}
+
+### AEGIS-AZURE-010 [medium] NSG rule open to the internet on a sensitive port
+pack=azure type=nsgOpenSensitivePort file=internal/rules/azure/azure2.go:261
+AppliesTo: return resType == "azurerm_network_security_rule"
+Check head:
+
+	dir, _, dpresent, dknown := getString(r, "direction")
+	access, _, apresent, aknown := getString(r, "access")
+	if !dpresent || !dknown || !apresent || !aknown {
+		return nil
+	}
+	if !strings.EqualFold(strings.TrimSpace(dir), "Inbound") {
+		return nil
+	}
+	if !strings.EqualFold(strings.TrimSpace(access), "Allow") {
+		return nil
+	}
+	// Source must be open.
+	open := false
+	if pfx, _, present, known := getString(r, "source_address_prefix"); present {
+		if !known {
+			return nil
+		}
+		open = isOpenSource(pfx)
+	} else if pfxs, _, ok := getStringList(r, "source_address_prefixes"); ok {
+		for _, pfx := range pfxs {
+			if isOpenSource(pfx) {
+				open = true
+				break
+			}
+		}
+	} else {
+		return nil // source absent or unresolved: cannot decide
+	}
+	if !open {
+		return nil
+	}
+	// Destination port must be sensitive.
+	if port, span, present, known := getString(r, "destination_port_range"); present {
+	
+
+### AEGIS-DOCKER-030 [low] apk add without --no-cache
+pack=docker type=apkNoCache file=internal/rules/docker/docker_extra.go:965
+AppliesTo: return appliesToDocker(resType)
+Check head:
+
+	rule := apkNoCache{}
+	var out []ir.Finding
+	for _, c := range runCommands(r) {
+		cmd, ok := c.AsString()
+		if !ok {
+			continue
+		}
+		lower := strings.ToLower(cmd)
+		if !strings.Contains(lower, "apk add") {
+			continue
+		}
+		if strings.Contains(lower, "--no-cache") {
+			continue
+		}
+		out = append(out, finding(
+			rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+			r, "RUN", c.Span, "apk add without --no-cache",
+			"apk add --no-cache",
+		))
+	}
+	return out
+
+### AEGIS-AZURE-295 [medium] Virtual machine without secure boot
+pack=azure type=vmNoSecureBoot file=internal/rules/azure/azure20.go:494
+AppliesTo: return resType == "azurerm_linux_virtual_machine" || resType == "azurerm_windows_virtual_machine"
+Check head:
+
+	return absentInsecureFalse(s, r, "secure_boot_enabled",
+		"secure_boot_enabled = true")
+
+### AEGIS-AWS-638 [medium] Elasticsearch/OpenSearch domain without dedicated master nodes
+pack=aws type=esNoDedicatedMaster file=internal/rules/aws/es2.go:108
+AppliesTo: return searchTypes(resType)
+Check head:
+
+	blks, _, present, known := getBlocks(r, "cluster_config")
+	if present && !known {
+		return nil // unresolved block: cannot decide
+	}
+	if !present || len(blks) == 0 {
+		return []ir.Finding{esFinding(s, r, "cluster_config.dedicated_master_enabled",
+			ir.Span{}, "absent (default false)",
+			"cluster_config { dedicated_master_enabled = true }")}
+	}
+	dm, _, dpresent, dknown := blockBool(blks[0], "dedicated_master_enabled")
+	if dpresent && !dknown {
+		return nil
+	}
+	if dpresent && dm {
+		return nil
+	}
+	actual := "absent (default false)"
+	if dpresent {
+		actual = "false"
+	}
+	return []ir.Finding{esFinding(s, r, "cluster_config.dedicated_master_enabled",
+		ir.Span{}, actual, "dedicated_master_enabled = true")}
+
+### AEGIS-AZURE-134 [low] AKS cluster without cost analysis
+pack=azure type=aksNoCostAnalysis file=internal/rules/azure/azure10.go:302
+AppliesTo: return aksApplies(resType)
+Check head:
+
+	enabled, span, present, known := getBool(r, "cost_analysis_enabled")
+	if present && !known {
+		return nil
+	}
+	if present && enabled {
+		return nil
+	}
+	actual := "absent (default false)"
+	if present {
+		actual = "false"
+	}
+	return []ir.Finding{mkFinding(s, r, "cost_analysis_enabled",
+		evidenceSpan(span, r.Span), actual, "cost_analysis_enabled = true")}

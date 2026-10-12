@@ -1,0 +1,67 @@
+{
+ "aegis_version": "1.0.0",
+ "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/phase4/probe/p4-14-compose-vuln",
+ "resources_scanned": 1,
+ "findings": [
+  {
+   "rule_id": "AEGIS-COMPOSE-001",
+   "title": "Service runs privileged",
+   "description": "privileged: true disables all container isolation: the service gets every capability and full device access, so a compromise is a host compromise. Grant only the capabilities the service needs via cap_add.",
+   "severity": "high",
+   "resource": "compose_service.probe",
+   "evidence": {
+    "attribute": "privileged",
+    "span": {
+     "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/phase4/probe/p4-14-compose-vuln/docker-compose.yml",
+     "start_line": 3,
+     "start_col": 1,
+     "end_line": 3,
+     "end_col": 1
+    },
+    "actual": "privileged: true",
+    "expected": "least-privilege cap_add instead of privileged"
+   },
+   "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+   "references": [
+    "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+   ]
+  },
+  {
+   "rule_id": "AEGIS-COMPOSE-007",
+   "title": "Service runs as root",
+   "description": "Without a user: directive the service runs as root; a container breakout then yields host root. Run as a non-root UID/GID.",
+   "severity": "medium",
+   "resource": "compose_service.probe",
+   "evidence": {
+    "attribute": "user",
+    "span": {
+     "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/phase4/probe/p4-14-compose-vuln/docker-compose.yml",
+     "start_line": 3,
+     "start_col": 1,
+     "end_line": 3,
+     "end_col": 1
+    },
+    "actual": "no user directive (defaults to root)",
+    "expected": "user: \"<uid>\" (non-root)"
+   },
+   "remediation": "Enable MFA on the account and restrict root usage. Create individual IAM users or federate via SSO, attach least-privilege policies, and never use root for daily operations.",
+   "references": [
+    "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html"
+   ]
+  }
+ ],
+ "diagnostics": [],
+ "scan_completeness": {
+  "files_discovered": 1,
+  "files_parsed": 1,
+  "files_skipped": 0,
+  "files_failed": 0,
+  "files": [
+   {
+    "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/phase4/probe/p4-14-compose-vuln/docker-compose.yml",
+    "status": "parsed",
+    "format": "compose"
+   }
+  ]
+ }
+}

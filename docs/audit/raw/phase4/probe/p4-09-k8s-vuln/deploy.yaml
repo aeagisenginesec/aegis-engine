@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p4-probe-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: p4probe
+  template:
+    metadata:
+      labels:
+        app: p4probe
+    spec:
+      hostNetwork: true
+      containers:
+        - name: web
+          image: nginx:1.25
+          securityContext:
+            privileged: true
+            runAsUser: 0

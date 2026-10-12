@@ -1,0 +1,52 @@
+# .gitlab-ci.yml — Aegis IaC scan
+#
+# Tested 2026-10-12 (phase 9, simulated runner — no live GitLab runner was
+# available; script steps were executed verbatim in order against a local
+# golang-equivalent toolchain and the YAML was schema-checked).
+# See docs/audit/08_CI_INTEGRATION_REPORT.md.
+#
+# Design notes:
+# - `--format=sarif` + `artifacts:paths` keeps the report downloadable on
+#   every GitLab tier. The job gate is the aegis exit code (0 clean,
+#   1 findings >= --fail-on, 2 scan error).
+# - `artifacts:reports:sarif` (NOT `sast`) is the correct report type for a
+#   SARIF file. `reports:sast` expects GitLab's own security-report JSON
+#   schema, which `aegis --format=json` does NOT emit. The SARIF report
+#   type feeds the Vulnerability Report / MR security widget on
+#   GitLab Ultimate; on other tiers the file in `paths` is still kept.
+# - `artifacts:when: always` ensures the report is uploaded even when the
+#   scan step fails the job with findings.
+
+stages:
+  - test
+
+variables:
+  AEGIS_VERSION: "1.0.0"
+  AEGIS_FAIL_ON: "high"
+
+aegis-scan:
+  stage: test
+  image: golang:1.25
+  script:
+    # Build from source (matches the shipped GitHub example). For a faster
+    # job, replace with a release-binary download instead.
+    - go build -o aegis ./cmd/aegis
+    - ./aegis --version
+    # Scan; keep the SARIF and propagate the aegis exit code so the job
+    # fails on findings at/above the threshold.
+    - set -o pipefail
+    - ./aegis scan . --format=sarif --fail-on="$AEGIS_FAIL_ON" | tee aegis.sarif
+    - echo "aegis exit code: $?"
+    # Local schema check (same script as the GitHub workflow).
+    - python3 scripts/ci/validate_sarif.py aegis.sarif
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - aegis.sarif
+    reports:
+      sarif: aegis.sarif
+  allow_failure: false
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

@@ -1,0 +1,237 @@
+{
+ "note": "Fixtures and expected labels authored by the Phase 4 auditor from reading the Aegis rule source (rule IDs, severities, trigger conditions). NEVER scanned before labeling. These fixtures were NOT used in rule development. Labels are auditor hypotheses about rule behavior, not scanner output.",
+ "probe": "phase4-fresh-accuracy-probe",
+ "projects": [
+  {
+   "cloud": "aws",
+   "expected": [
+    {
+     "basis": "s3PublicACL.Check: acl present and in publicACLs set (public-read)",
+     "resource": "aws_s3_bucket.probedata",
+     "rule_id": "AEGIS-AWS-002",
+     "severity": "high"
+    },
+    {
+     "basis": "s3Encryption.Check: no server_side_encryption_configuration block -> fires",
+     "resource": "aws_s3_bucket.probedata",
+     "rule_id": "AEGIS-AWS-001",
+     "severity": "high"
+    },
+    {
+     "basis": "sgOpenIngress.checkSGBlocks: ingress cidr_blocks contains 0.0.0.0/0",
+     "resource": "aws_security_group.probessh",
+     "rule_id": "AEGIS-AWS-004",
+     "severity": "high"
+    }
+   ],
+   "format": "terraform-hcl",
+   "project": "p4-01-aws-tf-vuln",
+   "vulnerable": true
+  },
+  {
+   "cloud": "aws",
+   "expected": [],
+   "format": "terraform-hcl",
+   "project": "p4-02-aws-tf-secure",
+   "vulnerable": false
+  },
+  {
+   "cloud": "azure",
+   "expected": [
+    {
+     "basis": "storagePublicNetworkAccess.Check: public_network_access_enabled=true (bool) -> fires",
+     "resource": "azurerm_storage_account.probestore",
+     "rule_id": "AEGIS-AZURE-006",
+     "severity": "high"
+    },
+    {
+     "basis": "storageNestedItemsPublic.Check: allow_blob_public_access=true -> fires",
+     "resource": "azurerm_storage_account.probestore",
+     "rule_id": "AEGIS-AZURE-119",
+     "severity": "high"
+    }
+   ],
+   "format": "terraform-hcl",
+   "project": "p4-03-azure-tf-vuln",
+   "vulnerable": true
+  },
+  {
+   "cloud": "azure",
+   "expected": [],
+   "format": "terraform-hcl",
+   "project": "p4-04-azure-tf-secure",
+   "vulnerable": false
+  },
+  {
+   "cloud": "azure",
+   "expected": [
+    {
+     "basis": "keyVaultNoFirewall.Check: network_acls block absent -> fires 'absent (default allow)'",
+     "resource": "azurerm_key_vault.p4probevault01",
+     "rule_id": "AEGIS-AZURE-007",
+     "severity": "high"
+    }
+   ],
+   "format": "arm-json",
+   "project": "p4-05-azure-arm-vuln",
+   "vulnerable": true
+  },
+  {
+   "cloud": "azure",
+   "expected": [],
+   "format": "arm-json",
+   "note": "networkAcls defaultAction Deny present; rule code path returns nil (cannot decide) when default_action not Allow -> no finding expected",
+   "project": "p4-06-azure-arm-secure",
+   "vulnerable": false
+  },
+  {
+   "cloud": "gcp",
+   "expected": [
+    {
+     "basis": "firewallOpenToWorld: source_ranges 0.0.0.0/0 + allow block -> fires",
+     "resource": "google_compute_firewall.probeweb",
+     "rule_id": "AEGIS-GCP-002",
+     "severity": "high"
+    },
+    {
+     "basis": "bucketPublicIAM.Check: role contains objectviewer + member allUsers -> fires",
+     "resource": "google_storage_bucket_iam_binding.probedata",
+     "rule_id": "AEGIS-GCP-001",
+     "severity": "critical"
+    }
+   ],
+   "format": "terraform-hcl",
+   "project": "p4-07-gcp-tf-vuln",
+   "vulnerable": true
+  },
+  {
+   "cloud": "gcp",
+   "expected": [],
+   "format": "terraform-hcl",
+   "project": "p4-08-gcp-tf-secure",
+   "vulnerable": false
+  },
+  {
+   "cloud": "k8s",
+   "expected": [
+    {
+     "basis": "privilegedContainer.Check: securityContext.privileged=true -> fires",
+     "resource": "k8s_Deployment.p4-probe-deploy",
+     "rule_id": "AEGIS-K8S-001",
+     "severity": "critical"
+    },
+    {
+     "basis": "runAsRootContainer.Check: runAsUser=0 -> fires",
+     "resource": "k8s_Deployment.p4-probe-deploy",
+     "rule_id": "AEGIS-K8S-002",
+     "severity": "high"
+    }
+   ],
+   "format": "kubernetes-yaml",
+   "project": "p4-09-k8s-vuln",
+   "vulnerable": true
+  },
+  {
+   "cloud": "k8s",
+   "expected": [],
+   "format": "kubernetes-yaml",
+   "project": "p4-10-k8s-secure",
+   "vulnerable": false
+  },
+  {
+   "cloud": "docker",
+   "expected": [
+    {
+     "basis": "latestTag.Check: FROM without tag implies :latest -> fires",
+     "resource": "docker_stage",
+     "rule_id": "AEGIS-DOCKER-001",
+     "severity": "medium"
+    },
+    {
+     "basis": "noNonRootUser.Check: no USER directive -> fires",
+     "resource": "docker_stage",
+     "rule_id": "AEGIS-DOCKER-002",
+     "severity": "high"
+    },
+    {
+     "basis": "envSecrets: ENV DB_PASSWORD literal; isSecretName matches PASSWORD -> fires",
+     "resource": "docker_stage",
+     "rule_id": "AEGIS-DOCKER-003",
+     "severity": "high"
+    },
+    {
+     "basis": "addInsteadOfCopy.Check: uses_add=true -> fires",
+     "resource": "docker_stage",
+     "rule_id": "AEGIS-DOCKER-004",
+     "severity": "low"
+    }
+   ],
+   "format": "dockerfile",
+   "project": "p4-11-docker-vuln",
+   "vulnerable": true
+  },
+  {
+   "cloud": "docker",
+   "expected": [],
+   "format": "dockerfile",
+   "project": "p4-12-docker-secure",
+   "vulnerable": false
+  },
+  {
+   "cloud": "aws",
+   "expected": [
+    {
+     "basis": "convertSecurityGroup maps SecurityGroupIngress/CidrIp 0.0.0.0/0 -> ingress cidr_blocks; sgOpenIngress fires",
+     "resource": "aws_security_group.ProbeSG",
+     "rule_id": "AEGIS-AWS-004",
+     "severity": "high"
+    }
+   ],
+   "format": "cloudformation-json",
+   "project": "p4-13-cfn-json-vuln",
+   "vulnerable": true
+  },
+  {
+   "cloud": "docker",
+   "expected": [
+    {
+     "basis": "privilegedService.Check: privileged=true -> fires",
+     "resource": "compose_service",
+     "rule_id": "AEGIS-COMPOSE-001",
+     "severity": "high"
+    }
+   ],
+   "format": "docker-compose",
+   "project": "p4-14-compose-vuln",
+   "vulnerable": true
+  },
+  {
+   "project": "p4-15-bicep-vuln",
+   "format": "bicep",
+   "cloud": "azure",
+   "vulnerable": true,
+   "expected": [
+    {
+     "rule_id": "AEGIS-AZURE-007",
+     "resource": "azurerm_key_vault",
+     "severity": "high",
+     "basis": "keyVaultNoFirewall.Check: network_acls block absent -> fires (bicep reuses ARM builder)"
+    }
+   ]
+  },
+  {
+   "project": "p4-16-pulumi-vuln",
+   "format": "pulumi-yaml",
+   "cloud": "aws",
+   "vulnerable": true,
+   "expected": [
+    {
+     "rule_id": "AEGIS-AWS-002",
+     "resource": "aws_s3_bucket.probedata",
+     "severity": "high",
+     "basis": "s3PublicACL.Check: acl=public-read present -> fires; pulumi maps aws:s3:BucketV2 -> aws_s3_bucket"
+    }
+   ]
+  }
+ ]
+}

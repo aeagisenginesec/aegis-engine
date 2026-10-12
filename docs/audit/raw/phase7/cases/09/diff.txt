@@ -1,0 +1,15 @@
+--- /tmp/p7-work/orig/09/before.tf	2026-10-12 17:34:07.141102282 +0000
++++ /tmp/p7-work/orig/09/after.tf	2026-10-12 17:34:08.252554737 +0000
+@@ -1,5 +1,12 @@
+ resource "aws_s3_bucket" "demo" {
+   bucket = "demo-public-policy-bucket"
++  server_side_encryption_configuration {
++    rule {
++      apply_server_side_encryption_by_default {
++        sse_algorithm = "AES256"
++      }
++    }
++  }
+ }
+ resource "aws_s3_bucket_policy" "demo" {
+   bucket = aws_s3_bucket.demo.id

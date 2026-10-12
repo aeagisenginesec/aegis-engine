@@ -1,0 +1,41 @@
+================================================================
+ SIMULATED GitHub Actions run — workflow: aegis-demo.yml
+ run id: 20261012T173719Z   workspace: /tmp/phase9/gh-runs/20261012T173719Z
+ runner image delta: ubuntu-latest -> this sandbox (Ubuntu 24.04)
+================================================================
+
+### Step 1/5: actions/checkout@v4  [SIMULATED]
+delta: real step does 'git clone' of the PR ref; here we copy the
+       scratch test-repo tree (same file bytes, no .git metadata).
+checked out 85 files
+
+### Step 2/5: Install aegis  [SIMULATED]
+delta: real step curls the v1.0.0 release binary from GitHub releases;
+       no release is published yet, so we stage the audited build
+       (/tmp/aegis-p9 = go build of HEAD 0c28621, branch
+       fix/demo-defects-d1-d3) as the binary under test.
+aegis 1.0.0 (build unknown, commit unknown)
+
+### Step 3/5: Scan with Aegis  [REAL COMMAND]
+delta: none — identical invocation to the workflow.
+cmd: ./aegis scan . --format=sarif --fail-on=high | tee aegis.sarif
+aegis exit code: 1
+
+### Step 4/5: Validate SARIF  [SIMULATED — local equivalent]
+delta: the workflow validates locally; the authoritative check is
+       GitHub's server-side validation on upload. We run both the
+       official SARIF 2.1.0 schema and GitHub's structural rules.
+PASS: conforms to SARIF 2.1.0 JSON schema (jsonschema)
+GITHUB-ACCEPTANCE: PASS (421 results, 354577 bytes)
+
+### Step 5/5: github/codeql-action/upload-sarif@v3  [SIMULATED]
+delta: cannot POST to the code-scanning API without a real GitHub
+       repo + token. Step 4's validation is the checkable part of
+       what upload-sarif + GitHub verify server-side.
+result: SKIPPED (no live GitHub API in sandbox)
+
+================================================================
+RUN SUMMARY: scan_exit=1 sarif_validation_exit=0
+log: /tmp/phase9/gh-runs/20261012T173719Z/run.log
+sarif: /tmp/phase9/gh-runs/20261012T173719Z/aegis.sarif
+================================================================

@@ -1,0 +1,1073 @@
+_blocks"
+      },
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-114",
+      "title": "GKE cluster without a release channel",
+      "description": "google_container_cluster with no release_channel.channel misses managed automatic upgrades to supported Kubernetes versions; hygiene finding.",
+      "severity": "low",
+      "resource": "google_container_cluster.workload_cluster",
+      "evidence": {
+        "attribute": "release_channel",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "release_channel { channel = \"REGULAR\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-115",
+      "title": "GKE cluster with Stackdriver logging disabled",
+      "description": "google_container_cluster with logging_service = \"none\" sends no cluster or workload logs to Cloud Logging; hygiene finding.",
+      "severity": "low",
+      "resource": "google_container_cluster.workload_cluster",
+      "evidence": {
+        "attribute": "logging_service",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 8,
+          "start_col": 24,
+          "end_line": 8,
+          "end_col": 30
+        },
+        "actual": "none",
+        "expected": "logging.googleapis.com (or omitted)"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-116",
+      "title": "GKE node pool without auto-repair",
+      "description": "google_container_node_pool with management.auto_repair not true leaves unhealthy nodes running instead of recreating them.",
+      "severity": "medium",
+      "resource": "google_container_node_pool.custom_node_pool",
+      "evidence": {
+        "attribute": "management",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 24,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "management { auto_repair = true }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-117",
+      "title": "GKE node pool without auto-upgrade",
+      "description": "google_container_node_pool with management.auto_upgrade not true misses security patches to node software.",
+      "severity": "medium",
+      "resource": "google_container_node_pool.custom_node_pool",
+      "evidence": {
+        "attribute": "management",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 24,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "management { auto_upgrade = true }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-118",
+      "title": "Compute instance with IP forwarding enabled",
+      "description": "google_compute_instance with can_ip_forward = true can route traffic for other hosts, enabling MITM positioning.",
+      "severity": "medium",
+      "resource": "google_compute_instance.server",
+      "evidence": {
+        "attribute": "can_ip_forward",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/instances.tf",
+          "start_line": 17,
+          "start_col": 20,
+          "end_line": 17,
+          "end_col": 24
+        },
+        "actual": "true",
+        "expected": "false (or omitted)"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-119",
+      "title": "Compute instance with serial port access enabled",
+      "description": "google_compute_instance metadata serial-port-enable = TRUE exposes an interactive serial console.",
+      "severity": "medium",
+      "resource": "google_compute_instance.server",
+      "evidence": {
+        "attribute": "metadata.serial-port-enable",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/instances.tf",
+          "start_line": 19,
+          "start_col": 14,
+          "end_line": 23,
+          "end_col": 4
+        },
+        "actual": "true",
+        "expected": "false (or omitted)"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-120",
+      "title": "Compute subnetwork without VPC flow logs",
+      "description": "google_compute_subnetwork with no log_config block records no VPC flow logs for the subnet; hygiene finding.",
+      "severity": "low",
+      "resource": "google_compute_subnetwork.public-subnetwork",
+      "evidence": {
+        "attribute": "log_config",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/networks.tf",
+          "start_line": 7,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "log_config { aggregation_interval = \"INTERVAL_5_SEC\" flow_sampling = 0.5 metadata = \"INCLUDE_ALL_METADATA\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-121",
+      "title": "GCS bucket without uniform bucket-level access",
+      "description": "google_storage_bucket with uniform_bucket_level_access not true keeps legacy per-object ACLs that can grant unexpected access.",
+      "severity": "medium",
+      "resource": "google_storage_bucket.terragoat_website",
+      "evidence": {
+        "attribute": "uniform_bucket_level_access",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gcs.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "uniform_bucket_level_access = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-122",
+      "title": "GCS bucket without enforced public access prevention",
+      "description": "google_storage_bucket without public_access_prevention = \"enforced\" can be exposed publicly via ACLs or IAM grants.",
+      "severity": "high",
+      "resource": "google_storage_bucket.terragoat_website",
+      "evidence": {
+        "attribute": "public_access_prevention",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gcs.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "public_access_prevention = \"enforced\""
+      },
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-153",
+      "title": "Cloud SQL instance without Query Insights",
+      "description": "google_sql_database_instance with no settings.insights_config block has no Query Insights: slow or abusive queries go undetected, hiding both performance and security anomalies. Enable Query Insights.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.master_instance",
+      "evidence": {
+        "attribute": "settings.insights_config",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/big_data.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 19,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "settings { insights_config { query_insights_enabled = true } }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-154",
+      "title": "Cloud SQL instance not highly available",
+      "description": "google_sql_database_instance with settings.availability_type other than REGIONAL (the default is ZONAL) has no standby in another zone: a zonal outage takes the database offline. Use availability_type = \"REGIONAL\" for production.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.master_instance",
+      "evidence": {
+        "attribute": "settings.availability_type",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/big_data.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 19,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: ZONAL)",
+        "expected": "settings { availability_type = \"REGIONAL\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-157",
+      "title": "Cloud SQL instance without password validation policy",
+      "description": "google_sql_database_instance with no settings.password_validation_policy block accepts weak database passwords (short, no complexity requirements). Enforce a password validation policy.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.master_instance",
+      "evidence": {
+        "attribute": "settings.password_validation_policy",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/big_data.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 19,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "settings { password_validation_policy { min_length = 12 ... } }"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-160",
+      "title": "Cloud SQL MySQL instance without binary logging",
+      "description": "google_sql_database_instance with a backup_configuration block but binary_log_enabled not true keeps no binary logs: MySQL point-in-time recovery and change auditing are impossible. Enable binary logging.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.master_instance",
+      "evidence": {
+        "attribute": "settings.backup_configuration.binary_log_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/big_data.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 19,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "binary_log_enabled = true"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-163",
+      "title": "GKE cluster without security posture management",
+      "description": "google_container_cluster with no security_posture_config block (or vulnerability_mode = \"DISABLED\") gets no workload vulnerability scanning: known CVEs in running workloads go unreported. Enable security posture management.",
+      "severity": "low",
+      "resource": "google_container_cluster.workload_cluster",
+      "evidence": {
+        "attribute": "security_posture_config",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "security_posture_config { vulnerability_mode = \"BASIC\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-164",
+      "title": "GKE cluster nodes with legacy metadata endpoints enabled",
+      "description": "google_container_cluster node_config.metadata without disable-legacy-endpoints = \"true\" exposes the legacy GCE metadata endpoints (v0.1/v1beta1) on nodes, widening SSRF and credential-theft impact. Disable legacy endpoints.",
+      "severity": "medium",
+      "resource": "google_container_cluster.workload_cluster",
+      "evidence": {
+        "attribute": "google_container_cluster.node_config.metadata",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "absent (legacy endpoints enabled)",
+        "expected": "metadata = { disable-legacy-endpoints = \"true\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-165",
+      "title": "GKE cluster without application-layer secrets encryption",
+      "description": "google_container_cluster with no database_encryption block stores Kubernetes secrets in etcd encrypted only at the storage layer with Google-managed keys. Enable application-layer secrets encryption with a customer-managed Cloud KMS key.",
+      "severity": "medium",
+      "resource": "google_container_cluster.workload_cluster",
+      "evidence": {
+        "attribute": "database_encryption",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "database_encryption { state = \"ENCRYPTED\" key_name = \"\u003ckms-key\u003e\" }"
+      },
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-166",
+      "title": "GKE cluster without Google Groups for RBAC",
+      "description": "google_container_cluster with no authenticator_groups_config block cannot bind Kubernetes RBAC to Google Groups: access is managed per-user instead of through group membership, which drifts during onboarding and offboarding. Configure authenticator_groups_config.",
+      "severity": "low",
+      "resource": "google_container_cluster.workload_cluster",
+      "evidence": {
+        "attribute": "authenticator_groups_config",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "authenticator_groups_config { security_group = \"gke-security-groups@\u003cdomain\u003e\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-168",
+      "title": "GKE cluster without VPC-native networking",
+      "description": "google_container_cluster with no ip_allocation_policy block uses routes-based networking, which lacks alias IPs for pods: network policies and VPC flow logs cannot distinguish pod traffic. Use VPC-native clusters with ip_allocation_policy.",
+      "severity": "medium",
+      "resource": "google_container_cluster.workload_cluster",
+      "evidence": {
+        "attribute": "ip_allocation_policy",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "absent (routes-based networking)",
+        "expected": "ip_allocation_policy { cluster_ipv4_cidr_block = \"...\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-170",
+      "title": "GKE master authorized networks include 0.0.0.0/0",
+      "description": "google_container_cluster master_authorized_networks_config with a cidr_block of 0.0.0.0/0 authorizes the entire internet to reach the Kubernetes API server, defeating the purpose of authorized networks. Restrict CIDR blocks to trusted ranges.",
+      "severity": "high",
+      "resource": "google_container_cluster.workload_cluster",
+      "evidence": {
+        "attribute": "master_authorized_networks_config.cidr_blocks.cidr_block",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 19,
+          "start_col": 20,
+          "end_line": 19,
+          "end_col": 31
+        },
+        "actual": "0.0.0.0/0",
+        "expected": "cidr_block = \"\u003ctrusted-range\u003e\""
+      },
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-3"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-171",
+      "title": "GKE node pool with legacy metadata endpoints enabled",
+      "description": "google_container_node_pool node_config.metadata without disable-legacy-endpoints = \"true\" exposes the legacy GCE metadata endpoints (v0.1/v1beta1) on pool nodes, widening SSRF and credential-theft impact. Disable legacy endpoints per pool.",
+      "severity": "medium",
+      "resource": "google_container_node_pool.custom_node_pool",
+      "evidence": {
+        "attribute": "google_container_node_pool.node_config.metadata",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 24,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 2
+        },
+        "actual": "absent (legacy endpoints enabled)",
+        "expected": "metadata = { disable-legacy-endpoints = \"true\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-172",
+      "title": "GKE node boot disks without customer-managed encryption",
+      "description": "google_container_cluster / google_container_node_pool node_config without boot_disk_kms_key encrypts node boot disks with Google-managed keys only. Assign a customer-managed Cloud KMS key for control over rotation and revocation.",
+      "severity": "medium",
+      "resource": "google_container_cluster.workload_cluster",
+      "evidence": {
+        "attribute": "node_config.boot_disk_kms_key",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "node_config { boot_disk_kms_key = \"\u003ckms-key\u003e\" }"
+      },
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-172",
+      "title": "GKE node boot disks without customer-managed encryption",
+      "description": "google_container_cluster / google_container_node_pool node_config without boot_disk_kms_key encrypts node boot disks with Google-managed keys only. Assign a customer-managed Cloud KMS key for control over rotation and revocation.",
+      "severity": "medium",
+      "resource": "google_container_node_pool.custom_node_pool",
+      "evidence": {
+        "attribute": "node_config.boot_disk_kms_key",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+          "start_line": 28,
+          "start_col": 3,
+          "end_line": 30,
+          "end_col": 4
+        },
+        "actual": "[REDACTED]",
+        "expected": "node_config { boot_disk_kms_key = \"\u003ckms-key\u003e\" }"
+      },
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-173",
+      "title": "Compute instance without Confidential VM",
+      "description": "google_compute_instance with no confidential_instance_config block runs without memory encryption and remote attestation: in-use data is visible to the hypervisor layer. Enable Confidential VM for sensitive workloads.",
+      "severity": "low",
+      "resource": "google_compute_instance.server",
+      "evidence": {
+        "attribute": "confidential_instance_config",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/instances.tf",
+          "start_line": 3,
+          "start_col": 1,
+          "end_line": 34,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "confidential_instance_config { enable_confidential_compute = true }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-183",
+      "title": "GCS bucket without soft-delete protection",
+      "description": "google_storage_bucket with no soft_delete_policy block loses the safety net that retains deleted objects for recovery. Configure soft_delete_policy to guard against accidental or malicious deletion.",
+      "severity": "low",
+      "resource": "google_storage_bucket.terragoat_website",
+      "evidence": {
+        "attribute": "soft_delete_policy",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gcs.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "soft_delete_policy { retention_duration_seconds = 604800 }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-215",
+      "title": "Firewall rule without description",
+      "description": "google_compute_firewall with no description is untracked rule sprawl: reviewers cannot tell why the rule exists or who owns it. Document every firewall rule.",
+      "severity": "low",
+      "resource": "google_compute_firewall.allow_all",
+      "evidence": {
+        "attribute": "description",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/networks.tf",
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 27,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "description = \"\u003cowner\u003e: \u003cpurpose\u003e\""
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-217",
+      "title": "Subnetwork without Private Google Access setting",
+      "description": "google_compute_subnetwork with private_ip_google_access unset inherits the provider default (false), forcing VMs to use public IPs to reach Google APIs. Set private_ip_google_access = true for internal-only workloads.",
+      "severity": "medium",
+      "resource": "google_compute_subnetwork.public-subnetwork",
+      "evidence": {
+        "attribute": "private_ip_google_access",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/networks.tf",
+          "start_line": 7,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "private_ip_google_access = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-OCI-001",
+      "title": "Object Storage bucket without KMS encryption",
+      "description": "oci_objectstorage_bucket without kms_key_id relies on Oracle-managed encryption keys. Assign a customer-managed Vault key so you control key rotation and revocation.",
+      "severity": "high",
+      "resource": "oci_objectstorage_bucket.secretsquirrel",
+      "evidence": {
+        "attribute": "kms_key_id",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/oracle/bucket.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 23,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "kms_key_id = \"\u003cvault-key-ocid\u003e\""
+      },
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-OCI-002",
+      "title": "Object Storage bucket with public access",
+      "description": "oci_objectstorage_bucket with access_type ObjectRead or ObjectReadWithoutList exposes bucket objects to the internet without authentication. Keep access_type at NoPublicAccess.",
+      "severity": "critical",
+      "resource": "oci_objectstorage_bucket.secretsquirrel",
+      "evidence": {
+        "attribute": "access_type",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/oracle/bucket.tf",
+          "start_line": 10,
+          "start_col": 27,
+          "end_line": 10,
+          "end_col": 39
+        },
+        "actual": "ObjectRead",
+        "expected": "access_type = \"NoPublicAccess\""
+      },
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-TF-002",
+      "title": "Terraform S3 backend without state locking",
+      "description": "Without a DynamoDB lock table, concurrent Terraform runs can corrupt the state file. An S3 backend without dynamodb_table has no state locking.",
+      "severity": "high",
+      "resource": "terraform_backend.s3",
+      "evidence": {
+        "attribute": "dynamodb_table",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/aws/providers.tf",
+          "start_line": 15,
+          "start_col": 3,
+          "end_line": 17,
+          "end_col": 4
+        },
+        "actual": "absent",
+        "expected": "dynamodb_table set to a lock table"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-TF-004",
+      "title": "Terraform CLI version not pinned",
+      "description": "Without terraform.required_version, any CLI version may run this configuration; behavior and provider-protocol differences across versions can change what gets applied.",
+      "severity": "medium",
+      "resource": "terraform_config.terraform",
+      "evidence": {
+        "attribute": "required_version",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/alicloud/provider.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 8,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "required_version constraint (e.g. \"\u003e= 1.5.0\")"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-TF-004",
+      "title": "Terraform CLI version not pinned",
+      "description": "Without terraform.required_version, any CLI version may run this configuration; behavior and provider-protocol differences across versions can change what gets applied.",
+      "severity": "medium",
+      "resource": "terraform_config.terraform",
+      "evidence": {
+        "attribute": "required_version",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/aws/providers.tf",
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 18,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "required_version constraint (e.g. \"\u003e= 1.5.0\")"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-TF-004",
+      "title": "Terraform CLI version not pinned",
+      "description": "Without terraform.required_version, any CLI version may run this configuration; behavior and provider-protocol differences across versions can change what gets applied.",
+      "severity": "medium",
+      "resource": "terraform_config.terraform",
+      "evidence": {
+        "attribute": "required_version",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/provider.tf",
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 13,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "required_version constraint (e.g. \"\u003e= 1.5.0\")"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-TF-007",
+      "title": "Terraform configuration without required_providers",
+      "description": "Without a required_providers block, provider sources and versions are implicit; Terraform may select unexpected providers or versions.",
+      "severity": "low",
+      "resource": "terraform_config.terraform",
+      "evidence": {
+        "attribute": "required_providers",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/aws/providers.tf",
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 18,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "required_providers block with pinned versions"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-TF-007",
+      "title": "Terraform configuration without required_providers",
+      "description": "Without a required_providers block, provider sources and versions are implicit; Terraform may select unexpected providers or versions.",
+      "severity": "low",
+      "resource": "terraform_config.terraform",
+      "evidence": {
+        "attribute": "required_providers",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/azure/provider.tf",
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 13,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "required_providers block with pinned versions"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-TF-007",
+      "title": "Terraform configuration without required_providers",
+      "description": "Without a required_providers block, provider sources and versions are implicit; Terraform may select unexpected providers or versions.",
+      "severity": "low",
+      "resource": "terraform_config.terraform",
+      "evidence": {
+        "attribute": "required_providers",
+        "span": {
+          "file": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/provider.tf",
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 13,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "required_providers block with pinned versions"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 48,
+    "files_parsed": 48,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/alicloud/bucket.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/alicloud/provider.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/alicloud/rds.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/alicloud/trail.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/consts.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/db-app.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/ec2.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/ecr.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/eks.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/elb.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/es.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/iam.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/kms.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/lambda.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/neptune.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/providers.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/rds.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/resources/Dockerfile",
+        "status": "parsed",
+        "format": "dockerfile"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/aws/s3.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/aks.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/app_service.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/application_gateway.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/instance.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/key_vault.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/logging.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/mssql.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/networking.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/policies.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/provider.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/random.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/resource_group.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/roles.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/security_center.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/sql.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/storage.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/azure/variables.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/big_data.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gcs.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/gke.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/instances.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/networks.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/provider.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/gcp/variables.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/oracle/bucket.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/oracle/compartment.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/oracle/data.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/oracle/provider.tf",
+        "status": "parsed",
+        "format": "terraform"
+      },
+      {
+        "path": "/home/hatch/workspace/terragoat-fresh/terraform/oracle/variables.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}
