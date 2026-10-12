@@ -63,29 +63,43 @@ func noCMEK(rule ir.Rule, r ir.Resource) []ir.Finding {
 
 // nestedCMEK fires when path[0].path[1]...path[n] (nested blocks) does not
 // carry a non-empty kms_key_name/kms_key_id leaf.
+//
+// Unknown-value contract: any present-but-unresolved value along the path
+// (intermediate block or leaf) yields NO finding — we cannot decide.
 func nestedCMEK(rule ir.Rule, r ir.Resource, path []string, leaf string, attr string) []ir.Finding {
 	blks, span, present, known := getBlocks(r, path[0])
 	if present && !known {
-		return nil
+		return nil // unresolved: cannot decide
 	}
 	if present {
 		cur := blks
-		ok := true
+		traversed := true
 		for _, p := range path[1:] {
 			var next []map[string]ir.Value
 			for _, b := range cur {
+				v, ok := b[p]
+				if !ok {
+					continue // absent at this level: keep looking
+				}
+				if !v.Known {
+					return nil // unresolved intermediate block: cannot decide
+				}
 				next = append(next, blockList(b, p)...)
 			}
 			if len(next) == 0 {
-				ok = false
+				traversed = false
 				break
 			}
 			cur = next
 		}
-		if ok {
+		if traversed {
 			for _, b := range cur {
-				if key, _, _, kok := blockString(b, leaf); kok && strings.TrimSpace(key) != "" {
-					return nil
+				key, _, lpresent, lknown := blockString(b, leaf)
+				if lpresent && !lknown {
+					return nil // leaf unresolved: cannot decide
+				}
+				if lknown && strings.TrimSpace(key) != "" {
+					return nil // CMEK configured
 				}
 			}
 		}

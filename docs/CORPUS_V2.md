@@ -59,13 +59,23 @@ Avg scan time: ~56 ms/project. Held-out gate: PASS.
 
 ## Comparison (context)
 
-| Split | Tool | Vuln detection rate | Secure FP rate | Avg ms/project |
+| Split | Tool | Vuln detection (med+) | Secure FP rate | Avg ms/project |
 |---|---|---|---|---|
-| _to be filled from score.py comparison run_ | | | | |
+| Dev (150) | Aegis | 1.000 (103/103) | 0.000 (0/45) | ~55 |
+| Dev (150) | Checkov 3.3.26 | 0.816 (84/103) | 0.844 (38/45) | ~113 |
+| Dev (150) | KICS 2.1.20 | 0.476 (49/103) | 0.711 (32/45) | ~593 |
+| Held-out (50) | Aegis | 1.000 (35/35) | 0.000 (0/15) | ~60 |
+| Held-out (50) | Checkov 3.3.26 | 0.829 (29/35) | 0.867 (13/15) | ~247 |
+| Held-out (50) | KICS 2.1.20 | 0.400 (14/35) | 0.800 (12/15) | ~1291 |
 
-Methodology notes: KICS counts HIGH/MEDIUM findings; Checkov's JSON severity is
+Methodology notes: KICS medium+ = CRITICAL/HIGH/MEDIUM; Checkov's JSON severity is
 null so all failed checks count (Checkov numbers are upper bounds). Project-level
-detection = ≥1 finding on the project.
+detection = ≥1 finding on the project. **Important caveat:** the corpus labels are
+Aegis-centric (each fixture isolates an Aegis-detectable issue), so rival tools'
+lower detection rates partly reflect scope differences, not pure accuracy gaps.
+Notably, KICS flagged all 103 dev vulnerable projects at *some* severity — but for
+54 of them only LOW/INFO hygiene findings (e.g. "Resource Not Using Tags") on
+genuinely high-severity misconfigurations, a severity-calibration gap worth noting.
 
 ## Manual verification
 - 100% of templates scan-verified by builders at creation.

@@ -26,7 +26,11 @@ func Rules() []ir.Rule {
 	rules = append(rules, GCP2Rules()...) // AEGIS-GCP-005..024
 	rules = append(rules, GCP3Rules()...) // AEGIS-GCP-025..100
 	rules = append(rules, GCP4Rules()...) // AEGIS-GCP-101..122
-	return append(rules, GCP5Rules()...)  // AEGIS-GCP-123..142
+	rules = append(rules, GCP5Rules()...) // AEGIS-GCP-123..142
+	rules = append(rules, GCP6Rules()...) // AEGIS-GCP-143..182
+	rules = append(rules, GCP7Rules()...) // AEGIS-GCP-183..222 (195 removed: subset of 006)
+	rules = append(rules, GCP8Rules()...) // AEGIS-GCP-223..262
+	return append(rules, GCP9Rules()...)  // AEGIS-GCP-263..292 (269/272/280/281/283/287 removed: dups)
 }
 
 // getString classifies a string attribute into a tri-state.

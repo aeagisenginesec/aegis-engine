@@ -288,6 +288,94 @@ var remediationDB = map[string]remediationEntry{
 			"https://cloud.google.com/storage/docs/access-control/iam-roles",
 		},
 	},
+	"AEGIS-GCP-148": {
+		fix: "Remove primitive basic roles (roles/owner, roles/editor, roles/viewer) from the organization IAM policy. Replace with least-privilege predefined roles:\n" +
+			"resource \"google_organization_iam_member\" \"least_priv\" {\n" +
+			"  org_id = \"123456789\"\n" +
+			"  role   = \"roles/resourcemanager.organizationViewer\"\n" +
+			"  member = \"group:security@example.com\"\n" +
+			"}",
+		refs: []string{
+			"https://cloud.google.com/iam/docs/understanding-roles#basic",
+		},
+	},
+	"AEGIS-GCP-185": {
+		fix: "Remove the public binding from the bucket IAM policy. Grant access only to specific principals:\n" +
+			"resource \"google_storage_bucket_iam_member\" \"viewer\" {\n" +
+			"  bucket = google_storage_bucket.this.name\n" +
+			"  role   = \"roles/storage.objectViewer\"\n" +
+			"  member = \"serviceAccount:app@project.iam.gserviceaccount.com\"\n" +
+			"}",
+		refs: []string{
+			"https://cloud.google.com/storage/docs/access-control/iam-roles",
+		},
+	},
+	"AEGIS-GCP-186": {
+		fix: "Remove public entries from the default object ACL. Use uniform bucket-level access instead:\n" +
+			"resource \"google_storage_bucket\" \"this\" {\n" +
+			"  name                        = \"my-bucket\"\n" +
+			"  uniform_bucket_level_access = true\n" +
+			"}",
+		refs: []string{
+			"https://cloud.google.com/storage/docs/uniform-bucket-level-access",
+		},
+	},
+	"AEGIS-GCP-190": {
+		fix: "Remove public write bindings (roles/storage.objectCreator, roles/storage.admin) from the bucket IAM policy. Writing should require authentication:\n" +
+			"resource \"google_storage_bucket_iam_member\" \"writer\" {\n" +
+			"  bucket = google_storage_bucket.this.name\n" +
+			"  role   = \"roles/storage.objectCreator\"\n" +
+			"  member = \"serviceAccount:uploader@project.iam.gserviceaccount.com\"\n" +
+			"}",
+		refs: []string{
+			"https://cloud.google.com/storage/docs/access-control/iam-roles",
+		},
+	},
+	"AEGIS-GCP-192": {
+		fix: "Remove public bindings from the table IAM policy. Grant BigQuery Data Viewer to specific principals:\n" +
+			"resource \"google_bigquery_table_iam_member\" \"viewer\" {\n" +
+			"  dataset_id = google_bigquery_dataset.this.dataset_id\n" +
+			"  table_id   = google_bigquery_table.this.table_id\n" +
+			"  role       = \"roles/bigquery.dataViewer\"\n" +
+			"  member     = \"group:analysts@example.com\"\n" +
+			"}",
+		refs: []string{
+			"https://cloud.google.com/bigquery/docs/access-control",
+		},
+	},
+	"AEGIS-GCP-205": {
+		fix: "Remove public bindings from the subscription IAM policy. Grant Pub/Sub Subscriber to specific service accounts:\n" +
+			"resource \"google_pubsub_subscription_iam_member\" \"sub\" {\n" +
+			"  subscription = google_pubsub_subscription.this.name\n" +
+			"  role         = \"roles/pubsub.subscriber\"\n" +
+			"  member       = \"serviceAccount:consumer@project.iam.gserviceaccount.com\"\n" +
+			"}",
+		refs: []string{
+			"https://cloud.google.com/pubsub/docs/access-control",
+		},
+	},
+	"AEGIS-GCP-226": {
+		fix: "Remove public bindings from the secret IAM policy. Grant Secret Manager Secret Accessor to specific principals:\n" +
+			"resource \"google_secret_manager_secret_iam_member\" \"accessor\" {\n" +
+			"  secret_id = google_secret_manager_secret.this.secret_id\n" +
+			"  role      = \"roles/secretmanager.secretAccessor\"\n" +
+			"  member    = \"serviceAccount:app@project.iam.gserviceaccount.com\"\n" +
+			"}",
+		refs: []string{
+			"https://cloud.google.com/secret-manager/docs/access-control",
+		},
+	},
+	"AEGIS-GCP-260": {
+		fix: "Remove public bindings from the repository IAM policy. Grant Artifact Registry Reader to specific principals:\n" +
+			"resource \"google_artifact_registry_repository_iam_member\" \"reader\" {\n" +
+			"  repository = google_artifact_registry_repository.this.name\n" +
+			"  role       = \"roles/artifactregistry.reader\"\n" +
+			"  member     = \"serviceAccount:ci@project.iam.gserviceaccount.com\"\n" +
+			"}",
+		refs: []string{
+			"https://cloud.google.com/artifact-registry/docs/access-control",
+		},
+	},
 	"AEGIS-K8S-001": {
 		fix: "Drop privileged mode. Remove `securityContext.privileged: true` and use the\n" +
 			"minimum Linux capabilities the container needs:\n" +

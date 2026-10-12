@@ -383,4 +383,464 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-AWS-336": { // CloudTrail not multi-region
 		ref(cis, "3.1"), ref(nist, "AU-2"), ref(pci, "10.3.1"),
 	},
+
+	// --- GCP criticals/highs (NIST-800-53 only; CIS/PCI maps are AWS-specific) ---
+	"AEGIS-GCP-145": { // SA key with weak RSA-1024
+		ref(nist, "IA-2"), ref(nist, "SC-12"),
+	},
+	"AEGIS-GCP-146": { // SA impersonation broad grant
+		ref(nist, "AC-6"),
+	},
+	"AEGIS-GCP-148": { // Org IAM basic roles
+		ref(nist, "AC-3"), ref(nist, "AC-6"),
+	},
+	"AEGIS-GCP-149": { // Folder IAM basic roles
+		ref(nist, "AC-3"), ref(nist, "AC-6"),
+	},
+	"AEGIS-GCP-152": { // Project IAM Admin grant
+		ref(nist, "AC-6"),
+	},
+	"AEGIS-GCP-162": { // Cloud SQL SSL permissive
+		ref(nist, "SC-8"), ref(nist, "SC-12"),
+	},
+	"AEGIS-GCP-167": { // GKE alpha cluster
+		ref(nist, "CM-7"),
+	},
+	"AEGIS-GCP-170": { // GKE master open to world
+		ref(nist, "AC-3"), ref(nist, "SC-7"),
+	},
+	"AEGIS-GCP-178": { // Instance template public IP
+		ref(nist, "SC-7"),
+	},
+	"AEGIS-GCP-185": { // GCS bucket IAM public
+		ref(nist, "AC-3"),
+	},
+	"AEGIS-GCP-186": { // GCS default object ACL public
+		ref(nist, "AC-3"),
+	},
+	"AEGIS-GCP-188": { // GCS bucket IAM admin to domain
+		ref(nist, "AC-3"), ref(nist, "AC-6"),
+	},
+	"AEGIS-GCP-190": { // GCS bucket publicly writable
+		ref(nist, "AC-3"),
+	},
+	"AEGIS-GCP-191": { // BigQuery dataset bigquery.admin
+		ref(nist, "AC-6"),
+	},
+	"AEGIS-GCP-192": { // BigQuery table IAM public
+		ref(nist, "AC-3"),
+	},
+	"AEGIS-GCP-194": { // BigQuery dataset dataOwner
+		ref(nist, "AC-6"),
+	},
+	"AEGIS-GCP-200": { // Cloud Function EOL runtime
+		ref(nist, "SI-7"), ref(nist, "CM-7"),
+	},
+	"AEGIS-GCP-205": { // Pub/Sub subscription IAM public
+		ref(nist, "AC-3"),
+	},
+	"AEGIS-GCP-214": { // Firewall all ports to world
+		ref(nist, "SC-7"),
+	},
+	"AEGIS-GCP-219": { // SSL weak ciphers
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-GCP-226": { // Secret Manager IAM public
+		ref(nist, "AC-3"),
+	},
+	"AEGIS-GCP-227": { // Secret value in TF state
+		ref(nist, "SC-28"),
+	},
+	"AEGIS-GCP-245": { // Redis AUTH string in state
+		ref(nist, "SC-28"),
+	},
+	"AEGIS-GCP-257": { // Artifact Registry over HTTP
+		ref(nist, "SC-8"),
+	},
+	"AEGIS-GCP-260": { // Artifact Registry IAM public
+		ref(nist, "AC-3"),
+	},
+
+	// --- AWS deep expansion (650-849) ---
+	"AEGIS-AWS-650": { // IAM password policy minimum length below 14
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-651": { // IAM password policy does not require uppercase characters
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-652": { // IAM password policy does not require lowercase characters
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-653": { // IAM password policy does not require numbers
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-654": { // IAM password policy does not require symbols
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-655": { // IAM password policy allows password reuse
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-656": { // IAM password maximum age too long or disabled
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-660": { // IAM policy grants sensitive service wildcard on all resources
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-661": { // IAM policy grants iam:PassRole on all resources
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-663": { // IAM password policy has no maximum password age
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-664": { // IAM user has force_destroy enabled
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-665": { // IAM role allows forced policy detach on destroy
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-666": { // IAM policy attachment grants AdministratorAccess
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-667": { // IAM role has no permissions boundary
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-668": { // IAM access key secret not encrypted with pgp_key
+		ref(nist, "IA-5"), ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-669": { // IAM role policy attachment grants PowerUserAccess
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-670": { // IAM policy grants iam:* on a scoped resource
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-671": { // IAM policy Allow statement uses NotResource
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-674": { // IAM group named admin should be reviewed
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-675": { // IAM password policy allows reset after expiry
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-676": { // IAM role trust grants sts:TagSession without conditions
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-677": { // IAM policy statement has no Sid
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-678": { // IAM login profile does not force password reset
+		ref(cis, "1.8"), ref(nist, "AU-2"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-679": { // Production-like IAM role attached to ReadOnlyAccess
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-685": { // EC2 instance with Windows password retrieval enabled
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-686": { // EC2 user_data embeds AWS credentials
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-687": { // Launch template user_data embeds a hardcoded password
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-688": { // Network interface with public IP association
+		ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-692": { // EC2 instance without an IAM instance profile
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-694": { // AMI copy without encryption
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-695": { // EBS snapshot copy without encryption
+		ref(nist, "CP-9"), ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-696": { // EC2 root volume without encryption
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-700": { // Aurora Performance Insights without customer-managed KMS key
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-701": { // RDS instance without enhanced monitoring
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-702": { // RDS instance snapshots do not copy tags
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-703": { // Aurora cluster skips final snapshot on deletion
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-704": { // Aurora cluster without automated backups
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-705": { // Aurora cluster snapshot shared with other accounts
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-709": { // RDS parameter group without forced SSL
+		ref(nist, "SC-8"), ref(pci, "4.2.1"),
+	},
+	"AEGIS-AWS-710": { // RDS master password not managed by Secrets Manager
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-712": { // Redshift cluster with short snapshot retention
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-713": { // Redshift cluster snapshots do not copy tags
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-714": { // ElastiCache cluster without snapshot retention
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-715": { // ElastiCache replication group without at-rest encryption
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-717": { // ElastiCache replication group without snapshot retention
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-719": { // Neptune cluster without deletion protection
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-720": { // Lambda async invoke config without a failure destination
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-724": { // Lambda permission grants a service principal without source_arn
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-725": { // Lambda code signing policy warns instead of enforcing
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-729": { // Step Functions state machine with logging switched off
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-731": { // Step Functions definition contains a hardcoded password
+		ref(cis, "1.8"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-733": { // Lambda code signing config without allowed publishers
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-735": { // ECS container without log configuration
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-738": { // EKS cluster control plane logging without audit logs
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-739": { // EKS encryption config not covering Kubernetes secrets
+		ref(nist, "AU-2"), ref(nist, "IA-5"), ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-741": { // Load balancer listener with TLS protocol on port 80
+		ref(nist, "SC-8"), ref(pci, "4.2.1"),
+	},
+	"AEGIS-AWS-744": { // Route sending all traffic to an internet gateway
+		ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-745": { // Default security group with a world-open rule
+		ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-750": { // ACM certificate using email validation
+		ref(nist, "SC-8"), ref(pci, "4.2.1"),
+	},
+	"AEGIS-AWS-751": { // API Gateway REST API with a public resource policy
+		ref(nist, "IA-5"), ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-752": { // CloudFront distribution without access logging
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-754": { // CloudFront viewer certificate with TLS 1.0 minimum
+		ref(nist, "SC-8"), ref(pci, "4.2.1"),
+	},
+	"AEGIS-AWS-756": { // API Gateway stage without a client certificate
+		ref(nist, "SC-8"), ref(pci, "4.2.1"),
+	},
+	"AEGIS-AWS-759": { // Network Firewall without firewall policy change protection
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-760": { // CloudTrail trail is not an organization trail
+		ref(cis, "3.1"), ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-761": { // CloudTrail trail without CloudTrail Insights
+		ref(cis, "3.1"), ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-762": { // CloudTrail trail logging disabled
+		ref(cis, "3.1"), ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-763": { // Config recorder skips global resource types
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-764": { // Config delivery channel without S3 key prefix
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-765": { // Config recorder status disabled
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-766": { // GuardDuty finding publishing disabled
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-767": { // GuardDuty S3 protection disabled
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-769": { // CloudWatch log group with short log retention
+		ref(nist, "AU-2"), ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-770": { // CloudWatch log group using AWS-managed encryption key
+		ref(nist, "AU-2"), ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-771": { // CloudWatch alarm with no alarm actions
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-772": { // SNS topic using AWS-managed encryption key
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-774": { // SNS topic policy grants wildcard actions
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-775": { // SQS queue using AWS-managed encryption key
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-777": { // SQS queue with short message retention
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-778": { // SQS queue policy grants wildcard actions
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-780": { // KMS key rotation period longer than one year
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-781": { // KMS key with short deletion window
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-782": { // KMS key policy allows public principal
+		ref(nist, "IA-5"), ref(nist, "SC-12"), ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-783": { // KMS key without description
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-784": { // KMS external key without key material expiry
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-785": { // KMS key bypasses policy lockout safety check
+		ref(nist, "IA-5"), ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-786": { // EBS default encryption uses AWS-managed key
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-787": { // Secrets Manager secret using AWS-managed encryption key
+		ref(nist, "IA-5"), ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-788": { // Secrets Manager rotation interval above 30 days
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-789": { // Secrets Manager secret without description
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-790": { // SSM SecureString parameter using default KMS key
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-791": { // SSM StringList parameter stores plaintext secret
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-792": { // SSM document shared publicly
+		ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-793": { // Secrets Manager secret version with weak placeholder secret
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-794": { // KMS grant with decrypt and retire-grant operations
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-795": { // KMS grant to public grantee principal
+		ref(nist, "IA-5"), ref(nist, "SC-12"), ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-796": { // Secrets Manager secret policy allows public principal
+		ref(nist, "IA-5"), ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-798": { // KMS key policy statement without Sid
+		ref(nist, "IA-5"), ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-799": { // Secrets Manager secret with zero recovery window
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-800": { // Bedrock invocation logging without text data delivery
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-801": { // Bedrock guardrail without a content policy
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-802": { // SageMaker notebook instance with direct internet access
+		ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-805": { // SageMaker domain allowing public internet app access
+		ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-806": { // EventBridge archive with zero-day retention
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-807": { // EventBridge Scheduler schedule without a KMS key
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-809": { // MSK cluster without per-topic enhanced monitoring
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-811": { // OpenSearch domain without advanced security options
+		ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-812": { // OpenSearch domain without log publishing options
+		ref(nist, "AU-2"), ref(nist, "SC-7"),
+	},
+	"AEGIS-AWS-813": { // Neptune cluster skipping the final snapshot
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-814": { // Neptune cluster not copying tags to snapshots
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-815": { // DocumentDB cluster without deletion protection
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-816": { // App Runner service without encryption configuration
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-819": { // Glue security configuration without encryption configuration
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-820": { // Athena workgroup without SSE-KMS query result encryption
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-822": { // Kinesis stream without shard-level metrics
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-823": { // Firehose delivery stream without server-side encryption
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-824": { // Timestream scheduled query error reports without SSE-KMS
+		ref(nist, "SC-12"),
+	},
+	"AEGIS-AWS-826": { // CloudFront distribution without a response headers policy
+		ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-830": { // API Gateway v2 stage without access logging
+		ref(nist, "AU-2"),
+	},
+	"AEGIS-AWS-832": { // API Gateway v2 domain name with TLS 1.0 security policy
+		ref(nist, "IA-5"), ref(nist, "SC-8"), ref(pci, "4.2.1"),
+	},
+	"AEGIS-AWS-834": { // Backup vault lock with short minimum retention
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-835": { // Backup plan rule without a copy action
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-836": { // Backup vault without vault lock configuration
+		ref(nist, "CP-9"),
+	},
+	"AEGIS-AWS-839": { // ACM certificate with certificate transparency logging disabled
+		ref(nist, "AU-2"), ref(nist, "SC-8"), ref(pci, "4.2.1"),
+	},
+	"AEGIS-AWS-842": { // ALB listener with an outdated SSL policy
+		ref(nist, "IA-5"), ref(nist, "SC-8"), ref(pci, "4.2.1"),
+	},
+	"AEGIS-AWS-843": { // API Gateway account without a CloudWatch logging role
+		ref(nist, "AU-2"), ref(nist, "IA-5"),
+	},
+	"AEGIS-AWS-847": { // DLM lifecycle policy disabled
+		ref(nist, "IA-5"),
+	},
 }

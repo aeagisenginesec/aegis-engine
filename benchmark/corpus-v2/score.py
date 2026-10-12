@@ -263,7 +263,7 @@ def main():
 
     if not args.aegis_only:
         print("\n===== COMPARISON (context) =====")
-        print("KICS: medium+ = HIGH/MEDIUM. Checkov: severity null in JSON -> all failed checks count.")
+        print("KICS: medium+ = CRITICAL/HIGH/MEDIUM. Checkov: severity null in JSON -> all failed checks count.")
         for name, proj_dir, manifest in splits:
             print(f"\n--- {name} ({len(manifest)} projects) ---")
             tmp = os.path.join(HERE, ".tmpcmp", name)

@@ -5,6 +5,7 @@ import (
 
 	"aegis/internal/ir"
 	"aegis/internal/rules/aws"
+	"aegis/internal/rules/gcp"
 )
 
 func TestComplianceFor_KnownRule(t *testing.T) {
@@ -114,10 +115,13 @@ func TestEnrichCompliance(t *testing.T) {
 	}
 }
 
-// Every mapped rule ID must exist in the AWS pack (catches typos).
+// Every mapped rule ID must exist in a known pack (catches typos).
 func TestComplianceMap_RuleIDsExist(t *testing.T) {
 	known := map[string]bool{}
 	for _, r := range aws.Rules() {
+		known[r.ID()] = true
+	}
+	for _, r := range gcp.Rules() {
 		known[r.ID()] = true
 	}
 	for id := range complianceMap {

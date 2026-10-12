@@ -119,8 +119,9 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	// + 25 Docker expansion (DOCKER-011-035) + 8 Compose pack (COMPOSE-001-008).
 	// - 4 AWS rules removed by the concurrent Phase-4 refactor (incl. AEGIS-AWS-558).
 	// + 144 Azure expansion (AEGIS-AZURE-170..313) + concurrent AWS/GCP deep packs.
-	if len(all) != 985 {
-		t.Fatalf("default registry should wire 985 rules, got %d", len(all))
+	// + 200 AWS deep expansion (AEGIS-AWS-650..849).
+	if len(all) != 1185 {
+		t.Fatalf("default registry should wire 1185 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {

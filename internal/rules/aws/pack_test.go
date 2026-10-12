@@ -6,10 +6,9 @@ import (
 
 func TestPack_HasExpectedRulesWithUniqueIDs(t *testing.T) {
 	rules := Rules()
-	// 282: 286 at v1.0.0 minus the 4 removed S3 hygiene rules
-	// (558 object lock, 559 inventory, 602 notifications, 603 replication).
-	if len(rules) != 282 {
-		t.Fatalf("expected 282 rules, got %d", len(rules))
+	// 482: 282 baseline + 200 deep-expansion rules (650-849).
+	if len(rules) != 482 {
+		t.Fatalf("expected 482 rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	var prev string
