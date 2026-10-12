@@ -1,0 +1,77 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/tmp.ErD2RVc9Bl",
+  "resources_scanned": 2,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-341",
+      "title": "SNS topic without KMS encryption",
+      "description": "SNS topics should encrypt messages at rest with a KMS key. A topic with no kms_master_key_id relies on unencrypted delivery.",
+      "severity": "high",
+      "resource": "aws_sns_topic.demo",
+      "evidence": {
+        "attribute": "kms_master_key_id",
+        "span": {
+          "file": "/tmp/tmp.ErD2RVc9Bl/29-sns-public-policy.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 3,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "kms_master_key_id set to a KMS key ARN or alias"
+      },
+      "remediation": "Encrypt the SNS topic with a customer-managed KMS key:\nresource \"aws_sns_topic\" \"this\" {\n  kms_master_key_id = aws_kms_key.sns.arn\n}",
+      "references": [
+        "https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.5.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-773",
+      "title": "SNS topic without display name",
+      "description": "A topic with no display_name is harder to identify in notifications and audit trails. Set a human-readable display name for every topic.",
+      "severity": "low",
+      "resource": "aws_sns_topic.demo",
+      "evidence": {
+        "attribute": "display_name",
+        "span": {
+          "file": "/tmp/tmp.ErD2RVc9Bl/29-sns-public-policy.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 3,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "human-readable display name"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/tmp.ErD2RVc9Bl/29-sns-public-policy.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

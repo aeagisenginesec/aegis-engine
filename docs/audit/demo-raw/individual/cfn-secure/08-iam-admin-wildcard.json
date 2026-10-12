@@ -1,0 +1,50 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/tmp.kMcuDLKZOP",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-677",
+      "title": "IAM policy statement has no Sid",
+      "description": "At least one policy statement has no Sid, making the statement harder to reference in reviews, audit findings, and exception tracking. Give every statement a descriptive Sid.",
+      "severity": "low",
+      "resource": "aws_iam_policy.DemoPolicy",
+      "evidence": {
+        "attribute": "policy",
+        "span": {
+          "file": "/tmp/tmp.kMcuDLKZOP/08-iam-admin-wildcard.yaml",
+          "start_line": 8,
+          "start_col": 9,
+          "end_line": 8,
+          "end_col": 9
+        },
+        "actual": "statement without Sid",
+        "expected": "Sid set on every statement"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/tmp.kMcuDLKZOP/08-iam-admin-wildcard.yaml",
+        "status": "parsed",
+        "format": "cloudformation"
+      }
+    ]
+  }
+}

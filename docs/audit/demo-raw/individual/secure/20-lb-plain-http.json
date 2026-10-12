@@ -1,0 +1,175 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/tmp.sf8yYkoONt",
+  "resources_scanned": 2,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-201",
+      "title": "Load balancer internet-facing",
+      "description": "A load balancer with internal absent or false is internet-facing (false is the provider default). Internet-facing LBs widen the attack surface and should be a deliberate choice.",
+      "severity": "high",
+      "resource": "aws_lb.demo",
+      "evidence": {
+        "attribute": "internal",
+        "span": {
+          "file": "/tmp/tmp.sf8yYkoONt/20-lb-plain-http.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "false (default)",
+        "expected": "internal = true"
+      },
+      "remediation": "If the load balancer must be internet-facing, attach a WAFv2 Web ACL and keep\nlisteners on HTTPS only. Otherwise make it internal:\nresource \"aws_lb\" \"this\" {\n  internal = true\n  # ...\n}",
+      "references": [
+        "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-203",
+      "title": "Load balancer not dropping invalid headers",
+      "description": "Without drop_invalid_header_fields, malformed HTTP headers reach targets and enable request-smuggling style attacks. The provider default is false.",
+      "severity": "high",
+      "resource": "aws_lb.demo",
+      "evidence": {
+        "attribute": "drop_invalid_header_fields",
+        "span": {
+          "file": "/tmp/tmp.sf8yYkoONt/20-lb-plain-http.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "false (default)",
+        "expected": "drop_invalid_header_fields = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-323",
+      "title": "Load balancer without deletion protection",
+      "description": "Without enable_deletion_protection, a load balancer can be destroyed by a single API call or Terraform change, taking the service offline. The provider default is disabled.",
+      "severity": "medium",
+      "resource": "aws_lb.demo",
+      "evidence": {
+        "attribute": "enable_deletion_protection",
+        "span": {
+          "file": "/tmp/tmp.sf8yYkoONt/20-lb-plain-http.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: disabled)",
+        "expected": "enable_deletion_protection = true"
+      },
+      "remediation": "Enable deletion protection to prevent accidental destruction:\nresource \"aws_db_instance\" \"this\" {\n  deletion_protection = true\n}\nFor S3, remove `force_destroy = true`. For EC2, set `disable_api_termination = true`.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-371",
+      "title": "Load balancer without access logs",
+      "description": "Access logs record every request to the load balancer and are essential for incident response and forensics. Enable them with an access_logs block pointing at an S3 bucket.",
+      "severity": "medium",
+      "resource": "aws_lb.demo",
+      "evidence": {
+        "attribute": "access_logs",
+        "span": {
+          "file": "/tmp/tmp.sf8yYkoONt/20-lb-plain-http.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: disabled)",
+        "expected": "access_logs { enabled = true }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-506",
+      "title": "Public load balancer without WAF",
+      "description": "An internet-facing load balancer with no WAFv2 web ACL association is exposed to common web exploits, bots, and application-layer DDoS with no managed filtering in front of it.",
+      "severity": "high",
+      "resource": "aws_lb.demo",
+      "evidence": {
+        "attribute": "internal",
+        "span": {
+          "file": "/tmp/tmp.sf8yYkoONt/20-lb-plain-http.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: internet-facing)",
+        "expected": "internal = true, or an aws_wafv2_web_acl_association on this load balancer"
+      },
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-609",
+      "title": "Load balancer without access logging",
+      "description": "Hygiene: Load balancers should log access to S3 for traffic analysis and incident investigation. Add an access_logs block with a bucket.",
+      "severity": "low",
+      "resource": "aws_lb.demo",
+      "evidence": {
+        "attribute": "access_logs",
+        "span": {
+          "file": "/tmp/tmp.sf8yYkoONt/20-lb-plain-http.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "access_logs block with bucket configured"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/tmp.sf8yYkoONt/20-lb-plain-http.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}
