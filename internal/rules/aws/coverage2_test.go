@@ -322,8 +322,39 @@ func flowLogFixture(name, vpcRefPath string, line int) ir.Resource {
 	})
 }
 
+func subnetFixture(name, vpcRefPath string, line int) ir.Resource {
+	return res("aws_subnet", name, map[string]ir.Value{
+		"vpc_id": bucketRef(line, vpcRefPath),
+	})
+}
+
 func Test209_NoFlowLogFires(t *testing.T) {
+	fs := runCross(vpcNoFlowLogs{},
+		vpcFixture("main"),
+		subnetFixture("a", "aws_vpc.main.id", 10),
+	)
+	if len(fs) != 1 {
+		t.Fatalf("got %d findings, want 1", len(fs))
+	}
+}
+
+// A VPC with no subnets carries no traffic: flow logs would capture
+// nothing, so the rule stays silent. Regression: held-out clean projects
+// ship a placeholder VPC in an uninstantiated module.
+func Test209_NoSubnetsSilent(t *testing.T) {
 	fs := runCross(vpcNoFlowLogs{}, vpcFixture("main"))
+	if len(fs) != 0 {
+		t.Fatalf("got %d findings, want 0 for subnet-less VPC", len(fs))
+	}
+}
+
+// A subnet whose vpc_id is unresolvable might belong to any VPC: fail-safe,
+// the VPC is still flagged.
+func Test209_UnresolvableSubnetVPCIDFires(t *testing.T) {
+	fs := runCross(vpcNoFlowLogs{},
+		vpcFixture("main"),
+		res("aws_subnet", "a", map[string]ir.Value{"vpc_id": ku(10)}),
+	)
 	if len(fs) != 1 {
 		t.Fatalf("got %d findings, want 1", len(fs))
 	}
@@ -343,6 +374,7 @@ func Test209_FlowLogForOtherVPCFires(t *testing.T) {
 	fs := runCross(vpcNoFlowLogs{},
 		vpcFixture("main"),
 		vpcFixture("other"),
+		subnetFixture("a", "aws_vpc.main.id", 10),
 		flowLogFixture("other", "aws_vpc.other.id", 10),
 	)
 	if len(fs) != 1 || fs[0].Resource != "aws_vpc.main" {

@@ -641,3 +641,76 @@ func TestStaticCountNoWarning(t *testing.T) {
 		t.Fatalf("static count must not warn, got %+v", diags)
 	}
 }
+
+// TestLenientMissingCommaRecovery: single-line object constructors without
+// comma separators (e.g. { Effect = "Allow" Action = "s3:GetObject" }) are
+// recovered by inserting commas at the parser-reported positions. Without
+// recovery, the parser silently drops the remaining items, mangling
+// jsonencode() policy documents.
+func TestLenientMissingCommaRecovery(t *testing.T) {
+	src := `resource "aws_iam_policy" "v" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      { Effect = "Allow" Action = "iam:PassRole" Resource = "*" },
+      { Effect = "Allow" Action = "ec2:RunInstances" Resource = "*" }
+    ]
+  })
+}
+`
+	mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) != 0 {
+		t.Fatalf("recovered parse must be clean, got %+v", diags)
+	}
+	if len(mod.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+	}
+	v := mod.Resources[0].Attributes["policy"]
+	s, ok := v.Raw.(string)
+	if !ok || !v.Known {
+		t.Fatalf("policy must be a known string, got known=%v type=%T", v.Known, v.Raw)
+	}
+	for _, want := range []string{"iam:PassRole", "ec2:RunInstances"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("recovered policy missing %q: %s", want, s)
+		}
+	}
+}
+
+// TestLenientUnrecoverableUnchanged: files with errors other than missing
+// separators are returned as-is (partial result, diagnostics preserved).
+func TestLenientUnrecoverableUnchanged(t *testing.T) {
+	src := `resource "aws_instance" "web" {
+  ami = "ami-123"
+  instance_type =
+}
+`
+	_, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) == 0 {
+		t.Fatal("expected diagnostics for genuinely broken HCL")
+	}
+}
+
+// TestLenientCleanUntouched: valid files are not modified by the recovery.
+func TestLenientCleanUntouched(t *testing.T) {
+	src := `resource "aws_s3_bucket" "b" {
+  bucket = "mybucket"
+}
+`
+	mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) != 0 {
+		t.Fatalf("valid file must have no diagnostics, got %+v", diags)
+	}
+	if len(mod.Resources) != 1 || mod.Resources[0].Address() != "aws_s3_bucket.b" {
+		t.Fatalf("unexpected resources: %+v", mod.Resources)
+	}
+}

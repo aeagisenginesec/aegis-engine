@@ -155,7 +155,7 @@ func (lambdaNoVPC) Description() string {
 		"access. Functions accessing VPC resources (RDS, ElastiCache) should " +
 		"declare vpc_config with subnet_ids and security_group_ids."
 }
-func (lambdaNoVPC) Severity() ir.Severity { return ir.SeverityMedium }
+func (lambdaNoVPC) Severity() ir.Severity { return ir.SeverityLow }
 func (lambdaNoVPC) AppliesTo(resType string) bool {
 	return resType == "aws_lambda_function"
 }
@@ -172,7 +172,7 @@ func (lambdaNoVPC) Check(r ir.Resource) []ir.Finding {
 		RuleID:      "AEGIS-AWS-542",
 		Title:       (lambdaNoVPC{}).Title(),
 		Description: (lambdaNoVPC{}).Description(),
-		Severity:    ir.SeverityMedium,
+		Severity:    ir.SeverityLow,
 		Resource:    r.Address(),
 		Evidence: ir.Evidence{
 			Attribute: "vpc_config",

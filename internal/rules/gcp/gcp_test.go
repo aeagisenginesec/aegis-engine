@@ -120,6 +120,11 @@ func TestRulesInIDOrder(t *testing.T) {
 		"AEGIS-GCP-113", "AEGIS-GCP-114", "AEGIS-GCP-115", "AEGIS-GCP-116",
 		"AEGIS-GCP-117", "AEGIS-GCP-118", "AEGIS-GCP-119", "AEGIS-GCP-120",
 		"AEGIS-GCP-121", "AEGIS-GCP-122",
+		"AEGIS-GCP-123", "AEGIS-GCP-124", "AEGIS-GCP-125", "AEGIS-GCP-126",
+		"AEGIS-GCP-127", "AEGIS-GCP-128", "AEGIS-GCP-129", "AEGIS-GCP-130",
+		"AEGIS-GCP-131", "AEGIS-GCP-132", "AEGIS-GCP-133", "AEGIS-GCP-134",
+		"AEGIS-GCP-135", "AEGIS-GCP-136", "AEGIS-GCP-137", "AEGIS-GCP-138",
+		"AEGIS-GCP-139", "AEGIS-GCP-140", "AEGIS-GCP-141", "AEGIS-GCP-142",
 	}
 	if len(rules) != len(want) {
 		t.Fatalf("expected %d rules, got %d", len(want), len(rules))

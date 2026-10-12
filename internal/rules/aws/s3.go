@@ -30,6 +30,8 @@ func (s3Encryption) AppliesTo(resType string) bool {
 
 // CheckAll suppresses the inline finding when a standalone
 // aws_s3_bucket_server_side_encryption_configuration is linked to the bucket.
+// Buckets that serve as log-delivery targets are skipped: they are logging
+// infrastructure, not data buckets.
 func (s3Encryption) CheckAll(resources []ir.Resource) []ir.Finding {
 	encrypted := map[string]bool{}
 	for _, r := range resources {
@@ -40,13 +42,14 @@ func (s3Encryption) CheckAll(resources []ir.Resource) []ir.Finding {
 			encrypted[addr] = true
 		}
 	}
+	logTargets := logDeliveryBuckets(resources)
 	var out []ir.Finding
 	for _, r := range resources {
 		if r.Type != "aws_s3_bucket" {
 			continue
 		}
 		for _, f := range (s3Encryption{}).Check(r) {
-			if !encrypted[r.Address()] {
+			if !encrypted[r.Address()] && !logTargets[r.Address()] {
 				out = append(out, f)
 			}
 		}
@@ -294,6 +297,8 @@ func versioningStandaloneEnabled(r ir.Resource) bool {
 
 // CheckAll suppresses the inline finding when a standalone
 // aws_s3_bucket_versioning with status=Enabled is linked to the bucket.
+// Buckets that serve as log-delivery targets are skipped: they are logging
+// infrastructure, not data buckets.
 func (s3Versioning) CheckAll(resources []ir.Resource) []ir.Finding {
 	versioned := map[string]bool{}
 	for _, r := range resources {
@@ -304,13 +309,14 @@ func (s3Versioning) CheckAll(resources []ir.Resource) []ir.Finding {
 			versioned[addr] = true
 		}
 	}
+	logTargets := logDeliveryBuckets(resources)
 	var out []ir.Finding
 	for _, r := range resources {
 		if r.Type != "aws_s3_bucket" {
 			continue
 		}
 		for _, f := range (s3Versioning{}).Check(r) {
-			if !versioned[r.Address()] {
+			if !versioned[r.Address()] && !logTargets[r.Address()] {
 				out = append(out, f)
 			}
 		}

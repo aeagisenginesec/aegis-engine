@@ -113,14 +113,19 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	// + 22 GCP Checkov gap-closure (GCP-101-122)
 	// + 23 Azure gap-closure (127-149: AKS, App Service, Storage)
 	// + 13 AWS gap-closure (637-644 search, 645-649 lambda).
-	if len(all) != 587 {
-		t.Fatalf("default registry should wire 587 rules, got %d", len(all))
+	// + 12 Alibaba Cloud pack (ALI-001..012) + 8 OCI pack (OCI-001..008)
+	// + 20 Azure new-service coverage (150-169) + 20 GCP expansion (123-142)
+	// + 22 K8s hardening (004-025).
+	// + 25 Docker expansion (DOCKER-011-035) + 8 Compose pack (COMPOSE-001-008).
+	// - 4 AWS rules removed by the concurrent Phase-4 refactor (incl. AEGIS-AWS-558).
+	if len(all) != 698 {
+		t.Fatalf("default registry should wire 698 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {
 		ids[r.ID()] = true
 	}
-	for _, want := range []string{"AEGIS-AWS-001", "AEGIS-AWS-104", "AEGIS-AZR-001", "AEGIS-GCP-001", "AEGIS-K8S-001", "AEGIS-SC-001", "AEGIS-TF-001"} {
+	for _, want := range []string{"AEGIS-AWS-001", "AEGIS-AWS-104", "AEGIS-AZR-001", "AEGIS-GCP-001", "AEGIS-K8S-001", "AEGIS-SC-001", "AEGIS-TF-001", "AEGIS-ALI-001", "AEGIS-OCI-001"} {
 		if !ids[want] {
 			t.Errorf("default registry missing %s", want)
 		}

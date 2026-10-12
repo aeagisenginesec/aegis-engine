@@ -25,7 +25,8 @@ func Rules() []ir.Rule {
 	}
 	rules = append(rules, GCP2Rules()...) // AEGIS-GCP-005..024
 	rules = append(rules, GCP3Rules()...) // AEGIS-GCP-025..100
-	return append(rules, GCP4Rules()...)  // AEGIS-GCP-101..122
+	rules = append(rules, GCP4Rules()...) // AEGIS-GCP-101..122
+	return append(rules, GCP5Rules()...)  // AEGIS-GCP-123..142
 }
 
 // getString classifies a string attribute into a tri-state.

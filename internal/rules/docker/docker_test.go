@@ -111,21 +111,22 @@ func Test010_UntrustedRegistry(t *testing.T) {
 
 func TestRules_IDOrder(t *testing.T) {
 	rules := Rules()
-	want := []string{
-		"AEGIS-DOCKER-001", "AEGIS-DOCKER-002", "AEGIS-DOCKER-003",
-		"AEGIS-DOCKER-004", "AEGIS-DOCKER-005", "AEGIS-DOCKER-006",
-		"AEGIS-DOCKER-007", "AEGIS-DOCKER-008", "AEGIS-DOCKER-009",
-		"AEGIS-DOCKER-010",
+	if len(rules) != 35 {
+		t.Fatalf("want 35 rules, got %d", len(rules))
 	}
-	if len(rules) != len(want) {
-		t.Fatalf("want %d rules, got %d", len(want), len(rules))
-	}
-	for i, w := range want {
-		if rules[i].ID() != w {
-			t.Fatalf("want %s at %d, got %s", w, i, rules[i].ID())
+	for i, r := range rules {
+		want := "AEGIS-DOCKER-" + pad3(i+1)
+		if r.ID() != want {
+			t.Fatalf("want %s at %d, got %s", want, i, r.ID())
 		}
-		if rules[i].Title() == "" || rules[i].Description() == "" {
-			t.Fatalf("empty metadata: %s", w)
+		if r.Title() == "" || r.Description() == "" {
+			t.Fatalf("empty metadata: %s", want)
+		}
+		if !r.AppliesTo("docker_stage") {
+			t.Fatalf("%s does not apply to docker_stage", want)
+		}
+		if r.AppliesTo("aws_s3_bucket") {
+			t.Fatalf("%s applies to non-docker resource", want)
 		}
 	}
 }

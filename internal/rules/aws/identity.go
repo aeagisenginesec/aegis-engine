@@ -498,7 +498,7 @@ func (hardcodedCredentials) CheckAll(resources []ir.Resource) []ir.Finding {
 			continue
 		}
 		out = append(out, (hardcodedCredentials{}).Check(r)...)
-		if f := checkCredentialTaint(r); f != nil {
+		if f := checkCredentialTaint(r, resources); f != nil {
 			out = append(out, *f)
 		}
 	}
@@ -517,7 +517,10 @@ var _ ir.CrossResourceRule = hardcodedCredentials{}
 // holds an unresolved var/local reference with a secret-like name.
 // One level of indirection only: ref -> attribute. Anything else (known
 // literals, non-secret names, unknown shapes) yields nil.
-func checkCredentialTaint(r ir.Resource) *ir.Finding {
+// Variables declared with sensitive = true are skipped: the author followed
+// best practice by marking the value sensitive, so flagging it as
+// "hardcoded" would be a false positive.
+func checkCredentialTaint(r ir.Resource, resources []ir.Resource) *ir.Finding {
 	attr := credentialAttr(r.Type)
 	v, ok := r.Attributes[attr]
 	if !ok || !v.IsRef() {
@@ -529,6 +532,9 @@ func checkCredentialTaint(r ir.Resource) *ir.Finding {
 	}
 	if !secretLikeName(name) {
 		return nil // clean name: cannot call it a secret
+	}
+	if head == "var" && isSensitiveVariable(name, resources) {
+		return nil // sensitive = true: best practice followed, not hardcoded
 	}
 	taintPath := v.Ref + " -> " + r.Address() + "." + attr
 	return &ir.Finding{
@@ -544,6 +550,22 @@ func checkCredentialTaint(r ir.Resource) *ir.Finding {
 			Expected:  "reference to a secrets manager or generated password",
 		},
 	}
+}
+
+// isSensitiveVariable reports whether the named variable is declared with
+// sensitive = true, by looking up the synthetic terraform_variable resource.
+func isSensitiveVariable(name string, resources []ir.Resource) bool {
+	for _, res := range resources {
+		if res.Type != "terraform_variable" || res.Name != name {
+			continue
+		}
+		if s, ok := res.Attributes["sensitive"]; ok {
+			if b, ok := s.AsBool(); ok && b {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // splitTaintRef splits "var.db_password" into ("var", "db_password").

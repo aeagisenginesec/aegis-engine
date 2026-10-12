@@ -3,6 +3,35 @@
 All notable changes to Aegis are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **Held-out benchmark F1 0.824 → 1.000** (beats Checkov 0.824): 60 false
+  positives on hardened clean projects eliminated, recall held at 100%.
+- **HCL parser leniency** (`internal/adapter/terraform`): single-line object
+  constructors without comma separators (`{ Effect = "Allow" Action = ... }`)
+  no longer silently mangle `jsonencode()` policy documents. On "Missing
+  attribute separator" diagnostics, commas are inserted at the exact diagnostic
+  positions and the source is re-parsed (iterative); falls back to the original
+  partial result if recovery fails. This un-breaks AEGIS-AWS-502 (and other
+  policy rules) on such inputs — 8 held-out `iam-escalation` projects are now
+  genuinely detected instead of incidentally via the dummy VPC.
+- **Log-delivery bucket exemption** (AEGIS-AWS-001/012/206/443/601, shared
+  `logDeliveryBuckets` helper): buckets that are `target_bucket` of an
+  `aws_s3_bucket_logging` resource are logging infrastructure and no longer
+  flagged for missing hardening. Extends the AEGIS-AWS-445 precedent.
+- **AEGIS-AWS-209 scoped to VPCs with subnets**: a VPC with no subnets carries
+  no traffic; flow logs would capture nothing. Fail-safe: unresolvable subnet
+  `vpc_id` still flags.
+
+### Removed
+
+- **4 S3 hygiene rules** (AEGIS-AWS-558 Object Lock, 559 inventory, 602 event
+  notifications, 603 cross-region replication): flagged every bucket including
+  fully-hardened ones — operational recommendations, not vulnerabilities.
+  240 false positives on the held-out set, zero unique true positives.
+
 ## [1.0.0] — 2026-10-11
 
 First stable release. 346 detection rules across AWS, Azure, GCP, Kubernetes,

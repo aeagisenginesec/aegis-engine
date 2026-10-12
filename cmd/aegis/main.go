@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"aegis/internal/adapter/compose"
 	"aegis/internal/adapter/dockerfile"
 	"aegis/internal/adapter/manifests"
 	"aegis/internal/adapter/planjson"
@@ -96,7 +97,9 @@ Exit codes:
 // NOTE: assumes the terraform adapter exposes terraform.New(); adjust the
 // single call below if the sibling package names its constructor differently.
 func defaultAdapters() []ir.Adapter {
-	return []ir.Adapter{terraform.New(), planjson.Adapter{}, manifests.Adapter{}, dockerfile.New()}
+	// compose.New() precedes manifests.Adapter{}: manifests claims every
+	// .yml/.yaml file, so compose files must be matched first.
+	return []ir.Adapter{terraform.New(), planjson.Adapter{}, compose.New(), manifests.Adapter{}, dockerfile.New()}
 }
 
 // defaultScanFunc re-scans a directory with the production adapters and

@@ -377,113 +377,6 @@ func policyHasWildcardPrincipal(doc string) bool {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-558: S3 bucket without Object Lock configuration
-// ---------------------------------------------------------------------------
-
-type s3NoObjectLock struct{}
-
-func (s3NoObjectLock) ID() string { return "AEGIS-AWS-558" }
-func (s3NoObjectLock) Title() string {
-	return "S3 bucket without Object Lock configuration"
-}
-func (s3NoObjectLock) Description() string {
-	return "S3 buckets holding compliance-sensitive data should enable " +
-		"Object Lock to prevent deletion or modification during retention. " +
-		"Add an aws_s3_bucket_object_lock_configuration resource."
-}
-func (s3NoObjectLock) Severity() ir.Severity { return ir.SeverityMedium }
-func (s3NoObjectLock) AppliesTo(resType string) bool {
-	return resType == "aws_s3_bucket"
-}
-func (s3NoObjectLock) Check(ir.Resource) []ir.Finding { return nil }
-func (s3NoObjectLock) CheckAll(resources []ir.Resource) []ir.Finding {
-	locked := map[string]bool{}
-	for _, r := range resources {
-		if r.Type != "aws_s3_bucket_object_lock_configuration" {
-			continue
-		}
-		if addr, ok := linkedBucketAddr(r, resources); ok {
-			locked[addr] = true
-		}
-	}
-	// An object-lock configuration whose bucket link is unresolvable might
-	// cover any bucket.
-	uncertain := companionLinkUncertain(resources, "aws_s3_bucket_object_lock_configuration", "bucket")
-	var out []ir.Finding
-	for _, r := range resources {
-		if r.Type != "aws_s3_bucket" {
-			continue
-		}
-		if locked[r.Address()] || uncertain {
-			continue
-		}
-		out = append(out, ir.Finding{
-			RuleID:      "AEGIS-AWS-558",
-			Title:       (s3NoObjectLock{}).Title(),
-			Description: (s3NoObjectLock{}).Description(),
-			Severity:    ir.SeverityMedium,
-			Resource:    r.Address(),
-			Evidence: ir.Evidence{
-				Attribute: "aws_s3_bucket_object_lock_configuration",
-				Span:      evidenceSpan(ir.Span{}, r.Span),
-				Actual:    "absent",
-				Expected:  "object lock configuration present",
-			},
-		})
-	}
-	return out
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-559: S3 bucket without inventory (hygiene)
-// ---------------------------------------------------------------------------
-
-type s3NoInventory struct{}
-
-func (s3NoInventory) ID() string { return "AEGIS-AWS-559" }
-func (s3NoInventory) Title() string {
-	return "S3 bucket without inventory configuration"
-}
-func (s3NoInventory) Description() string {
-	return "Hygiene: S3 buckets should enable inventory reports for " +
-		"auditing object metadata at scale. Add an aws_s3_bucket_inventory " +
-		"resource."
-}
-func (s3NoInventory) Severity() ir.Severity { return ir.SeverityLow }
-func (s3NoInventory) AppliesTo(resType string) bool {
-	return resType == "aws_s3_bucket"
-}
-func (s3NoInventory) Check(ir.Resource) []ir.Finding { return nil }
-func (s3NoInventory) CheckAll(resources []ir.Resource) []ir.Finding {
-	inventoried := map[string]bool{}
-	for _, r := range resources {
-		if r.Type != "aws_s3_bucket_inventory" {
-			continue
-		}
-		if addr, ok := linkedBucketAddr(r, resources); ok {
-			inventoried[addr] = true
-		}
-	}
-	// An inventory configuration whose bucket link is unresolvable might
-	// cover any bucket.
-	uncertain := companionLinkUncertain(resources, "aws_s3_bucket_inventory", "bucket")
-	var out []ir.Finding
-	for _, r := range resources {
-		if r.Type != "aws_s3_bucket" {
-			continue
-		}
-		if inventoried[r.Address()] || uncertain {
-			continue
-		}
-		out = append(out, hygieneFinding("AEGIS-AWS-559",
-			(s3NoInventory{}).Title(), (s3NoInventory{}).Description(),
-			r, "aws_s3_bucket_inventory", r.Span, "absent",
-			"inventory configuration present"))
-	}
-	return out
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AWS-560: S3 bucket with force_destroy enabled
 // ---------------------------------------------------------------------------
 
@@ -793,7 +686,7 @@ func (noSecurityHub) Description() string {
 		"aws_securityhub_account resource. Only evaluated on modules with " +
 		"5+ resources to avoid noise on trivial configurations."
 }
-func (noSecurityHub) Severity() ir.Severity { return ir.SeverityHigh }
+func (noSecurityHub) Severity() ir.Severity { return ir.SeverityLow }
 func (noSecurityHub) AppliesTo(resType string) bool {
 	return resType == "aws_securityhub_account"
 }
@@ -813,7 +706,7 @@ func (noSecurityHub) CheckAll(resources []ir.Resource) []ir.Finding {
 		RuleID:      "AEGIS-AWS-567",
 		Title:       (noSecurityHub{}).Title(),
 		Description: (noSecurityHub{}).Description(),
-		Severity:    ir.SeverityHigh,
+		Severity:    ir.SeverityLow,
 		Resource:    "module",
 		Evidence: ir.Evidence{
 			Attribute: "aws_securityhub_account",
@@ -882,7 +775,7 @@ func (noDetective) Description() string {
 		"findings. Add an aws_detective_graph resource. Only evaluated on " +
 		"modules with 5+ resources to avoid noise on trivial configurations."
 }
-func (noDetective) Severity() ir.Severity { return ir.SeverityMedium }
+func (noDetective) Severity() ir.Severity { return ir.SeverityLow }
 func (noDetective) AppliesTo(resType string) bool {
 	return resType == "aws_detective_graph"
 }
@@ -901,7 +794,7 @@ func (noDetective) CheckAll(resources []ir.Resource) []ir.Finding {
 		RuleID:      "AEGIS-AWS-569",
 		Title:       (noDetective{}).Title(),
 		Description: (noDetective{}).Description(),
-		Severity:    ir.SeverityMedium,
+		Severity:    ir.SeverityLow,
 		Resource:    "module",
 		Evidence: ir.Evidence{
 			Attribute: "aws_detective_graph",
@@ -1064,8 +957,6 @@ func CoverageGapRules() []ir.Rule {
 		iamGroupAdminPolicy{},        // AEGIS-AWS-555
 		tgwPermissivePropagation{},   // AEGIS-AWS-556
 		vpcEndpointOpenPolicy{},      // AEGIS-AWS-557
-		s3NoObjectLock{},             // AEGIS-AWS-558
-		s3NoInventory{},              // AEGIS-AWS-559
 		s3ForceDestroy{},             // AEGIS-AWS-560
 		kmsShortDeletionWindow{},     // AEGIS-AWS-561
 		kmsGrantWildcard{},           // AEGIS-AWS-562

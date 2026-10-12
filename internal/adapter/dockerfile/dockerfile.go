@@ -13,6 +13,21 @@
 //   - uses_add: bool (ADD used instead of COPY)
 //   - run_commands: []Value of RUN command bodies (for package/sudo analysis)
 //   - sudo_used: bool
+//   - arg_names: []Value of ARG variable names
+//   - arg_secrets: []Value of {name, span} maps for ARG names that look
+//     like secrets with literal defaults (values redacted)
+//   - workdir: value of the last WORKDIR directive (absent when none)
+//   - labels: []Value of LABEL keys
+//   - has_stopsignal: bool
+//   - shell: SHELL instruction args (absent when none)
+//   - uses_onbuild: bool
+//   - uses_volume: bool
+//   - uses_maintainer: bool (deprecated MAINTAINER instruction)
+//   - copy_sources: []Value of COPY source paths (dest excluded)
+//   - copy_chown_used: bool (any COPY used --chown)
+//   - cmd_shell_form / entrypoint_shell_form: bool
+//   - add_remote: bool (ADD fetched a remote http(s) URL)
+//   - total_stages: number of build stages in the file
 //
 // Safety: pure line-based parsing, no external deps. Malformed input yields
 // best-effort resources plus a diagnostic, never a panic or an error.
@@ -63,47 +78,100 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 
 	// stage accumulates per-stage state.
 	type stage struct {
-		name        string
-		baseImage   string
-		baseTag     string
-		baseSpan    ir.Span
-		user        string
-		userSet     bool
-		userSpan    ir.Span
-		ports       []ir.Value
-		envNames    []ir.Value
-		envSecrets  []ir.Value // []Value of map[string]ir.Value{name, span}
-		healthcheck bool
-		usesAdd     bool
-		addSpan     ir.Span
-		runs        []ir.Value
-		sudo        bool
-		span        ir.Span // stage span: FROM line to last instruction
+		name                string
+		baseImage           string
+		baseTag             string
+		baseSpan            ir.Span
+		user                string
+		userSet             bool
+		userSpan            ir.Span
+		ports               []ir.Value
+		envNames            []ir.Value
+		envSecrets          []ir.Value // []Value of map[string]ir.Value{name, span}
+		argNames            []ir.Value
+		argSecrets          []ir.Value // []Value of map[string]ir.Value{name, span}
+		workdir             string
+		workdirSet          bool
+		workdirSpan         ir.Span
+		labels              []ir.Value
+		stopsignal          bool
+		shell               string
+		shellSet            bool
+		shellSpan           ir.Span
+		onbuild             bool
+		volume              bool
+		maintainer          bool
+		maintainerSpan      ir.Span
+		copySources         []ir.Value
+		copyChown           bool
+		cmdShellForm        bool
+		entrypointShellForm bool
+		healthcheck         bool
+		usesAdd             bool
+		addSpan             ir.Span
+		addRemote           bool
+		runs                []ir.Value
+		sudo                bool
+		span                ir.Span // stage span: FROM line to last instruction
 	}
+
+	// Global ARGs (before the first FROM) apply to every stage; attach
+	// them to the first stage.
+	var globalArgs []argKV
 
 	var cur *stage
 	stageCount := 0
+	seedGlobalArgs := func(s *stage, line int) {
+		span := ir.Span{File: path, StartLine: line, StartCol: 1, EndLine: line, EndCol: 1}
+		for _, kv := range globalArgs {
+			s.argNames = append(s.argNames, ir.Value{Raw: kv.name, Known: true, Span: span})
+			if isSecretName(kv.name) && isLiteralValue(kv.def) && strings.TrimSpace(kv.def) != "" {
+				s.argSecrets = append(s.argSecrets, secretMap(kv.name, span))
+			}
+		}
+	}
 	flush := func(endLine int) {
 		if cur == nil {
 			return
 		}
 		cur.span.EndLine = endLine
 		attrs := map[string]ir.Value{
-			"base_image":      {Raw: cur.baseImage, Known: true, Span: cur.baseSpan},
-			"base_tag":        {Raw: cur.baseTag, Known: true, Span: cur.baseSpan},
-			"exposed_ports":   {Raw: cur.ports, Known: true, Span: cur.span},
-			"env_names":       {Raw: cur.envNames, Known: true, Span: cur.span},
-			"env_secrets":     {Raw: cur.envSecrets, Known: true, Span: cur.span},
-			"has_healthcheck": {Raw: cur.healthcheck, Known: true, Span: cur.span},
-			"uses_add":        {Raw: cur.usesAdd, Known: true, Span: cur.span},
-			"run_commands":    {Raw: cur.runs, Known: true, Span: cur.span},
-			"sudo_used":       {Raw: cur.sudo, Known: true, Span: cur.span},
+			"base_image":            {Raw: cur.baseImage, Known: true, Span: cur.baseSpan},
+			"base_tag":              {Raw: cur.baseTag, Known: true, Span: cur.baseSpan},
+			"exposed_ports":         {Raw: cur.ports, Known: true, Span: cur.span},
+			"env_names":             {Raw: cur.envNames, Known: true, Span: cur.span},
+			"env_secrets":           {Raw: cur.envSecrets, Known: true, Span: cur.span},
+			"arg_names":             {Raw: cur.argNames, Known: true, Span: cur.span},
+			"arg_secrets":           {Raw: cur.argSecrets, Known: true, Span: cur.span},
+			"labels":                {Raw: cur.labels, Known: true, Span: cur.span},
+			"has_stopsignal":        {Raw: cur.stopsignal, Known: true, Span: cur.span},
+			"uses_onbuild":          {Raw: cur.onbuild, Known: true, Span: cur.span},
+			"uses_volume":           {Raw: cur.volume, Known: true, Span: cur.span},
+			"uses_maintainer":       {Raw: cur.maintainer, Known: true, Span: cur.span},
+			"copy_sources":          {Raw: cur.copySources, Known: true, Span: cur.span},
+			"copy_chown_used":       {Raw: cur.copyChown, Known: true, Span: cur.span},
+			"cmd_shell_form":        {Raw: cur.cmdShellForm, Known: true, Span: cur.span},
+			"entrypoint_shell_form": {Raw: cur.entrypointShellForm, Known: true, Span: cur.span},
+			"has_healthcheck":       {Raw: cur.healthcheck, Known: true, Span: cur.span},
+			"uses_add":              {Raw: cur.usesAdd, Known: true, Span: cur.span},
+			"add_remote":            {Raw: cur.addRemote, Known: true, Span: cur.span},
+			"run_commands":          {Raw: cur.runs, Known: true, Span: cur.span},
+			"sudo_used":             {Raw: cur.sudo, Known: true, Span: cur.span},
 		}
 		if cur.userSet {
 			attrs["user"] = ir.Value{Raw: cur.user, Known: true, Span: cur.userSpan}
 		}
+		if cur.workdirSet {
+			attrs["workdir"] = ir.Value{Raw: cur.workdir, Known: true, Span: cur.workdirSpan}
+		}
+		if cur.shellSet {
+			attrs["shell"] = ir.Value{Raw: cur.shell, Known: true, Span: cur.shellSpan}
+		}
 		if cur.usesAdd {
 			attrs["add_span"] = ir.Value{Raw: true, Known: true, Span: cur.addSpan}
+		}
+		if cur.maintainer {
+			attrs["maintainer_span"] = ir.Value{Raw: true, Known: true, Span: cur.maintainerSpan}
 		}
 		out = append(out, ir.Resource{
 			Type:       "docker_stage",
@@ -132,6 +200,97 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 				baseTag:   imageTag(img),
 				baseSpan:  span,
 				span:      ir.Span{File: path, StartLine: in.line, StartCol: 1, EndLine: in.line, EndCol: 1},
+			}
+			if stageCount == 1 {
+				seedGlobalArgs(cur, in.line)
+				globalArgs = nil
+			}
+		case "ARG":
+			kv := parseArg(in.args)
+			if kv.name == "" {
+				continue
+			}
+			if cur == nil {
+				// Global ARG before the first FROM.
+				globalArgs = append(globalArgs, kv)
+				continue
+			}
+			cur.argNames = append(cur.argNames, ir.Value{Raw: kv.name, Known: true, Span: span})
+			if isSecretName(kv.name) && isLiteralValue(kv.def) && strings.TrimSpace(kv.def) != "" {
+				cur.argSecrets = append(cur.argSecrets, secretMap(kv.name, span))
+			}
+		case "WORKDIR":
+			if cur == nil {
+				continue
+			}
+			w := strings.TrimSpace(in.args)
+			// Strip surrounding quotes.
+			w = strings.Trim(w, `"'`)
+			if w == "" {
+				continue
+			}
+			cur.workdir = w
+			cur.workdirSet = true
+			cur.workdirSpan = span
+		case "LABEL":
+			if cur == nil {
+				continue
+			}
+			for _, kv := range parseLabel(in.args) {
+				cur.labels = append(cur.labels, ir.Value{Raw: kv, Known: true, Span: span})
+			}
+		case "STOPSIGNAL":
+			if cur == nil {
+				continue
+			}
+			cur.stopsignal = true
+		case "SHELL":
+			if cur == nil {
+				continue
+			}
+			cur.shell = strings.TrimSpace(in.args)
+			cur.shellSet = true
+			cur.shellSpan = span
+		case "ONBUILD":
+			if cur == nil {
+				continue
+			}
+			cur.onbuild = true
+		case "VOLUME":
+			if cur == nil {
+				continue
+			}
+			cur.volume = true
+		case "MAINTAINER":
+			if cur == nil {
+				continue
+			}
+			cur.maintainer = true
+			cur.maintainerSpan = span
+		case "COPY":
+			if cur == nil {
+				continue
+			}
+			srcs, chown := parseCopy(in.args)
+			for _, s := range srcs {
+				cur.copySources = append(cur.copySources, ir.Value{Raw: s, Known: true, Span: span})
+			}
+			if chown {
+				cur.copyChown = true
+			}
+		case "CMD":
+			if cur == nil {
+				continue
+			}
+			if strings.TrimSpace(in.args) != "" {
+				cur.cmdShellForm = !isExecForm(in.args)
+			}
+		case "ENTRYPOINT":
+			if cur == nil {
+				continue
+			}
+			if strings.TrimSpace(in.args) != "" {
+				cur.entrypointShellForm = !isExecForm(in.args)
 			}
 		case "USER":
 			if cur == nil {
@@ -188,6 +347,9 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			}
 			cur.usesAdd = true
 			cur.addSpan = span
+			if addHasRemoteURL(in.args) {
+				cur.addRemote = true
+			}
 		case "RUN":
 			if cur == nil {
 				continue
@@ -200,6 +362,14 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 	}
 	if len(ins) > 0 {
 		flush(ins[len(ins)-1].line)
+	}
+	// Every stage learns the total stage count (for single-stage rules).
+	for i := range out {
+		out[i].Attributes["total_stages"] = ir.Value{
+			Raw:   stageCount,
+			Known: true,
+			Span:  out[i].Span,
+		}
 	}
 	if len(ins) == 0 && len(strings.TrimSpace(string(src))) > 0 {
 		diags = append(diags, ir.Diagnostic{
@@ -438,6 +608,142 @@ func isSecretName(name string) bool {
 	up := strings.ToUpper(name)
 	for _, h := range secretNameHints {
 		if strings.Contains(up, h) {
+			return true
+		}
+	}
+	return false
+}
+
+// argKV is one parsed ARG assignment: name with optional default.
+type argKV struct {
+	name string
+	def  string
+}
+
+// parseArg parses `ARG name` or `ARG name=default`.
+func parseArg(args string) argKV {
+	args = strings.TrimSpace(args)
+	if args == "" {
+		return argKV{}
+	}
+	name, def := args, ""
+	if i := strings.Index(args, "="); i >= 0 {
+		name, def = strings.TrimSpace(args[:i]), args[i+1:]
+	}
+	return argKV{name: name, def: def}
+}
+
+// secretMap builds the {name, span} redacted-secret attribute value.
+func secretMap(name string, span ir.Span) ir.Value {
+	return ir.Value{
+		Raw: map[string]ir.Value{
+			"name": {Raw: name, Known: true, Span: span},
+		},
+		Known: true,
+		Span:  span,
+	}
+}
+
+// parseLabel extracts LABEL keys from KEY=val pairs. Values are discarded.
+func parseLabel(args string) []string {
+	var out []string
+	for _, f := range splitEnvFields(args) {
+		k := f
+		if i := strings.Index(f, "="); i >= 0 {
+			k = f[:i]
+		}
+		k = strings.Trim(strings.TrimSpace(k), `"'`)
+		if k != "" {
+			out = append(out, k)
+		}
+	}
+	return out
+}
+
+// isExecForm reports whether CMD/ENTRYPOINT args use the JSON-array exec
+// form (["executable", "arg"]) rather than shell form.
+func isExecForm(args string) bool {
+	return strings.HasPrefix(strings.TrimSpace(args), "[")
+}
+
+// parseCopy extracts COPY source paths (destination excluded) and reports
+// whether --chown was passed. Handles flag=value and flag value forms,
+// plus the JSON-array form COPY ["src", "dst"].
+func parseCopy(args string) (srcs []string, chown bool) {
+	trimmed := strings.TrimSpace(args)
+	if strings.HasPrefix(trimmed, "[") {
+		// JSON-array form: quoted strings; all but the last are sources.
+		var strs []string
+		var b strings.Builder
+		var quote rune
+		flush := func() {
+			if b.Len() > 0 {
+				strs = append(strs, b.String())
+				b.Reset()
+			}
+		}
+		for _, r := range trimmed {
+			switch {
+			case quote != 0:
+				if r == quote {
+					quote = 0
+				} else {
+					b.WriteRune(r)
+				}
+			case r == '"' || r == '\'':
+				quote = r
+			case r == ',' || r == '[' || r == ']':
+				flush()
+			}
+		}
+		flush()
+		if len(strs) > 1 {
+			srcs = strs[:len(strs)-1]
+		}
+		return srcs, false
+	}
+	fields := strings.Fields(args)
+	var rest []string
+	for i := 0; i < len(fields); i++ {
+		f := fields[i]
+		if !strings.HasPrefix(f, "--") {
+			rest = append(rest, f)
+			continue
+		}
+		name := f
+		if eq := strings.Index(f, "="); eq >= 0 {
+			name = f[:eq]
+		} else if i+1 < len(fields) && !strings.HasPrefix(fields[i+1], "--") {
+			// --flag value form: consume the value.
+			i++
+		}
+		if name == "--chown" {
+			chown = true
+		}
+	}
+	// All but the last non-flag field are sources; the last is the dest.
+	if len(rest) > 1 {
+		srcs = rest[:len(rest)-1]
+	}
+	return srcs, chown
+}
+
+// addHasRemoteURL reports whether an ADD instruction fetches an http(s)
+// URL (any source field but the destination).
+func addHasRemoteURL(args string) bool {
+	fields := strings.Fields(args)
+	var rest []string
+	for _, f := range fields {
+		if !strings.HasPrefix(f, "--") {
+			rest = append(rest, f)
+		}
+	}
+	if len(rest) < 2 {
+		return false
+	}
+	for _, s := range rest[:len(rest)-1] {
+		l := strings.ToLower(s)
+		if strings.HasPrefix(l, "http://") || strings.HasPrefix(l, "https://") {
 			return true
 		}
 	}
