@@ -3,7 +3,7 @@
 **Date:** 2026-10-12
 **Baseline commit:** `4898204fb83b6795a9b1f9303df55169f625d01d` ("Add ARM + Bicep adapters")
 **Rule registry:** 1,185 rules
-**Status:** ✅ PASS — all 334 parity tests green, quality gate PASS
+**Status:** ✅ PASS — all 331 parity subtests green, quality gate PASS
 
 ## Executive Summary
 
@@ -44,9 +44,9 @@ Each fixture includes input files + `expect.json` with normalized findings, diag
 `cmd/aegis/scan_parity_test.go` implements:
 1. **TestParityRegression**: current output matches recorded expectations (148 fixtures)
 2. **TestParityDeterminism**: 3 runs → identical finding hash (148 fixtures)
-3. **TestParityCrossFormat**: within one control+variant, all formats produce identical finding multisets (38 control groups)
+3. **TestParityCrossFormat**: within one control+variant, all formats produce identical finding multisets (35 multi-format control groups; 19 single-format groups have no cross-format peer and are covered by regression + determinism)
 
-**Result:** 334/334 tests PASS.
+**Result:** 331/331 subtests PASS (148 regression + 148 determinism + 35 cross-format; 3 parent tests also pass).
 
 ## Phase 4 — Format-Specific Findings
 
@@ -138,7 +138,7 @@ Each fixture includes input files + `expect.json` with normalized findings, diag
 1. ✅ `docs/ADAPTER_PARITY_REPORT.md` (this file)
 2. ✅ `benchmark/parity/fixtures/` — 148 versioned fixtures
 3. ✅ `cmd/aegis/scan_parity_test.go` — automated differential tests
-4. ✅ `benchmark/parity/support-matrix.json` — per-adapter × per-rule matrix (1,185 rules)
+4. ✅ `benchmark/parity/support-matrix.json` — per-adapter × per-rule matrix (1,185 rules), regenerable via `benchmark/parity/cmd/matrix` (`go run ./benchmark/parity/cmd/matrix -root .`)
 5. ✅ Regression tests for all 7 defects (in adapter `*_test.go` + parity fixtures)
 6. ✅ `benchmark/parity/test-summary.json` — machine-readable summary
 
@@ -160,5 +160,13 @@ go build -o /tmp/aegis-parity ./cmd/aegis/
 python3 benchmark/parity/record.py --aegis=/tmp/aegis-parity
 go test ./cmd/aegis/ -run 'TestParity' -v
 go test ./...
+go run ./benchmark/parity/cmd/matrix -root .   # regenerates support-matrix.json
 /tmp/aegis-parity quality-gate
 ```
+
+## Verification Notes (2026-10-12, post-audit re-verification)
+
+- Re-ran the full audit battery at the audit commit with Go 1.25.4: `aegis doctor` ✅, quality gate 5/5 PASS (precision 100%, recall 100%, 363/363 critical/high rules tested, p95 36.3ms), parity subtests 331/331, full suite 32/32 packages green, `TestParityCrossFormat` also green under `-race`.
+- Corrected the test count: the original "334" included the 3 parent test nodes; the precise subtest total is **331** (148 + 148 + 35).
+- Added the missing matrix generator (`benchmark/parity/cmd/matrix/main.go`) — the committed `support-matrix.json` referenced it via `generated_by` but the program was never committed. The generator reproduces 1184/1185 rule entries byte-identically; the single diff was a data bug in the original file (AEGIS-SC-005's `matched_types` listed attribute names instead of resource types — its `AppliesTo` returns true for every type), which the regenerated file corrects.
+- Refreshed `benchmark/parity/test-summary.json` with exact pass/fail/skipped counts and the documented exclusion list.

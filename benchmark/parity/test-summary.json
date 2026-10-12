@@ -1,7 +1,8 @@
 {
  "audit": "adapter-semantic-parity",
  "date": "2026-10-12",
- "commit": "4898204fb83b6795a9b1f9303df55169f625d01d",
+ "baseline_commit": "4898204fb83b6795a9b1f9303df55169f625d01d",
+ "verified_at_commit": "0262005e854774a4c8e2f6453e0c5740ad5a9c60",
  "fixtures": {
   "total": 148,
   "by_control": {
@@ -38,9 +39,72 @@
   }
  },
  "tests": {
-  "passed": 334,
-  "failed": 0,
-  "total": 334
+  "regression": {
+   "passed": 148,
+   "failed": 0,
+   "skipped": 0
+  },
+  "determinism": {
+   "passed": 148,
+   "failed": 0,
+   "skipped": 0,
+   "runs_per_fixture": 3
+  },
+  "cross_format": {
+   "passed": 35,
+   "failed": 0,
+   "skipped": 19,
+   "skipped_groups": [
+    "container-compose/secure",
+    "container-compose/vuln",
+    "container-dockerfile/secure",
+    "container-dockerfile/vuln",
+    "container-manifests/secure",
+    "container-manifests/vuln",
+    "database-public/secure",
+    "database-public/vuln",
+    "docker-args/vuln",
+    "docker-multistage/vuln",
+    "network-ingress/secure",
+    "network-ingress/vuln",
+    "secrets-hardcoded/secure",
+    "secrets-hardcoded/vuln",
+    "storage-encryption/secure",
+    "storage-encryption/vuln",
+    "storage-public/secure",
+    "storage-public/vuln",
+    "unknown-values/vuln"
+   ],
+   "note": "skipped groups are single-format controls with no cross-format peer; each is still covered by regression + determinism subtests"
+  },
+  "subtests": {
+   "passed": 331,
+   "failed": 0,
+   "skipped": 0
+  },
+  "parent_tests": 3
  },
+ "exclusions_unsupported": [
+  {
+   "category": "cloud-mismatch",
+   "detail": "CloudFormation fixtures only for AWS controls; ARM/Bicep only for Azure controls (format is cloud-specific by design)"
+  },
+  {
+   "category": "planjson",
+   "detail": "plan JSON fixtures only for AWS controls; plan schema is provider-shaped and the corpus covers the AWS control set"
+  },
+  {
+   "category": "containers",
+   "detail": "Dockerfile/Compose/Manifests controls are format-native (docker_stage/compose_service/k8s_* IR types) with distinct rule sets; not cross-compared against cloud formats"
+  },
+  {
+   "category": "single_variant",
+   "detail": "docker-args and docker-multistage are vuln-only probes of Dockerfile ARG/multi-stage semantics with no secure peer in another format"
+  },
+  {
+   "category": "tf_json",
+   "detail": ".tf.json (Terraform JSON syntax) not supported by any adapter; deferred to follow-up, documented in ADAPTER_PARITY_REPORT.md"
+  }
+ ],
  "status": "PASS"
 }
