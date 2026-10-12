@@ -831,6 +831,11 @@ func (elasticacheNoAutoFailover) Check(r ir.Resource) []ir.Finding {
 	if present && val {
 		return nil
 	}
+	// Automatic failover requires replicas; a single-node cluster
+	// (num_cache_clusters <= 1) has nothing to fail over to.
+	if n, _, np, nk := getNumber(r, "num_cache_clusters"); np && nk && n <= 1 {
+		return nil
+	}
 	actual := "absent (provider default: false)"
 	if present {
 		actual = "false"

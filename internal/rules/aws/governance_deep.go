@@ -392,10 +392,10 @@ func (cwLogGroupAWSManagedKey) Title() string {
 func (cwLogGroupAWSManagedKey) Description() string {
 	return "A log group with kms_key_id explicitly set to alias/aws/logs " +
 		"encrypts with the AWS-managed key, which the account cannot " +
-		"rotate or control via key policy. Use a customer-managed key. " +
-		"(Missing kms_key_id is AEGIS-AWS-346.)"
+		"rotate or control via key policy. Consider a customer-managed key " +
+		"for full key control. (Missing kms_key_id is AEGIS-AWS-346.)"
 }
-func (cwLogGroupAWSManagedKey) Severity() ir.Severity { return ir.SeverityMedium }
+func (cwLogGroupAWSManagedKey) Severity() ir.Severity { return ir.SeverityLow }
 
 func (cwLogGroupAWSManagedKey) AppliesTo(resType string) bool {
 	return resType == "aws_cloudwatch_log_group"
@@ -478,10 +478,11 @@ func (snsTopicAWSManagedKey) Title() string {
 func (snsTopicAWSManagedKey) Description() string {
 	return "A topic with kms_master_key_id explicitly set to " +
 		"alias/aws/sns encrypts with the AWS-managed key, which the " +
-		"account cannot rotate or control via key policy. Use a " +
-		"customer-managed key. (Missing kms_master_key_id is AEGIS-AWS-341.)"
+		"account cannot rotate or control via key policy. Consider a " +
+		"customer-managed key for full key control. (Missing kms_master_key_id " +
+		"is AEGIS-AWS-341.)"
 }
-func (snsTopicAWSManagedKey) Severity() ir.Severity { return ir.SeverityMedium }
+func (snsTopicAWSManagedKey) Severity() ir.Severity { return ir.SeverityLow }
 
 func (snsTopicAWSManagedKey) AppliesTo(resType string) bool {
 	return resType == "aws_sns_topic"

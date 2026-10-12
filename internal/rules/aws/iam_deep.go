@@ -249,9 +249,10 @@ func (iamPasswordReuseAllowed) Title() string {
 	return "IAM password policy allows password reuse"
 }
 func (iamPasswordReuseAllowed) Description() string {
-	return "The account password policy remembers fewer than 24 previous " +
-		"passwords, so users can cycle back to old (possibly compromised) " +
-		"passwords. Set password_reuse_prevention to 24."
+	return "The account password policy does not prevent password reuse " +
+		"(absent or 0), so users can cycle back to old (possibly compromised) " +
+		"passwords. Set password_reuse_prevention to a positive value " +
+		"(24 recommended by CIS AWS Foundations Benchmark)."
 }
 func (iamPasswordReuseAllowed) Severity() ir.Severity { return ir.SeverityMedium }
 func (iamPasswordReuseAllowed) AppliesTo(resType string) bool {
@@ -261,14 +262,16 @@ func (r iamPasswordReuseAllowed) Check(res ir.Resource) []ir.Finding {
 	n, span, present, known := getNumber(res, "password_reuse_prevention")
 	if !present {
 		return absentInsecureDefault(r, res, "password_reuse_prevention",
-			"absent (AWS default: reuse allowed)", ">= 24")
+			"absent (AWS default: reuse allowed)", "> 0")
 	}
 	if !known {
 		return nil
 	}
-	if n < 24 {
+	// Any explicit positive value is a conscious choice; only absent or 0
+	// means reuse is actually allowed.
+	if n == 0 {
 		return iamDeepFinding(r, res, "password_reuse_prevention", span,
-			strconv.FormatFloat(n, 'f', -1, 64), ">= 24")
+			"0", "> 0")
 	}
 	return nil
 }

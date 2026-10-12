@@ -318,6 +318,23 @@ func TestElasticacheNoAutoFailover(t *testing.T) {
 	}
 }
 
+func TestElasticacheNoAutoFailoverSingleNodeQuiet(t *testing.T) {
+	// Single-node clusters have no replicas; failover is N/A.
+	single := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{
+		"num_cache_clusters": kn(1, 2),
+	})
+	if got := runRule(elasticacheNoAutoFailover{}, single); len(got) != 0 {
+		t.Fatalf("single-node: expected 0 findings, got %d", len(got))
+	}
+	multi := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{
+		"num_cache_clusters":         kn(3, 2),
+		"automatic_failover_enabled": kv(false, 3),
+	})
+	if got := runRule(elasticacheNoAutoFailover{}, multi); len(got) != 1 {
+		t.Fatalf("multi-node without failover: expected 1 finding, got %d", len(got))
+	}
+}
+
 func TestElasticacheRGNoSnapRetention(t *testing.T) {
 	absent := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{})
 	quiet := res("aws_elasticache_replication_group", "rg", map[string]ir.Value{

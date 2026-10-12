@@ -230,8 +230,8 @@ func Test770_AWSManagedKeyFires(t *testing.T) {
 	if len(fs) != 1 {
 		t.Fatalf("got %d findings, want 1", len(fs))
 	}
-	if fs[0].Severity != ir.SeverityMedium {
-		t.Fatalf("want medium, got %s", fs[0].Severity)
+	if fs[0].Severity != ir.SeverityLow {
+		t.Fatalf("want low, got %s", fs[0].Severity)
 	}
 }
 
@@ -283,8 +283,8 @@ func Test772_AWSManagedKeyFires(t *testing.T) {
 	if len(fs) != 1 {
 		t.Fatalf("got %d findings, want 1", len(fs))
 	}
-	if fs[0].Severity != ir.SeverityMedium {
-		t.Fatalf("want medium, got %s", fs[0].Severity)
+	if fs[0].Severity != ir.SeverityLow {
+		t.Fatalf("want low, got %s", fs[0].Severity)
 	}
 }
 

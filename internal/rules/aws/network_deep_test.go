@@ -123,6 +123,15 @@ func TestVpcNoDnsSupportQuiet(t *testing.T) {
 	}
 }
 
+func TestVpcNoDnsSupportAbsentQuiet(t *testing.T) {
+	// AWS provider default for enable_dns_support is true; absent must not fire.
+	f := runRule(vpcNoDnsSupport{},
+		res("aws_vpc", "v", map[string]ir.Value{}))
+	if len(f) != 0 {
+		t.Fatalf("absent: expected 0 findings, got %d", len(f))
+	}
+}
+
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-744
 // ---------------------------------------------------------------------------

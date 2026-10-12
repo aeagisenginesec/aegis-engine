@@ -79,7 +79,7 @@ func Test651_NoUppercaseFires(t *testing.T) {
 
 func Test655_WeakReuseFires(t *testing.T) {
 	r := res("aws_iam_account_password_policy", "p", map[string]ir.Value{
-		"password_reuse_prevention": kn(5, 4),
+		"password_reuse_prevention": kn(0, 4),
 	})
 	if got := runRule(iamPasswordReuseAllowed{}, r); len(got) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(got))
@@ -92,6 +92,18 @@ func Test655_StrongReuseQuiet(t *testing.T) {
 	})
 	if got := runRule(iamPasswordReuseAllowed{}, r); len(got) != 0 {
 		t.Fatalf("expected 0 findings, got %d", len(got))
+	}
+}
+
+func Test655_ExplicitPositiveQuiet(t *testing.T) {
+	// Any explicit positive value is a conscious choice; only absent or 0 fires.
+	for _, n := range []float64{1, 5, 12} {
+		r := res("aws_iam_account_password_policy", "p", map[string]ir.Value{
+			"password_reuse_prevention": kn(n, 4),
+		})
+		if got := runRule(iamPasswordReuseAllowed{}, r); len(got) != 0 {
+			t.Fatalf("n=%v: expected 0 findings, got %d", n, len(got))
+		}
 	}
 }
 

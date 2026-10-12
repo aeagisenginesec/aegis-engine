@@ -200,10 +200,10 @@ func (vpcNoDnsSupport) Title() string {
 	return "VPC without DNS support"
 }
 func (vpcNoDnsSupport) Description() string {
-	return "An aws_vpc with enable_dns_support = false (the provider " +
-		"default) disables the Amazon DNS server, so instances cannot " +
-		"resolve AWS service endpoints or private hosted zones without " +
-		"custom DNS. Enable DNS support."
+	return "An aws_vpc with enable_dns_support = false disables the Amazon " +
+		"DNS server, so instances cannot resolve AWS service endpoints or " +
+		"private hosted zones without custom DNS. Enable DNS support " +
+		"(the AWS provider default is true; this fires only on explicit false)."
 }
 func (vpcNoDnsSupport) Severity() ir.Severity { return ir.SeverityMedium }
 func (vpcNoDnsSupport) AppliesTo(resType string) bool {
@@ -212,13 +212,10 @@ func (vpcNoDnsSupport) AppliesTo(resType string) bool {
 func (vpcNoDnsSupport) Check(r ir.Resource) []ir.Finding {
 	s := vpcNoDnsSupport{}
 	val, span, present, known := getBool(r, "enable_dns_support")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if !present {
-		return absentInsecureDefault(s, r, "enable_dns_support",
-			"absent (provider default: false)",
-			"enable_dns_support = true")
+	if !present || !known {
+		// AWS provider default for enable_dns_support is true; absent means
+		// DNS is enabled. Only an explicit false is a finding.
+		return nil
 	}
 	if val {
 		return nil
