@@ -434,3 +434,227 @@ module "a" { source = "./mods/a" }
 		t.Fatalf("unexpected order/names: %+v", r1)
 	}
 }
+
+func TestDynamicBlockExpandsStaticForEach(t *testing.T) {
+	src := `variable "open_ports" {
+  type    = list(number)
+  default = [22, 80]
+}
+
+resource "aws_security_group" "dynweb" {
+  dynamic "ingress" {
+    for_each = var.open_ports
+    content {
+      from_port   = ingress.value
+      to_port     = ingress.value
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+}
+`
+	mod := mustParseModule(t, "main.tf", src)
+	scope := semantics.MergeModules([]terraform.Module{mod})
+	resolved := scope.ResolveResources(mod.Resources)
+	expanded, diags := scope.ExpandDynamicBlocks(resolved)
+	for _, d := range diags {
+		t.Fatalf("unexpected diagnostic: %+v", d)
+	}
+	if len(expanded) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(expanded))
+	}
+	ingress, ok := expanded[0].Attributes["ingress"].AsList()
+	if !ok || len(ingress) != 2 {
+		t.Fatalf("expected 2 expanded ingress blocks, got %+v", expanded[0].Attributes["ingress"])
+	}
+	ports := map[float64]bool{}
+	for _, ing := range ingress {
+		m := ing.Raw.(map[string]ir.Value)
+		p, ok := m["from_port"].Raw.(float64)
+		if !ok || !m["from_port"].Known {
+			t.Fatalf("from_port not resolved: %+v", m["from_port"])
+		}
+		ports[p] = true
+		if cidr, ok := m["cidr_blocks"].AsList(); !ok || len(cidr) != 1 {
+			t.Fatalf("cidr_blocks wrong: %+v", m["cidr_blocks"])
+		}
+	}
+	if !ports[22] || !ports[80] {
+		t.Fatalf("ports not substituted: %v", ports)
+	}
+	// Dynamic block fully expanded: no "dynamic" key remains.
+	if _, exists := expanded[0].Attributes["dynamic"]; exists {
+		t.Fatalf("dynamic key should be removed after full expansion")
+	}
+}
+
+func TestDynamicBlockUnresolvableWarns(t *testing.T) {
+	src := `resource "aws_security_group" "web" {
+  dynamic "ingress" {
+    for_each = var.unknown_ports
+    content {
+      from_port = ingress.value
+    }
+  }
+}
+`
+	mod := mustParseModule(t, "main.tf", src)
+	scope := semantics.MergeModules([]terraform.Module{mod})
+	resolved := scope.ResolveResources(mod.Resources)
+	expanded, diags := scope.ExpandDynamicBlocks(resolved)
+	found := false
+	for _, d := range diags {
+		if d.Level == "warning" && strings.Contains(d.Message, "unresolvable for_each") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected unresolvable for_each warning, got %+v", diags)
+	}
+	// Unexpanded block is retained (not silently dropped).
+	if _, exists := expanded[0].Attributes["dynamic"]; !exists {
+		t.Fatalf("unexpanded dynamic block should be retained")
+	}
+}
+
+func TestDynamicBlockIteratorKey(t *testing.T) {
+	src := `resource "aws_security_group" "web" {
+  dynamic "ingress" {
+    for_each = { http = 80, ssh = 22 }
+    content {
+      description = ingress.key
+      from_port   = ingress.value
+    }
+  }
+}
+`
+	mod := mustParseModule(t, "main.tf", src)
+	scope := semantics.MergeModules([]terraform.Module{mod})
+	resolved := scope.ResolveResources(mod.Resources)
+	expanded, diags := scope.ExpandDynamicBlocks(resolved)
+	for _, d := range diags {
+		t.Fatalf("unexpected diagnostic: %+v", d)
+	}
+	ingress, ok := expanded[0].Attributes["ingress"].AsList()
+	if !ok || len(ingress) != 2 {
+		t.Fatalf("expected 2 expanded blocks, got %+v", expanded[0].Attributes["ingress"])
+	}
+	seen := map[string]float64{}
+	for _, ing := range ingress {
+		m := ing.Raw.(map[string]ir.Value)
+		desc, _ := m["description"].AsString()
+		port, _ := m["from_port"].Raw.(float64)
+		seen[desc] = port
+	}
+	if seen["http"] != 80 || seen["ssh"] != 22 {
+		t.Fatalf("key/value substitution wrong: %v", seen)
+	}
+}
+
+func TestPolicyDocumentDataSourceResolves(t *testing.T) {
+	src := `data "aws_iam_policy_document" "vuln" {
+  statement {
+    effect    = "Allow"
+    actions   = ["*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "vuln" {
+  name   = "vuln-inline"
+  role   = "some-role"
+  policy = data.aws_iam_policy_document.vuln.json
+}
+`
+	mod := mustParseModule(t, "main.tf", src)
+	scope := semantics.MergeModules([]terraform.Module{mod})
+	if len(scope.PolicyDocs) != 1 {
+		t.Fatalf("expected 1 policy doc indexed, got %d", len(scope.PolicyDocs))
+	}
+	resolved := scope.ResolveResources(mod.Resources)
+	var rolePolicy ir.Resource
+	for _, r := range resolved {
+		if r.Type == "aws_iam_role_policy" {
+			rolePolicy = r
+		}
+	}
+	pol, ok := rolePolicy.Attributes["policy"].AsString()
+	if !ok {
+		t.Fatalf("policy not resolved to string: %+v", rolePolicy.Attributes["policy"])
+	}
+	for _, want := range []string{`"Effect":"Allow"`, `"Action":["*"]`, `"Resource":["*"]`} {
+		if !strings.Contains(pol, want) {
+			t.Fatalf("policy JSON missing %s: %s", want, pol)
+		}
+	}
+}
+
+func TestPolicyDocumentWithPrincipalsAndConditions(t *testing.T) {
+	src := `data "aws_iam_policy_document" "trust" {
+  statement {
+    effect = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:PrincipalTag/team"
+      values   = ["core"]
+    }
+  }
+}
+
+resource "aws_iam_role" "r" {
+  name               = "r"
+  assume_role_policy = data.aws_iam_policy_document.trust.json
+}
+`
+	mod := mustParseModule(t, "main.tf", src)
+	scope := semantics.MergeModules([]terraform.Module{mod})
+	resolved := scope.ResolveResources(mod.Resources)
+	var role ir.Resource
+	for _, r := range resolved {
+		if r.Type == "aws_iam_role" {
+			role = r
+		}
+	}
+	pol, ok := role.Attributes["assume_role_policy"].AsString()
+	if !ok {
+		t.Fatalf("assume_role_policy not resolved: %+v", role.Attributes["assume_role_policy"])
+	}
+	for _, want := range []string{
+		`"Principal":{"Service":["ec2.amazonaws.com"]}`,
+		`"Condition":{"StringEquals":{"aws:PrincipalTag/team":["core"]}}`,
+	} {
+		if !strings.Contains(pol, want) {
+			t.Fatalf("policy JSON missing %s: %s", want, pol)
+		}
+	}
+}
+
+func TestPolicyDocumentUnresolvableStaysUnknown(t *testing.T) {
+	src := `resource "aws_iam_role_policy" "vuln" {
+  name   = "vuln-inline"
+  role   = "some-role"
+  policy = data.aws_iam_policy_document.missing.json
+}
+`
+	mod := mustParseModule(t, "main.tf", src)
+	scope := semantics.MergeModules([]terraform.Module{mod})
+	resolved := scope.ResolveResources(mod.Resources)
+	var rolePolicy ir.Resource
+	for _, r := range resolved {
+		if r.Type == "aws_iam_role_policy" {
+			rolePolicy = r
+		}
+	}
+	v := rolePolicy.Attributes["policy"]
+	if v.Known {
+		t.Fatalf("missing policy doc should stay unknown, got %+v", v)
+	}
+	if v.Ref != "data.aws_iam_policy_document.missing.json" {
+		t.Fatalf("ref should be intact, got %q", v.Ref)
+	}
+}

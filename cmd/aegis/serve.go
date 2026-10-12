@@ -193,6 +193,9 @@ func scanFilesInMemory(files []scanFile, registry *rules.Registry) scanResponse 
 	if len(mods) > 0 {
 		scope := semantics.MergeModules(mods)
 		resources = scope.ResolveResources(resources)
+		expandedDyn, dynDiags := scope.ExpandDynamicBlocks(resources)
+		diags = append(diags, dynDiags...)
+		resources = expandedDyn
 	}
 	findings := registry.Run(resources)
 	if findings == nil {

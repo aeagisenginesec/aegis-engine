@@ -579,7 +579,7 @@ func TestParseModuleNoTerraformBlock(t *testing.T) {
 	}
 }
 
-func TestDynamicBlockWarns(t *testing.T) {
+func TestDynamicBlockPreserved(t *testing.T) {
 	src := `resource "aws_security_group" "web" {
   dynamic "ingress" {
     for_each = var.ports
@@ -589,18 +589,36 @@ func TestDynamicBlockWarns(t *testing.T) {
   }
 }
 `
+	mod, _, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(mod.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+	}
+	r := mod.Resources[0]
+	dyn, ok := r.Attributes["dynamic"].AsList()
+	if !ok || len(dyn) != 1 {
+		t.Fatalf("expected dynamic block preserved, got %+v", r.Attributes["dynamic"])
+	}
+	m, ok := dyn[0].Raw.(map[string]ir.Value)
+	if !ok {
+		t.Fatalf("dynamic element not a map: %+v", dyn[0].Raw)
+	}
+	label, ok := m["__label"].AsString()
+	if !ok || label != "ingress" {
+		t.Fatalf("expected __label=ingress, got %+v", m["__label"])
+	}
+	// No adapter-level warning: the semantics expansion pass owns the
+	// "cannot expand" diagnostic. Verify none is emitted here.
 	_, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	found := false
 	for _, d := range diags {
-		if d.Level == "warning" && d.Span.StartLine == 2 {
-			found = true
+		if strings.Contains(d.Message, "dynamic") {
+			t.Fatalf("unexpected dynamic diagnostic at adapter level: %+v", d)
 		}
-	}
-	if !found {
-		t.Fatalf("expected a warning diagnostic at the dynamic block (line 2), got %+v", diags)
 	}
 }
 

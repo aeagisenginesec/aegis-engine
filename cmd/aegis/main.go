@@ -873,6 +873,9 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 	if len(mods) > 0 {
 		scope := semantics.MergeModules(mods)
 		resources = scope.ResolveResources(resources)
+		expandedDyn, dynDiags := scope.ExpandDynamicBlocks(resources)
+		res.Diagnostics = append(res.Diagnostics, dynDiags...)
+		resources = expandedDyn
 		if tfAdapter != nil {
 			expanded, mdiags := semantics.ExpandModules(target, mods, tfAdapter, 2)
 			res.Diagnostics = append(res.Diagnostics, mdiags...)

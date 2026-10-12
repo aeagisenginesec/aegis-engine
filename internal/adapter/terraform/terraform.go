@@ -605,27 +605,25 @@ func resourceFromBlock(path string, b *hclsyntax.Block, diags *[]ir.Diagnostic) 
 // then nested blocks. Each nested block type becomes []ir.Value of
 // map[string]ir.Value; repeated blocks append. On a name collision between
 // an attribute and a block type, the block list wins (deterministic).
-// A `dynamic` block cannot be expanded statically: it is kept verbatim
-// under the "dynamic" key and a warning diagnostic is appended so the
-// analysis gap is visible instead of silent.
+// A `dynamic` block is kept verbatim under the "dynamic" key with its label
+// preserved in "__label" so the semantics layer can expand it into concrete
+// nested blocks after resolving for_each. No diagnostic is emitted here:
+// the semantics expansion pass warns for dynamic blocks it cannot expand,
+// keeping the "never silent" contract without stale warnings.
 func attributesFromBody(path string, body *hclsyntax.Body, attrs map[string]ir.Value, diags *[]ir.Diagnostic) {
 	for name, attr := range body.Attributes {
 		attrs[name] = valueFromExpr(path, attr.Expr)
 	}
 	for _, nb := range body.Blocks {
+		m := make(map[string]ir.Value)
+		attributesFromBody(path, nb.Body, m, diags)
 		if nb.Type == "dynamic" {
 			label := ""
 			if len(nb.Labels) > 0 {
 				label = nb.Labels[0]
 			}
-			*diags = append(*diags, ir.Diagnostic{
-				Level:   "warning",
-				Message: fmt.Sprintf("terraform: dynamic %q block is not expanded; its nested configuration is not analyzed", label),
-				Span:    blockSpan(path, nb),
-			})
+			m["__label"] = ir.Value{Raw: label, Known: true, Span: blockSpan(path, nb)}
 		}
-		m := make(map[string]ir.Value)
-		attributesFromBody(path, nb.Body, m, diags)
 		elem := ir.Value{Raw: m, Known: true, Span: blockSpan(path, nb)}
 		if prev, ok := attrs[nb.Type]; ok {
 			if list, ok := prev.AsList(); ok {
