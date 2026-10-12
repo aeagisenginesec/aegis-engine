@@ -579,7 +579,7 @@ func TestParseModuleNoTerraformBlock(t *testing.T) {
 	}
 }
 
-func TestDynamicBlockWarns(t *testing.T) {
+func TestDynamicBlockPreserved(t *testing.T) {
 	src := `resource "aws_security_group" "web" {
   dynamic "ingress" {
     for_each = var.ports
@@ -589,18 +589,36 @@ func TestDynamicBlockWarns(t *testing.T) {
   }
 }
 `
+	mod, _, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(mod.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+	}
+	r := mod.Resources[0]
+	dyn, ok := r.Attributes["dynamic"].AsList()
+	if !ok || len(dyn) != 1 {
+		t.Fatalf("expected dynamic block preserved, got %+v", r.Attributes["dynamic"])
+	}
+	m, ok := dyn[0].Raw.(map[string]ir.Value)
+	if !ok {
+		t.Fatalf("dynamic element not a map: %+v", dyn[0].Raw)
+	}
+	label, ok := m["__label"].AsString()
+	if !ok || label != "ingress" {
+		t.Fatalf("expected __label=ingress, got %+v", m["__label"])
+	}
+	// No adapter-level warning: the semantics expansion pass owns the
+	// "cannot expand" diagnostic. Verify none is emitted here.
 	_, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	found := false
 	for _, d := range diags {
-		if d.Level == "warning" && d.Span.StartLine == 2 {
-			found = true
+		if strings.Contains(d.Message, "dynamic") {
+			t.Fatalf("unexpected dynamic diagnostic at adapter level: %+v", d)
 		}
-	}
-	if !found {
-		t.Fatalf("expected a warning diagnostic at the dynamic block (line 2), got %+v", diags)
 	}
 }
 
@@ -639,5 +657,78 @@ func TestStaticCountNoWarning(t *testing.T) {
 	}
 	if len(diags) != 0 {
 		t.Fatalf("static count must not warn, got %+v", diags)
+	}
+}
+
+// TestLenientMissingCommaRecovery: single-line object constructors without
+// comma separators (e.g. { Effect = "Allow" Action = "s3:GetObject" }) are
+// recovered by inserting commas at the parser-reported positions. Without
+// recovery, the parser silently drops the remaining items, mangling
+// jsonencode() policy documents.
+func TestLenientMissingCommaRecovery(t *testing.T) {
+	src := `resource "aws_iam_policy" "v" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      { Effect = "Allow" Action = "iam:PassRole" Resource = "*" },
+      { Effect = "Allow" Action = "ec2:RunInstances" Resource = "*" }
+    ]
+  })
+}
+`
+	mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) != 0 {
+		t.Fatalf("recovered parse must be clean, got %+v", diags)
+	}
+	if len(mod.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+	}
+	v := mod.Resources[0].Attributes["policy"]
+	s, ok := v.Raw.(string)
+	if !ok || !v.Known {
+		t.Fatalf("policy must be a known string, got known=%v type=%T", v.Known, v.Raw)
+	}
+	for _, want := range []string{"iam:PassRole", "ec2:RunInstances"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("recovered policy missing %q: %s", want, s)
+		}
+	}
+}
+
+// TestLenientUnrecoverableUnchanged: files with errors other than missing
+// separators are returned as-is (partial result, diagnostics preserved).
+func TestLenientUnrecoverableUnchanged(t *testing.T) {
+	src := `resource "aws_instance" "web" {
+  ami = "ami-123"
+  instance_type =
+}
+`
+	_, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) == 0 {
+		t.Fatal("expected diagnostics for genuinely broken HCL")
+	}
+}
+
+// TestLenientCleanUntouched: valid files are not modified by the recovery.
+func TestLenientCleanUntouched(t *testing.T) {
+	src := `resource "aws_s3_bucket" "b" {
+  bucket = "mybucket"
+}
+`
+	mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) != 0 {
+		t.Fatalf("valid file must have no diagnostics, got %+v", diags)
+	}
+	if len(mod.Resources) != 1 || mod.Resources[0].Address() != "aws_s3_bucket.b" {
+		t.Fatalf("unexpected resources: %+v", mod.Resources)
 	}
 }

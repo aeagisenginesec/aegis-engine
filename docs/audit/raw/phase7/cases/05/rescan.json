@@ -1,0 +1,440 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/p7-work/cases/05",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-008",
+      "title": "RDS instance without deletion protection",
+      "description": "Deletion protection guards against accidental database destruction. The provider default is false.",
+      "severity": "medium",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "deletion_protection",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "true"
+      },
+      "remediation": "Enable deletion protection to prevent accidental destruction:\nresource \"aws_db_instance\" \"this\" {\n  deletion_protection = true\n}\nFor S3, remove `force_destroy = true`. For EC2, set `disable_api_termination = true`.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-207",
+      "title": "RDS instance without backup retention",
+      "description": "With backup_retention_period absent or 0, automated backups are disabled and point-in-time recovery is impossible after data loss.",
+      "severity": "medium",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "backup_retention_period",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: no backups)",
+        "expected": "backup_retention_period \u003e 0 (e.g. 7)"
+      },
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-311",
+      "title": "RDS without IAM database authentication",
+      "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene.",
+      "severity": "medium",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "iam_database_authentication_enabled",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: disabled)",
+        "expected": "iam_database_authentication_enabled = true"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-339",
+      "title": "Hardcoded credentials in resource config",
+      "description": "A database password written as a literal in Terraform config is stored in state, plan output, and version control. The same holds for a secret-like variable or local flowing into a credential attribute. Reference a secrets manager or a generated password instead. The secret value is never included in findings.",
+      "severity": "high",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "password",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 7,
+          "start_col": 25,
+          "end_line": 7,
+          "end_col": 56
+        },
+        "actual": "[REDACTED]",
+        "expected": "reference to a secrets manager or generated password"
+      },
+      "remediation": "Remove the hardcoded credential and rotate it immediately — it is compromised.\nReference a Secrets Manager secret instead:\ndata \"aws_secretsmanager_secret_version\" \"db\" {\n  secret_id = aws_secretsmanager_secret.db.id\n}\n# then: password = jsondecode(data.aws_secretsmanager_secret_version.db.secret_string)[\"password\"]\nIf the value was committed to git, purge it from history (BFG/truffleHog) and rotate.",
+      "references": [
+        "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-446",
+      "title": "RDS instance without Multi-AZ",
+      "description": "Single-AZ RDS instances have no standby for failover. Enable multi_az for production databases.",
+      "severity": "medium",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "multi_az",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "true"
+      },
+      "remediation": "Enable Multi-AZ for high availability and automatic failover:\nresource \"aws_db_instance\" \"this\" {\n  multi_az = true\n}",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-540",
+      "title": "RDS MySQL/Postgres instance without IAM database authentication",
+      "description": "MySQL and Postgres RDS instances support IAM database authentication, which replaces long-lived passwords with short-lived IAM credentials. With iam_database_authentication_enabled absent or false, access relies on static passwords. Engine-scoped: only fires for mysql/postgres engines; aurora and unknown engines are out of scope.",
+      "severity": "high",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "iam_database_authentication_enabled",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: disabled)",
+        "expected": "iam_database_authentication_enabled = true"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-543",
+      "title": "RDS instance without CloudWatch log exports",
+      "description": "Hygiene: RDS instances should export database logs to CloudWatch via enabled_cloudwatch_logs_exports for auditing and troubleshooting. Without log exports, forensic analysis after an incident is limited.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "enabled_cloudwatch_logs_exports",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "enabled_cloudwatch_logs_exports with engine log types"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-544",
+      "title": "RDS instance without auto minor version upgrades",
+      "description": "Hygiene: RDS instances should enable auto_minor_version_upgrade so security patches are applied automatically during maintenance windows. Without it, the engine can drift behind on security fixes.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "auto_minor_version_upgrade",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "auto_minor_version_upgrade = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-546",
+      "title": "RDS instance without copy_tags_to_snapshot",
+      "description": "Hygiene: RDS instances should copy tags to snapshots so backup resources inherit cost-allocation and ownership tags. Set copy_tags_to_snapshot = true.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "copy_tags_to_snapshot",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "copy_tags_to_snapshot = true"
+      },
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-605",
+      "title": "RDS instance without enhanced monitoring",
+      "description": "Hygiene: RDS instances should enable enhanced monitoring (monitoring_interval \u003e 0) for OS-level metrics that aid troubleshooting. Set monitoring_interval to 1, 5, 10, 15, 30 or 60.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "monitoring_interval",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "monitoring_interval set to 1, 5, 10, 15, 30 or 60"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-607",
+      "title": "RDS Postgres instance without query logging",
+      "description": "Hygiene: RDS Postgres instances should export postgresql logs to CloudWatch for query auditing. Add \"postgresql\" to enabled_cloudwatch_logs_log_exports.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "enabled_cloudwatch_logs_log_exports",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "enabled_cloudwatch_logs_log_exports including \"postgresql\""
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-608",
+      "title": "RDS instance without Performance Insights",
+      "description": "Hygiene: RDS instances should enable Performance Insights for query-level performance analysis. Set performance_insights_enabled = true.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "performance_insights_enabled",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "performance_insights_enabled = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-701",
+      "title": "RDS instance without enhanced monitoring",
+      "description": "monitoring_interval is absent or 0, so enhanced monitoring is disabled: OS-level metrics that catch host problems are missing. Set monitoring_interval between 1 and 60 seconds.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "monitoring_interval",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: 0, disabled)",
+        "expected": "monitoring_interval between 1 and 60"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "AU-2"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-702",
+      "title": "RDS instance snapshots do not copy tags",
+      "description": "copy_tags_to_snapshot is absent or false, so automated snapshots lose the instance's tags (owner, environment, cost center), which breaks tag-based access control and cost allocation on restores.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "copy_tags_to_snapshot",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "copy_tags_to_snapshot = true"
+      },
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "CP-9"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-706",
+      "title": "RDS instance on the default option group",
+      "description": "option_group_name is absent or a default group, so the instance runs with AWS's generic options (e.g. no OEM, no MariaDB audit plugin). Use a purpose-built option group.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "option_group_name",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: default option group)",
+        "expected": "option_group_name = \u003ccustom group\u003e"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-710",
+      "title": "RDS master password not managed by Secrets Manager",
+      "description": "A plaintext master password is set without manage_master_user_password, so the credential sits in state and is never rotated automatically. Use manage_master_user_password = true so RDS manages rotation in Secrets Manager. The password value is never included in findings.",
+      "severity": "medium",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "password",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 7,
+          "start_col": 25,
+          "end_line": 7,
+          "end_col": 56
+        },
+        "actual": "[REDACTED]",
+        "expected": "manage_master_user_password = true"
+      },
+      "remediation": "Remove the hardcoded secret immediately and rotate it. Store secrets in AWS Secrets Manager or SSM Parameter Store (SecureString) and reference them via data sources. Never commit secrets to version control — scan history with gitleaks if the value was ever committed.",
+      "references": [
+        "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-718",
+      "title": "RDS instance without Performance Insights",
+      "description": "performance_insights_enabled is absent or false, so query-level telemetry is unavailable when investigating slow queries or suspicious database activity. Enable it for production instances.",
+      "severity": "low",
+      "resource": "aws_db_instance.demo",
+      "evidence": {
+        "attribute": "performance_insights_enabled",
+        "span": {
+          "file": "/tmp/p7-work/cases/05/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "performance_insights_enabled = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/p7-work/cases/05/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

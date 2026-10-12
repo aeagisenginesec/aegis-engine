@@ -37,6 +37,15 @@ func Rules() []ir.Rule {
 	rules = append(rules, Azure10Rules()...) // AEGIS-AZURE-127..136
 	rules = append(rules, Azure11Rules()...) // AEGIS-AZURE-137..143
 	rules = append(rules, Azure12Rules()...) // AEGIS-AZURE-144..149
+	rules = append(rules, Azure13Rules()...) // AEGIS-AZURE-150..169
+	rules = append(rules, Azure14Rules()...) // AEGIS-AZURE-170..185
+	rules = append(rules, Azure15Rules()...) // AEGIS-AZURE-186..205
+	rules = append(rules, Azure16Rules()...) // AEGIS-AZURE-206..225
+	rules = append(rules, Azure17Rules()...) // AEGIS-AZURE-226..245
+	rules = append(rules, Azure18Rules()...) // AEGIS-AZURE-246..261
+	rules = append(rules, Azure19Rules()...) // AEGIS-AZURE-262..281
+	rules = append(rules, Azure20Rules()...) // AEGIS-AZURE-282..297
+	rules = append(rules, Azure21Rules()...) // AEGIS-AZURE-298..313
 	return rules
 }
 
@@ -288,7 +297,7 @@ func (keyVaultPurgeProtection) Description() string {
 	return "purge_protection_enabled guards against permanent, irrecoverable " +
 		"deletion of keys and secrets. It should be enabled on every vault."
 }
-func (keyVaultPurgeProtection) Severity() ir.Severity { return ir.SeverityMedium }
+func (keyVaultPurgeProtection) Severity() ir.Severity { return ir.SeverityHigh }
 
 func (keyVaultPurgeProtection) AppliesTo(resType string) bool {
 	return resType == "azurerm_key_vault"

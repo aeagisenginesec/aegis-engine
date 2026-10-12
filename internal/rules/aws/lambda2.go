@@ -62,7 +62,7 @@ func (lambdaNoCodeSigning) Description() string {
 		"deploys code without signature validation, so tampered deployment " +
 		"packages run unchecked. Enforce code signing with AWS Signer."
 }
-func (lambdaNoCodeSigning) Severity() ir.Severity { return ir.SeverityMedium }
+func (lambdaNoCodeSigning) Severity() ir.Severity { return ir.SeverityLow }
 func (lambdaNoCodeSigning) AppliesTo(resType string) bool {
 	return resType == "aws_lambda_function"
 }

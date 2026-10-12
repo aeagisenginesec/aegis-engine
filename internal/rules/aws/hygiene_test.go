@@ -6,19 +6,20 @@ import (
 	"aegis/internal/ir"
 )
 
-// Minimal per-rule tests for the hygiene pack (AEGIS-AWS-601–626):
+// Minimal per-rule tests for the hygiene pack (AEGIS-AWS-601, 604–626):
 // vulnerable fires, compliant stays silent, unknown stays silent.
+// 602 (notifications) and 603 (replication) were removed as scanner noise.
 
 func TestHygieneRulesInIDOrder(t *testing.T) {
 	rules := HygieneRules()
 	want := []string{
-		"AEGIS-AWS-601", "AEGIS-AWS-602", "AEGIS-AWS-603",
+		"AEGIS-AWS-601",
 		"AEGIS-AWS-604", "AEGIS-AWS-605",
 		"AEGIS-AWS-607", "AEGIS-AWS-608", "AEGIS-AWS-609",
 		"AEGIS-AWS-610", "AEGIS-AWS-611", "AEGIS-AWS-612",
 		"AEGIS-AWS-613", "AEGIS-AWS-614", "AEGIS-AWS-615",
 		"AEGIS-AWS-617", "AEGIS-AWS-618",
-		"AEGIS-AWS-620", "AEGIS-AWS-621", "AEGIS-AWS-622",
+		"AEGIS-AWS-620", "AEGIS-AWS-622",
 		"AEGIS-AWS-623", "AEGIS-AWS-624", "AEGIS-AWS-625",
 		"AEGIS-AWS-626",
 	}
@@ -65,34 +66,6 @@ func Test601_S3NoLifecycle(t *testing.T) {
 	})
 	if got := checkAll(rule, unk); len(got) != 0 {
 		t.Errorf("unknown: want 0 findings, got %d", len(got))
-	}
-}
-
-func Test602_S3NoNotifications(t *testing.T) {
-	rule := s3NoNotifications{}
-	vuln := res("aws_s3_bucket", "b", map[string]ir.Value{})
-	if got := checkAll(rule, vuln); len(got) != 1 {
-		t.Errorf("vulnerable: want 1 finding, got %d", len(got))
-	}
-	notif := res("aws_s3_bucket_notification", "n", map[string]ir.Value{
-		"bucket": ks("b", 2),
-	})
-	if got := checkAll(rule, vuln, notif); len(got) != 0 {
-		t.Errorf("compliant: want 0 findings, got %d", len(got))
-	}
-}
-
-func Test603_S3NoReplication(t *testing.T) {
-	rule := s3NoReplication{}
-	vuln := res("aws_s3_bucket", "b", map[string]ir.Value{})
-	if got := checkAll(rule, vuln); len(got) != 1 {
-		t.Errorf("vulnerable: want 1 finding, got %d", len(got))
-	}
-	ok := res("aws_s3_bucket", "b", map[string]ir.Value{
-		"replication_configuration": blks(2, blk("role", ks("r", 2))),
-	})
-	if got := checkAll(rule, ok); len(got) != 0 {
-		t.Errorf("compliant: want 0 findings, got %d", len(got))
 	}
 }
 
@@ -326,7 +299,7 @@ func Test620_MQNoGeneralLogging(t *testing.T) {
 }
 
 func Test621_RedshiftNoLogging(t *testing.T) {
-	rule := redshiftNoLogging{}
+	rule := redshiftNoAuditLog{}
 	vuln := res("aws_redshift_cluster", "rs", map[string]ir.Value{})
 	if got := runRule(rule, vuln); len(got) != 1 {
 		t.Errorf("vulnerable: want 1 finding, got %d", len(got))

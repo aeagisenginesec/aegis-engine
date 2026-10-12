@@ -689,7 +689,7 @@ func (redisWeakTLS) Description() string {
 	return "azurerm_redis_cache should enforce TLS 1.2 via " +
 		"minimum_tls_version to protect data in transit."
 }
-func (redisWeakTLS) Severity() ir.Severity { return ir.SeverityMedium }
+func (redisWeakTLS) Severity() ir.Severity { return ir.SeverityHigh }
 
 func (redisWeakTLS) AppliesTo(resType string) bool {
 	return resType == "azurerm_redis_cache"

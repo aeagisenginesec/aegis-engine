@@ -23,7 +23,6 @@ func Azure3Rules() []ir.Rule {
 		storageNoCMK{},              // AEGIS-AZURE-033
 		storageQueueNoLogging{},     // AEGIS-AZURE-034
 		storageNoNFSv3Secure{},      // AEGIS-AZURE-035
-		keyVaultNoPurgeProtection{}, // AEGIS-AZURE-036
 		keyVaultNoSoftDelete{},      // AEGIS-AZURE-037
 		keyVaultNoRBAC{},            // AEGIS-AZURE-038
 		keyVaultPublicAccess{},      // AEGIS-AZURE-039
@@ -121,19 +120,25 @@ func (storageNoBlobVersioning) AppliesTo(resType string) bool {
 
 func (s storageNoBlobVersioning) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "blob_properties")
-	if !present || !known {
-		return nil // absent block: cannot decide
+	if !present {
+		return []ir.Finding{mkFinding(s, r, "blob_properties",
+			r.Span, "absent", "blob_properties { versioning_enabled = true }")}
+	}
+	if !known {
+		return nil // unresolved: cannot decide
 	}
 	if len(blks) == 0 {
-		return nil
+		return []ir.Finding{mkFinding(s, r, "blob_properties",
+			r.Span, "empty", "blob_properties { versioning_enabled = true }")}
 	}
 	v, ok := blks[0]["versioning_enabled"]
 	if !ok {
-		return nil
+		return []ir.Finding{mkFinding(s, r, "blob_properties.versioning_enabled",
+			r.Span, "absent", "versioning_enabled = true")}
 	}
 	b, kok := v.AsBool()
 	if !kok {
-		return nil
+		return nil // unresolved: cannot decide
 	}
 	if b {
 		return nil
@@ -164,8 +169,12 @@ func (storageNoBlobSoftDelete) AppliesTo(resType string) bool {
 
 func (s storageNoBlobSoftDelete) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "blob_properties")
-	if !present || !known || len(blks) == 0 {
-		return nil
+	if !present {
+		return []ir.Finding{mkFinding(s, r, "blob_properties",
+			r.Span, "absent", "blob_properties { delete_retention_policy { days = 7 } }")}
+	}
+	if !known || len(blks) == 0 {
+		return nil // unresolved: cannot decide
 	}
 	drp, ok := blks[0]["delete_retention_policy"]
 	if !ok || !drp.Known {
@@ -258,8 +267,13 @@ func (storageSharedKeyAccess) AppliesTo(resType string) bool {
 
 func (s storageSharedKeyAccess) Check(r ir.Resource) []ir.Finding {
 	shared, span, present, known := getBool(r, "shared_access_key_enabled")
-	if !present || !known {
-		return nil
+	if !present {
+		// Default is enabled in Azure; absent = insecure.
+		return []ir.Finding{mkFinding(s, r, "shared_access_key_enabled",
+			r.Span, "absent (default: enabled)", "shared_access_key_enabled = false")}
+	}
+	if !known {
+		return nil // unresolved: cannot decide
 	}
 	if !shared {
 		return nil
@@ -283,7 +297,7 @@ func (storageNoInfraEncryption) Description() string {
 		"lacks double encryption at the infrastructure layer. Enable it for " +
 		"defense in depth."
 }
-func (storageNoInfraEncryption) Severity() ir.Severity { return ir.SeverityLow }
+func (storageNoInfraEncryption) Severity() ir.Severity { return ir.SeverityMedium }
 
 func (storageNoInfraEncryption) AppliesTo(resType string) bool {
 	return resType == "azurerm_storage_account"
@@ -291,8 +305,12 @@ func (storageNoInfraEncryption) AppliesTo(resType string) bool {
 
 func (s storageNoInfraEncryption) Check(r ir.Resource) []ir.Finding {
 	enc, span, present, known := getBool(r, "infrastructure_encryption_enabled")
-	if !present || !known {
-		return nil
+	if !present {
+		return []ir.Finding{mkFinding(s, r, "infrastructure_encryption_enabled",
+			r.Span, "absent", "infrastructure_encryption_enabled = true")}
+	}
+	if !known {
+		return nil // unresolved: cannot decide
 	}
 	if enc {
 		return nil
@@ -356,8 +374,12 @@ func (storageQueueNoLogging) AppliesTo(resType string) bool {
 
 func (s storageQueueNoLogging) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "queue_properties")
-	if !present || !known || len(blks) == 0 {
-		return nil
+	if !present {
+		return []ir.Finding{mkFinding(s, r, "queue_properties",
+			r.Span, "absent", "queue_properties { logging { read = true } }")}
+	}
+	if !known || len(blks) == 0 {
+		return nil // unresolved: cannot decide
 	}
 	if _, ok := blks[0]["logging"]; !ok {
 		return []ir.Finding{mkFinding(s, r, "queue_properties.logging",
@@ -401,35 +423,6 @@ func (s storageNoNFSv3Secure) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-036: Key Vault without purge protection
-// ---------------------------------------------------------------------------
-
-type keyVaultNoPurgeProtection struct{}
-
-func (keyVaultNoPurgeProtection) ID() string { return "AEGIS-AZURE-036" }
-func (keyVaultNoPurgeProtection) Title() string {
-	return "Key Vault without purge protection"
-}
-func (keyVaultNoPurgeProtection) Description() string {
-	return "azurerm_key_vault without purge_protection_enabled allows " +
-		"permanent deletion of the vault and its secrets. Enable purge protection."
-}
-func (keyVaultNoPurgeProtection) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (keyVaultNoPurgeProtection) AppliesTo(resType string) bool {
-	return resType == "azurerm_key_vault"
-}
-
-func (s keyVaultNoPurgeProtection) Check(r ir.Resource) []ir.Finding {
-	purge, span, present, known := getBool(r, "purge_protection_enabled")
-	if !present || !known {
-		return nil
-	}
-	if purge {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "purge_protection_enabled", span,
-		"false", "purge_protection_enabled = true")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-037: Key Vault without soft delete
@@ -494,8 +487,12 @@ func (keyVaultNoRBAC) AppliesTo(resType string) bool {
 
 func (s keyVaultNoRBAC) Check(r ir.Resource) []ir.Finding {
 	rbac, span, present, known := getBool(r, "enable_rbac_authorization")
-	if !present || !known {
-		return nil
+	if !present {
+		return []ir.Finding{mkFinding(s, r, "enable_rbac_authorization",
+			r.Span, "absent", "enable_rbac_authorization = true")}
+	}
+	if !known {
+		return nil // unresolved: cannot decide
 	}
 	if rbac {
 		return nil
@@ -557,12 +554,19 @@ func (keyVaultSecretNoExpiry) AppliesTo(resType string) bool {
 }
 
 func (s keyVaultSecretNoExpiry) Check(r ir.Resource) []ir.Finding {
-	_, _, present, _ := getString(r, "expiration_date")
-	if present {
-		return nil
+	v, span, present, known := getString(r, "expiration_date")
+	if !present {
+		return []ir.Finding{mkFinding(s, r, "expiration_date",
+			evidenceSpan(ir.Span{}, r.Span), "absent", "expiration_date = \"2030-01-01T00:00:00Z\"")}
 	}
-	return []ir.Finding{mkFinding(s, r, "expiration_date",
-		evidenceSpan(ir.Span{}, r.Span), "absent", "expiration_date = \"2030-01-01T00:00:00Z\"")}
+	if !known {
+		return nil // unresolved: cannot decide
+	}
+	if strings.TrimSpace(v) == "" {
+		return []ir.Finding{mkFinding(s, r, "expiration_date",
+			span, "empty", "expiration_date = \"2030-01-01T00:00:00Z\"")}
+	}
+	return nil
 }
 
 // ---------------------------------------------------------------------------

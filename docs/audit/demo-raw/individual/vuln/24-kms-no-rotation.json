@@ -1,0 +1,58 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/tmp.mh56kZ33co",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-335",
+      "title": "KMS key without rotation",
+      "description": "Customer-managed KMS keys should rotate annually. enable_key_rotation defaults to false. (AWS-managed keys rotate automatically and cannot set this flag; a narrow false positive is possible if an AWS-managed key is declared explicitly.)",
+      "severity": "high",
+      "resource": "aws_kms_key.demo",
+      "evidence": {
+        "attribute": "enable_key_rotation",
+        "span": {
+          "file": "/tmp/tmp.mh56kZ33co/24-kms-no-rotation.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 3,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "true"
+      },
+      "remediation": "Enable automatic annual rotation on the KMS key:\nresource \"aws_kms_key\" \"this\" {\n  enable_key_rotation = true\n  # ...\n}",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "3.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-12"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.6.1"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/tmp.mh56kZ33co/24-kms-no-rotation.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

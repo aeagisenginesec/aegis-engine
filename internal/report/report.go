@@ -48,11 +48,13 @@ func redactFindings(fs []ir.Finding) []ir.Finding {
 
 // jsonEnvelope is the versioned JSON report format.
 type jsonEnvelope struct {
-	Version     string          `json:"aegis_version"`
-	Target      string          `json:"target"`
-	Resources   int             `json:"resources_scanned"`
-	Findings    []ir.Finding    `json:"findings"`
-	Diagnostics []ir.Diagnostic `json:"diagnostics"`
+	Version           string                `json:"aegis_version"`
+	Target            string                `json:"target"`
+	Resources         int                   `json:"resources_scanned"`
+	Findings          []ir.Finding          `json:"findings"`
+	Diagnostics       []ir.Diagnostic       `json:"diagnostics"`
+	Completeness      ir.ScanCompleteness   `json:"scan_completeness"`
+	ComplianceSummary *ir.ComplianceSummary `json:"compliance_summary,omitempty"`
 }
 
 // WriteJSON writes the versioned JSON envelope.
@@ -62,11 +64,13 @@ func WriteJSON(w io.Writer, res ir.ScanResult) error {
 		diags = []ir.Diagnostic{}
 	}
 	env := jsonEnvelope{
-		Version:     Version,
-		Target:      res.Target,
-		Resources:   res.Resources,
-		Findings:    redactFindings(res.Findings),
-		Diagnostics: diags,
+		Version:           Version,
+		Target:            res.Target,
+		Resources:         res.Resources,
+		Findings:          redactFindings(res.Findings),
+		Diagnostics:       diags,
+		Completeness:      res.Completeness,
+		ComplianceSummary: res.ComplianceSummary,
 	}
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
@@ -290,6 +294,28 @@ func WriteText(w io.Writer, res ir.ScanResult) error {
 	findings := redactFindings(res.Findings)
 	fmt.Fprintf(w, "aegis scan: %s\n", res.Target)
 	fmt.Fprintf(w, "resources: %d, findings: %d\n", res.Resources, len(findings))
+	// Scan-completeness: distinguish "zero findings" from "incomplete scan"
+	c := res.Completeness
+	if c.FilesDiscovered > 0 {
+		fmt.Fprintf(w, "files: %d discovered, %d parsed",
+			c.FilesDiscovered, c.FilesParsed)
+		if c.FilesSkipped > 0 {
+			fmt.Fprintf(w, ", %d skipped", c.FilesSkipped)
+		}
+		if c.FilesFailed > 0 {
+			fmt.Fprintf(w, ", %d FAILED", c.FilesFailed)
+		}
+		fmt.Fprintf(w, "\n")
+		if !c.Complete() {
+			fmt.Fprintf(w, "WARNING: incomplete scan — %d file(s) could not be parsed. "+
+				"\"0 findings\" does not mean \"clean\".\n", c.FilesFailed)
+			for _, f := range c.Files {
+				if f.Status == "failed" {
+					fmt.Fprintf(w, "  failed: %s (%s)\n", f.Path, f.Reason)
+				}
+			}
+		}
+	}
 	for _, f := range findings {
 		sev := strings.ToUpper(string(f.Severity))
 		fmt.Fprintf(w, "%s %s %s:%d — %s\n",
@@ -328,6 +354,13 @@ func WriteText(w io.Writer, res ir.ScanResult) error {
 		for _, d := range res.Diagnostics {
 			fmt.Fprintf(w, "  [%s] %s:%d — %s\n", d.Level, d.Span.File, d.Span.StartLine, d.Message)
 		}
+	}
+	if s := res.ComplianceSummary; s != nil {
+		fmt.Fprintf(w, "compliance %s: %d/%d controls passing", s.Framework, s.ControlsPassing, s.ControlsTotal)
+		if s.ControlsFailing > 0 {
+			fmt.Fprintf(w, " — FAILING: %s", strings.Join(s.FailedControls, ", "))
+		}
+		fmt.Fprintf(w, "\n")
 	}
 	return nil
 }

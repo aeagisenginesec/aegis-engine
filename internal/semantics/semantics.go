@@ -39,6 +39,11 @@ const defaultMaxModuleDepth = 2
 type Scope struct {
 	Variables map[string]ir.Value
 	Locals    map[string]ir.Value
+	// PolicyDocs indexes data.aws_iam_policy_document resources by their
+	// full data address ("aws_iam_policy_document.NAME") so references like
+	// data.aws_iam_policy_document.NAME.json can be resolved to the
+	// constructed policy JSON. Populated by MergeModules.
+	PolicyDocs map[string]ir.Resource
 }
 
 // MergeModules merges variable and local declarations across files of one
@@ -53,8 +58,9 @@ func MergeModules(mods []terraform.Module) Scope {
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Path < sorted[j].Path })
 
 	s := Scope{
-		Variables: make(map[string]ir.Value),
-		Locals:    make(map[string]ir.Value),
+		Variables:  make(map[string]ir.Value),
+		Locals:     make(map[string]ir.Value),
+		PolicyDocs: make(map[string]ir.Resource),
 	}
 	for _, m := range sorted {
 		for _, name := range sortedKeysOf(m.Variables) {
@@ -62,6 +68,14 @@ func MergeModules(mods []terraform.Module) Scope {
 		}
 		for _, name := range sortedKeysOf(m.Locals) {
 			s.Locals[name] = m.Locals[name]
+		}
+		// Index IAM policy document data sources for policy JSON
+		// resolution. Data blocks arrive as synthetic terraform_data
+		// resources named "<data-type>.<name>".
+		for _, r := range m.Resources {
+			if r.Type == "terraform_data" && strings.HasPrefix(r.Name, "aws_iam_policy_document.") {
+				s.PolicyDocs[r.Name] = r
+			}
 		}
 	}
 	return s
@@ -160,6 +174,14 @@ func (s Scope) resolveValue(v ir.Value, localsSeen map[string]bool, depth int) i
 		localsSeen[rest] = true
 		defer delete(localsSeen, rest)
 		return s.substitute(v, target, localsSeen, depth+1)
+	case "data":
+		// data.aws_iam_policy_document.NAME.json resolves to the
+		// constructed policy JSON document. Other data references stay
+		// unknown with Ref intact.
+		if policyJSON, ok := s.resolvePolicyDocumentRef(rest, localsSeen, depth+1); ok {
+			return ir.Value{Raw: policyJSON, Known: true, Span: v.Span}
+		}
+		return v
 	default:
 		// data.*, each.*, count.*, self.*, module.*, terraform.*, path.*,
 		// and resource references: unknown for now, Ref intact for M3.
@@ -321,7 +343,10 @@ func expandCall(parentDir, modPath string, mc terraform.ModuleCall, adapter *ter
 	// correlation breaks for expanded modules.
 	var collected []ir.Resource
 	for _, cm := range childMods {
-		collected = append(collected, childScope.ResolveResources(cm.Resources)...)
+		resolved := childScope.ResolveResources(cm.Resources)
+		expandedDyn, dynDiags := childScope.ExpandDynamicBlocks(resolved)
+		diags = append(diags, dynDiags...)
+		collected = append(collected, expandedDyn...)
 	}
 	// Build old address -> new address map.
 	rename := make(map[string]string, len(collected))
@@ -480,4 +505,332 @@ func sortedKeysOf[V any](m map[string]V) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+// ---------------------------------------------------------------------------
+// IAM policy document data sources
+// ---------------------------------------------------------------------------
+
+// resolvePolicyDocumentRef resolves "aws_iam_policy_document.NAME.json" to
+// the constructed policy JSON string. Returns ok=false for anything else,
+// leaving the reference unknown.
+func (s Scope) resolvePolicyDocumentRef(rest string, localsSeen map[string]bool, depth int) (string, bool) {
+	parts := strings.Split(rest, ".")
+	if len(parts) != 3 || parts[0] != "aws_iam_policy_document" || parts[2] != "json" {
+		return "", false
+	}
+	doc, ok := s.PolicyDocs[parts[0]+"."+parts[1]]
+	if !ok {
+		return "", false
+	}
+	return s.buildPolicyDocument(doc, localsSeen, depth)
+}
+
+// buildPolicyDocument constructs an IAM policy JSON document from a
+// data.aws_iam_policy_document resource's statement blocks. Statement
+// attributes are resolved against the scope first (they may reference
+// variables). Returns ok=false if any statement field needed for the
+// document is unresolvable — the reference stays unknown rather than
+// producing a wrong policy.
+func (s Scope) buildPolicyDocument(doc ir.Resource, localsSeen map[string]bool, depth int) (string, bool) {
+	stmts, ok := doc.Attributes["statement"]
+	if !ok {
+		return "", false
+	}
+	stmtList, ok := stmts.AsList()
+	if !ok || len(stmtList) == 0 {
+		return "", false
+	}
+	statements := []any{}
+	for _, st := range stmtList {
+		m, ok := st.Raw.(map[string]ir.Value)
+		if !ok {
+			return "", false
+		}
+		// Resolve each statement field against the scope.
+		rm := make(map[string]ir.Value, len(m))
+		for _, k := range sortedValueKeys(m) {
+			rm[k] = s.resolveValue(m[k], copySeen(localsSeen), depth+1)
+		}
+		stmt := map[string]any{}
+		effect, ok := rm["effect"].AsString()
+		if !ok {
+			return "", false
+		}
+		stmt["Effect"] = effect
+		if sid, ok := rm["sid"].AsString(); ok {
+			stmt["Sid"] = sid
+		}
+		for _, pair := range [][2]string{
+			{"actions", "Action"}, {"not_actions", "NotAction"},
+			{"resources", "Resource"}, {"not_resources", "NotResource"},
+		} {
+			if v, present := rm[pair[0]]; present {
+				if gv := valueToGo(v.Raw); gv != nil {
+					stmt[pair[1]] = gv
+				} else {
+					return "", false
+				}
+			}
+		}
+		if pv, present := rm["principals"]; present {
+			plist, ok := pv.AsList()
+			if !ok {
+				return "", false
+			}
+			principal := map[string]any{}
+			for _, p := range plist {
+				pm, ok := p.Raw.(map[string]ir.Value)
+				if !ok {
+					return "", false
+				}
+				ptype, ok := pm["type"].AsString()
+				if !ok {
+					return "", false
+				}
+				if gv := valueToGo(pm["identifiers"].Raw); gv != nil {
+					principal[ptype] = gv
+				} else {
+					return "", false
+				}
+			}
+			if len(principal) > 0 {
+				stmt["Principal"] = principal
+			}
+		}
+		if cv, present := rm["condition"]; present {
+			clist, ok := cv.AsList()
+			if !ok {
+				return "", false
+			}
+			cond := map[string]any{}
+			for _, c := range clist {
+				cm, ok := c.Raw.(map[string]ir.Value)
+				if !ok {
+					return "", false
+				}
+				test, ok := cm["test"].AsString()
+				if !ok {
+					return "", false
+				}
+				variable, ok := cm["variable"].AsString()
+				if !ok {
+					return "", false
+				}
+				vals := valueToGo(cm["values"].Raw)
+				if vals == nil {
+					return "", false
+				}
+				if _, exists := cond[test]; !exists {
+					cond[test] = map[string]any{}
+				}
+				cond[test].(map[string]any)[variable] = vals
+			}
+			if len(cond) > 0 {
+				stmt["Condition"] = cond
+			}
+		}
+		statements = append(statements, stmt)
+	}
+	out := map[string]any{
+		"Version":   "2012-10-17",
+		"Statement": statements,
+	}
+	b, err := json.Marshal(out)
+	if err != nil {
+		return "", false
+	}
+	return string(b), true
+}
+
+// copySeen copies the locals cycle-detection set for independent branches.
+func copySeen(in map[string]bool) map[string]bool {
+	out := make(map[string]bool, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+// ---------------------------------------------------------------------------
+// Dynamic block expansion
+// ---------------------------------------------------------------------------
+
+// ExpandDynamicBlocks expands Terraform `dynamic` blocks into concrete nested
+// blocks. It must run after ResolveResources so for_each expressions
+// referencing variables are resolved. For each dynamic block:
+//
+//   - for_each resolving to a known list/map: the content block is replicated
+//     once per element, with `<label>.value` and `<label>.key` references
+//     substituted. Expanded blocks are appended to the target block type.
+//   - for_each unresolvable: the block is left in place and a warning
+//     diagnostic is emitted (never silently skipped).
+//
+// The input resources are never mutated; expanded copies are returned.
+// Deterministic: expansion order follows resource and block order.
+func (s Scope) ExpandDynamicBlocks(resources []ir.Resource) ([]ir.Resource, []ir.Diagnostic) {
+	var diags []ir.Diagnostic
+	out := make([]ir.Resource, 0, len(resources))
+	for _, r := range resources {
+		c := r
+		dynVal, ok := r.Attributes["dynamic"]
+		if !ok {
+			out = append(out, c)
+			continue
+		}
+		dynList, ok := dynVal.AsList()
+		if !ok || len(dynList) == 0 {
+			out = append(out, c)
+			continue
+		}
+		c.Attributes = make(map[string]ir.Value, len(r.Attributes))
+		for _, k := range sortedValueKeys(r.Attributes) {
+			if k == "dynamic" {
+				continue
+			}
+			c.Attributes[k] = r.Attributes[k]
+		}
+		var unexpanded []ir.Value
+		for _, d := range dynList {
+			dm, ok := d.Raw.(map[string]ir.Value)
+			if !ok {
+				unexpanded = append(unexpanded, d)
+				continue
+			}
+			label, _ := dm["__label"].AsString()
+			if label == "" {
+				unexpanded = append(unexpanded, d)
+				continue
+			}
+			forEach, ok := dm["for_each"]
+			if !ok {
+				diags = append(diags, ir.Diagnostic{
+					Level:   "warning",
+					Message: fmt.Sprintf("terraform: dynamic %q block has no for_each; not expanded", label),
+					Span:    d.Span,
+				})
+				unexpanded = append(unexpanded, d)
+				continue
+			}
+			forEach = s.resolveValue(forEach, map[string]bool{}, 0)
+			items, keys, ok := dynamicItems(forEach)
+			if !ok {
+				diags = append(diags, ir.Diagnostic{
+					Level:   "warning",
+					Message: fmt.Sprintf("terraform: dynamic %q block has unresolvable for_each; its nested configuration is not analyzed", label),
+					Span:    forEach.Span,
+				})
+				unexpanded = append(unexpanded, d)
+				continue
+			}
+			contentVal, ok := dm["content"]
+			if !ok {
+				unexpanded = append(unexpanded, d)
+				continue
+			}
+			contentList, ok := contentVal.AsList()
+			if !ok || len(contentList) == 0 {
+				unexpanded = append(unexpanded, d)
+				continue
+			}
+			contentMap, ok := contentList[0].Raw.(map[string]ir.Value)
+			if !ok {
+				unexpanded = append(unexpanded, d)
+				continue
+			}
+			for i, item := range items {
+				expanded := substituteIterator(contentMap, label, keys[i], item)
+				elem := ir.Value{Raw: expanded, Known: true, Span: d.Span}
+				if prev, exists := c.Attributes[label]; exists {
+					if prevList, ok := prev.AsList(); ok {
+						c.Attributes[label] = ir.Value{Raw: append(prevList, elem), Known: true, Span: prev.Span}
+						continue
+					}
+				}
+				c.Attributes[label] = ir.Value{Raw: []ir.Value{elem}, Known: true, Span: d.Span}
+			}
+		}
+		if len(unexpanded) > 0 {
+			c.Attributes["dynamic"] = ir.Value{Raw: unexpanded, Known: true, Span: dynVal.Span}
+		}
+		out = append(out, c)
+	}
+	return out, diags
+}
+
+// dynamicItems converts a resolved for_each value into parallel items/keys
+// slices. Lists yield index keys; maps yield their keys. Anything else
+// (unknown, non-iterable) reports ok=false.
+func dynamicItems(v ir.Value) (items []ir.Value, keys []ir.Value, ok bool) {
+	if !v.Known {
+		return nil, nil, false
+	}
+	span := v.Span
+	switch raw := v.Raw.(type) {
+	case []ir.Value:
+		for i, item := range raw {
+			if !item.Known {
+				return nil, nil, false
+			}
+			items = append(items, item)
+			keys = append(keys, ir.Value{Raw: float64(i), Known: true, Span: span})
+		}
+		return items, keys, true
+	case map[string]ir.Value:
+		for _, k := range sortedValueKeys(raw) {
+			if !raw[k].Known {
+				return nil, nil, false
+			}
+			items = append(items, raw[k])
+			keys = append(keys, ir.Value{Raw: k, Known: true, Span: span})
+		}
+		return items, keys, true
+	default:
+		return nil, nil, false
+	}
+}
+
+// substituteIterator deep-copies a content block map, replacing references
+// to `<label>.value` with item and `<label>.key` with key. All other values
+// pass through unchanged.
+func substituteIterator(m map[string]ir.Value, label string, key, item ir.Value) map[string]ir.Value {
+	out := make(map[string]ir.Value, len(m))
+	for _, k := range sortedValueKeys(m) {
+		if k == "__label" {
+			continue
+		}
+		out[k] = substituteIteratorValue(m[k], label, key, item)
+	}
+	return out
+}
+
+func substituteIteratorValue(v ir.Value, label string, key, item ir.Value) ir.Value {
+	if v.IsRef() {
+		switch v.Ref {
+		case label + ".value":
+			return ir.Value{Raw: item.Raw, Known: item.Known, Span: v.Span}
+		case label + ".key":
+			return ir.Value{Raw: key.Raw, Known: key.Known, Span: v.Span}
+		default:
+			return v
+		}
+	}
+	switch raw := v.Raw.(type) {
+	case []ir.Value:
+		items := make([]ir.Value, len(raw))
+		for i, e := range raw {
+			items[i] = substituteIteratorValue(e, label, key, item)
+		}
+		v.Raw = items
+		return v
+	case map[string]ir.Value:
+		m := make(map[string]ir.Value, len(raw))
+		for _, k := range sortedValueKeys(raw) {
+			m[k] = substituteIteratorValue(raw[k], label, key, item)
+		}
+		v.Raw = m
+		return v
+	default:
+		return v
+	}
 }

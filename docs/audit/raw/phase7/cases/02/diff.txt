@@ -1,0 +1,14 @@
+--- /tmp/p7-work/orig/02/before.tf	2026-10-12 17:34:07.200945239 +0000
++++ /tmp/p7-work/orig/02/after.tf	2026-10-12 17:34:07.844799883 +0000
+@@ -1,4 +1,11 @@
+ resource "aws_s3_bucket" "demo" {
+   bucket = "demo-no-versioning-bucket"
+   acl    = "private"
++  server_side_encryption_configuration {
++    rule {
++      apply_server_side_encryption_by_default {
++        sse_algorithm = "AES256"
++      }
++    }
++  }
+ }

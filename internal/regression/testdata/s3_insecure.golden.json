@@ -168,44 +168,6 @@
     }
   },
   {
-    "rule_id": "AEGIS-AWS-558",
-    "title": "S3 bucket without Object Lock configuration",
-    "description": "S3 buckets holding compliance-sensitive data should enable Object Lock to prevent deletion or modification during retention. Add an aws_s3_bucket_object_lock_configuration resource.",
-    "severity": "medium",
-    "resource": "aws_s3_bucket.data_lake",
-    "evidence": {
-      "attribute": "aws_s3_bucket_object_lock_configuration",
-      "span": {
-        "file": "s3_insecure.tf",
-        "start_line": 3,
-        "start_col": 1,
-        "end_line": 11,
-        "end_col": 2
-      },
-      "actual": "absent",
-      "expected": "object lock configuration present"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-559",
-    "title": "S3 bucket without inventory configuration",
-    "description": "Hygiene: S3 buckets should enable inventory reports for auditing object metadata at scale. Add an aws_s3_bucket_inventory resource.",
-    "severity": "low",
-    "resource": "aws_s3_bucket.data_lake",
-    "evidence": {
-      "attribute": "aws_s3_bucket_inventory",
-      "span": {
-        "file": "s3_insecure.tf",
-        "start_line": 3,
-        "start_col": 1,
-        "end_line": 11,
-        "end_col": 2
-      },
-      "actual": "absent",
-      "expected": "inventory configuration present"
-    }
-  },
-  {
     "rule_id": "AEGIS-AWS-601",
     "title": "S3 bucket without lifecycle configuration",
     "description": "Hygiene: S3 buckets should define lifecycle rules to transition or expire objects, controlling long-term storage costs. Add a lifecycle_rule block or an aws_s3_bucket_lifecycle_configuration resource.",
@@ -222,44 +184,6 @@
       },
       "actual": "absent",
       "expected": "lifecycle_rule block or aws_s3_bucket_lifecycle_configuration"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-602",
-    "title": "S3 bucket without event notifications",
-    "description": "Hygiene: S3 buckets should configure event notifications (e.g. to Lambda or SNS) so object changes trigger downstream processing. Add an aws_s3_bucket_notification resource.",
-    "severity": "low",
-    "resource": "aws_s3_bucket.data_lake",
-    "evidence": {
-      "attribute": "notification",
-      "span": {
-        "file": "s3_insecure.tf",
-        "start_line": 3,
-        "start_col": 1,
-        "end_line": 11,
-        "end_col": 2
-      },
-      "actual": "absent",
-      "expected": "aws_s3_bucket_notification resource linked to the bucket"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-603",
-    "title": "S3 bucket without cross-region replication",
-    "description": "Hygiene: S3 buckets holding important data should replicate to a second region for disaster recovery. Add a replication_configuration block or an aws_s3_bucket_replication_configuration resource.",
-    "severity": "low",
-    "resource": "aws_s3_bucket.data_lake",
-    "evidence": {
-      "attribute": "replication_configuration",
-      "span": {
-        "file": "s3_insecure.tf",
-        "start_line": 3,
-        "start_col": 1,
-        "end_line": 11,
-        "end_col": 2
-      },
-      "actual": "absent",
-      "expected": "replication_configuration block or aws_s3_bucket_replication_configuration"
     }
   }
 ]

@@ -135,98 +135,6 @@ func (lambdaNoReservedConcurrency) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-549: ElastiCache replication group without at-rest encryption
-// ---------------------------------------------------------------------------
-
-type elasticacheNoAtRest struct{}
-
-func (elasticacheNoAtRest) ID() string { return "AEGIS-AWS-549" }
-func (elasticacheNoAtRest) Title() string {
-	return "ElastiCache replication group without at-rest encryption"
-}
-func (elasticacheNoAtRest) Description() string {
-	return "ElastiCache replication groups should encrypt data at rest " +
-		"to protect cached sensitive data. Set " +
-		"at_rest_encryption_enabled = true."
-}
-func (elasticacheNoAtRest) Severity() ir.Severity { return ir.SeverityHigh }
-func (elasticacheNoAtRest) AppliesTo(resType string) bool {
-	return resType == "aws_elasticache_replication_group"
-}
-func (elasticacheNoAtRest) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getBool(r, "at_rest_encryption_enabled")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if !present || !val {
-		actual := "absent"
-		if present {
-			actual = "false"
-		}
-		return []ir.Finding{{
-			RuleID:      "AEGIS-AWS-549",
-			Title:       (elasticacheNoAtRest{}).Title(),
-			Description: (elasticacheNoAtRest{}).Description(),
-			Severity:    ir.SeverityHigh,
-			Resource:    r.Address(),
-			Evidence: ir.Evidence{
-				Attribute: "at_rest_encryption_enabled",
-				Span:      evidenceSpan(span, r.Span),
-				Actual:    actual,
-				Expected:  "at_rest_encryption_enabled = true",
-			},
-		}}
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-550: ElastiCache replication group without transit encryption
-// ---------------------------------------------------------------------------
-
-type elasticacheNoTransit struct{}
-
-func (elasticacheNoTransit) ID() string { return "AEGIS-AWS-550" }
-func (elasticacheNoTransit) Title() string {
-	return "ElastiCache replication group without in-transit encryption"
-}
-func (elasticacheNoTransit) Description() string {
-	return "ElastiCache replication groups should encrypt data in transit " +
-		"to protect cached data on the wire. Set " +
-		"transit_encryption_enabled = true."
-}
-func (elasticacheNoTransit) Severity() ir.Severity { return ir.SeverityHigh }
-func (elasticacheNoTransit) AppliesTo(resType string) bool {
-	return resType == "aws_elasticache_replication_group"
-}
-func (elasticacheNoTransit) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getBool(r, "transit_encryption_enabled")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if !present || !val {
-		actual := "absent"
-		if present {
-			actual = "false"
-		}
-		return []ir.Finding{{
-			RuleID:      "AEGIS-AWS-550",
-			Title:       (elasticacheNoTransit{}).Title(),
-			Description: (elasticacheNoTransit{}).Description(),
-			Severity:    ir.SeverityHigh,
-			Resource:    r.Address(),
-			Evidence: ir.Evidence{
-				Attribute: "transit_encryption_enabled",
-				Span:      evidenceSpan(span, r.Span),
-				Actual:    actual,
-				Expected:  "transit_encryption_enabled = true",
-			},
-		}}
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AWS-551: ElastiCache replication group without Multi-AZ
 // ---------------------------------------------------------------------------
 
@@ -272,8 +180,6 @@ func FinalGap2Rules() []ir.Rule {
 		rdsNoCopyTags{},               // AEGIS-AWS-546
 		lambdaNoTracing{},             // AEGIS-AWS-547
 		lambdaNoReservedConcurrency{}, // AEGIS-AWS-548
-		elasticacheNoAtRest{},         // AEGIS-AWS-549
-		elasticacheNoTransit{},        // AEGIS-AWS-550
 		elasticacheNoMultiAZ{},        // AEGIS-AWS-551
 	}
 }

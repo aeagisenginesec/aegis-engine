@@ -1,0 +1,73 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/tmp.z4uOJCCiL4",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-392",
+      "title": "Backup vault without KMS encryption",
+      "description": "Recovery points in a vault without a customer-managed KMS key rely on AWS-owned encryption, which cannot be audited or rotated by the account.",
+      "severity": "medium",
+      "resource": "aws_backup_vault.demo",
+      "evidence": {
+        "attribute": "kms_key_arn",
+        "span": {
+          "file": "/tmp/tmp.z4uOJCCiL4/34-backup-vault-no-kms.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 3,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "customer-managed KMS key ARN"
+      },
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-836",
+      "title": "Backup vault without vault lock configuration",
+      "description": "A Backup vault with no aws_backup_vault_lock_configuration allows recovery points to be deleted before their retention period expires, undermining ransomware protection. Add a vault lock in compliance mode with a minimum retention.",
+      "severity": "low",
+      "resource": "aws_backup_vault.demo",
+      "evidence": {
+        "attribute": "aws_backup_vault_lock_configuration",
+        "span": {
+          "file": "/tmp/tmp.z4uOJCCiL4/34-backup-vault-no-kms.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 3,
+          "end_col": 2
+        },
+        "actual": "absent (vault not locked)",
+        "expected": "aws_backup_vault_lock_configuration { backup_vault_name = \"demo-vault\" ... }"
+      },
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "CP-9"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/tmp.z4uOJCCiL4/34-backup-vault-no-kms.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

@@ -85,13 +85,20 @@ metadata:
 spec:
   template:
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: app
-        image: nginx
+        image: nginx:1.25.3
+        resources:
+          limits: {cpu: "500m", memory: "256Mi"}
+        livenessProbe: {httpGet: {path: /, port: 80}}
+        readinessProbe: {httpGet: {path: /, port: 80}}
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          seccompProfile: {type: RuntimeDefault}
 `
 	fired := runAll(parseK8s(t, src))
 	for id, fs := range fired {
@@ -107,7 +114,11 @@ metadata:
 spec:
   containers:
   - name: app
-    image: nginx
+    image: nginx:1.25.3
+    resources:
+      limits: {cpu: "500m", memory: "256Mi"}
+    livenessProbe: {httpGet: {path: /, port: 80}}
+    readinessProbe: {httpGet: {path: /, port: 80}}
 `
 	fired := runAll(parseK8s(t, src))
 	for id, fs := range fired {
@@ -204,9 +215,21 @@ spec:
 }
 
 func TestAppliesTo(t *testing.T) {
+	k8sTypes := []string{
+		"k8s_Deployment", "k8s_Pod", "k8s_Service", "k8s_Ingress",
+		"k8s_Role", "k8s_ClusterRole", "k8s_RoleBinding",
+		"k8s_ClusterRoleBinding", "k8s_ConfigMap",
+	}
 	for _, rule := range Rules() {
-		if !rule.AppliesTo("k8s_Deployment") || !rule.AppliesTo("k8s_Pod") {
-			t.Errorf("%s should apply to k8s types", rule.ID())
+		hit := false
+		for _, kt := range k8sTypes {
+			if rule.AppliesTo(kt) {
+				hit = true
+				break
+			}
+		}
+		if !hit {
+			t.Errorf("%s should apply to at least one k8s type", rule.ID())
 		}
 		if rule.AppliesTo("aws_s3_bucket") || rule.AppliesTo("aws_iam_role") {
 			t.Errorf("%s should not apply to AWS types", rule.ID())
@@ -216,15 +239,26 @@ func TestAppliesTo(t *testing.T) {
 
 func TestRuleIDs(t *testing.T) {
 	rules := Rules()
-	want := []string{"AEGIS-K8S-001", "AEGIS-K8S-002", "AEGIS-K8S-003"}
-	if len(rules) != len(want) {
-		t.Fatalf("got %d rules, want %d", len(rules), len(want))
+	if len(rules) != 25 {
+		t.Fatalf("got %d rules, want 25", len(rules))
 	}
-	for i, id := range want {
-		if rules[i].ID() != id {
-			t.Errorf("rules[%d].ID() = %s, want %s", i, rules[i].ID(), id)
+	for i, rule := range rules {
+		want := "AEGIS-K8S-" + zeroPad3(i+1)
+		if rule.ID() != want {
+			t.Errorf("rules[%d].ID() = %s, want %s", i, rule.ID(), want)
 		}
 	}
+}
+
+func zeroPad3(n int) string {
+	s := ""
+	for v := n; v > 0; v /= 10 {
+		s = string(rune('0'+v%10)) + s
+	}
+	for len(s) < 3 {
+		s = "0" + s
+	}
+	return s
 }
 
 func TestNoPanicSweep(t *testing.T) {

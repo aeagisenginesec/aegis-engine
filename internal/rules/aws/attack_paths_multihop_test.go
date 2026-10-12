@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"strconv"
 	"testing"
 
 	"aegis/internal/ir"
@@ -221,7 +222,7 @@ func Test105_Deterministic(t *testing.T) {
 }
 
 func itoa(i int) string {
-	return string(rune('0' + i))
+	return strconv.Itoa(i)
 }
 
 // ---------------------------------------------------------------------------

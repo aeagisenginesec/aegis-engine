@@ -235,3 +235,53 @@ func linkedBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 	}
 	return "", false
 }
+
+// logDeliveryBuckets returns the set of bucket addresses that serve as the
+// target_bucket of an aws_s3_bucket_logging resource. Such buckets are
+// logging infrastructure: flagging them for missing hardening (encryption,
+// versioning, public-access block, TLS policy, access logging, lifecycle)
+// is scanner noise — the security posture that matters is the source
+// bucket's. Only definitely-resolved targets are returned; an unresolvable
+// target link simply doesn't exempt anything (fail-safe).
+func logDeliveryBuckets(resources []ir.Resource) map[string]bool {
+	targets := map[string]bool{}
+	for _, r := range resources {
+		if r.Type != "aws_s3_bucket_logging" {
+			continue
+		}
+		if addr, ok := linkedTargetBucketAddr(r, resources); ok {
+			targets[addr] = true
+		}
+	}
+	return targets
+}
+
+// linkedTargetBucketAddr resolves the target_bucket attribute of an
+// aws_s3_bucket_logging resource to the destination bucket's address.
+// Used by s3NoAccessLogging to skip log-delivery buckets.
+func linkedTargetBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
+	v, ok := r.Attributes["target_bucket"]
+	if !ok {
+		return "", false
+	}
+	if v.IsRef() {
+		return refAddrOf(v.Ref)
+	}
+	name, ok := v.AsString()
+	if !ok {
+		return "", false
+	}
+	name = strings.TrimSpace(name)
+	for _, b := range resources {
+		if b.Type != "aws_s3_bucket" {
+			continue
+		}
+		if b.Name == name {
+			return b.Address(), true
+		}
+		if bn, _, _, known := getString(b, "bucket"); known && strings.TrimSpace(bn) == name {
+			return b.Address(), true
+		}
+	}
+	return "", false
+}

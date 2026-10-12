@@ -229,8 +229,12 @@ func (appSvcNoHealthCheck) AppliesTo(resType string) bool {
 
 func (s appSvcNoHealthCheck) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "site_config")
-	if !present || !known || len(blks) == 0 {
-		return nil
+	if !present {
+		return []ir.Finding{mkFinding(s, r, "site_config.health_check_path",
+			r.Span, "absent", "health_check_path = \"/health\"")}
+	}
+	if !known || len(blks) == 0 {
+		return nil // unresolved: cannot decide
 	}
 	if _, _, hp, _ := blockString(blks[0], "health_check_path"); hp {
 		return nil

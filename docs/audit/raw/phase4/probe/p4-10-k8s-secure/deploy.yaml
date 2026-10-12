@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p4-probe-deploy-secure
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: p4probesecure
+  template:
+    metadata:
+      labels:
+        app: p4probesecure
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]

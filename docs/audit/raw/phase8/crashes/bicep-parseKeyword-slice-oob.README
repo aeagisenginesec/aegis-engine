@@ -1,0 +1,31 @@
+CRASHER 1 — bicep adapter panic (found by go fuzz, FuzzBicep, 2026-10-12)
+
+Input (15 bytes, this directory's .input file):
+  resource A0'''0
+
+Panic:
+  runtime error: slice bounds out of range [:18] with length 15
+
+Stack (abridged):
+  aegis/internal/adapter/bicep/bicep.go:201 in (*parser).parseKeyword
+  aegis/internal/adapter/bicep/bicep.go:373 in (*parser).parseResource
+
+Root cause (read-only analysis):
+  parseStringVal treats ''' as a multiline-string opener. On unterminated
+  input the scan loop exits at EOF, then `p.pos += 3` (bicep.go ~line 258)
+  blindly skips the never-found closing delimiter, leaving p.pos (18) past
+  len(src) (15). The next parseKeyword does p.src[start:p.pos] = p.src[18:18]
+  and panics.
+
+Repro (Go):
+  ad := bicep.Adapter{}
+  _, _, _ = ad.Parse("main.bicep", []byte("resource A0'''0"))  // panics
+
+Production impact: CONTAINED. CLI and `aegis serve` wrap adapter Parse in
+safeParse/safeParseModule panic recovery, so this surfaces as a
+"parse failed ... panicked" error diagnostic, not a process crash
+(verified live against `aegis serve` — HTTP 200 + diagnostic, no stack
+trace leaked, server stays up).
+
+Severity: Medium (parser robustness defect; unguarded slice arithmetic;
+any future caller that skips the recover wrapper would crash).

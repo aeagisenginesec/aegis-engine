@@ -37,19 +37,19 @@ func TestAZURE119_DisabledQuiet(t *testing.T) {
 
 // TestAZURE120_QueueLoggingAbsentFires verifies queue logging (strict).
 func TestAZURE120_QueueLoggingAbsentFires(t *testing.T) {
-	mustFinding(t, runRule(storageQueueNoLogging2{}, storageRes(nil)), "AEGIS-AZURE-120")
+	mustFinding(t, runRule(storageQueueNoLogging{}, storageRes(nil)), "AEGIS-AZURE-034")
 }
 
 func TestAZURE120_QueuePropsWithoutLoggingFires(t *testing.T) {
 	r := storageRes(map[string]ir.Value{"queue_properties": blks(3, blk())})
-	mustFinding(t, runRule(storageQueueNoLogging2{}, r), "AEGIS-AZURE-120")
+	mustFinding(t, runRule(storageQueueNoLogging{}, r), "AEGIS-AZURE-034")
 }
 
 func TestAZURE120_LoggingQuiet(t *testing.T) {
 	r := storageRes(map[string]ir.Value{
 		"queue_properties": blks(3, blk("logging", blks(4, blk("read", kv(true, 5))))),
 	})
-	if len(runRule(storageQueueNoLogging2{}, r)) != 0 {
+	if len(runRule(storageQueueNoLogging{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
@@ -90,17 +90,17 @@ func TestAZURE122_DisabledQuiet(t *testing.T) {
 
 // TestAZURE123_SharedKeyDefaultFires verifies shared key access (strict).
 func TestAZURE123_SharedKeyDefaultFires(t *testing.T) {
-	mustFinding(t, runRule(storageSharedKey2{}, storageRes(nil)), "AEGIS-AZURE-123")
+	mustFinding(t, runRule(storageSharedKeyAccess{}, storageRes(nil)), "AEGIS-AZURE-031")
 }
 
 func TestAZURE123_EnabledFires(t *testing.T) {
 	r := storageRes(map[string]ir.Value{"shared_access_key_enabled": kv(true, 3)})
-	mustFinding(t, runRule(storageSharedKey2{}, r), "AEGIS-AZURE-123")
+	mustFinding(t, runRule(storageSharedKeyAccess{}, r), "AEGIS-AZURE-031")
 }
 
 func TestAZURE123_DisabledQuiet(t *testing.T) {
 	r := storageRes(map[string]ir.Value{"shared_access_key_enabled": kv(false, 3)})
-	if len(runRule(storageSharedKey2{}, r)) != 0 {
+	if len(runRule(storageSharedKeyAccess{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
@@ -162,7 +162,7 @@ func TestAZURE125_PolicyQuiet(t *testing.T) {
 
 // TestAZURE126_NoSoftDeleteFires verifies blob soft delete (strict).
 func TestAZURE126_NoSoftDeleteFires(t *testing.T) {
-	mustFinding(t, runRule(storageBlobSoftDelete2{}, storageRes(nil)), "AEGIS-AZURE-126")
+	mustFinding(t, runRule(storageNoBlobSoftDelete{}, storageRes(nil)), "AEGIS-AZURE-029")
 }
 
 func TestAZURE126_ZeroDaysFires(t *testing.T) {
@@ -171,7 +171,7 @@ func TestAZURE126_ZeroDaysFires(t *testing.T) {
 			"delete_retention_policy", blks(4, blk("days", ir.Value{Raw: float64(0), Known: true, Span: spanAt(5)})),
 		)),
 	})
-	mustFinding(t, runRule(storageBlobSoftDelete2{}, r), "AEGIS-AZURE-126")
+	mustFinding(t, runRule(storageNoBlobSoftDelete{}, r), "AEGIS-AZURE-029")
 }
 
 func TestAZURE126_SoftDeleteQuiet(t *testing.T) {
@@ -180,7 +180,7 @@ func TestAZURE126_SoftDeleteQuiet(t *testing.T) {
 			"delete_retention_policy", blks(4, blk("days", ir.Value{Raw: float64(7), Known: true, Span: spanAt(5)})),
 		)),
 	})
-	if len(runRule(storageBlobSoftDelete2{}, r)) != 0 {
+	if len(runRule(storageNoBlobSoftDelete{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }

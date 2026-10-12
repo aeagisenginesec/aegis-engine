@@ -6,6 +6,12 @@
 // spec.jobTemplate.spec.template.spec (CronJob), inspecting containers and
 // initContainers. Missing or unknown securityContext never produces a
 // finding: the rules report only explicit misconfigurations.
+//
+// Exception (documented per rule): the hygiene rules added in k8s2.go
+// (resource limits 006, probes 014/015, ingress TLS 021, and service
+// account automount 010) intentionally fire on absent configuration, since
+// the secure posture is an explicit setting. Those are the only
+// absent-fires rules in this pack.
 package k8s
 
 import (
@@ -17,11 +23,12 @@ import (
 
 // Rules returns every rule in the Kubernetes pack, in ID order.
 func Rules() []ir.Rule {
-	return []ir.Rule{
+	rules := []ir.Rule{
 		privilegedContainer{}, // AEGIS-K8S-001
 		runAsRootContainer{},  // AEGIS-K8S-002
 		privilegeEscalation{}, // AEGIS-K8S-003
 	}
+	return append(rules, K8s2Rules()...) // AEGIS-K8S-004..025
 }
 
 // appliesTo reports whether a resource type belongs to this pack.

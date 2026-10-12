@@ -300,3 +300,77 @@ resource "aws_s3_bucket" "flagged" {
 		t.Error("expected AEGIS-AWS-001 on aws_s3_bucket.flagged")
 	}
 }
+
+func TestScanCompleteness(t *testing.T) {
+	dir := writeFixtures(t)
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"scan", dir, "--format=json"}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1 (findings), got %d", code)
+	}
+	var env map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("bad JSON: %v", err)
+	}
+	comp, ok := env["scan_completeness"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing scan_completeness in JSON output")
+	}
+	if comp["files_discovered"].(float64) != 2 {
+		t.Errorf("expected 2 files_discovered, got %v", comp["files_discovered"])
+	}
+	if comp["files_parsed"].(float64) != 2 {
+		t.Errorf("expected 2 files_parsed, got %v", comp["files_parsed"])
+	}
+	if comp["files_failed"].(float64) != 0 {
+		t.Errorf("expected 0 files_failed, got %v", comp["files_failed"])
+	}
+}
+
+func TestScanCompletenessMalformed(t *testing.T) {
+	dir := t.TempDir()
+	badTF := "resource \"aws_s3_bucket\" \"bad\" { bucket = "
+	if err := os.WriteFile(filepath.Join(dir, "bad.tf"), []byte(badTF), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"scan", dir, "--format=json"}, &stdout, &stderr)
+	// Malformed file: scan completes but reports the failure
+	var env map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("bad JSON: %v\n%s", err, stdout.String())
+	}
+	comp, ok := env["scan_completeness"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing scan_completeness in JSON output")
+	}
+	if comp["files_failed"].(float64) != 1 {
+		t.Errorf("expected 1 files_failed, got %v", comp["files_failed"])
+	}
+	// Non-strict mode: exit code reflects findings (0 here), not parse errors
+	if code != 0 {
+		t.Errorf("expected exit 0 without --strict, got %d", code)
+	}
+}
+
+func TestScanStrictFlag(t *testing.T) {
+	dir := t.TempDir()
+	badTF := "resource \"aws_s3_bucket\" \"bad\" { bucket = "
+	if err := os.WriteFile(filepath.Join(dir, "bad.tf"), []byte(badTF), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"scan", dir, "--strict"}, &stdout, &stderr)
+	if code != 2 {
+		t.Errorf("expected exit 2 with --strict on malformed file, got %d; stderr: %s",
+			code, stderr.String())
+	}
+	// Strict mode on clean input: normal exit codes apply
+	dir2 := writeFixtures(t)
+	stdout.Reset()
+	stderr.Reset()
+	code = run([]string{"scan", dir2, "--strict", "--format=json"}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("expected exit 1 (findings) with --strict on valid input, got %d", code)
+	}
+}

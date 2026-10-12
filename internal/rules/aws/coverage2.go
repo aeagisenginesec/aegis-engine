@@ -307,6 +307,9 @@ func (s3NoPublicAccessBlock) CheckAll(resources []ir.Resource) []ir.Finding {
 	// A public-access-block whose bucket link is unresolvable might protect
 	// any bucket: without proven coverage no finding is decidable.
 	uncertain := companionLinkUncertain(sorted, "aws_s3_bucket_public_access_block", "bucket")
+	// Buckets that serve as log-delivery targets are logging infrastructure,
+	// not data buckets: skip them.
+	logTargets := logDeliveryBuckets(sorted)
 	var out []ir.Finding
 	for _, b := range sorted {
 		if b.Type != "aws_s3_bucket" {
@@ -319,7 +322,7 @@ func (s3NoPublicAccessBlock) CheckAll(resources []ir.Resource) []ir.Finding {
 				break
 			}
 		}
-		if protected || uncertain {
+		if protected || uncertain || logTargets[b.Address()] {
 			continue
 		}
 		out = append(out, ir.Finding{
@@ -498,7 +501,8 @@ func (vpcNoFlowLogs) Title() string {
 func (vpcNoFlowLogs) Description() string {
 	return "Without an aws_flow_log attached to the VPC, network traffic " +
 		"metadata is not captured and incident investigation is blind. " +
-		"Fail-safe: a VPC with no linked flow log is flagged."
+		"Fail-safe: a VPC with no linked flow log is flagged. VPCs with no " +
+		"subnets carry no traffic and are skipped."
 }
 func (vpcNoFlowLogs) Severity() ir.Severity { return ir.SeverityMedium }
 
@@ -524,6 +528,20 @@ func (vpcNoFlowLogs) CheckAll(resources []ir.Resource) []ir.Finding {
 	}
 	// A flow log whose vpc_id is unresolvable might log any VPC.
 	uncertain := companionLinkUncertain(sorted, "aws_flow_log", "vpc_id")
+	// A VPC with no subnets carries no traffic: flow logs would capture
+	// nothing. Skip such VPCs (e.g. placeholder VPCs in uninstantiated
+	// modules). A subnet whose vpc_id is unresolvable might belong to any
+	// VPC, so no VPC is skipped while one exists.
+	subnetted := map[string]bool{}
+	for _, r := range sorted {
+		if r.Type != "aws_subnet" {
+			continue
+		}
+		if addr, ok := flowLogVPCAddr(r, sorted); ok {
+			subnetted[addr] = true
+		}
+	}
+	uncertainSubnet := companionLinkUncertain(sorted, "aws_subnet", "vpc_id")
 	var out []ir.Finding
 	for _, v := range sorted {
 		if v.Type != "aws_vpc" {
@@ -531,6 +549,9 @@ func (vpcNoFlowLogs) CheckAll(resources []ir.Resource) []ir.Finding {
 		}
 		if logged[v.Address()] || uncertain {
 			continue
+		}
+		if !uncertainSubnet && !subnetted[v.Address()] {
+			continue // no subnets: no traffic to log
 		}
 		out = append(out, ir.Finding{
 			RuleID:      "AEGIS-AWS-209",

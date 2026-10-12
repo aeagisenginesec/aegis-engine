@@ -1,0 +1,123 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/p7-work/cases/14",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-101",
+      "title": "IAM role assumable by anyone",
+      "description": "An Allow statement in the trust policy with Principal \"*\" lets any AWS identity assume this role. Restrict the principal to specific accounts, roles, or services.",
+      "severity": "critical",
+      "resource": "aws_iam_role.demo",
+      "evidence": {
+        "attribute": "assume_role_policy",
+        "span": {
+          "file": "/tmp/p7-work/cases/14/main.tf",
+          "start_line": 3,
+          "start_col": 24,
+          "end_line": 10,
+          "end_col": 5
+        },
+        "actual": "Allow statement with Principal \"*\"",
+        "expected": "Principal restricted to specific AWS identities"
+      },
+      "remediation": "Lock down the role trust policy. Replace the wildcard principal with the\nspecific IAM ARNs or federated providers allowed to assume the role, and add\na condition such as `aws:PrincipalOrgID` or `sts:ExternalId`:\nassume_role_policy = jsonencode({\n  Version = \"2012-10-17\"\n  Statement = [{\n    Effect    = \"Allow\"\n    Principal = { AWS = \"arn:aws:iam::123456789012:role/DeployRole\" }\n    Action    = \"sts:AssumeRole\"\n    Condition = { StringEquals = { \"sts:ExternalId\" = \"unique-value\" } }\n  }]\n})",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_terms-and-concepts.html"
+      ],
+      "path": [
+        {
+          "resource": "aws_iam_role.demo",
+          "detail": "any AWS identity can assume this role via the open trust policy",
+          "span": {
+            "file": "/tmp/p7-work/cases/14/main.tf",
+            "start_line": 3,
+            "start_col": 24,
+            "end_line": 10,
+            "end_col": 5
+          }
+        }
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.16"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-3"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "7.2.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-667",
+      "title": "IAM role has no permissions boundary",
+      "description": "The role sets no permissions_boundary, so nothing caps the maximum permissions its policies can grant — a single overly broad policy attachment becomes fully effective. Set a permissions boundary as a guardrail.",
+      "severity": "low",
+      "resource": "aws_iam_role.demo",
+      "evidence": {
+        "attribute": "permissions_boundary",
+        "span": {
+          "file": "/tmp/p7-work/cases/14/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 11,
+          "end_col": 2
+        },
+        "actual": "absent (AWS default: no boundary)",
+        "expected": "permissions_boundary set"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-673",
+      "title": "IAM role has no description",
+      "description": "The IAM role has no description, so reviewers cannot tell what the role is for or who owns it. Document the role's purpose in the description field.",
+      "severity": "low",
+      "resource": "aws_iam_role.demo",
+      "evidence": {
+        "attribute": "description",
+        "span": {
+          "file": "/tmp/p7-work/cases/14/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 11,
+          "end_col": 2
+        },
+        "actual": "absent (AWS default: none)",
+        "expected": "description set"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/p7-work/cases/14/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

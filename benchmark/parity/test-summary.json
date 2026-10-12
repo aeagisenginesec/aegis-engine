@@ -1,0 +1,110 @@
+{
+ "audit": "adapter-semantic-parity",
+ "date": "2026-10-12",
+ "baseline_commit": "4898204fb83b6795a9b1f9303df55169f625d01d",
+ "verified_at_commit": "0262005e854774a4c8e2f6453e0c5740ad5a9c60",
+ "fixtures": {
+  "total": 148,
+  "by_control": {
+   "container-compose": 2,
+   "container-dockerfile": 2,
+   "container-manifests": 2,
+   "database-public": 0,
+   "database-public-aws": 10,
+   "database-public-azure": 8,
+   "database-public-gcp": 4,
+   "defaults-absent": 5,
+   "docker-args": 1,
+   "docker-multistage": 1,
+   "iam-wildcard": 10,
+   "logging": 10,
+   "network-ingress": 0,
+   "network-ingress-aws": 10,
+   "network-ingress-azure": 8,
+   "network-ingress-gcp": 4,
+   "secrets-hardcoded": 0,
+   "secrets-hardcoded-aws": 10,
+   "secrets-hardcoded-azure": 8,
+   "storage-encryption": 0,
+   "storage-encryption-aws": 10,
+   "storage-encryption-azure": 8,
+   "storage-encryption-gcp": 4,
+   "storage-public": 0,
+   "storage-public-aws": 10,
+   "storage-public-azure": 8,
+   "storage-public-gcp": 4,
+   "unknown-values": 0,
+   "unknown-values-aws": 5,
+   "unknown-values-azure": 4
+  }
+ },
+ "tests": {
+  "regression": {
+   "passed": 148,
+   "failed": 0,
+   "skipped": 0
+  },
+  "determinism": {
+   "passed": 148,
+   "failed": 0,
+   "skipped": 0,
+   "runs_per_fixture": 3
+  },
+  "cross_format": {
+   "passed": 35,
+   "failed": 0,
+   "skipped": 19,
+   "skipped_groups": [
+    "container-compose/secure",
+    "container-compose/vuln",
+    "container-dockerfile/secure",
+    "container-dockerfile/vuln",
+    "container-manifests/secure",
+    "container-manifests/vuln",
+    "database-public/secure",
+    "database-public/vuln",
+    "docker-args/vuln",
+    "docker-multistage/vuln",
+    "network-ingress/secure",
+    "network-ingress/vuln",
+    "secrets-hardcoded/secure",
+    "secrets-hardcoded/vuln",
+    "storage-encryption/secure",
+    "storage-encryption/vuln",
+    "storage-public/secure",
+    "storage-public/vuln",
+    "unknown-values/vuln"
+   ],
+   "note": "skipped groups are single-format controls with no cross-format peer; each is still covered by regression + determinism subtests"
+  },
+  "subtests": {
+   "passed": 331,
+   "failed": 0,
+   "skipped": 0
+  },
+  "parent_tests": 3
+ },
+ "exclusions_unsupported": [
+  {
+   "category": "cloud-mismatch",
+   "detail": "CloudFormation fixtures only for AWS controls; ARM/Bicep only for Azure controls (format is cloud-specific by design)"
+  },
+  {
+   "category": "planjson",
+   "detail": "plan JSON fixtures only for AWS controls; plan schema is provider-shaped and the corpus covers the AWS control set"
+  },
+  {
+   "category": "containers",
+   "detail": "Dockerfile/Compose/Manifests controls are format-native (docker_stage/compose_service/k8s_* IR types) with distinct rule sets; not cross-compared against cloud formats"
+  },
+  {
+   "category": "single_variant",
+   "detail": "docker-args and docker-multistage are vuln-only probes of Dockerfile ARG/multi-stage semantics with no secure peer in another format"
+  },
+  {
+   "category": "tf_json",
+   "detail": ".tf.json (Terraform JSON syntax) not supported by any adapter; deferred to follow-up, documented in ADAPTER_PARITY_REPORT.md"
+  }
+ ],
+ "status": "PASS"
+}

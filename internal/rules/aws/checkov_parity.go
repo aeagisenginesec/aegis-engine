@@ -57,12 +57,15 @@ func (s3NoSecureTransport) CheckAll(resources []ir.Resource) []ir.Finding {
 	// SecureTransport on any bucket: no finding is decidable for buckets
 	// without a proven policy.
 	uncertain := companionLinkUncertain(resources, "aws_s3_bucket_policy", "bucket")
+	// Buckets that serve as log-delivery targets are logging infrastructure,
+	// not data buckets: skip them.
+	logTargets := logDeliveryBuckets(resources)
 	var out []ir.Finding
 	for _, b := range buckets {
 		pols := byBucket[b.Address()]
 		if len(pols) == 0 {
-			if uncertain {
-				continue // might be covered by the unresolvable policy
+			if uncertain || logTargets[b.Address()] {
+				continue // might be covered by the unresolvable policy, or is a log target
 			}
 			// No policy at all: definitely no SecureTransport enforcement.
 			out = append(out, s3NoSecureTransportFinding(b))
@@ -81,7 +84,7 @@ func (s3NoSecureTransport) CheckAll(resources []ir.Resource) []ir.Finding {
 				break
 			}
 		}
-		if enforced || undecidable {
+		if enforced || undecidable || logTargets[b.Address()] {
 			continue
 		}
 		out = append(out, s3NoSecureTransportFinding(b))
@@ -228,6 +231,8 @@ func (s3NoAccessLogging) AppliesTo(resType string) bool {
 
 // CheckAll suppresses the inline finding when a standalone
 // aws_s3_bucket_logging resource is linked to the bucket.
+// Buckets that serve as log targets (target_bucket) are also skipped:
+// a dedicated log-delivery bucket does not need its own access logging.
 func (s3NoAccessLogging) CheckAll(resources []ir.Resource) []ir.Finding {
 	logged := map[string]bool{}
 	for _, r := range resources {
@@ -238,6 +243,7 @@ func (s3NoAccessLogging) CheckAll(resources []ir.Resource) []ir.Finding {
 			logged[addr] = true
 		}
 	}
+	logTargets := logDeliveryBuckets(resources)
 	// A logging configuration whose bucket link is unresolvable might log
 	// any bucket.
 	uncertain := companionLinkUncertain(resources, "aws_s3_bucket_logging", "bucket")
@@ -247,7 +253,7 @@ func (s3NoAccessLogging) CheckAll(resources []ir.Resource) []ir.Finding {
 			continue
 		}
 		for _, f := range (s3NoAccessLogging{}).Check(r) {
-			if !logged[r.Address()] && !uncertain {
+			if !logged[r.Address()] && !logTargets[r.Address()] && !uncertain {
 				out = append(out, f)
 			}
 		}

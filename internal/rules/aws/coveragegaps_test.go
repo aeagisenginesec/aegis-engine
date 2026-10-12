@@ -142,52 +142,6 @@ func Test557_SilentOnScoped(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-558: S3 without Object Lock
-// ---------------------------------------------------------------------------
-
-func Test558_FiresWhenNoLockConfig(t *testing.T) {
-	b := res("aws_s3_bucket", "b", map[string]ir.Value{})
-	fs := (s3NoObjectLock{}).CheckAll([]ir.Resource{b})
-	if len(fs) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(fs))
-	}
-}
-
-func Test558_SilentWhenLocked(t *testing.T) {
-	b := res("aws_s3_bucket", "b", map[string]ir.Value{"bucket": ks("mybucket", 2)})
-	lock := res("aws_s3_bucket_object_lock_configuration", "l", map[string]ir.Value{
-		"bucket": ks("mybucket", 5),
-	})
-	fs := (s3NoObjectLock{}).CheckAll([]ir.Resource{b, lock})
-	if len(fs) != 0 {
-		t.Fatalf("expected 0 findings, got %d", len(fs))
-	}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-559: S3 without inventory
-// ---------------------------------------------------------------------------
-
-func Test559_FiresWhenNoInventory(t *testing.T) {
-	b := res("aws_s3_bucket", "b", map[string]ir.Value{})
-	fs := (s3NoInventory{}).CheckAll([]ir.Resource{b})
-	if len(fs) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(fs))
-	}
-}
-
-func Test559_SilentWhenInventoried(t *testing.T) {
-	b := res("aws_s3_bucket", "b", map[string]ir.Value{"bucket": ks("mybucket", 2)})
-	inv := res("aws_s3_bucket_inventory", "i", map[string]ir.Value{
-		"bucket": ks("mybucket", 5),
-	})
-	fs := (s3NoInventory{}).CheckAll([]ir.Resource{b, inv})
-	if len(fs) != 0 {
-		t.Fatalf("expected 0 findings, got %d", len(fs))
-	}
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AWS-560: S3 force_destroy
 // ---------------------------------------------------------------------------
 

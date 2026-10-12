@@ -137,7 +137,9 @@ type Variable struct {
 	// Default is the static default value, or Unknown when the variable
 	// has no default (or a non-static one). Span covers the default expr.
 	Default ir.Value
-	Span    ir.Span
+	// Sensitive is true when the variable block sets sensitive = true.
+	Sensitive bool
+	Span      ir.Span
 }
 
 // ProviderReq is one entry of `terraform { required_providers { ... } }`:
@@ -189,11 +191,79 @@ type ModuleCall struct {
 // Structural pre-validation (PreValidate) runs first: hopeless input
 // (binary garbage, UTF-16, oversize, truncated, absurdly nested) fails
 // fast with a clear hard error instead of a confusing parser diagnostic.
+// lenientParseConfig parses src as native HCL, with a targeted recovery
+// for single-line object constructors written without comma separators
+// (e.g. { Effect = "Allow" Action = "s3:GetObject" }). Some generators and
+// hand-written files omit the commas; the strict parser then reports
+// "Missing attribute separator" and silently drops the remaining items,
+// which mangles jsonencode() policy documents into empty statements.
+//
+// Recovery only triggers on files the strict parser already rejects:
+// commas are inserted at the exact diagnostic positions and the source is
+// re-parsed, iterating because the parser reports only the first missing
+// separator per pass. If the repaired source parses cleanly it is used;
+// otherwise the original partial result is returned unchanged. This is
+// purely additive: files that parsed cleanly before are untouched.
+func lenientParseConfig(src []byte, path string) (*hcl.File, hcl.Diagnostics) {
+	f, diags := hclsyntax.ParseConfig(src, path, hcl.Pos{Line: 1, Column: 1})
+	fixed := append([]byte(nil), src...)
+	// The parser reports only the first missing separator per pass, so
+	// iterate. Bound the loop: each pass must fix at least one position.
+	for i := 0; i < 32; i++ {
+		offsets := missingSeparatorOffsets(diags)
+		if len(offsets) == 0 {
+			break
+		}
+		// Insert commas back-to-front so earlier offsets stay valid.
+		for j := len(offsets) - 1; j >= 0; j-- {
+			off := offsets[j]
+			if off < 0 || off > len(fixed) {
+				continue
+			}
+			fixed = append(fixed[:off:off], append([]byte{','}, fixed[off:]...)...)
+		}
+		var diags2 hcl.Diagnostics
+		f, diags2 = hclsyntax.ParseConfig(fixed, path, hcl.Pos{Line: 1, Column: 1})
+		if !diags2.HasErrors() {
+			return f, diags2
+		}
+		diags = diags2
+	}
+	if diags.HasErrors() {
+		// Recovery failed: fall back to the original strict parse so
+		// behavior on unrecoverable files is unchanged.
+		f, diags = hclsyntax.ParseConfig(src, path, hcl.Pos{Line: 1, Column: 1})
+	}
+	return f, diags
+}
+
+// missingSeparatorOffsets returns the deduplicated, sorted byte offsets at
+// which the parser reported a missing attribute separator.
+func missingSeparatorOffsets(diags hcl.Diagnostics) []int {
+	seen := map[int]bool{}
+	var out []int
+	for _, d := range diags {
+		if d.Summary != "Missing attribute separator" {
+			continue
+		}
+		if d.Subject == nil {
+			continue
+		}
+		off := d.Subject.Start.Byte
+		if !seen[off] {
+			seen[off] = true
+			out = append(out, off)
+		}
+	}
+	sort.Ints(out)
+	return out
+}
+
 func (Adapter) ParseModule(path string, src []byte) (Module, []ir.Diagnostic, error) {
 	if err := PreValidate(path, src); err != nil {
 		return Module{}, nil, err
 	}
-	f, diags := hclsyntax.ParseConfig(src, path, hcl.Pos{Line: 1, Column: 1})
+	f, diags := lenientParseConfig(src, path)
 
 	var out []ir.Diagnostic
 	for _, d := range diags {
@@ -262,14 +332,23 @@ func (Adapter) ParseModule(path string, src []byte) (Module, []ir.Diagnostic, er
 			} else {
 				v.Default = ir.UnknownValue(blockSpan(path, b))
 			}
+			if attr, ok := b.Body.Attributes["sensitive"]; ok {
+				if bval, ok := valueFromExpr(path, attr.Expr).AsBool(); ok {
+					v.Sensitive = bval
+				}
+			}
 			mod.Variables[v.Name] = v
 			// Synthetic resource so secret-detection rules can inspect
 			// variable defaults (AEGIS-AWS-538).
+			synthAttrs := map[string]ir.Value{"default": v.Default}
+			if v.Sensitive {
+				synthAttrs["sensitive"] = ir.Value{Raw: true, Known: true, Span: blockSpan(path, b)}
+			}
 			mod.SyntheticResources = append(mod.SyntheticResources, ir.Resource{
 				Type:       "terraform_variable",
 				Name:       v.Name,
 				Provider:   "terraform",
-				Attributes: map[string]ir.Value{"default": v.Default},
+				Attributes: synthAttrs,
 				Span:       blockSpan(path, b),
 			})
 		case "locals":
@@ -508,13 +587,14 @@ func resourceFromBlock(path string, b *hclsyntax.Block, diags *[]ir.Diagnostic) 
 	attributesFromBody(path, b.Body, r.Attributes, diags)
 	// count/for_each decide how many instances a block creates. A static
 	// value is fine (one logical instance is analyzed); an unresolvable
-	// expression means the instance count is unknown — say so instead of
-	// silently analyzing a single instance.
+	// expression means the instance count is unknown — the block is
+	// analyzed as a single instance, but findings may not cover all
+	// actual instances. The warning propagates this uncertainty.
 	for _, meta := range []string{"count", "for_each"} {
 		if v, ok := r.Attributes[meta]; ok && !v.Known {
 			*diags = append(*diags, ir.Diagnostic{
 				Level:   "warning",
-				Message: fmt.Sprintf("terraform: %s uses %q with an unresolvable expression; analyzed as a single instance", r.Address(), meta),
+				Message: fmt.Sprintf("terraform: %s uses %q with an unresolvable expression; analyzed as a single instance (instance count unknown, findings may be incomplete)", r.Address(), meta),
 				Span:    v.Span,
 			})
 		}
@@ -526,27 +606,25 @@ func resourceFromBlock(path string, b *hclsyntax.Block, diags *[]ir.Diagnostic) 
 // then nested blocks. Each nested block type becomes []ir.Value of
 // map[string]ir.Value; repeated blocks append. On a name collision between
 // an attribute and a block type, the block list wins (deterministic).
-// A `dynamic` block cannot be expanded statically: it is kept verbatim
-// under the "dynamic" key and a warning diagnostic is appended so the
-// analysis gap is visible instead of silent.
+// A `dynamic` block is kept verbatim under the "dynamic" key with its label
+// preserved in "__label" so the semantics layer can expand it into concrete
+// nested blocks after resolving for_each. No diagnostic is emitted here:
+// the semantics expansion pass warns for dynamic blocks it cannot expand,
+// keeping the "never silent" contract without stale warnings.
 func attributesFromBody(path string, body *hclsyntax.Body, attrs map[string]ir.Value, diags *[]ir.Diagnostic) {
 	for name, attr := range body.Attributes {
 		attrs[name] = valueFromExpr(path, attr.Expr)
 	}
 	for _, nb := range body.Blocks {
+		m := make(map[string]ir.Value)
+		attributesFromBody(path, nb.Body, m, diags)
 		if nb.Type == "dynamic" {
 			label := ""
 			if len(nb.Labels) > 0 {
 				label = nb.Labels[0]
 			}
-			*diags = append(*diags, ir.Diagnostic{
-				Level:   "warning",
-				Message: fmt.Sprintf("terraform: dynamic %q block is not expanded; its nested configuration is not analyzed", label),
-				Span:    blockSpan(path, nb),
-			})
+			m["__label"] = ir.Value{Raw: label, Known: true, Span: blockSpan(path, nb)}
 		}
-		m := make(map[string]ir.Value)
-		attributesFromBody(path, nb.Body, m, diags)
 		elem := ir.Value{Raw: m, Known: true, Span: blockSpan(path, nb)}
 		if prev, ok := attrs[nb.Type]; ok {
 			if list, ok := prev.AsList(); ok {

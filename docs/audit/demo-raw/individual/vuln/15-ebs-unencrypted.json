@@ -1,0 +1,58 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/tmp.CMle26g8ZV",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-009",
+      "title": "EBS volume without encryption",
+      "description": "EBS volumes should be encrypted at rest. The provider default for encrypted is false, so an absent attribute is a finding.",
+      "severity": "medium",
+      "resource": "aws_ebs_volume.demo",
+      "evidence": {
+        "attribute": "encrypted",
+        "span": {
+          "file": "/tmp/tmp.CMle26g8ZV/15-ebs-unencrypted.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 4,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "true"
+      },
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "2.2.1"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.5.1"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/tmp.CMle26g8ZV/15-ebs-unencrypted.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

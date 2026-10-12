@@ -16,7 +16,7 @@ import (
 
 // Rules returns every rule in the Docker pack, in ID order.
 func Rules() []ir.Rule {
-	return []ir.Rule{
+	base := []ir.Rule{
 		latestTag{},         // AEGIS-DOCKER-001
 		noNonRootUser{},     // AEGIS-DOCKER-002
 		envSecrets{},        // AEGIS-DOCKER-003
@@ -28,6 +28,7 @@ func Rules() []ir.Rule {
 		sudoUsage{},         // AEGIS-DOCKER-009
 		untrustedRegistry{}, // AEGIS-DOCKER-010
 	}
+	return append(base, extraRules()...) // AEGIS-DOCKER-011..035
 }
 
 // appliesToDocker reports whether a resource type belongs to this pack.

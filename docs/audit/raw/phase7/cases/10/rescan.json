@@ -1,0 +1,50 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/tmp/p7-work/cases/10",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-338",
+      "title": "SSM parameter stores plaintext secret",
+      "description": "An SSM parameter whose name suggests a secret but whose type is plain String (not SecureString) stores the value unencrypted. The value itself is never included in findings; it is redacted by the report layer.",
+      "severity": "high",
+      "resource": "aws_ssm_parameter.demo",
+      "evidence": {
+        "attribute": "type",
+        "span": {
+          "file": "/tmp/p7-work/cases/10/main.tf",
+          "start_line": 3,
+          "start_col": 11,
+          "end_line": 3,
+          "end_col": 19
+        },
+        "actual": "plaintext String parameter with a secret-like name",
+        "expected": "SecureString"
+      },
+      "remediation": "Convert the parameter to SecureString with a KMS key:\nresource \"aws_ssm_parameter\" \"this\" {\n  type   = \"SecureString\"\n  key_id = aws_kms_key.ssm.arn\n  value  = var.secret_value  # never hardcode\n}",
+      "references": [
+        "https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/tmp/p7-work/cases/10/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

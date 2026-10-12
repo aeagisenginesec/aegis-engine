@@ -1,0 +1,17 @@
+name: parity-logging
+runtime: yaml
+resources:
+  dataBucket:
+    type: aws:s3:Bucket
+    properties:
+      bucket: parity-logged-data
+  logBucket:
+    type: aws:s3:Bucket
+    properties:
+      bucket: parity-log-target
+  dataBucketLogging:
+    type: aws:s3:BucketLogging
+    properties:
+      bucket: ${dataBucket.id}
+      targetBucket: ${logBucket.id}
+      targetPrefix: log/

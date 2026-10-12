@@ -16,15 +16,22 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"aegis/internal/adapter/arm"
+	"aegis/internal/adapter/bicep"
+	"aegis/internal/adapter/cloudformation"
+	"aegis/internal/adapter/compose"
 	"aegis/internal/adapter/dockerfile"
 	"aegis/internal/adapter/manifests"
 	"aegis/internal/adapter/planjson"
+	"aegis/internal/adapter/pulumi"
 	"aegis/internal/adapter/terraform"
 	"aegis/internal/advisories"
+	"aegis/internal/config"
 	"aegis/internal/discovery"
 	"aegis/internal/ir"
 	"aegis/internal/qualitygate"
@@ -46,7 +53,7 @@ type ruleRunner interface {
 const usageText = `aegis — Infrastructure-as-Code security scanner
 
 Usage:
-  aegis scan <dir> [--format=text|json|sarif] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file]
+  aegis scan <dir> [--format=text|json|sarif] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW] [--config=aegis.yaml] [--exclude=globs]
   aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json] [--force]
   aegis serve [--addr=127.0.0.1:8734]
   aegis quality-gate [--format=text|json] [--bench-dir=DIR] [--corpus-dir=DIR]
@@ -85,18 +92,31 @@ Flags:
                files larger than this are skipped with a diagnostic
   --timeout  scan: overall scan timeout in seconds (default 0 = no limit);
                the scan aborts with exit 2 when exceeded
+  --compliance scan: filter findings to a compliance framework and report a
+               per-control pass/fail summary (CIS-AWS-1.5, NIST-800-53, PCI-DSS-4.0)
+  --config   scan: project config YAML with severity_overrides and
+               exclude_rules (see docs/PULUMI.md for the format)
+  --exclude  scan: comma-separated glob patterns for paths to skip
+               (e.g. "vendor/**,*.tfvars"); skipped files are reported
+  --strict   scan: fail with exit 2 if any file fails to parse
 
 Exit codes:
   0  scan clean (or below --fail-on threshold) / fix dry run
   1  findings reported (scan) / patches proposed or applied (fix)
-  2  usage or scan error
+  2  usage or scan error, or --strict with unparseable files
 `
 
 // defaultAdapters returns the language adapters wired into this build.
 // NOTE: assumes the terraform adapter exposes terraform.New(); adjust the
 // single call below if the sibling package names its constructor differently.
 func defaultAdapters() []ir.Adapter {
-	return []ir.Adapter{terraform.New(), planjson.Adapter{}, manifests.Adapter{}, dockerfile.New()}
+	// compose.New() precedes manifests.Adapter{}: manifests claims every
+	// .yml/.yaml file, so compose files must be matched first. pulumi.New()
+	// likewise precedes manifests: a file named Pulumi.yaml is a Pulumi
+	// program, not a generic manifest. arm.New() precedes manifests for the
+	// same reason: manifests claims every .json file, but ARM deployment
+	// templates (detected by $schema sniffing) belong to the arm adapter.
+	return []ir.Adapter{terraform.New(), planjson.Adapter{}, compose.New(), pulumi.Adapter{}, arm.New(), bicep.New(), cloudformation.New(), manifests.Adapter{}, dockerfile.New()}
 }
 
 // defaultScanFunc re-scans a directory with the production adapters and
@@ -504,6 +524,33 @@ func (f *failOnValue) Set(s string) error {
 	return nil
 }
 
+// complianceSummary builds the per-control pass/fail summary for a
+// --compliance run: every control mapped for the framework is listed;
+// controls with at least one finding fail, the rest pass.
+func complianceSummary(framework string, findings []ir.Finding) *ir.ComplianceSummary {
+	controls := rules.ComplianceControls(framework)
+	failed := map[string]bool{}
+	for _, f := range findings {
+		for _, r := range f.Compliance {
+			if r.Framework == framework {
+				failed[r.Control] = true
+			}
+		}
+	}
+	var failedList []string
+	for c := range failed {
+		failedList = append(failedList, c)
+	}
+	sort.Strings(failedList)
+	return &ir.ComplianceSummary{
+		Framework:       framework,
+		ControlsTotal:   len(controls),
+		ControlsPassing: len(controls) - len(failed),
+		ControlsFailing: len(failed),
+		FailedControls:  failedList,
+	}
+}
+
 // runScan executes `aegis scan <dir>`.
 func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("scan", flag.ContinueOnError)
@@ -515,9 +562,12 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	baselineOut := fs.String("baseline-out", "", "")
 	complianceFw := fs.String("compliance", "", "")
 	customRulesDir := fs.String("custom-rules", "", "")
+	configPath := fs.String("config", "", "")
+	exclude := fs.String("exclude", "", "")
 	attackPaths := fs.Bool("attack-paths", false, "")
 	maxFileSize := fs.Int64("max-file-size", 0, "")
 	timeoutSecs := fs.Int("timeout", 0, "")
+	strict := fs.Bool("strict", false, "fail with exit 2 if any file fails to parse")
 	var failOn failOnValue
 	fs.Var(&failOn, "fail-on", "")
 	if err := fs.Parse(flagArgs); err != nil {
@@ -527,6 +577,17 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	if *maxFileSize > 0 {
 		discovery.SetMaxFileBytes(*maxFileSize)
 	}
+	// --exclude is process-global in discovery; always (re)set it so
+	// repeated runScan calls (tests, serve) never leak patterns.
+	var excludePats []string
+	if *exclude != "" {
+		for _, p := range strings.Split(*exclude, ",") {
+			if p = strings.TrimSpace(p); p != "" {
+				excludePats = append(excludePats, p)
+			}
+		}
+	}
+	discovery.SetExcludePatterns(excludePats)
 	switch *format {
 	case "text", "json", "sarif":
 	default:
@@ -619,12 +680,31 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	if findings := registry.Run(resources); findings != nil {
 		res.Findings = findings
 	}
+	// Inline-suppression compatibility: warn about aegis:skip IDs that are
+	// not registered rules (removed by deduplication or typos). Such
+	// entries have no effect; they are never silently migrated.
+	for _, d := range rules.ValidateSuppressedRuleIDs(rules.CollectSuppressedRuleIDs(resources), registry) {
+		fmt.Fprintf(stderr, "aegis: warning: %s\n", d.Message())
+	}
 	// Compliance: filter to the requested framework (narrowing refs), or
 	// enrich every finding with all its mapped controls.
 	if *complianceFw != "" {
 		res.Findings = rules.FilterByCompliance(res.Findings, *complianceFw)
+		res.ComplianceSummary = complianceSummary(*complianceFw, res.Findings)
 	} else {
 		res.Findings = rules.EnrichCompliance(res.Findings)
+	}
+	// --config severity overrides / rule exclusions apply after compliance
+	// filtering so overrides see the final finding set.
+	if *configPath != "" {
+		cfg, err := config.Load(*configPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "aegis: %v\n", err)
+			return 2
+		}
+		var cdiags []ir.Diagnostic
+		res.Findings, cdiags = cfg.Apply(res.Findings)
+		res.Diagnostics = append(res.Diagnostics, cdiags...)
 	}
 	// Remediation: attach fix steps and doc links to every finding.
 	res.Findings = rules.EnrichRemediation(res.Findings)
@@ -642,6 +722,13 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		if err != nil {
 			fmt.Fprintf(stderr, "aegis: baseline: %v\n", err)
 			return 2
+		}
+		// Compatibility: warn about baseline entries referencing rule IDs
+		// that are not registered (removed by deduplication or typos).
+		// Such entries have no effect; they are never silently migrated
+		// to a different rule.
+		for _, d := range rules.ValidateBaselineIDs(baseline, registry) {
+			fmt.Fprintf(stderr, "aegis: warning: %s\n", d.Message())
 		}
 		res.Findings = rules.ApplyBaseline(baseline, res.Findings)
 	}
@@ -665,6 +752,12 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	}
 	if werr != nil {
 		fmt.Fprintf(stderr, "aegis: report error: %v\n", werr)
+		return 2
+	}
+	// --strict: fail if any file could not be parsed (incomplete scan)
+	if *strict && !res.Completeness.Complete() {
+		fmt.Fprintf(stderr, "aegis: strict mode: %d file(s) failed to parse\n",
+			res.Completeness.FilesFailed)
 		return 2
 	}
 	for _, f := range res.Findings {
@@ -802,11 +895,55 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 	// resources, and modules come out exactly as the sequential loop
 	// produced them.
 	results := parseFilesConcurrent(files, adapters)
-	for _, pr := range results {
+	// Build scan-completeness: every discovered file gets an explicit outcome,
+	// including which adapter (format) handled it.
+	completeness := ir.ScanCompleteness{
+		FilesDiscovered: len(files),
+	}
+	for i, pr := range results {
 		res.Diagnostics = append(res.Diagnostics, pr.diags...)
+		fpath := files[i].Path
+		st := ir.FileStatus{Path: fpath, Format: pr.adapterName}
 		if pr.failed {
+			completeness.FilesFailed++
+			reason := "parse or read failure"
+			for _, d := range pr.diags {
+				if d.Level == "error" {
+					reason = d.Message
+					break
+				}
+			}
+			st.Status = "failed"
+			st.Reason = reason
+			completeness.Files = append(completeness.Files, st)
 			continue
 		}
+		// Skipped: file was excluded by --exclude pattern, no adapter handles
+		// it, or the adapter could not parse it (e.g., unrecognized document).
+		// Warnings from successful parses (e.g., unresolvable for_each where
+		// resources ARE produced) do NOT mark the file as skipped.
+		isSkipped := false
+		var skipReason string
+		hasResources := pr.mod != nil || len(pr.resources) > 0
+		if !hasResources {
+			for _, d := range pr.diags {
+				if d.Level == "warning" {
+					isSkipped = true
+					skipReason = d.Message
+					break
+				}
+			}
+		}
+		if isSkipped {
+			completeness.FilesSkipped++
+			st.Status = "skipped"
+			st.Reason = skipReason
+			completeness.Files = append(completeness.Files, st)
+			continue
+		}
+		completeness.FilesParsed++
+		st.Status = "parsed"
+		completeness.Files = append(completeness.Files, st)
 		if pr.mod != nil {
 			mods = append(mods, *pr.mod)
 			providerReqs = append(providerReqs, pr.mod.ProviderReqs...)
@@ -825,6 +962,9 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 	if len(mods) > 0 {
 		scope := semantics.MergeModules(mods)
 		resources = scope.ResolveResources(resources)
+		expandedDyn, dynDiags := scope.ExpandDynamicBlocks(resources)
+		res.Diagnostics = append(res.Diagnostics, dynDiags...)
+		resources = expandedDyn
 		if tfAdapter != nil {
 			expanded, mdiags := semantics.ExpandModules(target, mods, tfAdapter, 2)
 			res.Diagnostics = append(res.Diagnostics, mdiags...)
@@ -832,6 +972,7 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 		}
 	}
 	res.Resources = len(resources)
+	res.Completeness = completeness
 	if engine != nil {
 		if findings := engine.Run(resources); findings != nil {
 			res.Findings = findings
@@ -842,10 +983,11 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 
 // fileParseResult is the parse outcome for one discovered file.
 type fileParseResult struct {
-	diags     []ir.Diagnostic
-	mod       *terraform.Module // non-nil when the terraform adapter handled it
-	resources []ir.Resource     // for non-terraform adapters
-	failed    bool              // read or parse hard failure; diags carry the reason
+	diags       []ir.Diagnostic
+	mod         *terraform.Module // non-nil when the terraform adapter handled it
+	resources   []ir.Resource     // for non-terraform adapters
+	failed      bool              // read or parse hard failure; diags carry the reason
+	adapterName string            // adapter that handled the file ("" if none/excluded)
 }
 
 // parseFilesConcurrent parses every discovered file with a bounded worker
@@ -882,6 +1024,16 @@ func parseFilesConcurrent(files []discovery.File, adapters []ir.Adapter) []fileP
 // parseOneFile selects the adapter, reads, and parses a single file,
 // mirroring the sequential loop's diagnostic behavior exactly.
 func parseOneFile(f discovery.File, adapters []ir.Adapter) (pr fileParseResult) {
+	// --exclude patterns win over everything: the file is reported as
+	// skipped with an explicit reason, never parsed.
+	if discovery.IsExcluded(f.Path) {
+		pr.diags = append(pr.diags, ir.Diagnostic{
+			Level:   "warning",
+			Message: fmt.Sprintf("excluded by --exclude pattern; skipped"),
+			Span:    ir.Span{File: f.Path},
+		})
+		return pr
+	}
 	var ad ir.Adapter
 	for _, a := range adapters {
 		if a.Handles(f.Path) {
@@ -908,6 +1060,7 @@ func parseOneFile(f discovery.File, adapters []ir.Adapter) (pr fileParseResult) 
 		pr.failed = true
 		return pr
 	}
+	pr.adapterName = ad.Name()
 	// Terraform files go through ParseModule so the semantics layer
 	// gets variables/locals/module calls for M2 resolution.
 	if ta, ok := ad.(*terraform.Adapter); ok {

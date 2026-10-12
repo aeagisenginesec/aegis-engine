@@ -113,6 +113,58 @@ aegis scan ./infra --baseline=baseline.json --fail-on=high
 See [BASELINES.md](BASELINES.md) for the metadata format (reasons, owners,
 expiry dates).
 
+## Excluding paths
+
+Skip generated, vendored, or out-of-scope paths with KICS-style globs:
+
+```bash
+aegis scan ./infra --exclude="vendor/**,*.tfvars" --fail-on=high
+```
+
+`*` matches within a path segment, `**` crosses segments, `?` matches one
+character; patterns without a leading slash match at any depth. Excluded
+files are reported as `skipped` with an explicit reason in scan
+completeness (visible in `--format=json`).
+
+## Project config (severity overrides)
+
+Commit an `aegis.yaml` to tune severities per project without forking rules:
+
+```yaml
+severity_overrides:
+  AEGIS-AWS-001: low      # noisy in this repo
+  AEGIS-AWS-004: critical # matters to us
+exclude_rules:
+  - AEGIS-AWS-558
+```
+
+```bash
+aegis scan ./infra --config=aegis.yaml --fail-on=high
+```
+
+Overrides apply at report time (rule ID, evidence, and remediation stay
+intact); invalid severities and unmatched overrides produce warnings, never
+hard failures. See [PULUMI.md](PULUMI.md) for the full format.
+
+## Compliance gates
+
+Filter to a benchmark and get a per-control pass/fail summary:
+
+```bash
+aegis scan ./infra --compliance=CIS-AWS-1.5
+# compliance CIS-AWS-1.5: 42/50 controls passing — FAILING: 1.8, 2.1.1, 3.2
+```
+
+Supported frameworks: `CIS-AWS-1.5`, `NIST-800-53`, `PCI-DSS-4.0`. The
+summary is also in JSON output as `compliance_summary` for dashboards.
+
+## Mixed-format repositories
+
+`aegis scan` auto-detects every supported format in one run — Terraform,
+CloudFormation, ARM, Bicep, Pulumi YAML, Dockerfiles, Kubernetes manifests —
+and reports the per-file format in scan completeness. No per-format
+invocations needed.
+
 ## Monorepos
 
 `aegis scan <dir>` scans recursively — multiple Terraform roots under one

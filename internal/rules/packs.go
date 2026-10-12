@@ -3,17 +3,20 @@ package rules
 import (
 	"strings"
 
+	"aegis/internal/rules/alibaba"
 	"aegis/internal/rules/aws"
 	"aegis/internal/rules/azure"
+	"aegis/internal/rules/compose"
 	"aegis/internal/rules/docker"
 	"aegis/internal/rules/gcp"
 	"aegis/internal/rules/k8s"
+	"aegis/internal/rules/oci"
 	"aegis/internal/rules/supplychain"
 	"aegis/internal/rules/terraform"
 )
 
 // KnownPacks lists the rule packs selectable via --rules, in stable order.
-var KnownPacks = []string{"aws", "azure", "docker", "gcp", "k8s", "supplychain", "terraform"}
+var KnownPacks = []string{"alibaba", "aws", "azure", "compose", "docker", "gcp", "k8s", "oci", "supplychain", "terraform"}
 
 // RegistryFor builds a registry with the named packs. An empty list or the
 // name "all" selects every known pack. Unknown names are ignored; use
@@ -23,12 +26,20 @@ func RegistryFor(packs ...string) *Registry {
 	names := normalizePacks(packs)
 	for _, n := range names {
 		switch n {
+		case "alibaba":
+			for _, r := range alibaba.Rules() {
+				reg.Register(r)
+			}
 		case "aws":
 			for _, r := range aws.Rules() {
 				reg.Register(r)
 			}
 		case "azure":
 			for _, r := range azure.Rules() {
+				reg.Register(r)
+			}
+		case "compose":
+			for _, r := range compose.Rules() {
 				reg.Register(r)
 			}
 		case "docker":
@@ -41,6 +52,10 @@ func RegistryFor(packs ...string) *Registry {
 			}
 		case "k8s":
 			for _, r := range k8s.Rules() {
+				reg.Register(r)
+			}
+		case "oci":
+			for _, r := range oci.Rules() {
 				reg.Register(r)
 			}
 		case "supplychain":

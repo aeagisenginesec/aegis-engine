@@ -165,19 +165,19 @@ func TestGCP109_DisabledFires(t *testing.T) {
 }
 
 // --- 110: legacy ABAC ---
-func TestGCP110_EnabledFires(t *testing.T) {
+func TestGCP009_EnabledFires(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{"enable_legacy_abac": kv(true, 3)})
-	mustFinding(t, runRule(gkeLegacyABACGap{}, r), "AEGIS-GCP-110")
+	mustFinding(t, runRule(gkeLegacyABAC{}, r), "AEGIS-GCP-009")
 }
-func TestGCP110_DisabledQuiet(t *testing.T) {
+func TestGCP009_DisabledQuiet(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{"enable_legacy_abac": kv(false, 3)})
-	if len(runRule(gkeLegacyABACGap{}, r)) != 0 {
+	if len(runRule(gkeLegacyABAC{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
-func TestGCP110_AbsentQuiet(t *testing.T) {
+func TestGCP009_AbsentQuiet(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{})
-	if len(runRule(gkeLegacyABACGap{}, r)) != 0 {
+	if len(runRule(gkeLegacyABAC{}, r)) != 0 {
 		t.Fatal("expected 0 findings (default false)")
 	}
 }
@@ -203,15 +203,15 @@ func TestGCP111_DisabledFires(t *testing.T) {
 }
 
 // --- 112: private cluster ---
-func TestGCP112_AbsentFires(t *testing.T) {
+func TestGCP011_AbsentFires(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{})
-	mustFinding(t, runRule(gkeNoPrivateClusterGap{}, r), "AEGIS-GCP-112")
+	mustFinding(t, runRule(gkeNoPrivateCluster{}, r), "AEGIS-GCP-011")
 }
-func TestGCP112_PrivateNodesQuiet(t *testing.T) {
+func TestGCP011_PrivateNodesQuiet(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{
 		"private_cluster_config": blks(3, blk("enable_private_nodes", kv(true, 4))),
 	})
-	if len(runRule(gkeNoPrivateClusterGap{}, r)) != 0 {
+	if len(runRule(gkeNoPrivateCluster{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
@@ -314,36 +314,36 @@ func TestGCP117_AutoUpgradeQuiet(t *testing.T) {
 }
 
 // --- 118: IP forwarding ---
-func TestGCP118_EnabledFires(t *testing.T) {
+func TestGCP057_EnabledFires(t *testing.T) {
 	r := res("google_compute_instance", "i", map[string]ir.Value{"can_ip_forward": kv(true, 3)})
-	mustFinding(t, runRule(instanceIPForwarding{}, r), "AEGIS-GCP-118")
+	mustFinding(t, runRule(instanceIPForward{}, r), "AEGIS-GCP-057")
 }
-func TestGCP118_DisabledQuiet(t *testing.T) {
+func TestGCP057_DisabledQuiet(t *testing.T) {
 	r := res("google_compute_instance", "i", map[string]ir.Value{"can_ip_forward": kv(false, 3)})
-	if len(runRule(instanceIPForwarding{}, r)) != 0 {
+	if len(runRule(instanceIPForward{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
 
 // --- 119: serial port ---
-func TestGCP119_SerialPortMapBoolFires(t *testing.T) {
+func TestGCP058_SerialPortMapBoolFires(t *testing.T) {
 	r := res("google_compute_instance", "i", map[string]ir.Value{
 		"metadata": ir.Value{
 			Raw:   map[string]ir.Value{"serial-port-enable": kv(true, 4)},
 			Known: true, Span: spanAt(3),
 		},
 	})
-	mustFinding(t, runRule(instanceSerialPortAccess{}, r), "AEGIS-GCP-119")
+	mustFinding(t, runRule(instanceSerialPort{}, r), "AEGIS-GCP-058")
 }
-func TestGCP119_SerialPortStringFires(t *testing.T) {
+func TestGCP058_SerialPortStringFires(t *testing.T) {
 	r := res("google_compute_instance", "i", map[string]ir.Value{
 		"metadata": blks(3, blk("serial-port-enable", ks("TRUE", 4))),
 	})
-	mustFinding(t, runRule(instanceSerialPortAccess{}, r), "AEGIS-GCP-119")
+	mustFinding(t, runRule(instanceSerialPort{}, r), "AEGIS-GCP-058")
 }
-func TestGCP119_NoMetadataQuiet(t *testing.T) {
+func TestGCP058_NoMetadataQuiet(t *testing.T) {
 	r := res("google_compute_instance", "i", map[string]ir.Value{})
-	if len(runRule(instanceSerialPortAccess{}, r)) != 0 {
+	if len(runRule(instanceSerialPort{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
@@ -361,13 +361,13 @@ func TestGCP120_LogConfigQuiet(t *testing.T) {
 }
 
 // --- 121: uniform bucket-level access ---
-func TestGCP121_AbsentFires(t *testing.T) {
+func TestGCP005_AbsentFires(t *testing.T) {
 	r := res("google_storage_bucket", "b", map[string]ir.Value{})
-	mustFinding(t, runRule(bucketNoUniformAccessGap{}, r), "AEGIS-GCP-121")
+	mustFinding(t, runRule(bucketNoUniformAccess{}, r), "AEGIS-GCP-005")
 }
-func TestGCP121_EnabledQuiet(t *testing.T) {
+func TestGCP005_EnabledQuiet(t *testing.T) {
 	r := res("google_storage_bucket", "b", map[string]ir.Value{"uniform_bucket_level_access": kv(true, 3)})
-	if len(runRule(bucketNoUniformAccessGap{}, r)) != 0 {
+	if len(runRule(bucketNoUniformAccess{}, r)) != 0 {
 		t.Fatal("expected 0 findings")
 	}
 }
@@ -393,15 +393,21 @@ func TestGCP122_InheritedFires(t *testing.T) {
 // Verify all 22 new rules are registered in ID order
 func TestGCP4_AllRegistered(t *testing.T) {
 	rules := GCP4Rules()
-	if len(rules) != 22 {
-		t.Fatalf("expected 22 rules, got %d", len(rules))
+	// 17 rules after post-audit dedup removed 110, 112, 118, 119, 121
+	// (duplicates of 009, 011, 057, 058, 005).
+	wantIDs := []string{
+		"AEGIS-GCP-101", "AEGIS-GCP-102", "AEGIS-GCP-103", "AEGIS-GCP-104",
+		"AEGIS-GCP-105", "AEGIS-GCP-106", "AEGIS-GCP-107", "AEGIS-GCP-108",
+		"AEGIS-GCP-109", "AEGIS-GCP-111", "AEGIS-GCP-113", "AEGIS-GCP-114",
+		"AEGIS-GCP-115", "AEGIS-GCP-116", "AEGIS-GCP-117", "AEGIS-GCP-120",
+		"AEGIS-GCP-122",
+	}
+	if len(rules) != len(wantIDs) {
+		t.Fatalf("expected %d rules, got %d", len(wantIDs), len(rules))
 	}
 	for i, r := range rules {
-		want := 101 + i
-		var got int
-		_, err := scanID(r.ID(), &got)
-		if err != nil || got != want {
-			t.Fatalf("rule %d: want AEGIS-GCP-%03d, got %s", i, want, r.ID())
+		if r.ID() != wantIDs[i] {
+			t.Fatalf("rule %d: want %s, got %s", i, wantIDs[i], r.ID())
 		}
 		if r.Title() == "" || r.Description() == "" {
 			t.Fatalf("rule %s missing title/description", r.ID())
@@ -450,18 +456,18 @@ func TestGCP4_UnknownNoFindings(t *testing.T) {
 		{sqlNoPgAudit{}, unknownSQL},
 		{gkeNoMetadataServer{}, unknownCluster},
 		{gkeBinaryAuthDisabled{}, unknownCluster},
-		{gkeLegacyABACGap{}, unknownCluster},
+		{gkeLegacyABAC{}, unknownCluster},
 		{gkeNoNetworkPolicyGap{}, unknownCluster},
-		{gkeNoPrivateClusterGap{}, unknownCluster},
+		{gkeNoPrivateCluster{}, unknownCluster},
 		{gkePublicControlPlane{}, unknownCluster},
 		{gkeNoReleaseChannel{}, unknownCluster},
 		{gkeNoStackdriverLogging{}, unknownCluster},
 		{nodePoolNoAutoRepair{}, unknownPool},
 		{nodePoolNoAutoUpgrade{}, unknownPool},
-		{instanceIPForwarding{}, unknownInst},
-		{instanceSerialPortAccess{}, unknownInst},
+		{instanceIPForward{}, unknownInst},
+		{instanceSerialPort{}, unknownInst},
 		{subnetworkNoFlowLogs{}, unknownSubnet},
-		{bucketNoUniformAccessGap{}, unknownBucket},
+		{bucketNoUniformAccess{}, unknownBucket},
 		{bucketPAPNotEnforced{}, unknownBucket},
 	}
 	for _, c := range cases {

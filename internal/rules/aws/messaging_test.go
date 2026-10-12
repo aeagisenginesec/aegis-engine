@@ -117,6 +117,33 @@ func Test343_UnknownQuiet(t *testing.T) {
 	}
 }
 
+// D3 regression: unresolvable reference must produce an explicit UNCERTAIN
+// info finding, never a silent skip.
+func Test343_UnresolvableRefUncertain(t *testing.T) {
+	v := ir.Value{Known: false, Span: spanAt(6), Ref: "aws_sns_topic.demo.arn", EncodeJSON: true}
+	f := runRule(snsPolicyPublic{}, res("aws_sns_topic_policy", "p",
+		map[string]ir.Value{"policy": v}))
+	if len(f) != 1 {
+		t.Fatalf("got %d findings, want 1 UNCERTAIN", len(f))
+	}
+	if f[0].Severity != ir.SeverityInfo {
+		t.Fatalf("UNCERTAIN finding must be info severity, got %s", f[0].Severity)
+	}
+	if f[0].RuleID != "AEGIS-AWS-343" {
+		t.Fatalf("wrong rule id %q", f[0].RuleID)
+	}
+}
+
+// D3 regression: direct (non-jsonencode) unresolvable ref also surfaces.
+func Test343_DirectRefUncertain(t *testing.T) {
+	v := ir.Value{Known: false, Span: spanAt(6), Ref: "var.policy_json"}
+	f := runRule(snsPolicyPublic{}, res("aws_sns_topic_policy", "p",
+		map[string]ir.Value{"policy": v}))
+	if len(f) != 1 || f[0].Severity != ir.SeverityInfo {
+		t.Fatalf("expected 1 info UNCERTAIN finding, got %+v", f)
+	}
+}
+
 // --- 344: SQS queue policy allows public principal ---
 
 func Test344_StarPrincipalFires(t *testing.T) {
@@ -142,6 +169,23 @@ func Test344_UnknownQuiet(t *testing.T) {
 		map[string]ir.Value{"policy": ku(6)}))
 	if len(f) != 0 {
 		t.Fatalf("got %d findings, want 0", len(f))
+	}
+}
+
+// D3 regression: unresolvable reference must produce an explicit UNCERTAIN
+// info finding, never a silent skip.
+func Test344_UnresolvableRefUncertain(t *testing.T) {
+	v := ir.Value{Known: false, Span: spanAt(6), Ref: "aws_sqs_queue.demo.arn", EncodeJSON: true}
+	f := runRule(sqsPolicyPublic{}, res("aws_sqs_queue_policy", "p",
+		map[string]ir.Value{"policy": v}))
+	if len(f) != 1 {
+		t.Fatalf("got %d findings, want 1 UNCERTAIN", len(f))
+	}
+	if f[0].Severity != ir.SeverityInfo {
+		t.Fatalf("UNCERTAIN finding must be info severity, got %s", f[0].Severity)
+	}
+	if f[0].RuleID != "AEGIS-AWS-344" {
+		t.Fatalf("wrong rule id %q", f[0].RuleID)
 	}
 }
 

@@ -1,0 +1,50 @@
+# Aegis IaC scan — runs on every push and pull request.
+# Consumer pattern: scans an IaC repo with a released Aegis binary,
+# validates the SARIF locally, fails the build when a high-or-worse
+# finding is present, and uploads the SARIF report to GitHub code
+# scanning. Findings appear in the repository's Security tab.
+#
+# Tested 2026-10-12 (phase 9): see docs/audit/08_CI_INTEGRATION_REPORT.md.
+# NOTE: the Upload SARIF step could not be executed live in the audit
+# sandbox (no Docker daemon for `act`); it was simulated by full
+# SARIF 2.1.0 schema validation — the same check GitHub performs
+# server-side on upload.
+name: aegis-scan
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install aegis
+        run: |
+          curl -sSL -o aegis \
+            https://github.com/aegis/aegis/releases/download/v1.0.0/aegis-linux-amd64
+          chmod +x aegis
+          ./aegis --version
+
+      - name: Scan with Aegis
+        # Exit code drives the gate: 0 clean, 1 findings >= --fail-on,
+        # 2 scan/usage error. `set -o pipefail` keeps the aegis exit code
+        # through the tee so the SARIF artifact is kept AND the job fails.
+        run: |
+          set -o pipefail
+          ./aegis scan . --format=sarif --fail-on=high | tee aegis.sarif
+          echo "aegis exit code: $?"
+
+      - name: Validate SARIF
+        run: python3 .github/scripts/validate_sarif.py aegis.sarif
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: aegis.sarif

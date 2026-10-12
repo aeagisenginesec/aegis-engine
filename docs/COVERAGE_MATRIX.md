@@ -82,7 +82,7 @@ routes, overly permissive CORS, multi-hop attack paths (internet → SG → SG �
 | Public exposure | 002 (High), 003 (Critical), 104 (Critical), 206 (High), 415 (High), 441 (High) | aws_s3_bucket, aws_s3_bucket_acl, aws_s3_bucket_policy, aws_s3control_access_point_policy, aws_s3_account_public_access_block |
 | Versioning / logging | 012 (Medium), 445 (Medium) | aws_s3_bucket, aws_s3_bucket_versioning, aws_s3_bucket_logging |
 | TLS enforcement | 443 (High) | aws_s3_bucket_policy |
-| Hygiene | 601 (Low), 602 (Low), 603 (Low) | aws_s3_bucket |
+| Hygiene | 601 (Low) | aws_s3_bucket |
 
 **Threats covered:** Unencrypted buckets, public ACLs, public bucket policies,
 missing public access blocks, account-level PAB disabled, S3 exfiltration
@@ -91,9 +91,11 @@ attack paths, TLS enforcement, access logging, versioning.
 **Gaps:**
 | Priority | Gap | Suggested ID |
 |----------|-----|--------------|
-| Medium | S3 bucket without Object Lock (compliance/immutability) | AEGIS-AWS-558 |
-| Low | S3 bucket without inventory configuration | AEGIS-AWS-559 |
 | Low | S3 bucket with `force_destroy = true` (data loss risk) | AEGIS-AWS-560 |
+
+*Note: 558 (Object Lock), 559 (inventory), 602 (notifications), 603 (replication)
+were implemented then removed — they flagged every bucket including hardened
+ones and were reclassified as scanner noise, not vulnerabilities.*
 
 **Coverage score: 9/10** — excellent. Core S3 threats fully covered.
 
@@ -251,7 +253,7 @@ supply-chain pack (SC-001–009) handles Terraform-level threats.
 |----------|------:|------:|---------|
 | IAM and privilege escalation | 8/10 | 17 | Access key rotation (552) |
 | Networking | 9/10 | 34 | Transit Gateway routing (556) |
-| S3 and data protection | 9/10 | 14 | Object Lock (558) |
+| S3 and data protection | 9/10 | 12 | S3 inventory (removed as noise) |
 | KMS and secrets | 8/10 | 13 | KMS deletion window (561) |
 | Compute and serverless | 8/10 | 39 | Lambda concurrency (564) |
 | Databases | 10/10 | 54 | — (complete) |
@@ -268,8 +270,7 @@ Ranked by (severity × prevalence × exploitability):
 | 1 | 552 | IAM user access keys older than 90 days | High | IAM |
 | 2 | 553 | IAM policy with NotAction+Allow (deny bypass) | High | IAM |
 | 3 | 556 | Transit Gateway permissive route propagation | High | Networking |
-| 4 | 558 | S3 bucket without Object Lock | Medium | S3 |
-| 5 | 561 | KMS key deletion window < 7 days | High | KMS |
+| 4 | 561 | KMS key deletion window < 7 days | High | KMS |
 | 6 | 562 | KMS grant overly permissive | Medium | KMS |
 | 7 | 563 | Secrets Manager without CMK | Medium | KMS |
 | 8 | 564 | Lambda unlimited concurrency (cost risk) | Medium | Compute |
@@ -281,8 +282,7 @@ Ranked by (severity × prevalence × exploitability):
 | 14 | 554 | IAM role session duration > 12h | Medium | IAM |
 | 15 | 555 | IAM group with inline admin policy | Medium | IAM |
 | 16 | 557 | VPC endpoint policy allows * principal | Medium | Networking |
-| 17 | 559 | S3 bucket without inventory | Low | S3 |
-| 18 | 560 | S3 bucket with force_destroy=true | Low | S3 |
+| 17 | 560 | S3 bucket with force_destroy=true | Low | S3 |
 | 19 | 565 | EC2 ebs_optimized disabled | Low | Compute |
 | 20 | 571 | CodeArtifact without upstream restrictions | Medium | Supply chain |
 

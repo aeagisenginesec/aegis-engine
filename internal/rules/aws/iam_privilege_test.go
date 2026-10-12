@@ -3,6 +3,7 @@ package aws
 import (
 	"testing"
 
+	"aegis/internal/adapter/terraform"
 	"aegis/internal/ir"
 )
 
@@ -352,5 +353,36 @@ func Test501_505_NotActionSilent(t *testing.T) {
 		if f := runRule(r, p); len(f) != 0 {
 			t.Fatalf("%s must not fire on NotAction statements, got %d", r.ID(), len(f))
 		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Regression: held-out iam-escalation corpus uses single-line object
+// constructors without commas ({ Effect = "Allow" Action = ... }), which the
+// strict HCL parser rejects. The adapter's lenient recovery must restore the
+// policy so 502 fires end-to-end.
+// ---------------------------------------------------------------------------
+
+func Test502_EndToEndMissingCommaHCL(t *testing.T) {
+	src := `resource "aws_iam_policy" "v" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      { Effect = "Allow" Action = "iam:PassRole" Resource = "*" },
+      { Effect = "Allow" Action = "ec2:RunInstances" Resource = "*" }
+    ]
+  })
+}
+`
+	mod, _, err := (terraform.Adapter{}).ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if len(mod.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+	}
+	f := (iamPassRoleEscalation{}).Check(mod.Resources[0])
+	if len(f) != 1 || f[0].RuleID != "AEGIS-AWS-502" {
+		t.Fatalf("expected 502 to fire end-to-end, got %+v", f)
 	}
 }

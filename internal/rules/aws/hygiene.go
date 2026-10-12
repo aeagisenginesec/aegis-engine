@@ -102,6 +102,8 @@ var _ ir.CrossResourceRule = s3NoLifecycle{}
 
 // CheckAll suppresses the inline finding when a standalone
 // aws_s3_bucket_lifecycle_configuration is linked to the bucket.
+// Buckets that serve as log-delivery targets are skipped: they are logging
+// infrastructure, not data buckets.
 func (s3NoLifecycle) CheckAll(resources []ir.Resource) []ir.Finding {
 	configured := map[string]bool{}
 	for _, r := range resources {
@@ -112,136 +114,14 @@ func (s3NoLifecycle) CheckAll(resources []ir.Resource) []ir.Finding {
 			configured[addr] = true
 		}
 	}
+	logTargets := logDeliveryBuckets(resources)
 	var out []ir.Finding
 	for _, r := range resources {
 		if r.Type != "aws_s3_bucket" {
 			continue
 		}
 		for _, f := range (s3NoLifecycle{}).Check(r) {
-			if !configured[r.Address()] {
-				out = append(out, f)
-			}
-		}
-	}
-	return out
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-602: S3 bucket without event notifications (CKV2_AWS_62)
-// ---------------------------------------------------------------------------
-
-type s3NoNotifications struct{}
-
-func (s3NoNotifications) ID() string { return "AEGIS-AWS-602" }
-func (s3NoNotifications) Title() string {
-	return "S3 bucket without event notifications"
-}
-func (s3NoNotifications) Description() string {
-	return "Hygiene: S3 buckets should configure event notifications " +
-		"(e.g. to Lambda or SNS) so object changes trigger downstream " +
-		"processing. Add an aws_s3_bucket_notification resource."
-}
-func (s3NoNotifications) Severity() ir.Severity { return ir.SeverityLow }
-func (s3NoNotifications) AppliesTo(resType string) bool {
-	return resType == "aws_s3_bucket" ||
-		resType == "aws_s3_bucket_notification"
-}
-func (s3NoNotifications) Check(r ir.Resource) []ir.Finding {
-	if r.Type == "aws_s3_bucket_notification" {
-		return nil // standalone resource: notifications configured by definition
-	}
-	// Buckets never carry inline notifications; only the standalone
-	// resource counts. CheckAll does the correlation.
-	return nil
-}
-
-var _ ir.CrossResourceRule = s3NoNotifications{}
-
-func (s3NoNotifications) CheckAll(resources []ir.Resource) []ir.Finding {
-	notified := map[string]bool{}
-	for _, r := range resources {
-		if r.Type != "aws_s3_bucket_notification" {
-			continue
-		}
-		if addr, ok := linkedBucketAddr(r, resources); ok {
-			notified[addr] = true
-		}
-	}
-	// A notification configuration whose bucket link is unresolvable might
-	// cover any bucket.
-	uncertain := companionLinkUncertain(resources, "aws_s3_bucket_notification", "bucket")
-	var out []ir.Finding
-	for _, r := range resources {
-		if r.Type != "aws_s3_bucket" {
-			continue
-		}
-		if !notified[r.Address()] && !uncertain {
-			out = append(out, hygieneFinding("AEGIS-AWS-602",
-				(s3NoNotifications{}).Title(), (s3NoNotifications{}).Description(),
-				r, "notification", r.Span, "absent",
-				"aws_s3_bucket_notification resource linked to the bucket"))
-		}
-	}
-	return out
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-603: S3 bucket without cross-region replication (CKV_AWS_144)
-// ---------------------------------------------------------------------------
-
-type s3NoReplication struct{}
-
-func (s3NoReplication) ID() string { return "AEGIS-AWS-603" }
-func (s3NoReplication) Title() string {
-	return "S3 bucket without cross-region replication"
-}
-func (s3NoReplication) Description() string {
-	return "Hygiene: S3 buckets holding important data should replicate " +
-		"to a second region for disaster recovery. Add a " +
-		"replication_configuration block or an " +
-		"aws_s3_bucket_replication_configuration resource."
-}
-func (s3NoReplication) Severity() ir.Severity { return ir.SeverityLow }
-func (s3NoReplication) AppliesTo(resType string) bool {
-	return resType == "aws_s3_bucket" ||
-		resType == "aws_s3_bucket_replication_configuration"
-}
-func (s3NoReplication) Check(r ir.Resource) []ir.Finding {
-	if r.Type == "aws_s3_bucket_replication_configuration" {
-		return nil // standalone resource: replication configured by definition
-	}
-	blks, span, present, known := getBlocks(r, "replication_configuration")
-	if present && !known {
-		return nil
-	}
-	if !present || len(blks) == 0 {
-		return []ir.Finding{hygieneFinding("AEGIS-AWS-603",
-			(s3NoReplication{}).Title(), (s3NoReplication{}).Description(),
-			r, "replication_configuration", span, "absent",
-			"replication_configuration block or aws_s3_bucket_replication_configuration")}
-	}
-	return nil
-}
-
-var _ ir.CrossResourceRule = s3NoReplication{}
-
-func (s3NoReplication) CheckAll(resources []ir.Resource) []ir.Finding {
-	configured := map[string]bool{}
-	for _, r := range resources {
-		if r.Type != "aws_s3_bucket_replication_configuration" {
-			continue
-		}
-		if addr, ok := linkedBucketAddr(r, resources); ok {
-			configured[addr] = true
-		}
-	}
-	var out []ir.Finding
-	for _, r := range resources {
-		if r.Type != "aws_s3_bucket" {
-			continue
-		}
-		for _, f := range (s3NoReplication{}).Check(r) {
-			if !configured[r.Address()] {
+			if !configured[r.Address()] && !logTargets[r.Address()] {
 				out = append(out, f)
 			}
 		}
@@ -834,37 +714,6 @@ func (mqNoGeneralLogging) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-621: Redshift cluster without logging (CKV_AWS_71)
-// ---------------------------------------------------------------------------
-
-type redshiftNoLogging struct{}
-
-func (redshiftNoLogging) ID() string { return "AEGIS-AWS-621" }
-func (redshiftNoLogging) Title() string {
-	return "Redshift cluster without audit logging"
-}
-func (redshiftNoLogging) Description() string {
-	return "Hygiene: Redshift clusters should log to S3 for audit " +
-		"trails. Add a logging block with a bucket."
-}
-func (redshiftNoLogging) Severity() ir.Severity { return ir.SeverityLow }
-func (redshiftNoLogging) AppliesTo(resType string) bool {
-	return resType == "aws_redshift_cluster"
-}
-func (redshiftNoLogging) Check(r ir.Resource) []ir.Finding {
-	blks, span, present, known := getBlocks(r, "logging")
-	if present && !known {
-		return nil
-	}
-	if !present || len(blks) == 0 {
-		return []ir.Finding{hygieneFinding("AEGIS-AWS-621",
-			(redshiftNoLogging{}).Title(), (redshiftNoLogging{}).Description(),
-			r, "logging", span, "absent", "logging block with S3 bucket")}
-	}
-	return nil
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AWS-622: MSK cluster without logging (CKV_AWS_80)
 // ---------------------------------------------------------------------------
 
@@ -1042,14 +891,14 @@ func (docdbShortBackup) Check(r ir.Resource) []ir.Finding {
 	return nil
 }
 
-// HygieneRules returns the hygiene pack in ID order (601–605, 607–618,
+// HygieneRules returns the hygiene pack in ID order (601, 604–605, 607–618,
 // 620–626). Omitted as duplicates of existing rules: 606→310, 619→306,
-// 627→209, 628→445.
+// 627→209, 628→445. Removed as scanner noise (flagged every bucket,
+// including fully-hardened ones): 602 (event notifications), 603
+// (cross-region replication).
 func HygieneRules() []ir.Rule {
 	return []ir.Rule{
 		s3NoLifecycle{},           // AEGIS-AWS-601
-		s3NoNotifications{},       // AEGIS-AWS-602
-		s3NoReplication{},         // AEGIS-AWS-603
 		sgNoDescription{},         // AEGIS-AWS-604
 		rdsNoEnhancedMonitoring{}, // AEGIS-AWS-605
 		rdsNoQueryLogging{},       // AEGIS-AWS-607
@@ -1064,7 +913,6 @@ func HygieneRules() []ir.Rule {
 		codebuildNoLogging{},      // AEGIS-AWS-617
 		esNoAuditLogging{},        // AEGIS-AWS-618
 		mqNoGeneralLogging{},      // AEGIS-AWS-620
-		redshiftNoLogging{},       // AEGIS-AWS-621
 		mskNoLogging{},            // AEGIS-AWS-622
 		esNoDomainLogging{},       // AEGIS-AWS-623
 		docdbNoLogging{},          // AEGIS-AWS-624
