@@ -31,6 +31,14 @@ func TestAZURE084_PublicAccessFires(t *testing.T) {
 	mustFinding(t, runRule(cosmosPublicAccess{}, r), "AEGIS-AZURE-084")
 }
 
+// TestAZURE084_PrivateAccessQuiet verifies a private CosmosDB account stays quiet.
+func TestAZURE084_PrivateAccessQuiet(t *testing.T) {
+	r := res("azurerm_cosmosdb_account", "c", map[string]ir.Value{"public_network_access_enabled": kv(false, 3)})
+	if len(runRule(cosmosPublicAccess{}, r)) != 0 {
+		t.Fatal("AEGIS-AZURE-084: expected 0 findings")
+	}
+}
+
 // TestAZURE087_NoNetworkRulesFires verifies ACR network rules.
 func TestAZURE087_NoNetworkRulesFires(t *testing.T) {
 	r := res("azurerm_container_registry", "a", map[string]ir.Value{"sku": ks("Premium", 3)})
@@ -73,6 +81,28 @@ func TestAZURE096_SSLQuiet(t *testing.T) {
 func TestAZURE097_MysqlNoSSLFires(t *testing.T) {
 	r := res("azurerm_mysql_server", "m", map[string]ir.Value{"ssl_enforcement_enabled": kv(false, 3)})
 	mustFinding(t, runRule(mysqlNoSSL{}, r), "AEGIS-AZURE-097")
+}
+
+// TestAZURE097_MysqlSSLQuiet verifies a MySQL server with SSL enforced stays quiet.
+func TestAZURE097_MysqlSSLQuiet(t *testing.T) {
+	r := res("azurerm_mysql_server", "m", map[string]ir.Value{"ssl_enforcement_enabled": kv(true, 3)})
+	if len(runRule(mysqlNoSSL{}, r)) != 0 {
+		t.Fatal("AEGIS-AZURE-097: expected 0 findings")
+	}
+}
+
+// TestAZURE098_MariadbNoSSLFires verifies MariaDB SSL.
+func TestAZURE098_MariadbNoSSLFires(t *testing.T) {
+	r := res("azurerm_mariadb_server", "m", map[string]ir.Value{"ssl_enforcement_enabled": kv(false, 3)})
+	mustFinding(t, runRule(mariadbNoSSL{}, r), "AEGIS-AZURE-098")
+}
+
+// TestAZURE098_MariadbSSLQuiet verifies a MariaDB server with SSL enforced stays quiet.
+func TestAZURE098_MariadbSSLQuiet(t *testing.T) {
+	r := res("azurerm_mariadb_server", "m", map[string]ir.Value{"ssl_enforcement_enabled": kv(true, 3)})
+	if len(runRule(mariadbNoSSL{}, r)) != 0 {
+		t.Fatal("AEGIS-AZURE-098: expected 0 findings")
+	}
 }
 
 // TestAZURE099_NoWAFFires verifies Front Door WAF.

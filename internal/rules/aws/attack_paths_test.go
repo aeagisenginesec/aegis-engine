@@ -112,6 +112,20 @@ func TestRDSPath_Negative(t *testing.T) {
 	}
 }
 
+// TestRDSPath103_PrivateRDSQuiet: explicit rule-ID-tagged negative for
+// AEGIS-AWS-103 — a non-public RDS instance produces no exposure path.
+func TestRDSPath103_PrivateRDSQuiet(t *testing.T) {
+	sg := openSGFixture()
+	rds := rdsFixture("main", kv(false, 10))
+	out := findRDSPaths([]ir.Resource{sg, rds},
+		func(string) bool { return true },
+		func(ir.Resource) *ir.Resource { return &sg },
+	)
+	if len(out) != 0 {
+		t.Fatalf("AEGIS-AWS-103: expected no finding for publicly_accessible=false, got %+v", out)
+	}
+}
+
 func TestRDSPath_NoSGIdentified(t *testing.T) {
 	rds := rdsFixture("main", kv(true, 10))
 	out := findRDSPaths([]ir.Resource{rds},

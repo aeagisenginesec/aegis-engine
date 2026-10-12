@@ -169,6 +169,14 @@ func TestGCP038_PublicFires(t *testing.T) {
 	})
 	mustFinding(t, runRule(bqViewerAllUsers{}, r), "AEGIS-GCP-038")
 }
+func TestGCP038_PrivateQuiet(t *testing.T) {
+	r := res("google_bigquery_dataset_iam_binding", "b", map[string]ir.Value{
+		"role": ks("roles/bigquery.dataViewer", 3), "members": sl(4, "user:a@b.com"),
+	})
+	if len(runRule(bqViewerAllUsers{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-038: expected 0 findings")
+	}
+}
 
 // --- 039: SQL PITR ---
 func TestGCP039_NoPITRFires(t *testing.T) {
@@ -195,6 +203,17 @@ func TestGCP040_OpenNetworksFires(t *testing.T) {
 		"settings": blks(3, blk("ip_configuration", ipc)),
 	})
 	mustFinding(t, runRule(sqlOpenAuthorizedNetworks{}, r), "AEGIS-GCP-040")
+}
+func TestGCP040_RestrictedNetworksQuiet(t *testing.T) {
+	ipc := ir.Value{Raw: []ir.Value{{Raw: map[string]ir.Value{
+		"authorized_networks": blks(6, blk("value", ks("10.0.0.0/8", 7))),
+	}, Known: true, Span: spanAt(5)}}, Known: true, Span: spanAt(4)}
+	r := res("google_sql_database_instance", "db", map[string]ir.Value{
+		"settings": blks(3, blk("ip_configuration", ipc)),
+	})
+	if len(runRule(sqlOpenAuthorizedNetworks{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-040: expected 0 findings")
+	}
 }
 
 // --- 041: SQL wildcard host ---
@@ -259,6 +278,14 @@ func TestGCP047_NoWIFires(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{})
 	mustFinding(t, runRule(gkeNoWorkloadIdentity{}, r), "AEGIS-GCP-047")
 }
+func TestGCP047_WIQuiet(t *testing.T) {
+	r := res("google_container_cluster", "c", map[string]ir.Value{
+		"workload_identity_config": blks(3, blk("workload_pool", ks("proj.svc.id.goog", 4))),
+	})
+	if len(runRule(gkeNoWorkloadIdentity{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-047: expected 0 findings")
+	}
+}
 
 // --- 048: GKE binary auth ---
 func TestGCP048_NoBinaryAuthFires(t *testing.T) {
@@ -289,6 +316,15 @@ func TestGCP051_BasicAuthFires(t *testing.T) {
 	})
 	mustFinding(t, runRule(gkeBasicAuth{}, r), "AEGIS-GCP-051")
 }
+func TestGCP051_NoBasicAuthQuiet(t *testing.T) {
+	r := res("google_container_cluster", "c", map[string]ir.Value{
+		"master_auth": blks(3, blk("client_certificate_config",
+			blks(4, blk("issue_client_certificate", kv(false, 5))))),
+	})
+	if len(runRule(gkeBasicAuth{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-051: expected 0 findings")
+	}
+}
 
 // --- 052: GKE client cert ---
 func TestGCP052_ClientCertFires(t *testing.T) {
@@ -298,6 +334,15 @@ func TestGCP052_ClientCertFires(t *testing.T) {
 	})
 	mustFinding(t, runRule(gkeClientCert{}, r), "AEGIS-GCP-052")
 }
+func TestGCP052_NoClientCertQuiet(t *testing.T) {
+	r := res("google_container_cluster", "c", map[string]ir.Value{
+		"master_auth": blks(3, blk("client_certificate_config",
+			blks(4, blk("issue_client_certificate", kv(false, 5))))),
+	})
+	if len(runRule(gkeClientCert{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-052: expected 0 findings")
+	}
+}
 
 // --- 053: GKE default SA ---
 func TestGCP053_DefaultSAFires(t *testing.T) {
@@ -305,6 +350,17 @@ func TestGCP053_DefaultSAFires(t *testing.T) {
 		"node_config": blks(3, blk("oauth_scopes", sl(4, "https://www.googleapis.com/auth/cloud-platform"))),
 	})
 	mustFinding(t, runRule(gkeDefaultSAFullScope{}, r), "AEGIS-GCP-053")
+}
+func TestGCP053_DedicatedSAQuiet(t *testing.T) {
+	r := res("google_container_node_pool", "p", map[string]ir.Value{
+		"node_config": blks(3, blk(
+			"service_account", ks("node-sa@proj.iam.gserviceaccount.com", 4),
+			"oauth_scopes", sl(4, "https://www.googleapis.com/auth/logging.write"),
+		)),
+	})
+	if len(runRule(gkeDefaultSAFullScope{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-053: expected 0 findings")
+	}
 }
 
 // --- 054: GKE intranode visibility ---
@@ -362,6 +418,15 @@ func TestGCP061_NoDiskCMEKFires(t *testing.T) {
 	})
 	mustFinding(t, runRule(instanceDiskNoCMEK{}, r), "AEGIS-GCP-061")
 }
+func TestGCP061_DiskCMEKQuiet(t *testing.T) {
+	r := res("google_compute_instance", "i", map[string]ir.Value{
+		"boot_disk": blks(3, blk("initialize_params",
+			blks(4, blk("kms_key_self_link", ks("projects/p/locations/l/keyRings/r/cryptoKeys/k", 5))))),
+	})
+	if len(runRule(instanceDiskNoCMEK{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-061: expected 0 findings")
+	}
+}
 
 // --- 062: default SA ---
 func TestGCP062_DefaultSAFires(t *testing.T) {
@@ -377,6 +442,14 @@ func TestGCP063_FullScopeFires(t *testing.T) {
 		"service_account": blks(3, blk("scopes", sl(4, "https://www.googleapis.com/auth/cloud-platform"))),
 	})
 	mustFinding(t, runRule(instanceFullScope{}, r), "AEGIS-GCP-063")
+}
+func TestGCP063_MinimalScopeQuiet(t *testing.T) {
+	r := res("google_compute_instance", "i", map[string]ir.Value{
+		"service_account": blks(3, blk("scopes", sl(4, "https://www.googleapis.com/auth/logging.write"))),
+	})
+	if len(runRule(instanceFullScope{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-063: expected 0 findings")
+	}
 }
 
 // --- 064: deletion protection ---
@@ -407,6 +480,15 @@ func TestGCP067_RDPOpenFires(t *testing.T) {
 	})
 	mustFinding(t, runRule(firewallOpenRDP{}, r), "AEGIS-GCP-067")
 }
+func TestGCP067_ScopedPortsQuiet(t *testing.T) {
+	r := res("google_compute_firewall", "f", map[string]ir.Value{
+		"source_ranges": sl(3, "0.0.0.0/0"),
+		"allow":         blks(4, blk("protocol", ks("tcp", 5), "ports", sl(5, "443"))),
+	})
+	if len(runRule(firewallOpenRDP{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-067: expected 0 findings")
+	}
+}
 
 // --- 068: all ports ---
 func TestGCP068_AllPortsFires(t *testing.T) {
@@ -415,6 +497,15 @@ func TestGCP068_AllPortsFires(t *testing.T) {
 		"allow":         blks(4, blk("protocol", ks("tcp", 5), "ports", sl(5, "0-65535"))),
 	})
 	mustFinding(t, runRule(firewallAllPorts{}, r), "AEGIS-GCP-068")
+}
+func TestGCP068_ScopedPortsQuiet(t *testing.T) {
+	r := res("google_compute_firewall", "f", map[string]ir.Value{
+		"source_ranges": sl(3, "0.0.0.0/0"),
+		"allow":         blks(4, blk("protocol", ks("tcp", 5), "ports", sl(5, "443"))),
+	})
+	if len(runRule(firewallAllPorts{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-068: expected 0 findings")
+	}
 }
 
 // --- 069: firewall logging ---
@@ -430,6 +521,15 @@ func TestGCP070_AllProtocolsFires(t *testing.T) {
 	})
 	mustFinding(t, runRule(firewallAllProtocols{}, r), "AEGIS-GCP-070")
 }
+func TestGCP070_SpecificProtocolQuiet(t *testing.T) {
+	r := res("google_compute_firewall", "f", map[string]ir.Value{
+		"source_ranges": sl(3, "0.0.0.0/0"),
+		"allow":         blks(3, blk("protocol", ks("tcp", 4))),
+	})
+	if len(runRule(firewallAllProtocols{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-070: expected 0 findings")
+	}
+}
 
 // --- 071: egress all ---
 func TestGCP071_EgressAllFires(t *testing.T) {
@@ -444,11 +544,23 @@ func TestGCP072_OwnerFires(t *testing.T) {
 	r := res("google_project_iam_binding", "b", map[string]ir.Value{"role": ks("roles/owner", 3)})
 	mustFinding(t, runRule(iamOwnerBinding{}, r), "AEGIS-GCP-072")
 }
+func TestGCP072_ViewerQuiet(t *testing.T) {
+	r := res("google_project_iam_binding", "b", map[string]ir.Value{"role": ks("roles/viewer", 3)})
+	if len(runRule(iamOwnerBinding{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-072: expected 0 findings")
+	}
+}
 
 // --- 073: editor binding ---
 func TestGCP073_EditorFires(t *testing.T) {
 	r := res("google_project_iam_binding", "b", map[string]ir.Value{"role": ks("roles/editor", 3)})
 	mustFinding(t, runRule(iamEditorBinding{}, r), "AEGIS-GCP-073")
+}
+func TestGCP073_ViewerQuiet(t *testing.T) {
+	r := res("google_project_iam_binding", "b", map[string]ir.Value{"role": ks("roles/viewer", 3)})
+	if len(runRule(iamEditorBinding{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-073: expected 0 findings")
+	}
 }
 
 // --- 074: viewer to user ---
@@ -464,6 +576,14 @@ func TestGCP075_SAKeyFires(t *testing.T) {
 	r := res("google_service_account_key", "k", map[string]ir.Value{})
 	mustFinding(t, runRule(saUserManagedKey{}, r), "AEGIS-GCP-075")
 }
+func TestGCP075_NoKeyQuiet(t *testing.T) {
+	// Presence-based rule: the secure configuration is the absence of a
+	// user-managed key resource, so any other resource type must stay quiet.
+	r := res("google_service_account", "s", map[string]ir.Value{})
+	if len(runRule(saUserManagedKey{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-075: expected 0 findings without a user-managed key")
+	}
+}
 
 // --- 076: IAM public ---
 func TestGCP076_PublicFires(t *testing.T) {
@@ -472,6 +592,14 @@ func TestGCP076_PublicFires(t *testing.T) {
 	})
 	mustFinding(t, runRule(iamMemberPublic{}, r), "AEGIS-GCP-076")
 }
+func TestGCP076_PrivateQuiet(t *testing.T) {
+	r := res("google_project_iam_binding", "b", map[string]ir.Value{
+		"role": ks("roles/viewer", 3), "members": sl(4, "user:a@b.com"),
+	})
+	if len(runRule(iamMemberPublic{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-076: expected 0 findings")
+	}
+}
 
 // --- 077: SA IAM public ---
 func TestGCP077_SAPublicFires(t *testing.T) {
@@ -479,6 +607,14 @@ func TestGCP077_SAPublicFires(t *testing.T) {
 		"role": ks("roles/iam.serviceAccountUser", 3), "members": sl(4, "allUsers"),
 	})
 	mustFinding(t, runRule(saIAMBindingPublic{}, r), "AEGIS-GCP-077")
+}
+func TestGCP077_SAPrivateQuiet(t *testing.T) {
+	r := res("google_service_account_iam_binding", "b", map[string]ir.Value{
+		"role": ks("roles/iam.serviceAccountUser", 3), "members": sl(4, "user:a@b.com"),
+	})
+	if len(runRule(saIAMBindingPublic{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-077: expected 0 findings")
+	}
 }
 
 // --- 078: custom role wildcard ---
@@ -520,6 +656,14 @@ func TestGCP082_KMSPublicFires(t *testing.T) {
 	})
 	mustFinding(t, runRule(kmsIAMPublic{}, r), "AEGIS-GCP-082")
 }
+func TestGCP082_KMSPrivateQuiet(t *testing.T) {
+	r := res("google_kms_crypto_key_iam_binding", "b", map[string]ir.Value{
+		"role": ks("roles/cloudkms.cryptoKeyEncrypter", 3), "members": sl(4, "user:a@b.com"),
+	})
+	if len(runRule(kmsIAMPublic{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-082: expected 0 findings")
+	}
+}
 
 // --- 083: KMS admin to user ---
 func TestGCP083_KMSAdminUserFires(t *testing.T) {
@@ -527,6 +671,14 @@ func TestGCP083_KMSAdminUserFires(t *testing.T) {
 		"role": ks("roles/cloudkms.admin", 3), "member": ks("user:a@b.com", 4),
 	})
 	mustFinding(t, runRule(kmsAdminToUser{}, r), "AEGIS-GCP-083")
+}
+func TestGCP083_KMSGroupQuiet(t *testing.T) {
+	r := res("google_kms_crypto_key_iam_member", "m", map[string]ir.Value{
+		"role": ks("roles/cloudkms.admin", 3), "member": ks("group:admins@example.com", 4),
+	})
+	if len(runRule(kmsAdminToUser{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-083: expected 0 findings")
+	}
 }
 
 // --- 084: KMS weak algo ---
@@ -550,6 +702,15 @@ func TestGCP086_ExemptPublicFires(t *testing.T) {
 			blks(4, blk("log_type", ks("DATA_READ", 5), "exempted_members", sl(5, "allUsers"))))),
 	})
 	mustFinding(t, runRule(auditExemptAllUsers{}, r), "AEGIS-GCP-086")
+}
+func TestGCP086_PrivateExemptQuiet(t *testing.T) {
+	r := res("google_project_iam_policy", "p", map[string]ir.Value{
+		"audit_config": blks(3, blk("audit_log_configs",
+			blks(4, blk("log_type", ks("DATA_READ", 5), "exempted_members", sl(5, "user:a@b.com"))))),
+	})
+	if len(runRule(auditExemptAllUsers{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-086: expected 0 findings")
+	}
 }
 
 // --- 087: no DATA_READ ---
@@ -627,6 +788,14 @@ func TestGCP096_PubsubPublicFires(t *testing.T) {
 	})
 	mustFinding(t, runRule(pubsubTopicPublic{}, r), "AEGIS-GCP-096")
 }
+func TestGCP096_PrivateQuiet(t *testing.T) {
+	r := res("google_pubsub_topic_iam_binding", "b", map[string]ir.Value{
+		"role": ks("roles/pubsub.publisher", 3), "members": sl(4, "user:a@b.com"),
+	})
+	if len(runRule(pubsubTopicPublic{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-096: expected 0 findings")
+	}
+}
 
 // --- 097: cloud run public ---
 func TestGCP097_RunPublicFires(t *testing.T) {
@@ -634,6 +803,14 @@ func TestGCP097_RunPublicFires(t *testing.T) {
 		"role": ks("roles/run.invoker", 3), "members": sl(4, "allUsers"),
 	})
 	mustFinding(t, runRule(cloudRunPublic{}, r), "AEGIS-GCP-097")
+}
+func TestGCP097_PrivateQuiet(t *testing.T) {
+	r := res("google_cloud_run_service_iam_binding", "b", map[string]ir.Value{
+		"role": ks("roles/run.invoker", 3), "members": sl(4, "user:a@b.com"),
+	})
+	if len(runRule(cloudRunPublic{}, r)) != 0 {
+		t.Fatal("AEGIS-GCP-097: expected 0 findings")
+	}
 }
 
 // --- 098: function max instances ---

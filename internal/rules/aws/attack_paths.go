@@ -34,9 +34,12 @@ func (rdsPublicPath) Check(ir.Resource) []ir.Finding { return nil }
 
 func (rdsPublicPath) CheckAll(resources []ir.Resource) []ir.Finding {
 	g := graph.Build(resources)
+	// Hoisted out of the per-RDS closure: the open-SG set does not depend
+	// on the RDS, so recomputing it per public RDS was O(n) per RDS.
+	open := openSGs(resources)
 	return findRDSPaths(resources,
 		func(addr string) bool { return g.PubliclyExposed(addr) },
-		func(rds ir.Resource) *ir.Resource { return pickPathSG(rds, g, openSGs(resources)) },
+		func(rds ir.Resource) *ir.Resource { return pickPathSG(rds, g, open) },
 	)
 }
 

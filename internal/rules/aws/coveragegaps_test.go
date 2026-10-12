@@ -120,6 +120,16 @@ func Test556_FiresWhenPresent(t *testing.T) {
 	}
 }
 
+// Test556_SilentOnOtherResource: negative for AEGIS-AWS-556 — the rule is
+// presence-based, so the secure configuration is the absence of a
+// propagation resource: any other resource type must stay quiet.
+func Test556_SilentOnOtherResource(t *testing.T) {
+	r := res("aws_instance", "i", map[string]ir.Value{})
+	if fs := runRule(tgwPermissivePropagation{}, r); len(fs) != 0 {
+		t.Fatalf("AEGIS-AWS-556: expected 0 findings on non-propagation resource, got %d", len(fs))
+	}
+}
+
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-557: VPC endpoint open policy
 // ---------------------------------------------------------------------------

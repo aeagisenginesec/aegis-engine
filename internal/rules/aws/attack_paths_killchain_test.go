@@ -64,7 +64,10 @@ func TestKillChain629(t *testing.T) {
 	}
 }
 
-// No chain when nothing is exposed.
+// No chain when nothing is exposed. Strengthened 2026-10-12: the original
+// computed hasConcreteEntry and discarded it with `_ =`, asserting nothing.
+// A fully private setup may still emit uncertain (medium) chains, but a
+// concrete high/critical chain must never appear.
 func TestKillChain629NoExposure(t *testing.T) {
 	resources := []ir.Resource{
 		apResource("aws_security_group", "web", map[string]ir.Value{
@@ -76,27 +79,27 @@ func TestKillChain629NoExposure(t *testing.T) {
 	}
 	findings := (killChain{}).CheckAll(resources)
 	for _, f := range findings {
-		// Chains without a proven entry are uncertain-only; a fully
-		// concrete critical chain must not appear.
-		hasConcreteEntry := false
-		for _, s := range f.Path {
-			if s.Resource != "internet" && !containsUncertain(s.Detail) {
-				hasConcreteEntry = true
-			}
+		if f.RuleID == "AEGIS-AWS-629" && (f.Severity == ir.SeverityHigh || f.Severity == ir.SeverityCritical) {
+			t.Errorf("AEGIS-AWS-629: unexpected %s finding with no internet entry: %+v", f.Severity, f)
 		}
-		_ = hasConcreteEntry
 	}
 }
 
-func containsUncertain(detail string) bool {
-	return len(detail) >= 10 && (func() bool {
-		for i := 0; i+10 <= len(detail); i++ {
-			if detail[i:i+10] == "UNCERTAIN:" {
-				return true
-			}
-		}
-		return false
-	}())
+// TestKillChain629_NoDataStoreQuiet: negative for AEGIS-AWS-629 — with no
+// data store in the resource set, no internet-to-data chain can exist.
+func TestKillChain629_NoDataStoreQuiet(t *testing.T) {
+	resources := []ir.Resource{
+		apResource("aws_security_group", "web", map[string]ir.Value{
+			"ingress": apIngressBlock("0.0.0.0/0"),
+		}),
+		apResource("aws_instance", "web", map[string]ir.Value{
+			"vpc_security_group_ids": apRefVal("aws_security_group.web.id"),
+		}),
+	}
+	findings := (killChain{}).CheckAll(resources)
+	if len(findings) != 0 {
+		t.Fatalf("AEGIS-AWS-629: expected 0 findings with no data store, got %d", len(findings))
+	}
 }
 
 // IAM privilege chain: Lambda with admin policy.

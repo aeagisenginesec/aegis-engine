@@ -94,6 +94,14 @@ func TestAZURE039_PublicAccessFires(t *testing.T) {
 	mustFinding(t, runRule(keyVaultPublicAccess{}, r), "AEGIS-AZURE-039")
 }
 
+// TestAZURE039_PrivateAccessQuiet verifies a private Key Vault stays quiet.
+func TestAZURE039_PrivateAccessQuiet(t *testing.T) {
+	r := res("azurerm_key_vault", "v", map[string]ir.Value{"public_network_access_enabled": kv(false, 3)})
+	if len(runRule(keyVaultPublicAccess{}, r)) != 0 {
+		t.Fatal("AEGIS-AZURE-039: expected 0 findings")
+	}
+}
+
 // TestAZURE040_SecretNoExpiryFires verifies secret expiration.
 func TestAZURE040_SecretNoExpiryFires(t *testing.T) {
 	r := res("azurerm_key_vault_secret", "s", map[string]ir.Value{})
