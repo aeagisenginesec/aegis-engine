@@ -680,6 +680,12 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	if findings := registry.Run(resources); findings != nil {
 		res.Findings = findings
 	}
+	// Inline-suppression compatibility: warn about aegis:skip IDs that are
+	// not registered rules (removed by deduplication or typos). Such
+	// entries have no effect; they are never silently migrated.
+	for _, d := range rules.ValidateSuppressedRuleIDs(rules.CollectSuppressedRuleIDs(resources), registry) {
+		fmt.Fprintf(stderr, "aegis: warning: %s\n", d.Message())
+	}
 	// Compliance: filter to the requested framework (narrowing refs), or
 	// enrich every finding with all its mapped controls.
 	if *complianceFw != "" {
@@ -716,6 +722,13 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		if err != nil {
 			fmt.Fprintf(stderr, "aegis: baseline: %v\n", err)
 			return 2
+		}
+		// Compatibility: warn about baseline entries referencing rule IDs
+		// that are not registered (removed by deduplication or typos).
+		// Such entries have no effect; they are never silently migrated
+		// to a different rule.
+		for _, d := range rules.ValidateBaselineIDs(baseline, registry) {
+			fmt.Fprintf(stderr, "aegis: warning: %s\n", d.Message())
 		}
 		res.Findings = rules.ApplyBaseline(baseline, res.Findings)
 	}
