@@ -62,6 +62,13 @@ func (Adapter) Handles(path string) bool {
 
 // Parse converts a Pulumi.yaml program into IR resources. A document without
 // a resources: section yields no resources and a warning diagnostic.
+//
+// Two layouts are accepted, because both exist in the wild:
+//   - Modern (per the Pulumi YAML reference): resources:, variables:,
+//     configuration: (or config:) at the document root.
+//   - Legacy/embedded: the same sections nested under template:.
+// The template: layout takes effect only when the root has no resources:
+// of its own; a document with both is read from the root.
 func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, error) {
 	p := &parser{path: path}
 	var doc yaml.Node
@@ -82,8 +89,16 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 		})
 		return nil, p.diags, nil
 	}
-	p.collectVars(root)
-	resNode := nodeField(root, "resources")
+	prog := programNode(root)
+	if prog != root {
+		p.diags = append(p.diags, ir.Diagnostic{
+			Level:   "info",
+			Message: fmt.Sprintf("pulumi: %s uses the template:-nested program layout", path),
+			Span:    ir.Span{File: path},
+		})
+	}
+	p.collectVars(prog)
+	resNode := nodeField(prog, "resources")
 	if resNode == nil || resNode.Kind != yaml.MappingNode {
 		p.diags = append(p.diags, ir.Diagnostic{
 			Level:   "warning",
@@ -134,7 +149,7 @@ func (p *parser) collectVars(root *yaml.Node) {
 			p.vars[k] = nodeField(v, k)
 		}
 	}
-	if c := nodeField(root, "configuration"); c != nil && c.Kind == yaml.MappingNode {
+	collectConfig := func(c *yaml.Node) {
 		for _, k := range sortedKeys(c) {
 			cn := nodeField(c, k)
 			if cn == nil {
@@ -150,6 +165,12 @@ func (p *parser) collectVars(root *yaml.Node) {
 				p.vars[k] = cn
 			}
 		}
+	}
+	if c := nodeField(root, "configuration"); c != nil && c.Kind == yaml.MappingNode {
+		collectConfig(c)
+	} else if c := nodeField(root, "config"); c != nil && c.Kind == yaml.MappingNode {
+		// Modern Pulumi YAML reference uses config: instead of configuration:.
+		collectConfig(c)
 	}
 	if r := nodeField(root, "resources"); r != nil && r.Kind == yaml.MappingNode {
 		for _, k := range sortedKeys(r) {
@@ -200,6 +221,25 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 					}
 				}
 			}
+		}
+		// Pulumi azure-native property names differ from the Terraform
+		// attribute names the rules expect; normalize them.
+		renameAttr(attrs, "minimum_tls_version", "min_tls_version")
+		renameAttr(attrs, "supports_https_traffic_only", "https_traffic_only_enabled")
+		renameAttr(attrs, "allow_shared_key_access", "shared_access_key_enabled")
+		renameAttr(attrs, "network_rule_set", "network_rules")
+		// publicNetworkAccess is an enum in Pulumi ("Enabled"/"Disabled");
+		// the rules expect the boolean public_network_access_enabled.
+		if v, ok := attrs["public_network_access"]; ok {
+			if s, ok := v.AsString(); ok {
+				switch s {
+				case "Enabled":
+					attrs["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
+				case "Disabled":
+					attrs["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
+				}
+			}
+			delete(attrs, "public_network_access")
 		}
 	}
 	// Rename securityRules -> security_rule for NSGs (TF attribute name).
@@ -342,6 +382,33 @@ func (p *parser) spanOf(n *yaml.Node, path string) ir.Span {
 		return ir.Span{File: path, StartLine: 1, StartCol: 1}
 	}
 	return ir.Span{File: path, StartLine: n.Line, StartCol: n.Column}
+}
+
+// programNode resolves which mapping holds the Pulumi program sections
+// (resources:, variables:, configuration:/config:). The modern layout puts
+// them at the document root; the legacy layout nests them under template:.
+// The template layout applies only when the root defines no resources: of
+// its own, so a mixed document is read from the root.
+func programNode(root *yaml.Node) *yaml.Node {
+	if nodeField(root, "resources") != nil {
+		return root
+	}
+	if t := nodeField(root, "template"); t != nil && t.Kind == yaml.MappingNode {
+		return t
+	}
+	return root
+}
+
+// renameAttr moves attrs[from] to attrs[to] when present and to is absent.
+// Used to normalize Pulumi-native property names to the Terraform attribute
+// names the rule packs expect.
+func renameAttr(attrs map[string]ir.Value, from, to string) {
+	if v, ok := attrs[from]; ok {
+		if _, exists := attrs[to]; !exists {
+			attrs[to] = v
+		}
+		delete(attrs, from)
+	}
 }
 
 // nodeMap returns the document's root mapping node, unwrapping the

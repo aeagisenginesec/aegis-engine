@@ -376,3 +376,218 @@ func TestTypeTableSize(t *testing.T) {
 		}
 	}
 }
+
+// 13. Template-nested layout: resources under template: (legacy/embedded
+// Pulumi YAML, as seen in real-world programs). Root cause of the round-2
+// zero-findings gap: the adapter previously only read top-level resources:.
+func TestTemplateNestedLayout(t *testing.T) {
+	rs, diags := parse(t, "Pulumi.yaml", `
+name: legacy
+runtime: yaml
+description: Legacy layout program.
+template:
+  configuration:
+    bucketName:
+      type: String
+      default: my-data
+  resources:
+    data:
+      type: aws:s3:Bucket
+      properties:
+        bucket: ${bucketName}
+        acl: public-read
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	r := rs[0]
+	if r.Type != "aws_s3_bucket" {
+		t.Errorf("type = %q, want aws_s3_bucket", r.Type)
+	}
+	// ${bucketName} must resolve against template.configuration defaults.
+	if s, ok := attrString(t, r, "bucket"); !ok || s != "my-data" {
+		t.Errorf("bucket = %q, %v; want my-data (config default resolved)", s, ok)
+	}
+	if s, ok := attrString(t, r, "acl"); !ok || s != "public-read" {
+		t.Errorf("acl = %q, %v; want public-read", s, ok)
+	}
+	// The layout must be disclosed, not silent.
+	found := false
+	for _, d := range diags {
+		if d.Level == "info" && strings.Contains(d.Message, "template:") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected info diagnostic about template:-nested layout")
+	}
+}
+
+// 14. Root-level resources: take precedence over template: when both exist.
+func TestRootLayoutPrecedence(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: mixed
+runtime: yaml
+resources:
+  top:
+    type: aws:s3:Bucket
+    properties:
+      bucket: from-root
+template:
+  resources:
+    nested:
+      type: aws:s3:Bucket
+      properties:
+        bucket: from-template
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource (root wins), got %d", len(rs))
+	}
+	if rs[0].Name != "top" {
+		t.Errorf("resource = %q, want top (root layout precedence)", rs[0].Name)
+	}
+}
+
+// 15. Template-nested variables: resolve.
+func TestTemplateNestedVariables(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: vars
+runtime: yaml
+template:
+  variables:
+    env: prod
+  resources:
+    data:
+      type: aws:s3:Bucket
+      properties:
+        bucket: my-data
+        tags:
+          env: ${env}
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	tags, ok := rs[0].Attributes["tags"]
+	if !ok {
+		t.Fatalf("tags attribute missing")
+	}
+	m, ok := tags.AsMap()
+	if !ok {
+		t.Fatalf("tags is not a map")
+	}
+	ev, ok := m["env"]
+	if !ok {
+		t.Fatalf("tags.env missing")
+	}
+	if s, ok := ev.AsString(); !ok || s != "prod" {
+		t.Errorf("tags.env = %q, %v; want prod", s, ok)
+	}
+}
+
+// 16. Azure storage account: Pulumi azure-native property names normalize
+// to the Terraform attribute names the rules expect.
+func TestAzureStoragePropertyNormalization(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: az
+runtime: yaml
+template:
+  resources:
+    stg:
+      type: azure-native:storage:StorageAccount
+      properties:
+        accountName: mystg
+        minimumTlsVersion: TLS1_2
+        supportsHttpsTrafficOnly: true
+        allowSharedKeyAccess: false
+        allowBlobPublicAccess: false
+        publicNetworkAccess: Disabled
+        networkRuleSet:
+          defaultAction: Deny
+          bypass: None
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	r := rs[0]
+	if r.Type != "azurerm_storage_account" {
+		t.Fatalf("type = %q, want azurerm_storage_account", r.Type)
+	}
+	checks := map[string]string{
+		"min_tls_version": "TLS1_2",
+	}
+	for attr, want := range checks {
+		if s, ok := attrString(t, r, attr); !ok || s != want {
+			t.Errorf("%s = %q, %v; want %q", attr, s, ok, want)
+		}
+	}
+	for _, attr := range []string{"https_traffic_only_enabled", "network_rules"} {
+		if _, ok := r.Attributes[attr]; !ok {
+			t.Errorf("attribute %q missing after normalization", attr)
+		}
+	}
+	// shared_access_key_enabled must be false (secure) and present.
+	if v, ok := r.Attributes["shared_access_key_enabled"]; !ok {
+		t.Errorf("shared_access_key_enabled missing")
+	} else if b, ok := v.AsBool(); !ok || b {
+		t.Errorf("shared_access_key_enabled = %v; want false", v.Raw)
+	}
+	// public_network_access_enabled must be false (Disabled enum).
+	if v, ok := r.Attributes["public_network_access_enabled"]; !ok {
+		t.Errorf("public_network_access_enabled missing")
+	} else if b, ok := v.AsBool(); !ok || b {
+		t.Errorf("public_network_access_enabled = %v; want false", v.Raw)
+	}
+	// allow_blob_public_access passes through correctly.
+	if v, ok := r.Attributes["allow_blob_public_access"]; !ok {
+		t.Errorf("allow_blob_public_access missing")
+	} else if b, ok := v.AsBool(); !ok || b {
+		t.Errorf("allow_blob_public_access = %v; want false", v.Raw)
+	}
+}
+
+// 17. New typemap entries resolve without "unmapped type" warnings.
+func TestNewTypemapEntries(t *testing.T) {
+	cases := map[string]string{
+		"aws:ec2:NetworkAclRule":                 "aws_network_acl_rule",
+		"azure-native:authorization:RoleAssignment": "azurerm_role_assignment",
+		"azure-native:resources:ResourceGroup":     "azurerm_resource_group",
+		"azure-native:sql:FirewallRule":             "azurerm_mssql_firewall_rule",
+		"azure-native:storage:BlobContainer":       "azurerm_storage_container",
+	}
+	for token, want := range cases {
+		rs, diags := parse(t, "Pulumi.yaml", "name: x\nruntime: yaml\nresources:\n  r1:\n    type: "+token+"\n    properties:\n      name: x\n")
+		if len(rs) != 1 || rs[0].Type != want {
+			t.Errorf("%s -> %q, want %q", token, rs[0].Type, want)
+		}
+		for _, d := range diags {
+			if strings.Contains(d.Message, "unmapped type") {
+				t.Errorf("%s produced unmapped-type warning", token)
+			}
+		}
+	}
+}
+
+// 18. Template config: alias for configuration: is honored.
+// Note: partial interpolation ("${region}-data") is not supported by the
+// adapter (known limitation); pure ${...} references resolve.
+func TestTemplateConfigAlias(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: cfg
+runtime: yaml
+template:
+  config:
+    bucketName:
+      default: my-data
+  resources:
+    data:
+      type: aws:s3:Bucket
+      properties:
+        bucket: ${bucketName}
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	if s, ok := attrString(t, rs[0], "bucket"); !ok || s != "my-data" {
+		t.Errorf("bucket = %q, %v; want my-data", s, ok)
+	}
+}
