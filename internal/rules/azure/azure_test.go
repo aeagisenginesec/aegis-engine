@@ -153,6 +153,7 @@ func TestRulesInIDOrder(t *testing.T) {
 		"AEGIS-AZURE-302", "AEGIS-AZURE-303", "AEGIS-AZURE-304", "AEGIS-AZURE-305",
 		"AEGIS-AZURE-306", "AEGIS-AZURE-307", "AEGIS-AZURE-308", "AEGIS-AZURE-309",
 		"AEGIS-AZURE-310", "AEGIS-AZURE-311", "AEGIS-AZURE-313",
+		"AEGIS-AZURE-314",
 	}
 	if len(rules) != len(want) {
 		t.Fatalf("expected %d rules, got %d", len(want), len(rules))

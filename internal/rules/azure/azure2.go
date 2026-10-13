@@ -229,14 +229,15 @@ func (sqlNoAuditing) Title() string {
 	return "SQL server without auditing"
 }
 func (sqlNoAuditing) Description() string {
-	return "azurerm_mssql_server with no extended_auditing_policy block " +
-		"produces no audit trail of database activity. Enable extended " +
-		"auditing for compliance and incident response."
+	return "azurerm_mssql_server / azurerm_sql_server with no " +
+		"extended_auditing_policy block produces no audit trail of " +
+		"database activity. Enable extended auditing for compliance " +
+		"and incident response."
 }
 func (sqlNoAuditing) Severity() ir.Severity { return ir.SeverityHigh }
 
 func (sqlNoAuditing) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
+	return resType == "azurerm_mssql_server" || resType == "azurerm_sql_server"
 }
 
 func (s sqlNoAuditing) Check(r ir.Resource) []ir.Finding {
