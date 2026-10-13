@@ -173,9 +173,21 @@ func ProposeAll(findings []ir.Finding, resources []ir.Resource, readFile func(pa
 // tests to inject probe fixers for blocked resource types.
 func proposeAllWithFixers(findings []ir.Finding, resources []ir.Resource, readFile func(path string) ([]byte, error), fixers []Fixer) []Patch {
 	byAddr := make(map[string]ir.Resource, len(resources))
+	// byAddrFile keys on (address, file): two files may declare the same
+	// resource address (invalid Terraform, but the scanner still reports
+	// per-file findings). Matching a finding to the first resource with
+	// its address reads spans from the wrong file and proposes patches
+	// against a file the finding never came from (Item 5). Prefer the
+	// resource in the finding's own file; fall back to first-by-address
+	// when the file doesn't match (e.g. spans without file info).
+	byAddrFile := make(map[string]ir.Resource, len(resources))
 	for _, r := range resources {
 		if _, ok := byAddr[r.Address()]; !ok {
 			byAddr[r.Address()] = r
+		}
+		key := r.Address() + "\x00" + r.Span.File
+		if _, ok := byAddrFile[key]; !ok {
+			byAddrFile[key] = r
 		}
 	}
 	fixerByID := make(map[string]Fixer)
@@ -196,7 +208,10 @@ func proposeAllWithFixers(findings []ir.Finding, resources []ir.Resource, readFi
 		if !ok {
 			continue // no auto-fix for this rule
 		}
-		res, ok := byAddr[f.Resource]
+		res, ok := byAddrFile[f.Resource+"\x00"+f.Evidence.Span.File]
+		if !ok {
+			res, ok = byAddr[f.Resource]
+		}
 		if !ok {
 			continue // resource not in this scan; nothing to patch
 		}
@@ -307,9 +322,20 @@ func ValidatePatch(targetDir string, p Patch, scan func(dir string) (ir.ScanResu
 	// Safety gate 1: the target resource must still parse after the patch.
 	// A patch that corrupts the file drops the resource, which also drops
 	// the finding — absence then proves nothing.
+	// File-aware (Item 5): with duplicate resource addresses across
+	// files, another file's same-address resource must not satisfy this
+	// gate for the patched file. The after-scan runs on the temp copy,
+	// so its paths are rooted at tmp; test doubles may return paths
+	// rooted at the original target dir, so both roots are accepted.
+	patchRels := map[string]bool{}
+	for _, e := range p.Edits {
+		if rel, err := filepath.Rel(targetDir, e.File); err == nil {
+			patchRels[rel] = true
+		}
+	}
 	v.ResourceMissing = true
 	for _, r := range afterRes {
-		if r.Address() == p.Resource {
+		if r.Address() == p.Resource && inPatchFiles(r.Span.File, tmp, targetDir, patchRels) {
 			v.ResourceMissing = false
 			break
 		}
@@ -325,7 +351,10 @@ func ValidatePatch(targetDir string, p Patch, scan func(dir string) (ir.ScanResu
 	}
 	fixed := true
 	for _, f := range after.Findings {
-		if f.RuleID == p.RuleID && f.Resource == p.Resource {
+		// File-aware: a finding for the same rule+resource in a
+		// different file (duplicate address) does not mean this
+		// patch failed — that twin is a separate patch's job.
+		if f.RuleID == p.RuleID && f.Resource == p.Resource && inPatchFiles(f.Evidence.Span.File, tmp, targetDir, patchRels) {
 			fixed = false
 			break
 		}
@@ -341,6 +370,25 @@ func ValidatePatch(targetDir string, p Patch, scan func(dir string) (ir.ScanResu
 		}
 	}
 	return v, nil
+}
+
+// inPatchFiles reports whether file belongs to one of the patch's files.
+// file may be rooted at the temp copy (production after-scan) or at the
+// original target dir (test doubles); both roots are accepted. An empty
+// file is treated as a match: spans without file info must not silently
+// satisfy or defeat the gates — the conservative choice for the Fixed
+// check is to count the finding, and for ResourceMissing to count the
+// resource.
+func inPatchFiles(file, tmp, targetDir string, patchRels map[string]bool) bool {
+	if file == "" {
+		return true
+	}
+	for _, root := range []string{tmp, targetDir} {
+		if rel, err := filepath.Rel(root, file); err == nil && patchRels[rel] {
+			return true
+		}
+	}
+	return false
 }
 
 // copyTree copies regular files from src to dst, skipping .git, .terraform,

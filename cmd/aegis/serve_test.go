@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -30,14 +31,14 @@ func postScan(t *testing.T, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/v1/scan", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	return rr
 }
 
 func TestHealth(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/health", nil)
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200", rr.Code)
 	}
@@ -53,7 +54,7 @@ func TestHealth(t *testing.T) {
 func TestHealthMethodNotAllowed(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/v1/health", nil)
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	if rr.Code != http.StatusMethodNotAllowed {
 		t.Errorf("status = %d, want 405", rr.Code)
 	}
@@ -113,7 +114,7 @@ func TestScanInvalidJSON(t *testing.T) {
 func TestScanMethodNotAllowed(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/scan", nil)
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	if rr.Code != http.StatusMethodNotAllowed {
 		t.Errorf("status = %d, want 405", rr.Code)
 	}
@@ -122,7 +123,7 @@ func TestScanMethodNotAllowed(t *testing.T) {
 func TestScanUnknownPath(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/nope", nil)
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	if rr.Code != http.StatusNotFound {
 		t.Errorf("status = %d, want 404", rr.Code)
 	}
@@ -224,6 +225,92 @@ resource "aws_security_group" "web" {
 func jsonString(s string) string {
 	b, _ := json.Marshal(s)
 	return string(b)
+}
+
+// --- Item 5: API security ---
+
+func TestScanAuthToken(t *testing.T) {
+	mux := newServeMux("s3cret-token")
+	do := func(auth string) int {
+		req := httptest.NewRequest(http.MethodPost, "/v1/scan", strings.NewReader(`{"files":[]}`))
+		if auth != "" {
+			req.Header.Set("Authorization", auth)
+		}
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+		return rr.Code
+	}
+	if code := do(""); code != http.StatusUnauthorized {
+		t.Errorf("no token: status = %d, want 401", code)
+	}
+	if code := do("Bearer wrong"); code != http.StatusUnauthorized {
+		t.Errorf("wrong token: status = %d, want 401", code)
+	}
+	if code := do("Bearer s3cret-token"); code != http.StatusOK {
+		t.Errorf("right token: status = %d, want 200", code)
+	}
+	// Health stays open for liveness probes even with a token set.
+	req := httptest.NewRequest(http.MethodGet, "/v1/health", nil)
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("health with token set: status = %d, want 200", rr.Code)
+	}
+}
+
+func TestScanRejectsTrailingData(t *testing.T) {
+	if rr := postScan(t, `{"files":[]} trailing garbage`); rr.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400 for trailing data", rr.Code)
+	}
+	// Trailing whitespace/newline is fine.
+	if rr := postScan(t, "{\"files\":[]}\n"); rr.Code != http.StatusOK {
+		t.Errorf("trailing newline: status = %d, want 200", rr.Code)
+	}
+}
+
+func TestScanUnknownPathJSON(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/v1/nope", nil)
+	rr := httptest.NewRecorder()
+	newServeMux("").ServeHTTP(rr, req)
+	if rr.Code != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", rr.Code)
+	}
+	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
+		t.Errorf("Content-Type = %q, want application/json", ct)
+	}
+	var body map[string]string
+	if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+		t.Errorf("404 body is not JSON: %v", err)
+	}
+}
+
+func TestTruncateServeDiag(t *testing.T) {
+	short := "small problem"
+	if got := truncateServeDiag(short); got != short {
+		t.Errorf("short message changed: %q", got)
+	}
+	long := strings.Repeat("x", maxServeDiagChars+500)
+	got := truncateServeDiag(long)
+	if len(got) > maxServeDiagChars+64 {
+		t.Errorf("long message not truncated: %d bytes", len(got))
+	}
+	if !strings.HasSuffix(got, "[truncated]") {
+		t.Errorf("missing truncation marker: %q", got[len(got)-20:])
+	}
+}
+
+func TestServeSanitizesPanicText(t *testing.T) {
+	panicErr := fmt.Errorf("adapter bicep panicked: runtime error: slice bounds out of range [:18] with length 15")
+	if got := sanitizeServeParseErr(panicErr); !strings.Contains(got, "withheld") || strings.Contains(got, "slice bounds") {
+		t.Errorf("panic text not sanitized: %q", got)
+	}
+	plainErr := fmt.Errorf("terraform: main.tf: unbalanced braces: 3 open, 1 close")
+	if got := sanitizeServeParseErr(plainErr); !strings.Contains(got, "unbalanced braces") {
+		t.Errorf("ordinary error changed: %q", got)
+	}
+	if got := sanitizeServeParseErr(nil); got != "" {
+		t.Errorf("nil error: got %q", got)
+	}
 }
 
 func keys(m map[string]bool) []string {

@@ -55,7 +55,7 @@ const usageText = `aegis — Infrastructure-as-Code security scanner
 Usage:
   aegis scan <dir> [--format=text|json|sarif] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW] [--config=aegis.yaml] [--exclude=globs]
   aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json] [--force]
-  aegis serve [--addr=127.0.0.1:8734]
+  aegis serve [--addr=127.0.0.1:8734] [--auth-token=TOKEN]
   aegis quality-gate [--format=text|json] [--bench-dir=DIR] [--corpus-dir=DIR]
   aegis doctor
   aegis --version
@@ -99,6 +99,9 @@ Flags:
   --exclude  scan: comma-separated glob patterns for paths to skip
                (e.g. "vendor/**,*.tfvars"); skipped files are reported
   --strict   scan: fail with exit 2 if any file fails to parse
+  --auth-token serve: require "Authorization: Bearer TOKEN" on /v1/scan
+               (or set AEGIS_SERVE_TOKEN); required in practice whenever
+               serve binds a non-loopback address
 
 Exit codes:
   0  scan clean (or below --fail-on threshold) / fix dry run
@@ -176,6 +179,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 	}
 	if cmd == "serve" {
 		addr := "127.0.0.1:8734"
+		authToken := os.Getenv("AEGIS_SERVE_TOKEN")
 		for i := 0; i < len(flagArgs); i++ {
 			a := flagArgs[i]
 			if a == "--addr" && i+1 < len(flagArgs) {
@@ -183,9 +187,14 @@ func run(args []string, stdout, stderr io.Writer) int {
 				i++
 			} else if strings.HasPrefix(a, "--addr=") {
 				addr = strings.TrimPrefix(a, "--addr=")
+			} else if a == "--auth-token" && i+1 < len(flagArgs) {
+				authToken = flagArgs[i+1]
+				i++
+			} else if strings.HasPrefix(a, "--auth-token=") {
+				authToken = strings.TrimPrefix(a, "--auth-token=")
 			}
 		}
-		return runServe(addr)
+		return runServe(addr, authToken)
 	}
 	if len(posArgs) < 2 {
 		fmt.Fprintf(stderr, "aegis: %s requires a target directory\n", cmd)
@@ -435,7 +444,14 @@ func runFix(target string, flagArgs []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "aegis: re-scan error: %v\n", rerr)
 			return 2
 		}
-		fmt.Fprintf(stdout, "\nre-scan: findings %d → %d\n", before, len(after.Findings))
+		// In JSON mode the re-scan line must not go to stdout: it
+		// would corrupt the JSON document (Phase 7 F1). It belongs
+		// on stderr there; text mode keeps it on stdout.
+		if *format == "json" {
+			fmt.Fprintf(stderr, "\nre-scan: findings %d → %d\n", before, len(after.Findings))
+		} else {
+			fmt.Fprintf(stdout, "\nre-scan: findings %d → %d\n", before, len(after.Findings))
+		}
 	}
 	if len(outcomes) > 0 {
 		return 1
@@ -882,9 +898,31 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 	if _, err := os.Stat(target); err != nil {
 		return res, nil, nil, fmt.Errorf("target: %w", err)
 	}
-	files, err := discovery.Discover(target)
+	files, discSkipped, err := discovery.DiscoverWithReport(target)
 	if err != nil {
 		return res, nil, nil, fmt.Errorf("discovery: %w", err)
+	}
+	// Files discovery dropped for size/total caps must be reported, not
+	// silently skipped: an over-cap file used to vanish with no
+	// diagnostic at all (0 findings that looked clean). Oversize files
+	// get a warning diagnostic each; a scan-wide cap hit gets one
+	// diagnostic naming the cap (the remaining files are unknowable).
+	var discSkippedFiles []discovery.Skipped
+	for _, sk := range discSkipped {
+		if sk.Path == target {
+			res.Diagnostics = append(res.Diagnostics, ir.Diagnostic{
+				Level:   "warning",
+				Message: sk.Reason,
+				Span:    ir.Span{File: target},
+			})
+			continue
+		}
+		discSkippedFiles = append(discSkippedFiles, sk)
+		res.Diagnostics = append(res.Diagnostics, ir.Diagnostic{
+			Level:   "warning",
+			Message: fmt.Sprintf("discovery: skipped %s: %s", sk.Path, sk.Reason),
+			Span:    ir.Span{File: sk.Path},
+		})
 	}
 	var resources []ir.Resource
 	var mods []terraform.Module
@@ -898,7 +936,16 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 	// Build scan-completeness: every discovered file gets an explicit outcome,
 	// including which adapter (format) handled it.
 	completeness := ir.ScanCompleteness{
-		FilesDiscovered: len(files),
+		FilesDiscovered: len(files) + len(discSkippedFiles),
+	}
+	// Discovery-dropped oversize files count as discovered-but-skipped.
+	for _, sk := range discSkippedFiles {
+		completeness.FilesSkipped++
+		completeness.Files = append(completeness.Files, ir.FileStatus{
+			Path:   sk.Path,
+			Status: "skipped",
+			Reason: sk.Reason,
+		})
 	}
 	for i, pr := range results {
 		res.Diagnostics = append(res.Diagnostics, pr.diags...)
