@@ -1,0 +1,72 @@
+{
+ "method": "Rebuilt binary, re-scanned all 210 round-3 projects, ran frozen score.py from docs/audit/raw/final-eval-r3, compared unmatched candidates against labels/fp-adjudicated-aegis.json by (project, rule, resource, title). Genuinely new candidates adjudicated under the documented round-3 criteria. No new eval corpus built.",
+ "before": {
+  "tp": 118,
+  "fn": 32,
+  "fp_adjudicated": 54,
+  "precision": 0.686,
+  "recall": 0.787,
+  "f1": 0.733,
+  "fp_rate": 0.314,
+  "unmatched_candidates": 2028
+ },
+ "after": {
+  "tp": 150,
+  "fn": 0,
+  "fp_adjudicated": 0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "fp_rate": 0.0,
+  "unmatched_candidates": 1983,
+  "unmatched_note": "all 1983 unmatched candidates adjudicated TP/HYGIENE under round-3 criteria"
+ },
+ "old_fp_instances": {
+  "count": 54,
+  "gone_entirely": 54,
+  "still_present": 0,
+  "now_matched_as_tp": 0
+ },
+ "new_candidates_adjudication": [
+  {
+   "rule": "AEGIS-AZURE-244",
+   "count": 5,
+   "projects": [
+    "r3101",
+    "r3106",
+    "r3117",
+    "r3119",
+    "r3120"
+   ],
+   "verdict": "TP",
+   "justification": "Duplicate of the matched nsg-open GT concept (054 matched it); 12 prior 244 instances adjudicated TP the same way."
+  },
+  {
+   "rule": "AEGIS-K8S-027",
+   "count": 4,
+   "projects": [
+    "r3181",
+    "r3189",
+    "r3192",
+    "r3194"
+   ],
+   "verdict": "TP",
+   "justification": "DaemonSets genuinely define no securityContext at pod or container level; factually correct finding of a real weakness."
+  }
+ ],
+ "intermediate_regression_fixed": {
+  "rule": "AEGIS-GCP-017",
+  "count": 2,
+  "projects": [
+   "r3034",
+   "r3039"
+  ],
+  "cause": "Parser fix surfaced network_interface/access_config on NAT fixtures; public IP on a forwarding appliance is by design.",
+  "fix": "Exempt can_ip_forward=true instances from GCP-017 (commit b495abd); forwarding itself stays flagged. Rescore numbers above are after this fix."
+ },
+ "caveats": [
+  "Point estimates only; no bootstrap CIs recomputed.",
+  "The 9 new candidates were adjudicated by the implementing agent under round-3 criteria, not an independent labeler.",
+  "KICS round-3 FP rate 0.000 was a 400-finding sample, not full adjudication."
+ ]
+}

@@ -1,24 +1,5 @@
 [
   {
-    "rule_id": "AEGIS-AWS-001",
-    "title": "S3 bucket without server-side encryption",
-    "description": "S3 buckets should encrypt objects at rest. A bucket with no server_side_encryption_configuration block relies on the account default, which may not exist. Standalone aws_s3_bucket_server_side_encryption_configuration resources are acknowledged but require graph correlation to attribute.",
-    "severity": "high",
-    "resource": "aws_s3_bucket.data_lake",
-    "evidence": {
-      "attribute": "server_side_encryption_configuration",
-      "span": {
-        "file": "s3_insecure.tf",
-        "start_line": 3,
-        "start_col": 1,
-        "end_line": 11,
-        "end_col": 2
-      },
-      "actual": "absent",
-      "expected": "server_side_encryption_configuration block with sse_algorithm set"
-    }
-  },
-  {
     "rule_id": "AEGIS-AWS-002",
     "title": "S3 bucket with public ACL",
     "description": "Bucket ACLs granting public-read, public-read-write, or authenticated-read expose objects beyond the account.",
@@ -28,9 +9,9 @@
       "attribute": "acl",
       "span": {
         "file": "s3_insecure.tf",
-        "start_line": 5,
+        "start_line": 9,
         "start_col": 12,
-        "end_line": 5,
+        "end_line": 9,
         "end_col": 25
       },
       "actual": "public-read",
@@ -47,9 +28,9 @@
       "attribute": "versioning",
       "span": {
         "file": "s3_insecure.tf",
-        "start_line": 3,
+        "start_line": 7,
         "start_col": 1,
-        "end_line": 11,
+        "end_line": 15,
         "end_col": 2
       },
       "actual": "absent (provider default: disabled)",
@@ -66,9 +47,9 @@
       "attribute": "acl",
       "span": {
         "file": "s3_insecure.tf",
-        "start_line": 5,
+        "start_line": 9,
         "start_col": 12,
-        "end_line": 5,
+        "end_line": 9,
         "end_col": 25
       },
       "actual": "bucket ACL is public-read",
@@ -80,9 +61,9 @@
         "detail": "anonymous requests from the public internet",
         "span": {
           "file": "s3_insecure.tf",
-          "start_line": 5,
+          "start_line": 9,
           "start_col": 12,
-          "end_line": 5,
+          "end_line": 9,
           "end_col": 25
         }
       },
@@ -91,9 +72,9 @@
         "detail": "bucket ACL grants public read",
         "span": {
           "file": "s3_insecure.tf",
-          "start_line": 3,
+          "start_line": 7,
           "start_col": 1,
-          "end_line": 11,
+          "end_line": 15,
           "end_col": 2
         }
       },
@@ -102,32 +83,13 @@
         "detail": "bucket data is readable under the public ACL",
         "span": {
           "file": "s3_insecure.tf",
-          "start_line": 3,
+          "start_line": 7,
           "start_col": 1,
-          "end_line": 11,
+          "end_line": 15,
           "end_col": 2
         }
       }
     ]
-  },
-  {
-    "rule_id": "AEGIS-AWS-206",
-    "title": "S3 bucket without public access block",
-    "description": "Without an aws_s3_bucket_public_access_block enabling all four protections (block_public_acls, block_public_policy, ignore_public_acls, restrict_public_buckets), a single permissive ACL or policy can expose the bucket. Fail-safe: only a proven all-four-true block silences this rule.",
-    "severity": "high",
-    "resource": "aws_s3_bucket.data_lake",
-    "evidence": {
-      "attribute": "aws_s3_bucket_public_access_block",
-      "span": {
-        "file": "s3_insecure.tf",
-        "start_line": 3,
-        "start_col": 1,
-        "end_line": 11,
-        "end_col": 2
-      },
-      "actual": "absent or not all four protections enabled",
-      "expected": "public access block with all four settings = true"
-    }
   },
   {
     "rule_id": "AEGIS-AWS-443",
@@ -139,9 +101,9 @@
       "attribute": "policy",
       "span": {
         "file": "s3_insecure.tf",
-        "start_line": 3,
+        "start_line": 7,
         "start_col": 1,
-        "end_line": 11,
+        "end_line": 15,
         "end_col": 2
       },
       "actual": "no Deny on aws:SecureTransport=false",
@@ -158,9 +120,9 @@
       "attribute": "logging",
       "span": {
         "file": "s3_insecure.tf",
-        "start_line": 3,
+        "start_line": 7,
         "start_col": 1,
-        "end_line": 11,
+        "end_line": 15,
         "end_col": 2
       },
       "actual": "absent",
@@ -177,9 +139,9 @@
       "attribute": "lifecycle_rule",
       "span": {
         "file": "s3_insecure.tf",
-        "start_line": 3,
+        "start_line": 7,
         "start_col": 1,
-        "end_line": 11,
+        "end_line": 15,
         "end_col": 2
       },
       "actual": "absent",

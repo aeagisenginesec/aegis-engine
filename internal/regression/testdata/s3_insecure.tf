@@ -1,5 +1,9 @@
 # Data-lake bucket: public ACL, no default encryption, versioning suspended,
-# no access logging. Each of these should be a finding.
+# no access logging. The public ACL (002), versioning (012), exfiltration
+# path (104), and hardening findings fire. SSE (001) and PAB (206) do NOT
+# fire: the bucket is intentionally public, so recommending encryption
+# at rest or a public access block is wrong advice (see
+# bucketIntentionallyPublic).
 resource "aws_s3_bucket" "data_lake" {
   bucket = "acme-data-lake-prod"
   acl    = "public-read"

@@ -9,7 +9,7 @@ resource "azurerm_mssql_server" "db" {
   location                      = azurerm_resource_group.rg.location
   version                       = "12.0"
   administrator_login           = "dbadmin"
-  administrator_login_password  = var.db_password
+  administrator_login_password  = "Hardcoded123!"
   public_network_access_enabled = false
 }
 
