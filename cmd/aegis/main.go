@@ -969,6 +969,11 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 			expanded, mdiags := semantics.ExpandModules(target, mods, tfAdapter, 2)
 			res.Diagnostics = append(res.Diagnostics, mdiags...)
 			resources = append(resources, expanded...)
+			// Drop bare-address twins: module files are parsed once as
+			// roots and again via expansion. The expanded copy (correct
+			// address, resolved inputs, rewritten refs) is authoritative;
+			// the bare copy would double every finding on the block.
+			resources = semantics.RemoveBareModuleTwins(resources, expanded)
 		}
 	}
 	res.Resources = len(resources)

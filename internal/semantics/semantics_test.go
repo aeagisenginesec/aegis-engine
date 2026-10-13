@@ -658,3 +658,66 @@ func TestPolicyDocumentUnresolvableStaysUnknown(t *testing.T) {
 		t.Fatalf("ref should be intact, got %q", v.Ref)
 	}
 }
+
+func TestRemoveBareModuleTwins(t *testing.T) {
+	span := func(file string, line int) ir.Span {
+		return ir.Span{File: file, StartLine: line, StartCol: 1, EndLine: line + 4, EndCol: 2}
+	}
+	res := func(typ, name, file string, line int) ir.Resource {
+		return ir.Resource{Type: typ, Name: name, Span: span(file, line)}
+	}
+	all := []ir.Resource{
+		res("aws_s3_bucket", "uploads", "/proj/modules/data/main.tf", 1),               // bare twin -> drop
+		res("aws_s3_bucket", "module.data.uploads", "/proj/modules/data/main.tf", 1),   // expanded -> keep
+		res("aws_s3_bucket", "module.other.uploads", "/proj/modules/data/main.tf", 1), // 2nd instance -> keep
+		res("aws_s3_bucket", "root", "/proj/main.tf", 1),                              // bare root -> keep
+		res("aws_s3_bucket", "uploads", "/proj/modules/other/main.tf", 1),             // same name, other file -> keep
+		res("aws_s3_bucket", "unexpanded", "/proj/modules/remote/main.tf", 1),         // no twin (remote) -> keep
+	}
+	expanded := []ir.Resource{
+		res("aws_s3_bucket", "module.data.uploads", "/proj/modules/data/main.tf", 1),
+		res("aws_s3_bucket", "module.other.uploads", "/proj/modules/data/main.tf", 1),
+	}
+	got := semantics.RemoveBareModuleTwins(all, expanded)
+	wantAddrs := map[string]bool{
+		"aws_s3_bucket.module.data.uploads":  true,
+		"aws_s3_bucket.module.other.uploads": true,
+		"aws_s3_bucket.root":                 true,
+		"aws_s3_bucket.uploads":              true, // the other-file one
+		"aws_s3_bucket.unexpanded":           true,
+	}
+	if len(got) != len(wantAddrs) {
+		t.Fatalf("expected %d resources, got %d", len(wantAddrs), len(got))
+	}
+	for _, r := range got {
+		if !wantAddrs[r.Address()] {
+			t.Errorf("unexpected resource kept: %s", r.Address())
+		}
+	}
+	for _, r := range got {
+		if r.Address() == "aws_s3_bucket.uploads" && r.Span.File == "/proj/modules/data/main.tf" {
+			t.Errorf("bare twin was not dropped: %s", r.Address())
+		}
+	}
+	// Relative vs absolute path forms must still match: root parsing uses
+	// discovery paths, expansion uses absolute paths.
+	dir := t.TempDir()
+	absFile := filepath.Join(dir, "modules/data/main.tf")
+	rel := []ir.Resource{
+		{Type: "aws_s3_bucket", Name: "uploads", Span: ir.Span{File: "modules/data/main.tf", StartLine: 1, StartCol: 1, EndLine: 5, EndCol: 2}},
+		{Type: "aws_s3_bucket", Name: "module.data.uploads", Span: ir.Span{File: absFile, StartLine: 1, StartCol: 1, EndLine: 5, EndCol: 2}},
+	}
+	oldWd, _ := os.Getwd()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Chdir(oldWd) }()
+	got2 := semantics.RemoveBareModuleTwins(rel, rel[1:])
+	if len(got2) != 1 || got2[0].Address() != "aws_s3_bucket.module.data.uploads" {
+		t.Fatalf("relative/absolute path mismatch: got %v", got2)
+	}
+	// Empty expansion: nothing is dropped.
+	if got3 := semantics.RemoveBareModuleTwins(all, nil); len(got3) != len(all) {
+		t.Fatalf("empty expansion must not drop resources: got %d want %d", len(got3), len(all))
+	}
+}
