@@ -18,7 +18,6 @@ import (
 func DatabasesDeepRules() []ir.Rule {
 	return []ir.Rule{
 		auroraPerfInsightsNoCMK{},      // AEGIS-AWS-700
-		dbInstanceNoCopyTagsSnapshot{}, // AEGIS-AWS-702
 		auroraSkipFinalSnapshot{},      // AEGIS-AWS-703
 		auroraNoAutomatedBackup{},      // AEGIS-AWS-704
 		dbClusterSnapshotShared{},     // AEGIS-AWS-705
@@ -82,52 +81,6 @@ func (auroraPerfInsightsNoCMK) Check(r ir.Resource) []ir.Finding {
 			Span:      r.Span,
 			Actual:    "absent (AWS-managed key)",
 			Expected:  "performance_insights_kms_key_id set",
-		},
-	}}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-702: RDS instance snapshot without tag copying (low)
-// ---------------------------------------------------------------------------
-
-type dbInstanceNoCopyTagsSnapshot struct{}
-
-func (dbInstanceNoCopyTagsSnapshot) ID() string { return "AEGIS-AWS-702" }
-func (dbInstanceNoCopyTagsSnapshot) Title() string {
-	return "RDS instance snapshots do not copy tags"
-}
-func (dbInstanceNoCopyTagsSnapshot) Description() string {
-	return "copy_tags_to_snapshot is absent or false, so automated snapshots " +
-		"lose the instance's tags (owner, environment, cost center), which " +
-		"breaks tag-based access control and cost allocation on restores."
-}
-func (dbInstanceNoCopyTagsSnapshot) Severity() ir.Severity { return ir.SeverityLow }
-func (dbInstanceNoCopyTagsSnapshot) AppliesTo(resType string) bool {
-	return resType == "aws_db_instance"
-}
-func (dbInstanceNoCopyTagsSnapshot) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getBool(r, "copy_tags_to_snapshot")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present && val {
-		return nil
-	}
-	actual := "absent (provider default: false)"
-	if present {
-		actual = "false"
-	}
-	return []ir.Finding{{
-		RuleID:      "AEGIS-AWS-702",
-		Title:       (dbInstanceNoCopyTagsSnapshot{}).Title(),
-		Description: (dbInstanceNoCopyTagsSnapshot{}).Description(),
-		Severity:    ir.SeverityLow,
-		Resource:    r.Address(),
-		Evidence: ir.Evidence{
-			Attribute: "copy_tags_to_snapshot",
-			Span:      evidenceSpan(span, r.Span),
-			Actual:    actual,
-			Expected:  "copy_tags_to_snapshot = true",
 		},
 	}}
 }

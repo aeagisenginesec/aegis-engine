@@ -110,7 +110,24 @@ type template struct {
 	diags      []ir.Diagnostic
 	converted  map[string]ir.Resource // logicalID -> converted resource (for cross-refs)
 	companions []ir.Resource          // synthesized companion resources
+	// aliasActive tracks alias targets currently being resolved (cycle
+	// guard). YAML anchors can be self-referential (&a [*a]); without
+	// this, resolveValue recurses until the goroutine stack overflows
+	// and the whole scanner process dies. Unlike decoding into `any`,
+	// decoding into yaml.Node does NOT get yaml.v3's alias safeguards.
+	aliasActive map[*yaml.Node]bool
+	// aliasBudget bounds total alias expansions per template (billion-
+	// laughs protection): each alias follow re-walks its target subtree,
+	// so nested aliases amplify exponentially. Exhaustion yields Unknown
+	// plus a single warning diagnostic, never a hang or OOM.
+	aliasBudget int
+	// budgetWarned records that the alias-budget warning was emitted.
+	budgetWarned bool
 }
+
+// maxAliasExpansions bounds alias follows per template. Legitimate
+// templates reuse a handful of anchors; 100k is generous headroom.
+const maxAliasExpansions = 100000
 
 type paramDef struct {
 	def     ir.Value // Default value, or UnknownValue if none
@@ -121,11 +138,12 @@ type paramDef struct {
 // Parse converts a CloudFormation template into IR resources.
 func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, error) {
 	t := &template{
-		path:      path,
-		params:    map[string]paramDef{},
-		resources: map[string]*yaml.Node{},
-		outputs:   map[string]*yaml.Node{},
-		converted: map[string]ir.Resource{},
+		path:        path,
+		params:      map[string]paramDef{},
+		resources:   map[string]*yaml.Node{},
+		outputs:     map[string]*yaml.Node{},
+		converted:   map[string]ir.Resource{},
+		aliasBudget: maxAliasExpansions,
 	}
 	var doc yaml.Node
 	if err := yaml.Unmarshal(src, &doc); err != nil {
@@ -340,16 +358,23 @@ func nodeSpan(path string, n *yaml.Node) ir.Span {
 }
 
 // mappingGet returns the value node for key in a mapping node, or nil.
+//
+// Duplicate keys: LAST occurrence wins, matching YAML-to-map decoders
+// (e.g. Python yaml.safe_load) and JSON semantics. This matters because
+// some generated templates repeat a top-level section (e.g. an empty
+// "Resources:" followed later by the real one); first-wins silently
+// dropped every resource in such templates.
 func mappingGet(m *yaml.Node, key string) *yaml.Node {
 	if m == nil || m.Kind != yaml.MappingNode {
 		return nil
 	}
+	var found *yaml.Node
 	for i := 0; i+1 < len(m.Content); i += 2 {
 		if m.Content[i].Kind == yaml.ScalarNode && m.Content[i].Value == key {
-			return m.Content[i+1]
+			found = m.Content[i+1]
 		}
 	}
-	return nil
+	return found
 }
 
 // mappingKeys returns the scalar keys of a mapping node.
@@ -367,16 +392,18 @@ func mappingKeys(m *yaml.Node) []string {
 }
 
 // keyNode returns the key node for key in a mapping node (for spans).
+// Like mappingGet, LAST occurrence wins on duplicate keys.
 func keyNode(m *yaml.Node, key string) *yaml.Node {
 	if m == nil || m.Kind != yaml.MappingNode {
 		return nil
 	}
+	var found *yaml.Node
 	for i := 0; i+1 < len(m.Content); i += 2 {
 		if m.Content[i].Kind == yaml.ScalarNode && m.Content[i].Value == key {
-			return m.Content[i]
+			found = m.Content[i]
 		}
 	}
-	return nil
+	return found
 }
 
 // scalarValue converts a YAML scalar node to an ir.Value.

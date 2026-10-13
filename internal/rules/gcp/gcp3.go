@@ -2209,10 +2209,13 @@ func (projectAutoNetwork) AppliesTo(t string) bool {
 }
 func (s projectAutoNetwork) Check(r ir.Resource) []ir.Finding {
 	v, ok := r.Attributes["auto_create_network"]
-	if !ok || !v.Known {
+	if !ok {
 		// absent: provider default is true
 		return []ir.Finding{mkFinding(s, r, "auto_create_network", r.Span,
 			"absent (defaults to true)", "auto_create_network = false")}
+	}
+	if !v.Known {
+		return nil // unresolved: cannot decide
 	}
 	if b, ok := v.AsBool(); ok && b {
 		return []ir.Finding{mkFinding(s, r, "auto_create_network", v.Span,
@@ -2304,9 +2307,12 @@ func (dnsPolicyNoLogging) AppliesTo(t string) bool {
 }
 func (s dnsPolicyNoLogging) Check(r ir.Resource) []ir.Finding {
 	v, ok := r.Attributes["enable_logging"]
-	if !ok || !v.Known {
+	if !ok {
 		return []ir.Finding{mkFinding(s, r, "enable_logging", r.Span,
 			"absent", "enable_logging = true")}
+	}
+	if !v.Known {
+		return nil // unresolved: cannot decide
 	}
 	if b, ok := v.AsBool(); ok && !b {
 		return []ir.Finding{mkFinding(s, r, "enable_logging", v.Span,

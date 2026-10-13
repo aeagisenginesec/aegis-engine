@@ -2,6 +2,7 @@
 package azure
 
 import (
+	"sort"
 	"strings"
 
 	"aegis/internal/ir"
@@ -280,8 +281,14 @@ func (s mssqlNoVulnAssess) Check(r ir.Resource) []ir.Finding {
 	if strings.EqualFold(en, "true") {
 		return nil
 	}
+	// An empty value is not an explicit enable: keep firing, but report
+	// a non-empty Actual so the evidence is meaningful.
+	actual := en
+	if actual == "" {
+		actual = "(empty — not enabled)"
+	}
 	return []ir.Finding{mkFinding(s, r, "recurring_scans.enabled",
-		evidenceSpan(ir.Span{}, r.Span), en, "recurring_scans { enabled = true }")}
+		evidenceSpan(ir.Span{}, r.Span), actual, "recurring_scans { enabled = true }")}
 }
 
 // ---------------------------------------------------------------------------
@@ -631,6 +638,9 @@ func (vnetNoFlowTimeout) AppliesTo(resType string) bool {
 }
 
 func (s vnetNoFlowTimeout) Check(r ir.Resource) []ir.Finding {
+	if v, ok := r.Attributes["dns_servers"]; ok && !v.Known {
+		return nil // unresolved: cannot decide
+	}
 	if _, _, ok := getStringList(r, "dns_servers"); ok {
 		return nil
 	}
@@ -659,12 +669,42 @@ func (subnetNoNSG) AppliesTo(resType string) bool {
 	return resType == "azurerm_subnet"
 }
 
-func (s subnetNoNSG) Check(r ir.Resource) []ir.Finding {
-	// Subnets associate NSGs via a separate association resource; the
-	// subnet itself rarely carries the reference. Only flag when the
-	// subnet explicitly opts out via a documented attribute is not
-	// possible — stay quiet to avoid noise.
-	return nil
+func (s subnetNoNSG) Check(ir.Resource) []ir.Finding { return nil }
+
+var _ ir.CrossResourceRule = subnetNoNSG{}
+
+// CheckAll fires for each subnet with no azurerm_subnet_network_security_group_association
+// referencing it. NSG association is a separate resource, so a per-resource Check cannot
+// decide this (the subnet itself carries no NSG reference).
+func (s subnetNoNSG) CheckAll(resources []ir.Resource) []ir.Finding {
+	protected := map[string]bool{}
+	for _, r := range resources {
+		if r.Type != "azurerm_subnet_network_security_group_association" {
+			continue
+		}
+		v, ok := r.Attributes["subnet_id"]
+		if !ok || !v.IsRef() {
+			continue // unresolvable link: cannot prove protection
+		}
+		if addr, ok := refAddrOf(v.Ref); ok {
+			protected[addr] = true
+		}
+	}
+	sorted := append([]ir.Resource(nil), resources...)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Address() < sorted[j].Address() })
+	var out []ir.Finding
+	for _, r := range sorted {
+		if r.Type != "azurerm_subnet" {
+			continue
+		}
+		if protected[r.Address()] {
+			continue
+		}
+		out = append(out, mkFinding(s, r, "network_security_group",
+			evidenceSpan(ir.Span{}, r.Span), "absent",
+			"azurerm_subnet_network_security_group_association targeting "+r.Address()))
+	}
+	return out
 }
 
 // ---------------------------------------------------------------------------
@@ -689,6 +729,9 @@ func (subnetNoServiceEndpoint) AppliesTo(resType string) bool {
 }
 
 func (s subnetNoServiceEndpoint) Check(r ir.Resource) []ir.Finding {
+	if v, ok := r.Attributes["service_endpoints"]; ok && !v.Known {
+		return nil // unresolved: cannot decide
+	}
 	if _, _, ok := getStringList(r, "service_endpoints"); ok {
 		return nil
 	}

@@ -56,6 +56,8 @@ var unknownAttrNames = []string{
 	"cidr_block",
 	"client_broker",
 	"client_certificate_id",
+	"cloud_watch_logs_group_arn",
+	"cloud_watch_logs_role_arn",
 	"cloudwatch_role_arn",
 	"cluster_config",
 	"cluster_endpoint_encryption_type",

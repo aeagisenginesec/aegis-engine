@@ -14,7 +14,7 @@ import (
 	"aegis/internal/ir"
 )
 
-// extraRules returns rules AEGIS-DOCKER-011 through AEGIS-DOCKER-036.
+// extraRules returns rules AEGIS-DOCKER-011 through AEGIS-DOCKER-037.
 func extraRules() []ir.Rule {
 	return []ir.Rule{
 		argSecrets{},           // AEGIS-DOCKER-011
@@ -43,6 +43,7 @@ func extraRules() []ir.Rule {
 		runSecrets{},           // AEGIS-DOCKER-034
 		addRemoteURL{},         // AEGIS-DOCKER-035
 		buildToolsInFinal{},    // AEGIS-DOCKER-036
+		nopasswdSudoers{},      // AEGIS-DOCKER-037
 	}
 }
 
@@ -1392,4 +1393,38 @@ func sortStrings(s []string) {
 			s[j], s[j-1] = s[j-1], s[j]
 		}
 	}
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-DOCKER-037: passwordless sudo configured (NOPASSWD)
+// ---------------------------------------------------------------------------
+
+type nopasswdSudoers struct{}
+
+func (nopasswdSudoers) ID() string { return "AEGIS-DOCKER-037" }
+func (nopasswdSudoers) Title() string {
+	return "Passwordless sudo configured (NOPASSWD)"
+}
+func (nopasswdSudoers) Description() string {
+	return "A RUN step writes a NOPASSWD entry to /etc/sudoers (or " +
+		"/etc/sudoers.d/), granting a user passwordless root. Any " +
+		"process running as that user — including a compromised " +
+		"application — can escalate to root without a password. " +
+		"Require a password for sudo, or drop sudo entirely and rely " +
+		"on USER for runtime privilege separation."
+}
+func (nopasswdSudoers) Severity() ir.Severity         { return ir.SeverityHigh }
+func (nopasswdSudoers) AppliesTo(resType string) bool { return appliesToDocker(resType) }
+
+func (nopasswdSudoers) Check(r ir.Resource) []ir.Finding {
+	rule := nopasswdSudoers{}
+	set, _, present, known := getBool(r, "nopasswd_sudoers")
+	if !present || !known || !set {
+		return nil
+	}
+	return []ir.Finding{finding(
+		rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+		r, "RUN", r.Span, "NOPASSWD entry written to a sudoers file",
+		"no passwordless sudo entry in sudoers",
+	)}
 }

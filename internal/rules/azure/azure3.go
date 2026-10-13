@@ -13,23 +13,23 @@ import (
 // Azure3Rules returns storage and Key Vault rules in ID order.
 func Azure3Rules() []ir.Rule {
 	return []ir.Rule{
-		storageNoHTTPSOnly{},        // AEGIS-AZURE-026
-		storageWeakTLS{},            // AEGIS-AZURE-027
-		storageNoBlobVersioning{},   // AEGIS-AZURE-028
-		storageNoBlobSoftDelete{},   // AEGIS-AZURE-029
-		storageNoContainerDelete{},  // AEGIS-AZURE-030
-		storageSharedKeyAccess{},    // AEGIS-AZURE-031
-		storageNoInfraEncryption{},  // AEGIS-AZURE-032
-		storageNoCMK{},              // AEGIS-AZURE-033
-		storageQueueNoLogging{},     // AEGIS-AZURE-034
-		storageNoNFSv3Secure{},      // AEGIS-AZURE-035
-		keyVaultNoSoftDelete{},      // AEGIS-AZURE-037
-		keyVaultNoRBAC{},            // AEGIS-AZURE-038
-		keyVaultPublicAccess{},      // AEGIS-AZURE-039
-		keyVaultSecretNoExpiry{},    // AEGIS-AZURE-040
-		keyVaultKeyNoRotation{},     // AEGIS-AZURE-041
-		keyVaultCertNoAutoRenew{},   // AEGIS-AZURE-042
-		keyVaultSkuNotPremium{},     // AEGIS-AZURE-043
+		storageNoHTTPSOnly{},       // AEGIS-AZURE-026
+		storageWeakTLS{},           // AEGIS-AZURE-027
+		storageNoBlobVersioning{},  // AEGIS-AZURE-028
+		storageNoBlobSoftDelete{},  // AEGIS-AZURE-029
+		storageNoContainerDelete{}, // AEGIS-AZURE-030
+		storageSharedKeyAccess{},   // AEGIS-AZURE-031
+		storageNoInfraEncryption{}, // AEGIS-AZURE-032
+		storageNoCMK{},             // AEGIS-AZURE-033
+		storageQueueNoLogging{},    // AEGIS-AZURE-034
+		storageNoNFSv3Secure{},     // AEGIS-AZURE-035
+		keyVaultNoSoftDelete{},     // AEGIS-AZURE-037
+		keyVaultNoRBAC{},           // AEGIS-AZURE-038
+		keyVaultPublicAccess{},     // AEGIS-AZURE-039
+		keyVaultSecretNoExpiry{},   // AEGIS-AZURE-040
+		keyVaultKeyNoRotation{},    // AEGIS-AZURE-041
+		keyVaultCertNoAutoRenew{},  // AEGIS-AZURE-042
+		keyVaultSkuNotPremium{},    // AEGIS-AZURE-043
 	}
 }
 
@@ -341,15 +341,17 @@ func (storageNoCMK) AppliesTo(resType string) bool {
 }
 
 func (s storageNoCMK) Check(r ir.Resource) []ir.Finding {
-	_, _, present, _ := getBlocks(r, "customer_managed_key")
+	_, _, present, known := getBlocks(r, "customer_managed_key")
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
 	if present {
 		return nil
 	}
-	// Only flag when account kind suggests sensitivity; keep it simple:
-	// flag if explicitly documented as sensitive via tags? No — keep quiet
-	// on absence to avoid noise. This rule fires only when the block exists
-	// but is incomplete.
-	return nil
+	// Absent block: the account uses Microsoft-managed keys.
+	return []ir.Finding{mkFinding(s, r, "customer_managed_key",
+		evidenceSpan(ir.Span{}, r.Span), "absent (Microsoft-managed keys)",
+		"customer_managed_key { key_vault_key_id = ... }")}
 }
 
 // ---------------------------------------------------------------------------

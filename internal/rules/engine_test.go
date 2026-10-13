@@ -123,8 +123,10 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	// - 39 duplicate rules removed by post-audit dedup (46 pairs consolidated).
 	// + 5 accuracy-100 rules (AEGIS-AZURE-314, AEGIS-AWS-850,
 	//   AEGIS-DOCKER-036, AEGIS-K8S-026, AEGIS-K8S-027).
-	if len(all) != 1151 {
-		t.Fatalf("default registry should wire 1151 rules, got %d", len(all))
+	// + 6 outperform-mission rules (AEGIS-AWS-851..855, AEGIS-DOCKER-037).
+	// − 3 removed as factually wrong / duplicates (684, 692, 702).
+	if len(all) != 1154 {
+		t.Fatalf("default registry should wire 1156 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {
@@ -177,7 +179,10 @@ func TestDefaultRegistry_EndToEndSmoke(t *testing.T) {
 						{Raw: map[string]ir.Value{
 							"apply_server_side_encryption_by_default": ir.Value{Raw: []ir.Value{
 								{Raw: map[string]ir.Value{
-									"sse_algorithm": ir.Value{Raw: "AES256", Known: true, Span: span},
+									// CMK (not AES256): the smoke bucket is fully
+									// compliant, so 852 must stay quiet on it.
+									"sse_algorithm":     ir.Value{Raw: "aws:kms", Known: true, Span: span},
+									"kms_master_key_id": ir.Value{Raw: "arn:aws:kms:us-east-1:123456789012:key/abc-123", Known: true, Span: span},
 								}, Known: true, Span: span},
 							}, Known: true, Span: span},
 						}, Known: true, Span: span},

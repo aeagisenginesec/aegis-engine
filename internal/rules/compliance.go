@@ -566,9 +566,6 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-AWS-688": { // Network interface with public IP association
 		ref(nist, "SC-7"),
 	},
-	"AEGIS-AWS-692": { // EC2 instance without an IAM instance profile
-		ref(nist, "IA-5"),
-	},
 	"AEGIS-AWS-694": { // AMI copy without encryption
 		ref(nist, "SC-12"),
 	},
@@ -583,9 +580,6 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	},
 	"AEGIS-AWS-605": { // RDS instance without enhanced monitoring
 		ref(nist, "AU-2"),
-	},
-	"AEGIS-AWS-702": { // RDS instance snapshots do not copy tags
-		ref(nist, "CP-9"),
 	},
 	"AEGIS-AWS-703": { // Aurora cluster skips final snapshot on deletion
 		ref(nist, "CP-9"),

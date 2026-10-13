@@ -290,8 +290,14 @@ func (s acrNoContentTrust) Check(r ir.Resource) []ir.Finding {
 	if strings.EqualFold(en, "true") {
 		return nil
 	}
+	// An empty value is not an explicit enable: keep firing, but report
+	// a non-empty Actual so the evidence is meaningful.
+	actual := en
+	if actual == "" {
+		actual = "(empty — not enabled)"
+	}
 	return []ir.Finding{mkFinding(s, r, "trust_policy.enabled",
-		evidenceSpan(ir.Span{}, r.Span), en, "trust_policy { enabled = true }")}
+		evidenceSpan(ir.Span{}, r.Span), actual, "trust_policy { enabled = true }")}
 }
 
 // ---------------------------------------------------------------------------
@@ -326,8 +332,14 @@ func (s acrNoQuarantine) Check(r ir.Resource) []ir.Finding {
 	if strings.EqualFold(en, "true") {
 		return nil
 	}
+	// An empty value is not an explicit enable: keep firing, but report
+	// a non-empty Actual so the evidence is meaningful.
+	actual := en
+	if actual == "" {
+		actual = "(empty — not enabled)"
+	}
 	return []ir.Finding{mkFinding(s, r, "quarantine_policy.enabled",
-		evidenceSpan(ir.Span{}, r.Span), en, "quarantine_policy { enabled = true }")}
+		evidenceSpan(ir.Span{}, r.Span), actual, "quarantine_policy { enabled = true }")}
 }
 
 // ---------------------------------------------------------------------------
@@ -383,6 +395,9 @@ func (monitorNoActivityLog) AppliesTo(resType string) bool {
 }
 
 func (s monitorNoActivityLog) Check(r ir.Resource) []ir.Finding {
+	if v, ok := r.Attributes["categories"]; ok && !v.Known {
+		return nil // unresolved: cannot decide
+	}
 	if _, _, ok := getStringList(r, "categories"); ok {
 		return nil
 	}

@@ -21,7 +21,6 @@ func ComputeDeepRules() []ir.Rule {
 		ec2IMDSHopLimitTooHigh{},     // AEGIS-AWS-681
 		launchTemplateStaleDefault{}, // AEGIS-AWS-682
 		ec2NoTerminationProtection{}, // AEGIS-AWS-683
-		ec2EBSOptimizedAbsent{},      // AEGIS-AWS-684
 		ec2PasswordDataExposed{},     // AEGIS-AWS-685
 		ec2UserDataAWSCreds{},        // AEGIS-AWS-686
 		ltUserDataHardcodedPassword{}, // AEGIS-AWS-687
@@ -29,7 +28,6 @@ func ComputeDeepRules() []ir.Rule {
 		ec2SourceDestCheckDisabled{}, // AEGIS-AWS-689
 		asgHealthCheckEC2Only{},      // AEGIS-AWS-690
 		ltEBSOptimizedAbsent{},       // AEGIS-AWS-691
-		ec2NoInstanceProfile{},       // AEGIS-AWS-692
 		ec2UnlimitedCPUCredits{},     // AEGIS-AWS-693
 		amiCopyUnencrypted{},         // AEGIS-AWS-694
 		ebsSnapshotCopyUnencrypted{}, // AEGIS-AWS-695
@@ -224,39 +222,6 @@ func (ec2NoTerminationProtection) Check(r ir.Resource) []ir.Finding {
 			Expected:  "disable_api_termination = true",
 		},
 	}}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-684: EC2 instance without ebs_optimized declared (low)
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-565 fires on explicit ebs_optimized = false; this rule covers
-// the absent case, whose provider default (false) is equally unoptimized.
-
-type ec2EBSOptimizedAbsent struct{}
-
-func (ec2EBSOptimizedAbsent) ID() string { return "AEGIS-AWS-684" }
-func (ec2EBSOptimizedAbsent) Title() string {
-	return "EC2 instance without ebs_optimized declared"
-}
-func (ec2EBSOptimizedAbsent) Description() string {
-	return "ebs_optimized is absent, so the provider default (false) applies: " +
-		"the instance gets no dedicated EBS bandwidth. Declare " +
-		"ebs_optimized = true on EBS-backed workloads."
-}
-func (ec2EBSOptimizedAbsent) Severity() ir.Severity { return ir.SeverityLow }
-func (ec2EBSOptimizedAbsent) AppliesTo(resType string) bool { return resType == "aws_instance" }
-func (ec2EBSOptimizedAbsent) Check(r ir.Resource) []ir.Finding {
-	_, _, present, known := getBool(r, "ebs_optimized")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present {
-		return nil // explicit value (false is AEGIS-AWS-565's job)
-	}
-	return absentInsecureDefault(ec2EBSOptimizedAbsent{}, r,
-		"ebs_optimized",
-		"absent (provider default: false)",
-		"ebs_optimized = true")
 }
 
 // ---------------------------------------------------------------------------
@@ -565,38 +530,6 @@ func (ltEBSOptimizedAbsent) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-692: EC2 instance without an IAM instance profile (medium)
-// ---------------------------------------------------------------------------
-
-type ec2NoInstanceProfile struct{}
-
-func (ec2NoInstanceProfile) ID() string { return "AEGIS-AWS-692" }
-func (ec2NoInstanceProfile) Title() string {
-	return "EC2 instance without an IAM instance profile"
-}
-func (ec2NoInstanceProfile) Description() string {
-	return "iam_instance_profile is absent, so the instance has no IAM role: " +
-		"any AWS access must come from credentials baked into the image or " +
-		"user_data. Attach an instance profile with least-privilege " +
-		"permissions instead."
-}
-func (ec2NoInstanceProfile) Severity() ir.Severity { return ir.SeverityLow }
-func (ec2NoInstanceProfile) AppliesTo(resType string) bool { return resType == "aws_instance" }
-func (ec2NoInstanceProfile) Check(r ir.Resource) []ir.Finding {
-	_, _, present, known := getString(r, "iam_instance_profile")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present {
-		return nil
-	}
-	return absentInsecureDefault(ec2NoInstanceProfile{}, r,
-		"iam_instance_profile",
-		"absent (no IAM role attached)",
-		"iam_instance_profile set")
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AWS-693: burstable instance with unlimited CPU credits (low)
 // ---------------------------------------------------------------------------
 
@@ -745,9 +678,12 @@ func (ec2RootVolumeUnencrypted) Title() string {
 	return "EC2 root volume without encryption"
 }
 func (ec2RootVolumeUnencrypted) Description() string {
-	return "root_block_device with encrypted absent or false leaves the " +
+	return "root_block_device with encrypted = false explicitly leaves the " +
 		"instance's root volume unencrypted at rest, exposing the OS disk " +
-		"and any data written to it. Set encrypted = true."
+		"and any data written to it. Set encrypted = true. (An omitted " +
+		"root_block_device — or an omitted encrypted within it — is NOT " +
+		"evidence of an unencrypted volume: encryption then follows the " +
+		"AMI snapshot and the account EBS-encryption-by-default setting.)"
 }
 func (ec2RootVolumeUnencrypted) Severity() ir.Severity { return ir.SeverityHigh }
 func (ec2RootVolumeUnencrypted) AppliesTo(resType string) bool { return resType == "aws_instance" }
@@ -757,17 +693,16 @@ func (ec2RootVolumeUnencrypted) Check(r ir.Resource) []ir.Finding {
 		return nil // unresolved: cannot decide
 	}
 	if !present || len(blks) == 0 {
-		return absentInsecureDefault(ec2RootVolumeUnencrypted{}, r,
-			"root_block_device.encrypted",
-			"absent (provider default: unencrypted)",
-			"root_block_device { encrypted = true }")
+		// Absent block: encryption governed by AMI snapshot + account
+		// EBS-encryption-by-default, NOT a provider default of
+		// unencrypted. Stay quiet (was: absentInsecureDefault FP).
+		return nil
 	}
 	enc, span, p, k := blockBool(blks[0], "encrypted")
 	if !p {
-		return absentInsecureDefault(ec2RootVolumeUnencrypted{}, r,
-			"root_block_device.encrypted",
-			"absent (provider default: unencrypted)",
-			"encrypted = true")
+		// Present block, encrypted omitted: same AMI/account default
+		// governs. Stay quiet.
+		return nil
 	}
 	if !k {
 		return nil // unresolved: cannot decide

@@ -77,5 +77,7 @@ func Rules() []ir.Rule {
 	base = append(base, ServicesDeepRules()...)          // 800-824
 	base = append(base, EdgeDeepRules()...)              // 825-849
 	base = append(base, WeakPasswordRules()...)          // AEGIS-AWS-850
+	base = append(base, CloudTrailCloudWatchRules()...) // AEGIS-AWS-851
+	base = append(base, CMKRefinementRules()...)         // AEGIS-AWS-852..855
 	return base
 }

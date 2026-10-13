@@ -546,3 +546,103 @@ Outputs:
 		t.Errorf("expected GetAtt output to be unknown")
 	}
 }
+
+// Parity (item 2): a CFN BucketPolicy linked via !Ref must attribute to
+// its bucket, so the exfiltration-path rule (AWS-104) fires on a
+// policy-only public grant, not just when a public ACL is also present.
+func TestS3BucketPolicyRefAttribution(t *testing.T) {
+	src := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: probe-policy-only
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DataBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicRead
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: "arn:aws:s3:::probe-policy-only/*"
+`
+	findings := scanTemplate(t, "template.yaml", src)
+	if !ruleIDs(findings)["AEGIS-AWS-104"] {
+		t.Errorf("expected AEGIS-AWS-104 (policy-only public grant via !Ref), got %v", ruleIDs(findings))
+	}
+}
+
+// Parity (item 2): a standalone AWS::S3::PublicAccessBlock resource linked
+// via !Ref must attribute to its bucket, so AWS-206 stays quiet on a
+// protected private bucket (previously the type was unmapped -> dropped
+// with a warning -> 206 false-positive).
+func TestS3PublicAccessBlockRefAttribution(t *testing.T) {
+	src := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: probe-pab
+  Pab:
+    Type: AWS::S3::PublicAccessBlock
+    Properties:
+      Bucket: !Ref DataBucket
+      BlockPublicAcls: true
+      BlockPublicPolicy: true
+      IgnorePublicAcls: true
+      RestrictPublicBuckets: true
+`
+	findings := scanTemplate(t, "template.yaml", src)
+	if ruleIDs(findings)["AEGIS-AWS-206"] {
+		t.Errorf("did not expect AEGIS-AWS-206 on bucket protected by a !Ref-linked PublicAccessBlock")
+	}
+}
+
+// TestDuplicateTopLevelKeys: a generated template that repeats the
+// top-level "Resources:" key (empty first, real second, with Parameters
+// in between) must still parse the real resources. Previously
+// mappingGet returned the FIRST match (the empty block) and the adapter
+// silently produced zero resources, dropping every finding in such
+// templates (R4 r4049/r4058/r4059/r4064/r4067).
+func TestDuplicateTopLevelKeys(t *testing.T) {
+	src := `AWSTemplateFormatVersion: "2010-09-09"
+Description: App stack
+Resources:
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+    Description: Database password
+Resources:
+  AppDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: app-dup
+      AllocatedStorage: "20"
+      StorageEncrypted: true
+      MasterUsername: appadmin
+      MasterUserPassword: !Ref DbPassword
+  DataKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: data-key-dup
+      EnableKeyRotation: false
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: arn:aws:lambda:us-east-1:123456789012:function:hook
+      AuthType: NONE
+`
+	ids := ruleIDs(scanTemplate(t, "template.yaml", src))
+	for _, want := range []string{"AEGIS-AWS-339", "AEGIS-AWS-335", "AEGIS-AWS-407"} {
+		if !ids[want] {
+			t.Errorf("expected %s on duplicate-Resources template, got %v", want, ids)
+		}
+	}
+}

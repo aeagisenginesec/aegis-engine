@@ -248,16 +248,17 @@ func (rdsNoAutoMinorUpgrade) Check(r ir.Resource) []ir.Finding {
 	if present && !known {
 		return nil
 	}
-	if present && val {
+	if !present {
+		// Absent: the AWS API and Terraform provider default is TRUE,
+		// so absent means upgrades ARE applied. Only explicit false fires.
 		return nil
 	}
-	actual := "absent"
-	if present {
-		actual = "false"
+	if val {
+		return nil
 	}
 	return []ir.Finding{hygieneFinding("AEGIS-AWS-544",
 		(rdsNoAutoMinorUpgrade{}).Title(), (rdsNoAutoMinorUpgrade{}).Description(),
-		r, "auto_minor_version_upgrade", evidenceSpan(span, r.Span), actual,
+		r, "auto_minor_version_upgrade", evidenceSpan(span, r.Span), "false",
 		"auto_minor_version_upgrade = true")}
 }
 

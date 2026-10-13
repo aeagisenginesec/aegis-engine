@@ -227,11 +227,12 @@ func Test543_UnknownSilent(t *testing.T) {
 // AEGIS-AWS-544: RDS without auto minor upgrades
 // ---------------------------------------------------------------------------
 
-func Test544_AbsentFires(t *testing.T) {
+func Test544_AbsentQuiet(t *testing.T) {
+	// Absent: the AWS API + provider default is TRUE, so absent means
+	// upgrades ARE applied. Only explicit false fires.
 	r := fgRes("aws_db_instance", "db", map[string]ir.Value{})
-	got := (rdsNoAutoMinorUpgrade{}).Check(r)
-	if len(got) != 1 || got[0].Severity != ir.SeverityLow {
-		t.Fatalf("expected 1 low finding, got %+v", got)
+	if got := (rdsNoAutoMinorUpgrade{}).Check(r); len(got) != 0 {
+		t.Fatalf("expected silent on absent (default true), got %+v", got)
 	}
 }
 

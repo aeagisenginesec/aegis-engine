@@ -47,9 +47,12 @@ func PreValidate(path string, src []byte) error {
 	if bytes.IndexByte(src, 0x00) >= 0 {
 		return fmt.Errorf("terraform: %s: file contains null bytes; not valid UTF-8 HCL", path)
 	}
-	// Reuse discovery's cap (currently 10 MiB) rather than hardcoding it.
-	if int64(len(src)) > discovery.MaxFileBytes {
-		return fmt.Errorf("terraform: %s: file exceeds %d MiB limit", path, discovery.MaxFileBytes>>20)
+	// Reuse discovery's effective cap (honors the --max-file-size
+	// override) rather than the MaxFileBytes constant: with the constant,
+	// a raised flag raised the discovery cap while this parser cap stayed
+	// at 10 MiB, and the file failed with a confusing message.
+	if int64(len(src)) > discovery.EffectiveMaxFileBytes() {
+		return fmt.Errorf("terraform: %s: file exceeds %d MiB limit", path, discovery.EffectiveMaxFileBytes()>>20)
 	}
 	open, close, maxDepth := scanBraces(src)
 	if maxDepth > MaxNestingDepth {

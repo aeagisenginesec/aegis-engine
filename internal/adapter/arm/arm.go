@@ -221,7 +221,29 @@ func (t *template) staticValue(v any) ir.Value {
 type evalCtx struct {
 	t        *template
 	varStack map[string]bool // cycle guard for variables
+	warned   map[string]bool // dedup for one-time expression warnings
+	// varCache memoizes fully-evaluated variable values. Without it,
+	// variables('vN') chains re-evaluate exponentially: v22 = concat of
+	// v21 twice costs 2^22 leaf evaluations (~18 s from a 2 KB file).
+	// Cache entries are only stored when the evaluation saw no cycle-
+	// guard hit (cycleHits unchanged across it): a value computed while
+	// a dependency was in-progress embeds an Unknown that a later,
+	// cycle-free evaluation would not produce (coalesce() skips
+	// Unknowns), so poisoned evaluations must never be cached.
+	varCache map[string]ir.Value
+	// cycleHits counts variables() lookups that hit an in-progress
+	// variable (the cycle guard). A counter, not a bool: a sticky bool
+	// would make later evaluations' "unchanged" snapshots pass even
+	// when a NEW hit occurred during them, caching poisoned values.
+	cycleHits int
 }
+
+// maxConstructedString caps strings built by concat/join/format/replace.
+// Variable chains can otherwise double a string per level (v30 = 8 GiB
+// from a 2 KB file) even with memoization, because the final string
+// itself is that large. Literals from the file are unaffected (bounded
+// by the file-size cap); only constructed amplification is capped.
+const maxConstructedString = 1 << 20
 
 // eval resolves a raw template value to an ir.Value. Strings in [..] are
 // ARM expressions; everything else converts literally.
@@ -279,6 +301,20 @@ func unescapeBracket(s string) (string, bool) {
 }
 
 // evalExpression parses and evaluates one ARM [...] expression.
+// warnOnce emits a template diagnostic at most once per key within one
+// template parse, so a repeated unsupported expression does not flood
+// the scan output.
+func (c *evalCtx) warnOnce(key, msg string) {
+	if c.warned == nil {
+		c.warned = map[string]bool{}
+	}
+	if c.warned[key] {
+		return
+	}
+	c.warned[key] = true
+	c.t.diag("warning", msg)
+}
+
 func (c *evalCtx) evalExpression(s string) ir.Value {
 	span := c.t.span
 	if lit, ok := unescapeBracket(s); ok {
@@ -287,6 +323,10 @@ func (c *evalCtx) evalExpression(s string) ir.Value {
 	inner := strings.TrimSpace(s[1 : len(s)-1])
 	v, ok := c.parseExpr(inner)
 	if !ok {
+		// Unparsable expression: the value is Unknown, and the failure
+		// must be visible — a property guarded by an unparsed
+		// expression would otherwise fail silently.
+		c.warnOnce("expr:"+s, fmt.Sprintf("arm: could not parse expression %q; treated as unknown", s))
 		return ir.UnknownValue(span)
 	}
 	return v
@@ -549,7 +589,11 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 		if !ok {
 			return unknown
 		}
+		if cached, ok := c.varCache[n]; ok {
+			return cached
+		}
 		if c.varStack[n] {
+			c.cycleHits++
 			return unknown // cycle
 		}
 		raw, ok := c.t.variables[n]
@@ -557,8 +601,16 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 			return unknown
 		}
 		c.varStack[n] = true
+		before := c.cycleHits
 		v := c.eval(raw)
 		delete(c.varStack, n)
+		// Cache only cycle-free evaluations (see varCache doc).
+		if c.cycleHits == before {
+			if c.varCache == nil {
+				c.varCache = map[string]ir.Value{}
+			}
+			c.varCache[n] = v
+		}
 		return v
 	case "concat":
 		var b strings.Builder
@@ -566,6 +618,9 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 			s, ok := a.AsString()
 			if !ok {
 				return unknown
+			}
+			if b.Len()+len(s) > maxConstructedString {
+				return unknown // constructed string would exceed cap
 			}
 			b.WriteString(s)
 		}
@@ -582,6 +637,9 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 				return unknown
 			}
 			out = strings.ReplaceAll(out, "{"+strconv.Itoa(i-1)+"}", s)
+			if len(out) > maxConstructedString {
+				return unknown // constructed string would exceed cap
+			}
 		}
 		return ir.Value{Raw: out, Known: true, Span: span}
 	case "tolower":
@@ -602,6 +660,12 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 		neu, ok3 := strArg(2)
 		if !ok1 || !ok2 || !ok3 {
 			return unknown
+		}
+		// ReplaceAll can amplify (short old -> long neu, many matches).
+		if old != "" && len(neu) > len(old) {
+			if n := strings.Count(s, old); n > 0 && len(s)+n*(len(neu)-len(old)) > maxConstructedString {
+				return unknown
+			}
 		}
 		return ir.Value{Raw: strings.ReplaceAll(s, old, neu), Known: true, Span: span}
 	case "string":
@@ -753,10 +817,15 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 			return unknown
 		}
 		parts := make([]string, 0, len(l))
+		total := len(sep) * len(l)
 		for _, e := range l {
 			s, ok := e.AsString()
 			if !ok {
 				return unknown
+			}
+			total += len(s)
+			if total > maxConstructedString {
+				return unknown // constructed string would exceed cap
 			}
 			parts = append(parts, s)
 		}
@@ -788,7 +857,56 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 	// Everything else (resourceId, reference, listKeys, subscription(),
 	// resourceGroup(), if(), equals(), guid(), uniqueString(), utcNow(),
 	// providers(), extensionResourceId(), ...) -> explicit Unknown.
+	// Known-but-unresolvable functions stay silent: their values
+	// genuinely cannot be decided statically. A function name outside
+	// the known ARM set is almost certainly a typo or an unsupported
+	// construct, so it gets one warning per template parse — otherwise
+	// a property guarded by it would fail silently.
+	if !knownARMFunction(name) {
+		c.warnOnce("func:"+strings.ToLower(name), fmt.Sprintf("arm: unknown template function %q; treated as unknown", name))
+	}
 	return unknown
+}
+
+// knownARMFunction reports whether name is a function from the ARM
+// template function reference (implemented or known-unresolvable). The
+// list is generous: a false warning on a real function is noise, while
+// a missed typo is a silent miss. list* is matched by prefix: the
+// family (listKeys, listAccountSas, listSecrets, ...) is too large to
+// enumerate.
+func knownARMFunction(name string) bool {
+	lower := strings.ToLower(name)
+	if strings.HasPrefix(lower, "list") {
+		return true
+	}
+	switch lower {
+	case "abs", "add", "and", "array", "base64", "base64tojson",
+		"base64tostring", "builduri", "cidrhost", "cidrsubnet", "ceil",
+		"copyindex", "datauri", "datauritostring", "datetimeadd",
+		"datetimefromepoch", "datetimetoepoch", "datetimetoutc",
+		"deployment", "div", "empty", "environment", "equals",
+		"extensionconfig", "extensionresourceid", "field", "filter",
+		"flatten", "float", "floor", "format", "greater",
+		"greaterorequals", "groupby", "guid", "if", "indexof",
+		"intersection", "items", "json", "lambda", "lambdavariables",
+		"less", "lessorequals", "managementgroup",
+		"managementgroupresourceid", "map", "mod", "mul",
+		"newguid", "not", "objectkeys", "or", "parsecidr", "pickzones",
+		"providers", "range", "reduce", "reference", "references",
+		"resourcegroup", "resourceid", "reverse", "shallowmerge", "sort",
+		"sub", "subscription", "subscriptionresourceid", "tenant",
+		"tenantresourceid", "toobject", "tryget",
+		"tryindexfromend", "utcnow", "uniquestring", "uri",
+		"uricomponent", "uricomponenttostring",
+		// Bicep-side functions / placeholders that legitimately reach
+		// the ARM evaluator: getSecret (Key Vault references),
+		// load* (compile-time file loads), and "unknown" — the Bicep
+		// adapter's own Unknown placeholder ([unknown()]).
+		"getsecret", "loadtextcontent", "loadfileasbase64",
+		"loadjsoncontent", "loadyamlcontent", "unknown":
+		return true
+	}
+	return false
 }
 
 // mapResource converts one ARM resource's fields into IR attributes:
@@ -909,7 +1027,52 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 			}
 		}
 	}
+	// Normalize Key Vault network_acls: ARM ipRules: [{value: ...}] and
+	// virtualNetworkRules: [{id: ...}] become the plain string lists
+	// ip_rules / virtual_network_subnet_ids the Azure rules read (TF
+	// shape). Without this, AZURE-205 fires a false positive on vaults
+	// that do define IP/VNet allowances.
+	if res.Type == "azurerm_key_vault" {
+		if nacls, ok := res.Attributes["network_acls"]; ok {
+			if m, ok := nacls.AsMap(); ok {
+				if ip, ok := m["ip_rules"]; ok {
+					if unwrapped, ok := unwrapSingleKeyList(ip, "value"); ok {
+						m["ip_rules"] = unwrapped
+					}
+				}
+				if vr, ok := m["virtual_network_rules"]; ok {
+					if unwrapped, ok := unwrapSingleKeyList(vr, "id"); ok {
+						m["virtual_network_subnet_ids"] = unwrapped
+						delete(m, "virtual_network_rules")
+					}
+				}
+			}
+		}
+	}
 	_ = span
+}
+
+// unwrapSingleKeyList converts a list of single-key maps [{key: x}, ...]
+// to a plain list [x, ...]. Non-map elements or maps without the key
+// abort the conversion.
+func unwrapSingleKeyList(v ir.Value, key string) (ir.Value, bool) {
+	lst, ok := v.AsList()
+	if !ok {
+		return ir.Value{}, false
+	}
+	out := make([]ir.Value, 0, len(lst))
+	for _, e := range lst {
+		em, ok := e.AsMap()
+		if !ok {
+			return ir.Value{}, false
+		}
+		ev, ok := em[key]
+		if !ok || !ev.Known {
+			return ir.Value{}, false
+		}
+		out = append(out, ev)
+	}
+	return ir.Value{Raw: out, Known: true, Span: v.Span}, true
 }
 
 // foldBlobServices merges Microsoft.Storage/storageAccounts/blobServices

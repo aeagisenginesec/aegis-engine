@@ -258,3 +258,18 @@ func Test036_BuildStageQuiet(t *testing.T) {
 	expectFinding(t, buildToolsInFinal{}, rs[0], 0)
 	expectFinding(t, buildToolsInFinal{}, rs[1], 0)
 }
+
+func Test037_NopasswdSudoers(t *testing.T) {
+	// R4 r4122 shape: NOPASSWD appended to /etc/sudoers.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y sudo && echo \"app ALL=(ALL) NOPASSWD: ALL\" >> /etc/sudoers\n"), 1)
+	// sudoers.d drop-in.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN echo \"app ALL=(ALL) NOPASSWD: ALL\" > /etc/sudoers.d/app\n"), 1)
+	// sed rewrite of sudoers.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN sed -i 's/^%sudo.*/& NOPASSWD: ALL/' /etc/sudoers\n"), 1)
+	// Reading sudoers does not configure anything.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN cat /etc/sudoers\n"), 0)
+	// NOPASSWD mentioned without a sudoers file configures nothing.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN echo \"NOPASSWD is dangerous\" > /tmp/note.txt\n"), 0)
+	// Plain sudo use without a sudoers write (DOCKER-009's domain).
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN sudo apt-get update\n"), 0)
+}

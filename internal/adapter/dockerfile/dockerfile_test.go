@@ -178,3 +178,26 @@ func TestParseUserRootVariants(t *testing.T) {
 		}
 	}
 }
+
+// Parity (item 2): an unknown Dockerfile instruction must produce a
+// warning diagnostic, never vanish silently (a typo'd USER or
+// HEALTHCHECK would otherwise look like an absent setting).
+func TestUnknownInstructionWarns(t *testing.T) {
+	src := "FROM ubuntu:latest\nBOGUSINSTRUCTION something here\nUSER root\n"
+	rs, diags, err := Adapter{}.Parse("Dockerfile", []byte(src))
+	if err != nil {
+		t.Fatalf("Parse error: %v", err)
+	}
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 stage, got %d", len(rs))
+	}
+	found := false
+	for _, d := range diags {
+		if d.Level == "warning" && strings.Contains(d.Message, "BOGUSINSTRUCTION") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected warning diagnostic for unknown instruction, got %v", diags)
+	}
+}

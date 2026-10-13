@@ -246,7 +246,7 @@ func (rdsNoQueryLogging) Title() string {
 func (rdsNoQueryLogging) Description() string {
 	return "Hygiene: RDS Postgres instances should export postgresql " +
 		"logs to CloudWatch for query auditing. Add \"postgresql\" to " +
-		"enabled_cloudwatch_logs_log_exports."
+		"enabled_cloudwatch_logs_exports."
 }
 func (rdsNoQueryLogging) Severity() ir.Severity { return ir.SeverityLow }
 func (rdsNoQueryLogging) AppliesTo(resType string) bool {
@@ -260,12 +260,12 @@ func (rdsNoQueryLogging) Check(r ir.Resource) []ir.Finding {
 	if !strings.HasPrefix(strings.ToLower(engine), "postgres") {
 		return nil
 	}
-	v, ok := r.Attr("enabled_cloudwatch_logs_log_exports")
+	v, ok := r.Attr("enabled_cloudwatch_logs_exports")
 	if !ok {
 		return []ir.Finding{hygieneFinding("AEGIS-AWS-607",
 			(rdsNoQueryLogging{}).Title(), (rdsNoQueryLogging{}).Description(),
-			r, "enabled_cloudwatch_logs_log_exports", r.Span, "absent",
-			"enabled_cloudwatch_logs_log_exports including \"postgresql\"")}
+			r, "enabled_cloudwatch_logs_exports", r.Span, "absent",
+			"enabled_cloudwatch_logs_exports including \"postgresql\"")}
 	}
 	has, known := stringListHas(v, "postgresql")
 	if !known {
@@ -274,9 +274,9 @@ func (rdsNoQueryLogging) Check(r ir.Resource) []ir.Finding {
 	if !has {
 		return []ir.Finding{hygieneFinding("AEGIS-AWS-607",
 			(rdsNoQueryLogging{}).Title(), (rdsNoQueryLogging{}).Description(),
-			r, "enabled_cloudwatch_logs_log_exports", v.Span,
+			r, "enabled_cloudwatch_logs_exports", v.Span,
 			"postgresql log export missing",
-			"enabled_cloudwatch_logs_log_exports including \"postgresql\"")}
+			"enabled_cloudwatch_logs_exports including \"postgresql\"")}
 	}
 	return nil
 }

@@ -20,8 +20,8 @@ func TestDeepRulesCoverage(t *testing.T) {
 	rules = append(rules, KMSSecretsDeepRules()...)
 	rules = append(rules, ServicesDeepRules()...)
 	rules = append(rules, EdgeDeepRules()...)
-	if len(rules) != 191 {
-		t.Fatalf("expected 191 deep rules, got %d", len(rules))
+	if len(rules) != 188 {
+		t.Fatalf("expected 188 deep rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	for _, r := range rules {
@@ -68,7 +68,7 @@ func TestDeepRulesCoverage(t *testing.T) {
 // AEGIS-AWS-681
 // AEGIS-AWS-682
 // AEGIS-AWS-683
-// AEGIS-AWS-684
+// AEGIS-AWS-684 (removed: absent ebs_optimized is type-governed (see 565))
 // AEGIS-AWS-685
 // AEGIS-AWS-686
 // AEGIS-AWS-687
@@ -76,7 +76,7 @@ func TestDeepRulesCoverage(t *testing.T) {
 // AEGIS-AWS-689
 // AEGIS-AWS-690
 // AEGIS-AWS-691
-// AEGIS-AWS-692
+// AEGIS-AWS-692 (removed: inverted premise, no replacement)
 // AEGIS-AWS-693
 // AEGIS-AWS-694
 // AEGIS-AWS-695
@@ -86,7 +86,7 @@ func TestDeepRulesCoverage(t *testing.T) {
 // AEGIS-AWS-699
 // AEGIS-AWS-700
 // AEGIS-AWS-701
-// AEGIS-AWS-702
+// AEGIS-AWS-702 (removed: duplicate of 546)
 // AEGIS-AWS-703
 // AEGIS-AWS-704
 // AEGIS-AWS-705

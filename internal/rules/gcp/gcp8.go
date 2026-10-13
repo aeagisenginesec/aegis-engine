@@ -189,8 +189,14 @@ func (s kmsShortDestroyDuration) Check(r ir.Resource) []ir.Finding {
 		return nil // unparseable: cannot decide
 	}
 	if secs < 86400 {
+		// An empty value parses as 0s: keep firing, but report a
+		// non-empty Actual so the evidence is meaningful.
+		actual := dur
+		if actual == "" {
+			actual = "(empty — parses as 0s)"
+		}
 		return []ir.Finding{mkFinding(s, r, "destroy_scheduled_duration", span,
-			dur, "destroy_scheduled_duration >= \"86400s\" (24h)")}
+			actual, "destroy_scheduled_duration >= \"86400s\" (24h)")}
 	}
 	return nil
 }

@@ -4,9 +4,10 @@ package cloudformation
 // Only AWS types are mapped; everything else is skipped with a diagnostic.
 var cfnToTF = map[string]string{
 	// S3
-	"AWS::S3::Bucket":       "aws_s3_bucket",
-	"AWS::S3::BucketPolicy": "aws_s3_bucket_policy",
-	"AWS::S3::AccessPoint":  "aws_s3_access_point",
+	"AWS::S3::Bucket":            "aws_s3_bucket",
+	"AWS::S3::BucketPolicy":      "aws_s3_bucket_policy",
+	"AWS::S3::AccessPoint":       "aws_s3_access_point",
+	"AWS::S3::PublicAccessBlock": "aws_s3_bucket_public_access_block",
 
 	// EC2
 	"AWS::EC2::Instance":             "aws_instance",

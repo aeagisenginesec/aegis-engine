@@ -57,7 +57,10 @@ func (appSvcNoAuth) AppliesTo(resType string) bool {
 
 func (s appSvcNoAuth) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "auth_settings")
-	if !present || !known || len(blks) == 0 {
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if !present || len(blks) == 0 {
 		return []ir.Finding{mkFinding(s, r, "auth_settings",
 			evidenceSpan(ir.Span{}, r.Span), "absent", "auth_settings block with enabled = true")}
 	}
@@ -446,9 +449,30 @@ func (aksNoPodIdentity) AppliesTo(resType string) bool {
 }
 
 func (s aksNoPodIdentity) Check(r ir.Resource) []ir.Finding {
-	// Advisory: only flag when explicitly disabled via oidc_issuer.
-	// Stay quiet otherwise to avoid noise on older configs.
-	return nil
+	// Pod-managed identity (legacy) is the pod_identity block; the modern
+	// replacement is workload identity, enabled via workload_identity_enabled
+	// (or the oidc_issuer_enabled prerequisite). Fire only when no identity
+	// mechanism is present; an unknown signal means "cannot decide".
+	blks, _, present, known := getBlocks(r, "pod_identity")
+	if present && !known {
+		return nil
+	}
+	if present && len(blks) > 0 {
+		return nil // pod_identity block present: has pod-managed identity
+	}
+	for _, attr := range []string{"workload_identity_enabled", "oidc_issuer_enabled"} {
+		if v, ok := r.Attributes[attr]; ok {
+			if !v.Known {
+				return nil
+			}
+			if b, ok := v.AsBool(); ok && b {
+				return nil // workload-identity path enabled
+			}
+		}
+	}
+	return []ir.Finding{mkFinding(s, r, "pod_identity",
+		evidenceSpan(ir.Span{}, r.Span), "absent (no pod identity or workload identity)",
+		"pod_identity { ... } or workload_identity_enabled = true")}
 }
 
 // ---------------------------------------------------------------------------
@@ -544,10 +568,16 @@ func (s aksPublicAPI) Check(r ir.Resource) []ir.Finding {
 		return nil // private: no need for IP ranges
 	}
 	blks, _, present, known := getBlocks(r, "api_server_access_profile")
-	if !present || !known || len(blks) == 0 {
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if !present || len(blks) == 0 {
 		return []ir.Finding{mkFinding(s, r, "api_server_access_profile",
 			evidenceSpan(ir.Span{}, r.Span), "absent",
 			"api_server_access_profile { authorized_ip_ranges = [...] }")}
+	}
+	if v, ok := blks[0]["authorized_ip_ranges"]; ok && !v.Known {
+		return nil // unresolved: cannot decide
 	}
 	if _, _, ok := getStringListFromBlock(blks[0], "authorized_ip_ranges"); ok {
 		return nil

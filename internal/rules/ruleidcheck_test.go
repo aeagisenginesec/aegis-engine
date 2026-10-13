@@ -183,9 +183,10 @@ func TestDeprecatedIDsNeverSilentlyMigrate(t *testing.T) {
 }
 
 // TestDeprecatedMapCoversDocCount guards against the map drifting out of
-// sync with docs/audit/DEPRECATED_RULE_IDS.md (39 entries).
+// sync with docs/audit/DEPRECATED_RULE_IDS.md (42 entries: 39 post-audit
+// + 3 outperform-mission).
 func TestDeprecatedMapCoversDocCount(t *testing.T) {
-	if len(deprecatedRuleIDs) != 39 {
-		t.Fatalf("deprecated map has %d entries, doc lists 39", len(deprecatedRuleIDs))
+	if len(deprecatedRuleIDs) != 42 {
+		t.Fatalf("deprecated map has %d entries, doc lists 42", len(deprecatedRuleIDs))
 	}
 }

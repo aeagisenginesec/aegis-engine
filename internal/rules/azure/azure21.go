@@ -20,20 +20,20 @@ import (
 // Azure21Rules returns data platform & AI services rules in ID order.
 func Azure21Rules() []ir.Rule {
 	return []ir.Rule{
-		adfNoCMK{},           // AEGIS-AZURE-299
-		adfNoManagedVNet{},   // AEGIS-AZURE-300
-		synapseDataExfil{},   // AEGIS-AZURE-301
-		synapseNoCMK{},       // AEGIS-AZURE-302
-		databricksInfraEnc{},  // AEGIS-AZURE-303
+		adfNoCMK{},             // AEGIS-AZURE-299
+		adfNoManagedVNet{},     // AEGIS-AZURE-300
+		synapseDataExfil{},     // AEGIS-AZURE-301
+		synapseNoCMK{},         // AEGIS-AZURE-302
+		databricksInfraEnc{},   // AEGIS-AZURE-303
 		databricksNoPublicIP{}, // AEGIS-AZURE-304
-		iotHubNoIPFilter{},   // AEGIS-AZURE-305
-		iotHubSAPRegWrite{},  // AEGIS-AZURE-306
-		iotHubMinTLS{},       // AEGIS-AZURE-307
-		iotHubFallbackRoute{}, // AEGIS-AZURE-308
-		cognitiveNetACLs{},   // AEGIS-AZURE-309
-		cognitiveNoCMK{},     // AEGIS-AZURE-310
-		cognitiveLocalAuth{}, // AEGIS-AZURE-311
-		redisPublicNet{},      // AEGIS-AZURE-313
+		iotHubNoIPFilter{},     // AEGIS-AZURE-305
+		iotHubSAPRegWrite{},    // AEGIS-AZURE-306
+		iotHubMinTLS{},         // AEGIS-AZURE-307
+		iotHubFallbackRoute{},  // AEGIS-AZURE-308
+		cognitiveNetACLs{},     // AEGIS-AZURE-309
+		cognitiveNoCMK{},       // AEGIS-AZURE-310
+		cognitiveLocalAuth{},   // AEGIS-AZURE-311
+		redisPublicNet{},       // AEGIS-AZURE-313
 	}
 }
 
@@ -194,6 +194,7 @@ func (s databricksInfraEnc) Check(r ir.Resource) []ir.Finding {
 	return absentInsecureFalse(s, r, "infrastructure_encryption_enabled",
 		"infrastructure_encryption_enabled = true")
 }
+
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-304: Databricks workspace with public IPs on clusters
@@ -218,7 +219,10 @@ func (databricksNoPublicIP) AppliesTo(resType string) bool {
 
 func (s databricksNoPublicIP) Check(r ir.Resource) []ir.Finding {
 	cps, span, present, known := getBlocks(r, "custom_parameters")
-	if !present || !known {
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if !present {
 		return []ir.Finding{mkFinding(s, r, "custom_parameters",
 			evidenceSpan(span, r.Span), "absent (public IPs by default)",
 			"custom_parameters { no_public_ip = true }")}
@@ -237,6 +241,7 @@ func (s databricksNoPublicIP) Check(r ir.Resource) []ir.Finding {
 	}
 	return nil
 }
+
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-305: IoT Hub without IP filter
 // ---------------------------------------------------------------------------
@@ -315,6 +320,7 @@ func (s iotHubSAPRegWrite) Check(r ir.Resource) []ir.Finding {
 	return []ir.Finding{mkFinding(s, r, "registry_write", span,
 		"true", "registry_write = false")}
 }
+
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-307: IoT Hub below TLS 1.2
 // ---------------------------------------------------------------------------
@@ -426,6 +432,7 @@ func (s cognitiveNetACLs) Check(r ir.Resource) []ir.Finding {
 	}
 	return nil
 }
+
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-310: Cognitive Services without customer-managed key
 // ---------------------------------------------------------------------------

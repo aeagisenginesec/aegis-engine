@@ -25,12 +25,15 @@ import (
 
 // deprecatedRuleIDs maps rule IDs removed during the post-audit
 // deduplication to their surviving canonical replacements.
-// Source of truth: docs/audit/DEPRECATED_RULE_IDS.md (39 entries).
+// Source of truth: docs/audit/DEPRECATED_RULE_IDS.md (42 entries).
 var deprecatedRuleIDs = map[string]string{
 	"AEGIS-AWS-549":   "AEGIS-AWS-321",
 	"AEGIS-AWS-550":   "AEGIS-AWS-320",
 	"AEGIS-AWS-621":   "AEGIS-AWS-316",
+	"AEGIS-AWS-684":   "AEGIS-AWS-565",
+	"AEGIS-AWS-692":   "",
 	"AEGIS-AWS-701":   "AEGIS-AWS-605",
+	"AEGIS-AWS-702":   "AEGIS-AWS-546",
 	"AEGIS-AWS-715":   "AEGIS-AWS-321",
 	"AEGIS-AWS-718":   "AEGIS-AWS-608",
 	"AEGIS-AWS-719":   "AEGIS-AWS-440",
@@ -100,6 +103,10 @@ type RuleIDDiagnostic struct {
 func (d RuleIDDiagnostic) Message() string {
 	switch d.Kind {
 	case RuleIDDeprecated:
+		if d.Canonical == "" {
+			return fmt.Sprintf("rule ID %s in %s was removed and has no replacement; the entry has no effect (see docs/audit/DEPRECATED_RULE_IDS.md)",
+				d.ID, d.Source)
+		}
 		return fmt.Sprintf("rule ID %s in %s was removed by deduplication and has no effect; migrate to %s (see docs/audit/DEPRECATED_RULE_IDS.md)",
 			d.ID, d.Source, d.Canonical)
 	default:

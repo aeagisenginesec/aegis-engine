@@ -101,7 +101,10 @@ func (storageNoChangeFeed) AppliesTo(resType string) bool {
 
 func (s storageNoChangeFeed) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "blob_properties")
-	if !present || !known || len(blks) == 0 {
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if !present || len(blks) == 0 {
 		return []ir.Finding{mkFinding(s, r, "blob_properties.change_feed_enabled",
 			evidenceSpan(ir.Span{}, r.Span), "absent (default false)",
 			"blob_properties { change_feed_enabled = true }")}

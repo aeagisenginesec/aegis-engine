@@ -54,10 +54,41 @@ func (t *template) resolveValue(n *yaml.Node) ir.Value {
 		}
 		return ir.Value{Raw: m, Known: true, Span: span}
 	case yaml.AliasNode:
-		if n.Alias != nil {
-			return t.resolveValue(n.Alias)
+		if n.Alias == nil {
+			return ir.UnknownValue(span)
 		}
-		return ir.UnknownValue(span)
+		// Cycle guard: an anchor whose subtree aliases itself
+		// (&a [*a]) would otherwise recurse until stack overflow.
+		if t.aliasActive[n.Alias] {
+			t.diags = append(t.diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: "cloudformation: YAML alias cycle detected; value treated as unknown",
+				Span:    span,
+			})
+			return ir.UnknownValue(span)
+		}
+		// Expansion budget: nested aliases amplify exponentially
+		// (billion laughs). Stop expanding, keep everything parsed
+		// so far, and warn once.
+		if t.aliasBudget <= 0 {
+			if !t.budgetWarned {
+				t.budgetWarned = true
+				t.diags = append(t.diags, ir.Diagnostic{
+					Level:   "warning",
+					Message: "cloudformation: YAML alias expansion budget exceeded; remaining alias values treated as unknown",
+					Span:    span,
+				})
+			}
+			return ir.UnknownValue(span)
+		}
+		t.aliasBudget--
+		if t.aliasActive == nil {
+			t.aliasActive = map[*yaml.Node]bool{}
+		}
+		t.aliasActive[n.Alias] = true
+		v := t.resolveValue(n.Alias)
+		delete(t.aliasActive, n.Alias)
+		return v
 	default:
 		return ir.UnknownValue(span)
 	}

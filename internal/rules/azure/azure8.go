@@ -116,6 +116,14 @@ func (appSvcNoDetailedErr) Severity() ir.Severity { return ir.SeverityLow }
 func (appSvcNoDetailedErr) AppliesTo(resType string) bool { return appSvcTypes(resType) }
 
 func (s appSvcNoDetailedErr) Check(r ir.Resource) []ir.Finding {
+	if _, _, present, known := getBlocks(r, "logs"); present && !known {
+		return nil // unresolved: cannot decide
+	}
+	for _, name := range []string{"detailed_error_messages_enabled", "detailed_error_logging_enabled"} {
+		if v, ok := r.Attributes[name]; ok && !v.Known {
+			return nil // unresolved: cannot decide
+		}
+	}
 	if logsBoolEnabled(r, "logs", "detailed_error_messages_enabled",
 		"detailed_error_logging_enabled") {
 		return nil
@@ -144,6 +152,12 @@ func (appSvcNoFailedReq) Severity() ir.Severity { return ir.SeverityLow }
 func (appSvcNoFailedReq) AppliesTo(resType string) bool { return appSvcTypes(resType) }
 
 func (s appSvcNoFailedReq) Check(r ir.Resource) []ir.Finding {
+	if _, _, present, known := getBlocks(r, "logs"); present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if v, ok := r.Attributes["failed_request_tracing_enabled"]; ok && !v.Known {
+		return nil // unresolved: cannot decide
+	}
 	if logsBoolEnabled(r, "logs", "failed_request_tracing_enabled") {
 		return nil
 	}
@@ -218,10 +232,19 @@ func (appSvcNoHTTPLogging) Severity() ir.Severity { return ir.SeverityLow }
 func (appSvcNoHTTPLogging) AppliesTo(resType string) bool { return appSvcTypes(resType) }
 
 func (s appSvcNoHTTPLogging) Check(r ir.Resource) []ir.Finding {
+	if _, _, present, known := getBlocks(r, "logs"); present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if v, ok := r.Attributes["http_logging_enabled"]; ok && !v.Known {
+		return nil // unresolved: cannot decide
+	}
 	if logsBoolEnabled(r, "logs", "http_logging_enabled") {
 		return nil
 	}
 	blks, _, present, known := getBlocks(r, "logs")
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
 	if present && known {
 		for _, b := range blks {
 			if len(blockList(b, "http_logs")) > 0 {
@@ -255,7 +278,10 @@ func (appSvcNoHTTP2) AppliesTo(resType string) bool { return appSvcTypes(resType
 
 func (s appSvcNoHTTP2) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "site_config")
-	if !present || !known || len(blks) == 0 {
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if !present || len(blks) == 0 {
 		// Provider default is false; absent means HTTP/2 is off.
 		return []ir.Finding{mkFinding(s, r, "site_config.http2_enabled",
 			evidenceSpan(ir.Span{}, r.Span), "absent (default false)",

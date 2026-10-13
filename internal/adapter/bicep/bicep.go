@@ -330,7 +330,11 @@ func (p *parser) parseParam() (string, string, *tval) {
 	p.skipWSAndComments()
 	if p.peek() == '=' {
 		p.pos++
-		v := p.parseExpr()
+		v, ok := p.parseExprOK()
+		if !ok {
+			p.diag("warning", fmt.Sprintf("param %q default value failed to parse; treated as unknown", name))
+			v = unknownExpr()
+		}
 		def = &v
 	}
 	if ptype == "" {
@@ -350,7 +354,12 @@ func (p *parser) parseVar() (string, tval) {
 		p.diag("warning", fmt.Sprintf("var %q missing =", name))
 		return "", static(nil)
 	}
-	return name, p.parseExpr()
+	v, ok := p.parseExprOK()
+	if !ok {
+		p.diag("warning", fmt.Sprintf("var %q expression failed to parse; treated as unknown", name))
+		v = unknownExpr()
+	}
+	return name, v
 }
 
 // parseResource parses: resource <sym> '<type>@<api>' [=|existing =] { ... }
@@ -470,11 +479,23 @@ func (p *parser) parseTypeString() string {
 
 // parseExpr parses a Bicep value expression.
 func (p *parser) parseExpr() tval {
+	v, _ := p.parseExprOK()
+	return v
+}
+
+// parseExprOK parses an expression, reporting whether it parsed cleanly.
+// A clean parse may still yield an Unknown value (undeclared identifier,
+// unsupported function, forward reference); only SYNTAX failures return
+// ok=false. Callers use ok=false to emit a "failed to parse; treated as
+// unknown" diagnostic — without this signal, a malformed expression (e.g.
+// `var open = [~]`) degrades to Unknown silently, and a rule that needs
+// a known value (e.g. AEGIS-AZR-001) stops firing with no diagnostic.
+func (p *parser) parseExprOK() (tval, bool) {
 	v, ok := p.parseTernary()
 	if !ok {
-		return unknownExpr()
+		return unknownExpr(), false
 	}
-	return v
+	return v, true
 }
 
 func (p *parser) parseTernary() (tval, bool) {
@@ -485,12 +506,18 @@ func (p *parser) parseTernary() (tval, bool) {
 	p.skipWSAndComments()
 	if p.peek() == '?' {
 		p.pos++
-		a := p.parseExpr()
+		a, ok := p.parseExprOK()
+		if !ok {
+			return tval{}, false
+		}
 		p.skipWSAndComments()
 		if !p.expect(':') {
 			return tval{}, false
 		}
-		b := p.parseExpr()
+		b, ok := p.parseExprOK()
+		if !ok {
+			return tval{}, false
+		}
 		return expr("[if(" + toFrag(cond.v) + ", " + toFrag(a.v) + ", " + toFrag(b.v) + ")]"), true
 	}
 	return cond, true
@@ -636,6 +663,12 @@ func (p *parser) parseBicepString() (any, bool) {
 }
 
 func (p *parser) parseNumber() (float64, bool) {
+	// Bounds-check: the `[n]` suffix path in parseIdentOrCall calls
+	// parseNumber at EOF (e.g. `var A=A[`), and the bare index panicked
+	// (fuzzer-found: index out of range). No digits at EOF: not a number.
+	if p.pos >= len(p.src) {
+		return 0, false
+	}
 	start := p.pos
 	if p.src[p.pos] == '-' {
 		p.pos++
@@ -663,7 +696,17 @@ func (p *parser) parseArray() (tval, bool) {
 			p.pos++
 			break
 		}
-		v := p.parseExpr()
+		// Progress guard: a failed parseExpr returns unknown WITHOUT
+		// consuming input, so without this check an unparseable
+		// element (e.g. `~` in `var x = [[[[ ~[[[[[`) loops forever
+		// — a hang of the whole scan from a 47-byte file (fuzzer-found).
+		// parseExpr always consumes input on success, so no-progress
+		// means malformed input: fail the array, don't spin.
+		before := p.pos
+		v, ok := p.parseExprOK()
+		if !ok || p.pos == before {
+			return tval{}, false
+		}
 		out = append(out, v.v)
 		p.skipWSAndComments()
 		if p.peek() == ',' {
@@ -703,7 +746,11 @@ func (p *parser) parseObject() map[string]any {
 		if !p.expect(':') {
 			break
 		}
-		v := p.parseExpr()
+		v, ok := p.parseExprOK()
+		if !ok {
+			p.diag("warning", fmt.Sprintf("bicep: property %q value failed to parse; treated as unknown", key))
+			v = unknownExpr()
+		}
 		out[key] = v.v
 		p.skipWSAndComments()
 		if p.peek() == ',' {
@@ -833,7 +880,10 @@ func (p *parser) parseCall(name string) (tval, bool) {
 	p.skipWSAndComments()
 	if p.peek() != ')' {
 		for {
-			a := p.parseExpr()
+			a, ok := p.parseExprOK()
+			if !ok {
+				return tval{}, false
+			}
 			args = append(args, toFrag(a.v))
 			p.skipWSAndComments()
 			if p.peek() == ',' {

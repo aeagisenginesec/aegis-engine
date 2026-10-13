@@ -676,3 +676,172 @@ template:
 		t.Errorf("nested properties map not removed after flatten")
 	}
 }
+
+// 21. Parity (item 2): Key Vault softDeleteRetentionInDays -> the
+// soft_delete_retention_days the Azure rules read, and sku.name ->
+// sku_name (same promotion as the ARM adapter).
+func TestKeyVaultRetentionAndSkuNormalization(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: kv
+runtime: yaml
+template:
+  resources:
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: my-kv
+        properties:
+          sku:
+            family: A
+            name: standard
+          softDeleteRetentionInDays: 7
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	r := rs[0]
+	if v, ok := r.Attributes["soft_delete_retention_days"]; !ok {
+		t.Errorf("soft_delete_retention_days missing (softDeleteRetentionInDays not renamed)")
+	} else if f, ok := v.Raw.(float64); !ok || f != 7 {
+		t.Errorf("soft_delete_retention_days = %v; want 7", v.Raw)
+	}
+	if _, ok := r.Attributes["soft_delete_retention_in_days"]; ok {
+		t.Errorf("unrenamed soft_delete_retention_in_days still present")
+	}
+	if s, ok := attrString(t, r, "sku_name"); !ok || s != "standard" {
+		t.Errorf("sku_name = %q, want standard", s)
+	}
+}
+
+// 22. Parity (item 2): Key Vault networkAcls ipRules [{value}] unwrap to a
+// plain string list, and virtualNetworkRules [{id}] become
+// virtual_network_subnet_ids, so AZURE-205 reads them like TF ip_rules.
+func TestKeyVaultNetworkAclsUnwrap(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: kv
+runtime: yaml
+template:
+  resources:
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: my-kv
+        properties:
+          networkAcls:
+            bypass: None
+            defaultAction: Deny
+            ipRules:
+              - value: 1.2.3.4/32
+            virtualNetworkRules:
+              - id: /subscriptions/x/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/v/subnets/s
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	r := rs[0]
+	nacls, ok := r.Attributes["network_acls"]
+	if !ok {
+		t.Fatalf("network_acls missing")
+	}
+	m, ok := nacls.AsMap()
+	if !ok {
+		t.Fatalf("network_acls is not a map")
+	}
+	ips, ok := m["ip_rules"]
+	if !ok {
+		t.Fatalf("ip_rules missing after unwrap")
+	}
+	lst, ok := ips.Raw.([]ir.Value)
+	if !ok || len(lst) != 1 {
+		t.Fatalf("ip_rules is not a 1-element list: %#v", ips.Raw)
+	}
+	if s, ok := lst[0].AsString(); !ok || s != "1.2.3.4/32" {
+		t.Errorf("ip_rules[0] = %v, want 1.2.3.4/32", lst[0].Raw)
+	}
+	subs, ok := m["virtual_network_subnet_ids"]
+	if !ok {
+		t.Fatalf("virtual_network_subnet_ids missing after unwrap")
+	}
+	slst, ok := subs.Raw.([]ir.Value)
+	if !ok || len(slst) != 1 {
+		t.Fatalf("virtual_network_subnet_ids is not a 1-element list")
+	}
+	if _, ok := m["virtual_network_rules"]; ok {
+		t.Errorf("unrenamed virtual_network_rules still present")
+	}
+}
+
+// 23. Parity (item 2): a Pulumi YAML mapping for `policy` (e.g. an S3
+// BucketPolicy document) is stringified to JSON so the policy rules,
+// which read a JSON string, can evaluate it. A policy containing an
+// unresolved reference stays a mapping (never fabricated).
+func TestMapValuedPolicyStringified(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: s3pol
+runtime: yaml
+template:
+  resources:
+    b:
+      type: aws:s3:Bucket
+      properties:
+        bucket: my-bucket
+    bPolicy:
+      type: aws:s3:BucketPolicy
+      properties:
+        bucket: ${b.id}
+        policy:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicRead
+              Effect: Allow
+              Principal: "*"
+              Action: s3:GetObject
+              Resource: "arn:aws:s3:::my-bucket/*"
+`)
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 resources, got %d", len(rs))
+	}
+	pol := findResource(rs, "bPolicy")
+	if pol == nil {
+		t.Fatalf("bPolicy resource missing")
+	}
+	s, ok := attrString(t, *pol, "policy")
+	if !ok {
+		t.Fatalf("policy was not stringified to a JSON string")
+	}
+	if !strings.Contains(s, `"effect"`) || !strings.Contains(s, `s3:GetObject`) {
+		t.Errorf("stringified policy lost content: %s", s)
+	}
+}
+
+// 24. Parity (item 2): a policy with an unresolved reference is NOT
+// stringified (its Unknown part must not become fabricated JSON).
+func TestPolicyWithUnknownNotStringified(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: s3pol
+runtime: yaml
+template:
+  resources:
+    bPolicy:
+      type: aws:s3:BucketPolicy
+      properties:
+        bucket: some-bucket
+        policy:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: "*"
+              Action: s3:GetObject
+              Resource: ${missingVar}
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	v, ok := rs[0].Attributes["policy"]
+	if !ok {
+		t.Fatalf("policy attribute missing")
+	}
+	if _, isMap := v.Raw.(map[string]ir.Value); !isMap {
+		t.Errorf("policy with Unknown content was stringified; want mapping left intact")
+	}
+}

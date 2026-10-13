@@ -354,13 +354,28 @@ var _ ir.CrossResourceRule = s3NoPublicAccessBlock{}
 
 // pabBucketAddr resolves which bucket a public-access-block targets via its
 // `bucket` attribute: a reference ("aws_s3_bucket.assets.id") or a known
-// name matched against the bucket set. Unresolvable -> false.
+// name matched against the bucket set. A CloudFormation !Ref to a resource
+// logical ID ("cfn.resource.X") matches by the bucket's Name (its CFN
+// logical ID), mirroring linkedBucketAddr in helpers.go. Unresolvable -> false.
 func pabBucketAddr(r ir.Resource, buckets []ir.Resource) (string, bool) {
 	v, ok := r.Attributes["bucket"]
 	if !ok {
 		return "", false
 	}
 	if v.IsRef() {
+		// CloudFormation !Ref to a resource logical ID: "cfn.resource.X".
+		if strings.HasPrefix(v.Ref, "cfn.resource.") {
+			lid := strings.TrimPrefix(v.Ref, "cfn.resource.")
+			for _, b := range buckets {
+				if b.Type != "aws_s3_bucket" || !sameScope(r, b) {
+					continue
+				}
+				if b.Name == lid {
+					return scopeKey(b), true
+				}
+			}
+			return "", false
+		}
 		return refAddrOf(v.Ref)
 	}
 	name, ok := v.AsString()

@@ -410,8 +410,14 @@ func (s storageNetRulesOpen) Check(r ir.Resource) []ir.Finding {
 	if strings.EqualFold(strings.TrimSpace(act), "Deny") {
 		return nil
 	}
+	// An empty value is not an explicit Deny: keep firing, but report
+	// a non-empty Actual so the evidence is meaningful.
+	actual := act
+	if actual == "" {
+		actual = "(empty — provider default is Allow)"
+	}
 	return []ir.Finding{mkFinding(s, r, "default_action", span,
-		act, "default_action = \"Deny\"")}
+		actual, "default_action = \"Deny\"")}
 }
 
 // ---------------------------------------------------------------------------

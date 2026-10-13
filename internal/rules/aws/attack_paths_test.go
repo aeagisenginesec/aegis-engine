@@ -310,3 +310,61 @@ func TestS3Exfiltration_Determinism(t *testing.T) {
 		t.Fatal("non-deterministic output")
 	}
 }
+
+// Parity (item 2): policyGrantsPublicRead must match statement keys
+// case-insensitively. Pulumi stringifies map-valued policy documents with
+// snake_cased keys (statement/effect/principal/action); a case-sensitive
+// read would silently miss the exfiltration path on Pulumi buckets.
+func TestS3Exfiltration_SnakeCasePolicyDoc(t *testing.T) {
+	snakeDoc := `{"version":"2012-10-17","statement":[{"sid":"PublicRead","effect":"Allow","principal":"*","action":"s3:GetObject","resource":"arn:aws:s3:::assets/*"}]}`
+	if !policyGrantsPublicRead(snakeDoc) {
+		t.Fatalf("snake_cased policy doc not recognized as a public-read grant")
+	}
+	b := bucketFixture("assets")
+	p := bucketPolicyFixture("assets", "aws_s3_bucket.assets.id", snakeDoc, 10)
+	out := (s3ExfiltrationPath{}).CheckAll([]ir.Resource{b, p})
+	if len(out) != 1 {
+		t.Fatalf("expected 1 finding for snake_cased policy doc, got %d", len(out))
+	}
+	// A snake_cased doc with a non-public principal must still stay quiet.
+	privDoc := `{"version":"2012-10-17","statement":[{"effect":"Allow","principal":{"aws":"arn:aws:iam::123:root"},"action":"s3:GetObject","resource":"*"}]}`
+	if policyGrantsPublicRead(privDoc) {
+		t.Fatalf("snake_cased private-principal doc wrongly recognized as public")
+	}
+}
+
+// Parity (item 2): policyBucketAddr resolves CloudFormation !Ref links
+// ("cfn.resource.X") by the bucket's logical-ID name, like
+// linkedBucketAddr does for companion resources.
+func TestPolicyBucketAddr_CFNRef(t *testing.T) {
+	b := bucketFixture("DataBucket")
+	p := res("aws_s3_bucket_policy", "BucketPolicy", map[string]ir.Value{
+		"bucket": {Known: false, Span: spanAt(5), Ref: "cfn.resource.DataBucket"},
+		"policy": ks(publicReadPolicyDoc(), 6),
+	})
+	addr, ok := policyBucketAddr(p, []ir.Resource{b})
+	if !ok {
+		t.Fatalf("cfn.resource ref did not resolve to its bucket")
+	}
+	if addr != scopeKey(b) {
+		t.Fatalf("resolved to %q, want %q", addr, scopeKey(b))
+	}
+	p2 := res("aws_s3_bucket_policy", "Other", map[string]ir.Value{
+		"bucket": {Known: false, Span: spanAt(5), Ref: "cfn.resource.NoSuchBucket"},
+	})
+	if _, ok := policyBucketAddr(p2, []ir.Resource{b}); ok {
+		t.Fatalf("cfn.resource ref to a nonexistent bucket wrongly resolved")
+	}
+}
+
+// Parity (item 2): pabBucketAddr resolves CloudFormation !Ref links.
+func TestPabBucketAddr_CFNRef(t *testing.T) {
+	b := bucketFixture("DataBucket")
+	pab := res("aws_s3_bucket_public_access_block", "Pab", map[string]ir.Value{
+		"bucket": {Known: false, Span: spanAt(5), Ref: "cfn.resource.DataBucket"},
+	})
+	addr, ok := pabBucketAddr(pab, []ir.Resource{b})
+	if !ok || addr != scopeKey(b) {
+		t.Fatalf("cfn.resource PAB ref resolved to %q, ok=%v; want %q", addr, ok, scopeKey(b))
+	}
+}

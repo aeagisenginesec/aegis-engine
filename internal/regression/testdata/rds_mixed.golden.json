@@ -247,44 +247,6 @@
     }
   },
   {
-    "rule_id": "AEGIS-AWS-544",
-    "title": "RDS instance without auto minor version upgrades",
-    "description": "Hygiene: RDS instances should enable auto_minor_version_upgrade so security patches are applied automatically during maintenance windows. Without it, the engine can drift behind on security fixes.",
-    "severity": "low",
-    "resource": "aws_db_instance.legacy",
-    "evidence": {
-      "attribute": "auto_minor_version_upgrade",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 5,
-        "start_col": 1,
-        "end_line": 18,
-        "end_col": 2
-      },
-      "actual": "absent",
-      "expected": "auto_minor_version_upgrade = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-544",
-    "title": "RDS instance without auto minor version upgrades",
-    "description": "Hygiene: RDS instances should enable auto_minor_version_upgrade so security patches are applied automatically during maintenance windows. Without it, the engine can drift behind on security fixes.",
-    "severity": "low",
-    "resource": "aws_db_instance.orders",
-    "evidence": {
-      "attribute": "auto_minor_version_upgrade",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 20,
-        "start_col": 1,
-        "end_line": 32,
-        "end_col": 2
-      },
-      "actual": "absent",
-      "expected": "auto_minor_version_upgrade = true"
-    }
-  },
-  {
     "rule_id": "AEGIS-AWS-546",
     "title": "RDS instance without copy_tags_to_snapshot",
     "description": "Hygiene: RDS instances should copy tags to snapshots so backup resources inherit cost-allocation and ownership tags. Set copy_tags_to_snapshot = true.",
@@ -363,11 +325,11 @@
   {
     "rule_id": "AEGIS-AWS-607",
     "title": "RDS Postgres instance without query logging",
-    "description": "Hygiene: RDS Postgres instances should export postgresql logs to CloudWatch for query auditing. Add \"postgresql\" to enabled_cloudwatch_logs_log_exports.",
+    "description": "Hygiene: RDS Postgres instances should export postgresql logs to CloudWatch for query auditing. Add \"postgresql\" to enabled_cloudwatch_logs_exports.",
     "severity": "low",
     "resource": "aws_db_instance.orders",
     "evidence": {
-      "attribute": "enabled_cloudwatch_logs_log_exports",
+      "attribute": "enabled_cloudwatch_logs_exports",
       "span": {
         "file": "rds_mixed.tf",
         "start_line": 20,
@@ -376,7 +338,7 @@
         "end_col": 2
       },
       "actual": "absent",
-      "expected": "enabled_cloudwatch_logs_log_exports including \"postgresql\""
+      "expected": "enabled_cloudwatch_logs_exports including \"postgresql\""
     }
   },
   {
@@ -415,44 +377,6 @@
       },
       "actual": "absent",
       "expected": "performance_insights_enabled = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-702",
-    "title": "RDS instance snapshots do not copy tags",
-    "description": "copy_tags_to_snapshot is absent or false, so automated snapshots lose the instance's tags (owner, environment, cost center), which breaks tag-based access control and cost allocation on restores.",
-    "severity": "low",
-    "resource": "aws_db_instance.legacy",
-    "evidence": {
-      "attribute": "copy_tags_to_snapshot",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 5,
-        "start_col": 1,
-        "end_line": 18,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: false)",
-      "expected": "copy_tags_to_snapshot = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-702",
-    "title": "RDS instance snapshots do not copy tags",
-    "description": "copy_tags_to_snapshot is absent or false, so automated snapshots lose the instance's tags (owner, environment, cost center), which breaks tag-based access control and cost allocation on restores.",
-    "severity": "low",
-    "resource": "aws_db_instance.orders",
-    "evidence": {
-      "attribute": "copy_tags_to_snapshot",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 20,
-        "start_col": 1,
-        "end_line": 32,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: false)",
-      "expected": "copy_tags_to_snapshot = true"
     }
   },
   {

@@ -36,6 +36,8 @@
 package dockerfile
 
 import (
+	"bytes"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -74,9 +76,29 @@ type instruction struct {
 
 // Parse converts Dockerfile content into one ir.Resource per build stage.
 func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, error) {
-	ins := tokenize(string(src))
 	var out []ir.Resource
 	var diags []ir.Diagnostic
+
+	// NUL bytes are never legitimate in a Dockerfile, and silently
+	// keeping them suppresses findings: `USER \x00root` tokenizes to
+	// user "\x00root", which no longer matches "root", so the
+	// run-as-root finding vanished with no diagnostic. Strip NULs and
+	// say so, so the parsed result is the file the user meant.
+	if bytes.IndexByte(src, 0) >= 0 {
+		diags = append(diags, ir.Diagnostic{
+			Level:   "warning",
+			Message: "dockerfile: file contains null bytes; stripped",
+			Span:    ir.Span{File: path, StartLine: 1, StartCol: 1, EndLine: 1, EndCol: 1},
+		})
+		cleaned := make([]byte, 0, len(src))
+		for _, b := range src {
+			if b != 0 {
+				cleaned = append(cleaned, b)
+			}
+		}
+		src = cleaned
+	}
+	ins := tokenize(string(src))
 
 	// stage accumulates per-stage state.
 	type stage struct {
@@ -114,6 +136,7 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 		addRemote           bool
 		runs                []ir.Value
 		sudo                bool
+		nopasswd            bool
 		span                ir.Span // stage span: FROM line to last instruction
 	}
 
@@ -159,6 +182,7 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			"add_remote":            {Raw: cur.addRemote, Known: true, Span: cur.span},
 			"run_commands":          {Raw: cur.runs, Known: true, Span: cur.span},
 			"sudo_used":             {Raw: cur.sudo, Known: true, Span: cur.span},
+			"nopasswd_sudoers":      {Raw: cur.nopasswd, Known: true, Span: cur.span},
 		}
 		if cur.userSet {
 			attrs["user"] = ir.Value{Raw: cur.user, Known: true, Span: cur.userSpan}
@@ -360,6 +384,18 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			if usesSudo(in.args) {
 				cur.sudo = true
 			}
+			if writesNopasswdSudoers(in.args) {
+				cur.nopasswd = true
+			}
+		default:
+			// Unknown instruction: Docker itself would fail the build,
+			// so the line must not vanish silently (a typo'd USER or
+			// HEALTHCHECK would otherwise look like an absent setting).
+			diags = append(diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: fmt.Sprintf("dockerfile: unknown instruction %q; skipped", in.name),
+				Span:    span,
+			})
 		}
 	}
 	if len(ins) > 0 {
@@ -771,6 +807,15 @@ func usesSudo(cmd string) bool {
 		}
 	}
 	return false
+}
+
+// writesNopasswdSudoers reports whether a RUN command configures
+// passwordless sudo, i.e. it writes a NOPASSWD entry to a sudoers file
+// (/etc/sudoers or /etc/sudoers.d/...). Both tokens are required: a
+// bare NOPASSWD mention (e.g. in a comment or a note file) configures
+// nothing, and merely reading /etc/sudoers does not grant anything.
+func writesNopasswdSudoers(cmd string) bool {
+	return strings.Contains(cmd, "NOPASSWD") && strings.Contains(cmd, "sudoers")
 }
 
 func itoa(i int) string {

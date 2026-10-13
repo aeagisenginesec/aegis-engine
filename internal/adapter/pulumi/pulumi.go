@@ -28,6 +28,7 @@
 package pulumi
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sort"
@@ -70,7 +71,7 @@ func (Adapter) Handles(path string) bool {
 // The template: layout takes effect only when the root has no resources:
 // of its own; a document with both is read from the root.
 func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, error) {
-	p := &parser{path: path}
+	p := &parser{path: path, workBudget: maxPulumiWork, resolving: map[string]bool{}}
 	var doc yaml.Node
 	if err := yaml.Unmarshal(src, &doc); err != nil {
 		p.diags = append(p.diags, ir.Diagnostic{
@@ -136,7 +137,28 @@ type parser struct {
 	// resourceTypes maps logical resource name -> canonical TF type,
 	// for qualifying Refs in the type.name.attr form rules expect.
 	resourceTypes map[string]string
+	// aliasActive tracks alias targets currently being resolved (cycle
+	// guard). YAML anchors can be self-referential (&a [*a]); decoding
+	// into yaml.Node does NOT get yaml.v3's alias safeguards, so an
+	// unguarded follow recurses until the goroutine stack overflows.
+	aliasActive map[*yaml.Node]bool
+	// workBudget bounds total value() calls per Parse. Each ${...}
+	// resolution re-walks the referenced variable's subtree, so nested
+	// variable references amplify exponentially (diamond expansion).
+	// Exhaustion yields Unknown plus a single warning, never a hang.
+	workBudget int
+	// budgetWarned records that the work-budget warning was emitted.
+	budgetWarned bool
+	// resolving tracks variable names currently being resolved via
+	// ${...}. A reference cycle (a: ${b}, b: ${a}) would otherwise
+	// recurse value -> scalar -> resolveRef forever until stack overflow.
+	resolving map[string]bool
 }
+
+// maxPulumiWork bounds value() calls per Parse. A 10 MiB YAML file holds
+// at most ~1M nodes; 20M leaves ample headroom for ${...} re-walks while
+// bounding adversarial diamond expansion to seconds, not hours.
+const maxPulumiWork = 20000000
 
 // collectVars indexes variables: and configuration: defaults for ${...}
 // reference resolution.
@@ -258,6 +280,13 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 		flattenNestedProperties(attrs, "")
 		renameAttr(attrs, "enable_purge_protection", "purge_protection_enabled")
 		renameAttr(attrs, "enable_soft_delete", "soft_delete_enabled")
+		// azure-native uses softDeleteRetentionInDays; the rules read
+		// soft_delete_retention_days (same rename as the ARM adapter).
+		renameAttr(attrs, "soft_delete_retention_in_days", "soft_delete_retention_days")
+		// azure-native networkAcls use ipRules: [{value: ...}] and
+		// virtualNetworkRules: [{id: ...}]; the rules read ip_rules /
+		// virtual_network_subnet_ids as plain string lists.
+		normalizeKVNetworkAcls(attrs)
 	}
 	// Rename allows -> allow for GCP firewalls (TF attribute name).
 	if tfType == "google_compute_firewall" {
@@ -281,6 +310,29 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 			delete(attrs, "public_network_access")
 		}
 	}
+	// Terraform policy attributes are JSON strings; a Pulumi YAML mapping
+	// for `policy` (e.g. an S3 BucketPolicy document) must be stringified
+	// so the policy rules (which parse a JSON string) can read it. If any
+	// part is unresolved, leave the mapping untouched: stringifying an
+	// Unknown would fabricate document content.
+	if v, ok := attrs["policy"]; ok {
+		if m, ok := v.Raw.(map[string]ir.Value); ok {
+			if s, ok := stringifyPolicyDoc(m); ok {
+				attrs["policy"] = ir.Value{Raw: s, Known: true, Span: v.Span}
+			}
+		}
+	}
+	// Rules sometimes read sku as a plain string; expose sku.name too
+	// (same promotion as the ARM adapter).
+	if v, ok := attrs["sku"]; ok {
+		if m, ok := v.Raw.(map[string]ir.Value); ok {
+			if n, ok := m["name"]; ok {
+				if _, exists := attrs["sku_name"]; !exists {
+					attrs["sku_name"] = n
+				}
+			}
+		}
+	}
 	return ir.Resource{
 		Type:       tfType,
 		Name:       name,
@@ -297,6 +349,19 @@ func (p *parser) value(n *yaml.Node, span ir.Span) ir.Value {
 	if n == nil {
 		return ir.UnknownValue(span)
 	}
+	// Work budget: bounds total node visits incl. ${...} re-walks.
+	if p.workBudget <= 0 {
+		if !p.budgetWarned {
+			p.budgetWarned = true
+			p.diags = append(p.diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: "pulumi: evaluation budget exceeded (deeply nested variable references?); remaining values treated as unknown",
+				Span:    span,
+			})
+		}
+		return ir.UnknownValue(span)
+	}
+	p.workBudget--
 	span = p.spanOf(n, p.path)
 	switch n.Kind {
 	case yaml.ScalarNode:
@@ -324,7 +389,26 @@ func (p *parser) value(n *yaml.Node, span ir.Span) ir.Value {
 		}
 		return ir.Value{Raw: out, Known: true, Span: span}
 	case yaml.AliasNode:
-		return p.value(n.Alias, span)
+		if n.Alias == nil {
+			return ir.UnknownValue(span)
+		}
+		// Cycle guard: a self-referential anchor (&a [*a]) would
+		// otherwise recurse until stack overflow.
+		if p.aliasActive[n.Alias] {
+			p.diags = append(p.diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: "pulumi: YAML alias cycle detected; value treated as unknown",
+				Span:    span,
+			})
+			return ir.UnknownValue(span)
+		}
+		if p.aliasActive == nil {
+			p.aliasActive = map[*yaml.Node]bool{}
+		}
+		p.aliasActive[n.Alias] = true
+		v := p.value(n.Alias, span)
+		delete(p.aliasActive, n.Alias)
+		return v
 	default:
 		return ir.UnknownValue(span)
 	}
@@ -371,8 +455,21 @@ func (p *parser) resolveRef(ref string, span ir.Span) ir.Value {
 		head = head[:i]
 	}
 	if v, ok := p.vars[head]; ok {
+		// Cycle guard: a: ${b}, b: ${a} would otherwise recurse
+		// value -> scalar -> resolveRef until stack overflow.
+		if p.resolving[head] {
+			p.diags = append(p.diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: fmt.Sprintf("pulumi: variable reference cycle involving %q; value treated as unknown", head),
+				Span:    span,
+			})
+			return ir.Value{Known: false, Span: span, Ref: ref}
+		}
 		// Statically-known variable/config value: inline it.
-		return p.value(v, span)
+		p.resolving[head] = true
+		out := p.value(v, span)
+		delete(p.resolving, head)
+		return out
 	}
 	if p.resourceNames[head] {
 		// Qualify with canonical type for cross-adapter Ref compatibility:
@@ -457,6 +554,104 @@ func flattenNestedProperties(attrs map[string]ir.Value, attr string) {
 			merge(attrs, v)
 		}
 	}
+}
+
+// stringifyPolicyDoc renders a Pulumi policy-document mapping as a JSON
+// string. Keys stay snake_cased (the policy parsers match keys
+// case-insensitively); values are the literal scalars/lists/maps. Any
+// unresolved (Unknown) value aborts the conversion so no fabricated
+// document content is produced.
+func stringifyPolicyDoc(m map[string]ir.Value) (string, bool) {
+	plain, ok := plainValue(ir.Value{Raw: m, Known: true})
+	if !ok {
+		return "", false
+	}
+	b, err := json.Marshal(plain)
+	if err != nil {
+		return "", false
+	}
+	return string(b), true
+}
+
+// plainValue converts an ir.Value tree to plain Go values for JSON
+// marshalling. Unknown values abort the conversion.
+func plainValue(v ir.Value) (any, bool) {
+	if !v.Known {
+		return nil, false
+	}
+	switch t := v.Raw.(type) {
+	case map[string]ir.Value:
+		out := make(map[string]any, len(t))
+		for k, ev := range t {
+			pv, ok := plainValue(ev)
+			if !ok {
+				return nil, false
+			}
+			out[k] = pv
+		}
+		return out, true
+	case []ir.Value:
+		out := make([]any, 0, len(t))
+		for _, ev := range t {
+			pv, ok := plainValue(ev)
+			if !ok {
+				return nil, false
+			}
+			out = append(out, pv)
+		}
+		return out, true
+	default:
+		return t, true
+	}
+}
+
+// normalizeKVNetworkAcls unwraps azure-native Key Vault network ACL rule
+// lists: ipRules: [{value: ...}] -> ip_rules: [...] and
+// virtualNetworkRules: [{id: ...}] -> virtual_network_subnet_ids: [...],
+// the plain string lists the Azure rules read.
+func normalizeKVNetworkAcls(attrs map[string]ir.Value) {
+	nacls, ok := attrs["network_acls"]
+	if !ok {
+		return
+	}
+	m, ok := nacls.Raw.(map[string]ir.Value)
+	if !ok {
+		return
+	}
+	if ip, ok := m["ip_rules"]; ok {
+		if unwrapped, ok := unwrapSingleKeyList(ip, "value"); ok {
+			m["ip_rules"] = unwrapped
+		}
+	}
+	if vr, ok := m["virtual_network_rules"]; ok {
+		if unwrapped, ok := unwrapSingleKeyList(vr, "id"); ok {
+			m["virtual_network_subnet_ids"] = unwrapped
+			delete(m, "virtual_network_rules")
+		}
+	}
+}
+
+// unwrapSingleKeyList converts a list of single-key maps [{key: x}, ...]
+// to a plain list [x, ...]. Non-map elements or maps without the key
+// abort the conversion.
+func unwrapSingleKeyList(v ir.Value, key string) (ir.Value, bool) {
+	lst, ok := v.Raw.([]ir.Value)
+	if !ok {
+		return ir.Value{}, false
+	}
+	out := make([]ir.Value, 0, len(lst))
+	for _, e := range lst {
+		em, ok := e.Raw.(map[string]ir.Value)
+		if !ok {
+			return ir.Value{}, false
+		}
+		ev, ok := em[key]
+		if !ok || !ev.Known {
+			return ir.Value{}, false
+		}
+		out = append(out, ev)
+	}
+	return ir.Value{Raw: out, Known: true, Span: v.Span}, true
 }
 
 // renameAttr moves attrs[from] to attrs[to] when present and to is absent.

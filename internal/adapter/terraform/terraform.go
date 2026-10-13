@@ -192,12 +192,14 @@ type ModuleCall struct {
 // (binary garbage, UTF-16, oversize, truncated, absurdly nested) fails
 // fast with a clear hard error instead of a confusing parser diagnostic.
 // lenientParseConfig parses src as native HCL, with targeted recovery
-// for two classes of separator omission that make the strict parser drop
-// attributes:
+// for separator omissions that make the strict parser drop attributes:
 //
 //   - Object constructors written without comma separators
 //     (e.g. { Effect = "Allow" Action = "s3:GetObject" }): the parser
 //     reports "Missing attribute separator"; a comma is inserted.
+//     Tuple constructors and function-call arguments without separators
+//     ("Missing item separator" / "Missing argument separator") are
+//     repaired the same way.
 //   - Multiple attributes on one line inside a block body
 //     (e.g. `resource "aws_s3_bucket" "pub" { bucket = "c1" acl = "public-read" }`
 //     or `engine = "postgres" instance_class = "db.t3.micro"`): the parser
@@ -220,8 +222,20 @@ func lenientParseConfig(src []byte, path string) (*hcl.File, hcl.Diagnostics) {
 	f, diags := hclsyntax.ParseConfig(src, path, hcl.Pos{Line: 1, Column: 1})
 	fixed := append([]byte(nil), src...)
 	// The parser reports only the first missing separator per pass, so
-	// iterate. Bound the loop: each pass must fix at least one position.
-	for i := 0; i < 256; i++ {
+	// iterate. Each pass re-parses the whole file, so the loop is bounded
+	// two ways: an iteration cap and a cumulative-bytes budget. The old
+	// 256-iteration cap alone was too low — a 100-statement jsonencode()
+	// policy needs ~300 separator repairs, so recovery gave up and the
+	// file fell back to a partial parse that silently dropped the policy
+	// attribute (0 findings, file still marked "parsed") — while a bare
+	// iteration raise would let a 10 MiB file with thousands of omissions
+	// pay 1000+ full re-parses. The byte budget keeps small sloppy files
+	// recoverable and large pathological ones bounded.
+	repairedBytes := len(src)
+	for i := 0; i < 2048; i++ {
+		if repairedBytes > maxLenientRepairBytes {
+			break
+		}
 		repairs := separatorRepairs(fixed, diags)
 		if len(repairs) == 0 {
 			break
@@ -237,6 +251,7 @@ func lenientParseConfig(src []byte, path string) (*hcl.File, hcl.Diagnostics) {
 		}
 		var diags2 hcl.Diagnostics
 		f, diags2 = hclsyntax.ParseConfig(fixed, path, hcl.Pos{Line: 1, Column: 1})
+		repairedBytes += len(fixed)
 		if !diags2.HasErrors() {
 			return f, diags2
 		}
@@ -250,6 +265,15 @@ func lenientParseConfig(src []byte, path string) (*hcl.File, hcl.Diagnostics) {
 	return f, diags
 }
 
+// maxLenientRepairBytes caps cumulative re-parsed bytes in
+// lenientParseConfig's repair loop (see there). 16 MiB: a 200-statement
+// sloppy policy needs ~7 MiB of re-parsing to recover, while a 117 KiB
+// file with 2000 sloppy statements aborts after ~136 iterations
+// (~11 s of re-parsing) instead of hanging; a 10 MiB file aborts after
+// ~2 iterations. Worst-case repair-loop time is bounded by ~16 MiB of
+// HCL re-parsing; scans of untrusted input should also use --timeout.
+const maxLenientRepairBytes = 16 << 20
+
 // separatorRepair is one separator insertion at a parser-reported offset.
 type separatorRepair struct {
 	offset int
@@ -260,8 +284,13 @@ type separatorRepair struct {
 // implied by the parser diagnostics. Diagnostics of any other kind yield
 // no repairs, which makes the caller fall back to the strict parse.
 //
-//   - "Missing attribute separator" (object constructor): insert ',' at
-//     the start of the offending attribute.
+//   - "Missing attribute separator" (object constructor), "Missing item
+//     separator" (tuple constructor), "Missing argument separator"
+//     (function call): insert ',' at the start of the offending element.
+//     The item/argument cases were previously unhandled, so recovery
+//     stalled at the first comma-less tuple (e.g. a jsonencode() policy
+//     whose statements are space-separated) and fell back to a partial
+//     parse that dropped the attribute.
 //   - "Missing newline after argument" (block body): insert '\n' at the
 //     start of the offending attribute.
 //   - "Invalid single-argument block definition": an argument sharing a
@@ -286,7 +315,7 @@ func separatorRepairs(src []byte, diags hcl.Diagnostics) []separatorRepair {
 			continue
 		}
 		switch d.Summary {
-		case "Missing attribute separator":
+		case "Missing attribute separator", "Missing item separator", "Missing argument separator":
 			add(d.Subject.Start.Byte, ',')
 		case "Missing newline after argument":
 			add(d.Subject.Start.Byte, '\n')
@@ -881,6 +910,13 @@ func staticKeyString(e hcl.Expression) (string, bool) {
 		if kw := hcl.ExprAsKeyword(k.Wrapped); kw != "" {
 			return kw, true
 		}
+		// Quoted keys ("Effect": "Allow") arrive as ObjectConsKeyExpr
+		// wrapping a TemplateExpr, not a bare keyword: ExprAsKeyword
+		// returns "" for them. Unwrap and evaluate the inner
+		// expression, or every JSON-style (colon-separated) object —
+		// the form AWS policy documents are pasted in as — silently
+		// degrades to Unknown and its rules stop firing.
+		return staticKeyString(k.Wrapped)
 	}
 	if staticExpr(e) {
 		val, diags := e.Value(emptyCtx)
@@ -986,6 +1022,8 @@ func staticObjectKey(e hcl.Expression) bool {
 		if hcl.ExprAsKeyword(k.Wrapped) != "" {
 			return true
 		}
+		// Quoted keys ("Effect": "Allow"): unwrap, same as staticKeyString.
+		return staticExpr(k.Wrapped)
 	}
 	return staticExpr(e)
 }
