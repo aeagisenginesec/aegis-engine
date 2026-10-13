@@ -242,6 +242,20 @@ func linkedBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 		return "", false
 	}
 	if v.IsRef() {
+		// CloudFormation !Ref to a resource logical ID: "cfn.resource.X".
+		// Match by the bucket's Name (its CFN logical ID) in scope.
+		if strings.HasPrefix(v.Ref, "cfn.resource.") {
+			lid := strings.TrimPrefix(v.Ref, "cfn.resource.")
+			for _, b := range resources {
+				if b.Type != "aws_s3_bucket" || !sameScope(r, b) {
+					continue
+				}
+				if b.Name == lid {
+					return scopeKey(b), true
+				}
+			}
+			return "", false
+		}
 		addr, ok := refAddrOf(v.Ref)
 		if !ok {
 			return "", false

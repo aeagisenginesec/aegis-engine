@@ -290,7 +290,11 @@ func convertS3BucketPolicy(t *template, logicalID, tfType string, attrs map[stri
 		attrs["bucket"] = t.resolveValue(b)
 	}
 	if pd := mappingGet(props, "PolicyDocument"); pd != nil {
-		attrs["policy"] = jsonString(t.path, pd, t)
+		// Preserve IAM policy key casing (Statement, Principal, ...):
+		// the rules parse the document case-sensitively for these keys,
+		// and snake_casing them silently breaks public-principal
+		// detection (the same bug class as IAM PolicyDocument handling).
+		attrs["policy"] = jsonStringPreserveCase(t.path, pd, t)
 		delete(attrs, "policy_document")
 	}
 	return attrs, nil

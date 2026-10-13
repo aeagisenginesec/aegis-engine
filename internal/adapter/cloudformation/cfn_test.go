@@ -128,6 +128,42 @@ func TestS3JSON(t *testing.T) {
 	}
 }
 
+// TestS3BucketPolicyPreservesCase: a CFN BucketPolicy PolicyDocument must
+// keep IAM key casing (Statement/Principal/Action). The converter used to
+// snake_case the document (statement/principal), which silently broke
+// public-principal detection (AEGIS-AWS-003) and the intentionally-public
+// correlation for SSE/PAB.
+func TestS3BucketPolicyPreservesCase(t *testing.T) {
+	src := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: data-32a737
+  DataPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DataBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: arn:aws:s3:::data-32a737/*
+`
+	findings := scanTemplate(t, "template.yaml", src)
+	ids := ruleIDs(findings)
+	if !ids["AEGIS-AWS-003"] {
+		t.Fatalf("expected AEGIS-AWS-003 on CFN public bucket policy, got %v", findings)
+	}
+	// The bucket is intentionally public: SSE (001) and PAB (206) must
+	// stay quiet on it.
+	if ids["AEGIS-AWS-001"] || ids["AEGIS-AWS-206"] {
+		t.Fatalf("001/206 must stay quiet on intentionally-public CFN bucket, got %v", findings)
+	}
+}
+
 func TestIAMRoleWildcard(t *testing.T) {
 	src := `AWSTemplateFormatVersion: '2010-09-09'
 Resources:

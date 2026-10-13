@@ -315,6 +315,14 @@ func (s3NoPublicAccessBlock) CheckAll(resources []ir.Resource) []ir.Finding {
 		if b.Type != "aws_s3_bucket" {
 			continue
 		}
+		// Intentionally-public buckets must NOT be told to enable a
+		// public access block: PAB would break the public access the
+		// bucket exists to provide (website hosting, public ACL, or a
+		// public-granting bucket policy). Recommending it is wrong
+		// advice, not a hardening gap.
+		if bucketIntentionallyPublic(sorted, b) {
+			continue
+		}
 		protected := false
 		for _, pab := range blocks[b.Address()] {
 			if pabBlocksAll(pab) {

@@ -224,6 +224,96 @@ func Test206_BlockForOtherBucketFires(t *testing.T) {
 	}
 }
 
+// --- AEGIS-AWS-001/206: intentionally-public buckets ----------------------
+// A bucket that is publicly readable by design (public ACL, website
+// hosting, or a public-granting bucket policy) must not be told to
+// enable SSE (001) or a public access block (206): PAB would break the
+// public access the bucket exists to provide, and published content
+// has no confidentiality requirement for at-rest encryption.
+
+func publicPolicyFixture(bucketRefPath, doc string, line int) ir.Resource {
+	return res("aws_s3_bucket_policy", "data", map[string]ir.Value{
+		"bucket": bucketRef(line, bucketRefPath),
+		"policy": ks(doc, line+1),
+	})
+}
+
+const publicGetObjectPolicy = `{"Statement":[{"Effect":"Allow","Principal":"*","Action":"s3:GetObject","Resource":"*"}]}`
+const scopedPolicy = `{"Statement":[{"Effect":"Allow","Principal":{"AWS":"arn:aws:iam::123:root"},"Action":"s3:GetObject","Resource":"*"}]}`
+
+func TestS3IntentionallyPublic_PolicySuppresses001And206(t *testing.T) {
+	bucket := bucketFixture("data")
+	pol := publicPolicyFixture("aws_s3_bucket.data.id", publicGetObjectPolicy, 10)
+	if fs := runCross(s3Encryption{}, bucket, pol); len(fs) != 0 {
+		t.Fatalf("001 must stay quiet on public-policy bucket, got %+v", fs)
+	}
+	if fs := runCross(s3NoPublicAccessBlock{}, bucket, pol); len(fs) != 0 {
+		t.Fatalf("206 must stay quiet on public-policy bucket, got %+v", fs)
+	}
+}
+
+func TestS3IntentionallyPublic_LowercasePolicyKeysDetected(t *testing.T) {
+	// Adapters that lowercase document keys must not hide public intent.
+	bucket := bucketFixture("data")
+	pol := publicPolicyFixture("aws_s3_bucket.data.id",
+		`{"statement":[{"effect":"Allow","principal":"*","action":"s3:GetObject","resource":"*"}]}`, 10)
+	if fs := runCross(s3Encryption{}, bucket, pol); len(fs) != 0 {
+		t.Fatalf("001 must stay quiet on lowercase-keys public policy, got %+v", fs)
+	}
+	if !policyAllowsPublicPrincipal(`{"statement":[{"effect":"Allow","principal":"*"}]}`) {
+		t.Fatal("case-insensitive policy parsing must detect Principal *")
+	}
+}
+
+func TestS3IntentionallyPublic_ScopedPolicyStillFires(t *testing.T) {
+	bucket := bucketFixture("data")
+	pol := publicPolicyFixture("aws_s3_bucket.data.id", scopedPolicy, 10)
+	if fs := runCross(s3Encryption{}, bucket, pol); len(fs) != 1 {
+		t.Fatalf("001 must fire on scoped-policy (private) bucket, got %+v", fs)
+	}
+	if fs := runCross(s3NoPublicAccessBlock{}, bucket, pol); len(fs) != 1 {
+		t.Fatalf("206 must fire on scoped-policy (private) bucket, got %+v", fs)
+	}
+}
+
+func TestS3IntentionallyPublic_ACLAndWebsiteSuppress(t *testing.T) {
+	aclBucket := res("aws_s3_bucket", "site", map[string]ir.Value{"acl": ks("public-read", 3)})
+	if fs := runCross(s3Encryption{}, aclBucket); len(fs) != 0 {
+		t.Fatalf("001 must stay quiet on public-ACL bucket, got %+v", fs)
+	}
+	if fs := runCross(s3NoPublicAccessBlock{}, aclBucket); len(fs) != 0 {
+		t.Fatalf("206 must stay quiet on public-ACL bucket, got %+v", fs)
+	}
+	webBucket := res("aws_s3_bucket", "site", map[string]ir.Value{
+		"website": blks(3, blk("index_document", ks("index.html", 4))),
+	})
+	if fs := runCross(s3Encryption{}, webBucket); len(fs) != 0 {
+		t.Fatalf("001 must stay quiet on website bucket, got %+v", fs)
+	}
+	if fs := runCross(s3NoPublicAccessBlock{}, webBucket); len(fs) != 0 {
+		t.Fatalf("206 must stay quiet on website bucket, got %+v", fs)
+	}
+	// Public-ACL detection must not suppress the ACL finding itself.
+	if f := runRule(s3PublicACL{}, aclBucket); len(f) != 1 {
+		t.Fatalf("002 must still fire on public-ACL bucket, got %+v", f)
+	}
+}
+
+func TestS3IntentionallyPublic_CFNRefLink(t *testing.T) {
+	// CloudFormation !Ref DataBucket arrives as Ref "cfn.resource.DataBucket".
+	bucket := res("aws_s3_bucket", "DataBucket", map[string]ir.Value{})
+	pol := res("aws_s3_bucket_policy", "DataPolicy", map[string]ir.Value{
+		"bucket": bucketRef(10, "cfn.resource.DataBucket"),
+		"policy": ks(publicGetObjectPolicy, 11),
+	})
+	if fs := runCross(s3Encryption{}, bucket, pol); len(fs) != 0 {
+		t.Fatalf("001 must stay quiet on CFN public-policy bucket, got %+v", fs)
+	}
+	if fs := runCross(s3NoPublicAccessBlock{}, bucket, pol); len(fs) != 0 {
+		t.Fatalf("206 must stay quiet on CFN public-policy bucket, got %+v", fs)
+	}
+}
+
 func Test206_KnownNameLinkQuiet(t *testing.T) {
 	fs := runCross(s3NoPublicAccessBlock{},
 		res("aws_s3_bucket", "assets", map[string]ir.Value{"bucket": ks("my-bucket", 3)}),

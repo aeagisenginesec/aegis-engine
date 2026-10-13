@@ -49,7 +49,12 @@ func (s3Encryption) CheckAll(resources []ir.Resource) []ir.Finding {
 			continue
 		}
 		for _, f := range (s3Encryption{}).Check(r) {
-			if !encrypted[scopeKey(r)] && !logTargets[scopeKey(r)] {
+			// Intentionally-public buckets (public ACL, website hosting,
+			// or a public-granting bucket policy) have no confidentiality
+			// requirement for their published content: flagging missing
+			// at-rest encryption on them is noise.
+			if !encrypted[scopeKey(r)] && !logTargets[scopeKey(r)] &&
+				!bucketIntentionallyPublic(resources, r) {
 				out = append(out, f)
 			}
 		}
@@ -204,36 +209,108 @@ func (s3PublicPolicy) Check(r ir.Resource) []ir.Finding {
 
 // policyAllowsPublicPrincipal parses a policy JSON document and reports
 // whether any Allow statement grants Principal "*". Malformed JSON or
-// unexpected shapes yield false (cannot decide -> no finding).
+// unexpected shapes yield false (cannot decide -> no finding). Key
+// matching is case-insensitive: some adapters lowercase document keys
+// (Statement -> statement), and the principal check must not depend on
+// the producer's casing.
 func policyAllowsPublicPrincipal(doc string) bool {
-	var parsed struct {
-		Statement json.RawMessage `json:"Statement"`
-	}
+	var parsed map[string]json.RawMessage
 	if err := json.Unmarshal([]byte(doc), &parsed); err != nil {
 		return false
 	}
-	if len(parsed.Statement) == 0 {
+	stmtRaw, ok := lookupKeyFold(parsed, "Statement")
+	if !ok || len(stmtRaw) == 0 {
 		return false
 	}
 	var stmts []map[string]any
-	if parsed.Statement[0] == '[' {
-		if err := json.Unmarshal(parsed.Statement, &stmts); err != nil {
+	if stmtRaw[0] == '[' {
+		if err := json.Unmarshal(stmtRaw, &stmts); err != nil {
 			return false
 		}
 	} else {
 		var one map[string]any
-		if err := json.Unmarshal(parsed.Statement, &one); err != nil {
+		if err := json.Unmarshal(stmtRaw, &one); err != nil {
 			return false
 		}
 		stmts = []map[string]any{one}
 	}
 	for _, s := range stmts {
-		eff, _ := s["Effect"].(string)
+		eff, _ := lookupMapFold(s, "Effect").(string)
 		if eff != "Allow" {
 			continue
 		}
-		if principalIsPublic(s["Principal"]) {
+		if principalIsPublic(lookupMapFold(s, "Principal")) {
 			return true
+		}
+	}
+	return false
+}
+
+// lookupKeyFold returns the value for key in m, matching case-insensitively.
+func lookupKeyFold(m map[string]json.RawMessage, key string) (json.RawMessage, bool) {
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			return v, true
+		}
+	}
+	return nil, false
+}
+
+// lookupMapFold returns the value for key in m, matching case-insensitively.
+func lookupMapFold(m map[string]any, key string) any {
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			return v
+		}
+	}
+	return nil
+}
+
+// bucketIntentionallyPublic reports whether a bucket is meant to be
+// publicly readable, from positive evidence in the same module: a public
+// ACL (inline or via a standalone aws_s3_bucket_acl), a website
+// configuration (inline or standalone — website hosting is public by
+// definition), or a bucket policy granting a public principal. Absence
+// of evidence is NOT public intent: an unconfigured bucket is private
+// by default and stays flagged by the hardening rules.
+func bucketIntentionallyPublic(resources []ir.Resource, b ir.Resource) bool {
+	if acl, _, present, known := getString(b, "acl"); present && known &&
+		publicACLs[strings.ToLower(strings.TrimSpace(acl))] {
+		return true
+	}
+	for _, blockName := range []string{"website", "website_configuration"} {
+		if blks, _, present, known := getBlocks(b, blockName); present && known && len(blks) > 0 {
+			return true
+		}
+	}
+	for _, r := range resources {
+		if !sameScope(r, b) {
+			continue
+		}
+		switch r.Type {
+		case "aws_s3_bucket_acl":
+			addr, ok := linkedBucketAddr(r, resources)
+			if !ok || addr != scopeKey(b) {
+				continue
+			}
+			if acl, _, present, known := getString(r, "acl"); present && known &&
+				publicACLs[strings.ToLower(strings.TrimSpace(acl))] {
+				return true
+			}
+		case "aws_s3_bucket_website_configuration":
+			addr, ok := linkedBucketAddr(r, resources)
+			if ok && addr == scopeKey(b) {
+				return true
+			}
+		case "aws_s3_bucket_policy":
+			addr, ok := linkedBucketAddr(r, resources)
+			if !ok || addr != scopeKey(b) {
+				continue
+			}
+			if pol, _, present, known := getString(r, "policy"); present && known &&
+				policyAllowsPublicPrincipal(pol) {
+				return true
+			}
 		}
 	}
 	return false
