@@ -248,6 +248,16 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 			attrs["security_rule"] = v
 			delete(attrs, "security_rules")
 		}
+		// azure-native nests each rule's fields under properties:; the
+		// rules read direction/access/source_* at the rule level.
+		flattenNestedProperties(attrs, "security_rule")
+	}
+	// azure-native Key Vault wraps all settings under properties:; the
+	// rules read purge_protection_enabled etc. at the resource level.
+	if tfType == "azurerm_key_vault" {
+		flattenNestedProperties(attrs, "")
+		renameAttr(attrs, "enable_purge_protection", "purge_protection_enabled")
+		renameAttr(attrs, "enable_soft_delete", "soft_delete_enabled")
 	}
 	// Rename allows -> allow for GCP firewalls (TF attribute name).
 	if tfType == "google_compute_firewall" {
@@ -397,6 +407,56 @@ func programNode(root *yaml.Node) *yaml.Node {
 		return t
 	}
 	return root
+}
+
+// flattenNestedProperties merges nested "properties" maps up one level.
+// When attr is "", the resource's own attrs["properties"] map is merged
+// into attrs. When attr names a list attribute (e.g. "security_rule"),
+// each list entry's nested "properties" map is merged into that entry.
+// This normalizes the azure-native API shape (which nests settings under
+// properties:) to the flat Terraform attribute layout the rules expect.
+// Keys are already snake_cased by value(); existing keys win on conflict.
+func flattenNestedProperties(attrs map[string]ir.Value, attr string) {
+	merge := func(dst map[string]ir.Value, v ir.Value) {
+		if m, ok := v.AsMap(); ok {
+			if props, ok := m["properties"]; ok {
+				if pm, ok := props.AsMap(); ok {
+					for k, pv := range pm {
+						if _, exists := dst[k]; !exists {
+							dst[k] = pv
+						}
+					}
+				}
+			}
+		}
+	}
+	if attr == "" {
+		if v, ok := attrs["properties"]; ok {
+			if m, ok := v.AsMap(); ok {
+				for k, pv := range m {
+					if _, exists := attrs[k]; !exists {
+						attrs[k] = pv
+					}
+				}
+			}
+			delete(attrs, "properties")
+		}
+		return
+	}
+	if v, ok := attrs[attr]; ok {
+		if lst, ok := v.Raw.([]ir.Value); ok {
+			for i := range lst {
+				if m, ok := lst[i].AsMap(); ok {
+					merge(m, lst[i])
+					if _, has := m["properties"]; has {
+						delete(m, "properties")
+					}
+				}
+			}
+		} else {
+			merge(attrs, v)
+		}
+	}
 }
 
 // renameAttr moves attrs[from] to attrs[to] when present and to is absent.

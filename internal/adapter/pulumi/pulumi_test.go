@@ -591,3 +591,88 @@ template:
 		t.Errorf("bucket = %q, %v; want my-data", s, ok)
 	}
 }
+
+// 19. NSG: nested properties.securityRules[].properties flattened so rules
+// read direction/access at the rule level (round-3 gap: 5 FNs).
+func TestNSGNestedRuleProperties(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: nsg
+runtime: yaml
+template:
+  resources:
+    webNsg:
+      type: azure-native:network:NetworkSecurityGroup
+      properties:
+        networkSecurityGroupName: web-nsg
+        securityRules:
+          - name: allow-ssh
+            properties:
+              priority: 100
+              direction: Inbound
+              access: Allow
+              protocol: Tcp
+              sourceAddressPrefix: "*"
+              destinationPortRange: "22"
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	r := rs[0]
+	if r.Type != "azurerm_network_security_group" {
+		t.Fatalf("type = %q", r.Type)
+	}
+	rules, ok := r.Attributes["security_rule"]
+	if !ok {
+		t.Fatalf("security_rule attribute missing")
+	}
+	lst, ok := rules.Raw.([]ir.Value)
+	if !ok || len(lst) != 1 {
+		t.Fatalf("security_rule is not a 1-element list")
+	}
+	m, ok := lst[0].AsMap()
+	if !ok {
+		t.Fatalf("rule is not a map")
+	}
+	if s, ok := m["direction"].AsString(); !ok || s != "Inbound" {
+		t.Errorf("direction not flattened: %v", m["direction"].Raw)
+	}
+	if s, ok := m["access"].AsString(); !ok || s != "Allow" {
+		t.Errorf("access not flattened")
+	}
+	if _, has := m["properties"]; has {
+		t.Errorf("nested properties map not removed after flatten")
+	}
+}
+
+// 20. Key Vault: nested properties flattened + enable* renamed (round-3
+// gap: 4 FNs on purge protection).
+func TestKeyVaultNestedProperties(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: kv
+runtime: yaml
+template:
+  resources:
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: my-kv
+        properties:
+          enablePurgeProtection: false
+          enableSoftDelete: true
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	r := rs[0]
+	if r.Type != "azurerm_key_vault" {
+		t.Fatalf("type = %q", r.Type)
+	}
+	if v, ok := r.Attributes["purge_protection_enabled"]; !ok {
+		t.Errorf("purge_protection_enabled missing after flatten+rename")
+	} else if b, ok := v.AsBool(); !ok || b {
+		t.Errorf("purge_protection_enabled = %v; want false", v.Raw)
+	}
+	if _, has := r.Attributes["properties"]; has {
+		t.Errorf("nested properties map not removed after flatten")
+	}
+}
