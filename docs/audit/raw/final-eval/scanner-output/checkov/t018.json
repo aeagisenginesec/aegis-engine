@@ -1,0 +1,1348 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security group and rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]",
+                        "ingress/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"web\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name   = \"web-alb-sg\"\n"
+                    ],
+                    [
+                        16,
+                        "  vpc_id = \"vpc-3c4d5e6f7a8b91213\"\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "  ingress {\n"
+                    ],
+                    [
+                        19,
+                        "    from_port   = 80\n"
+                    ],
+                    [
+                        20,
+                        "    to_port     = 80\n"
+                    ],
+                    [
+                        21,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        22,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        23,
+                        "  }\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "  egress {\n"
+                    ],
+                    [
+                        26,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        27,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        28,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        29,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        30,
+                        "  }\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  tags = {\n"
+                    ],
+                    [
+                        33,
+                        "    Name = \"web-alb-sg\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    14,
+                    35
+                ],
+                "resource": "aws_security_group.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "web-alb-sg"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_382",
+                "bc_check_id": "BC_AWS_IAM_93",
+                "check_name": "Ensure no security groups allow egress from 0.0.0.0:0 to port -1",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]/from_port",
+                        "egress/[0]/to_port",
+                        "egress/[0]/cidr_blocks",
+                        "egress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"web\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name   = \"web-alb-sg\"\n"
+                    ],
+                    [
+                        16,
+                        "  vpc_id = \"vpc-3c4d5e6f7a8b91213\"\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "  ingress {\n"
+                    ],
+                    [
+                        19,
+                        "    from_port   = 80\n"
+                    ],
+                    [
+                        20,
+                        "    to_port     = 80\n"
+                    ],
+                    [
+                        21,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        22,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        23,
+                        "  }\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "  egress {\n"
+                    ],
+                    [
+                        26,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        27,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        28,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        29,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        30,
+                        "  }\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  tags = {\n"
+                    ],
+                    [
+                        33,
+                        "    Name = \"web-alb-sg\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    14,
+                    35
+                ],
+                "resource": "aws_security_group.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedEgressAny",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "web-alb-sg"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_260",
+                "bc_check_id": "BC_AWS_NETWORKING_67",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ingress/[0]/from_port",
+                        "ingress/[0]/to_port",
+                        "ingress/[0]/cidr_blocks",
+                        "ingress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"web\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name   = \"web-alb-sg\"\n"
+                    ],
+                    [
+                        16,
+                        "  vpc_id = \"vpc-3c4d5e6f7a8b91213\"\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "  ingress {\n"
+                    ],
+                    [
+                        19,
+                        "    from_port   = 80\n"
+                    ],
+                    [
+                        20,
+                        "    to_port     = 80\n"
+                    ],
+                    [
+                        21,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        22,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        23,
+                        "  }\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "  egress {\n"
+                    ],
+                    [
+                        26,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        27,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        28,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        29,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        30,
+                        "  }\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  tags = {\n"
+                    ],
+                    [
+                        33,
+                        "    Name = \"web-alb-sg\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    14,
+                    35
+                ],
+                "resource": "aws_security_group.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress80",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "web-alb-sg"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-aws-security-groups-do-not-allow-ingress-from-00000-to-port-80",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_131",
+                "bc_check_id": "BC_AWS_NETWORKING_41",
+                "check_name": "Ensure that ALB drops HTTP headers",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "drop_invalid_header_fields"
+                    ]
+                },
+                "code_block": [
+                    [
+                        37,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        38,
+                        "  name               = \"web-alb\"\n"
+                    ],
+                    [
+                        39,
+                        "  internal           = false\n"
+                    ],
+                    [
+                        40,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        41,
+                        "  security_groups    = [aws_security_group.web.id]\n"
+                    ],
+                    [
+                        42,
+                        "  subnets            = [\"subnet-pub1\", \"subnet-pub2\"]\n"
+                    ],
+                    [
+                        43,
+                        "\n"
+                    ],
+                    [
+                        44,
+                        "  tags = {\n"
+                    ],
+                    [
+                        45,
+                        "    Name = \"web-alb\"\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    37,
+                    47
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.ALBDropHttpHeaders",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "web-alb"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-alb-drops-http-headers",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_91",
+                "bc_check_id": "BC_AWS_LOGGING_22",
+                "check_name": "Ensure the ELBv2 (Application/Network) has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "access_logs/0/enabled/0"
+                    ]
+                },
+                "code_block": [
+                    [
+                        37,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        38,
+                        "  name               = \"web-alb\"\n"
+                    ],
+                    [
+                        39,
+                        "  internal           = false\n"
+                    ],
+                    [
+                        40,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        41,
+                        "  security_groups    = [aws_security_group.web.id]\n"
+                    ],
+                    [
+                        42,
+                        "  subnets            = [\"subnet-pub1\", \"subnet-pub2\"]\n"
+                    ],
+                    [
+                        43,
+                        "\n"
+                    ],
+                    [
+                        44,
+                        "  tags = {\n"
+                    ],
+                    [
+                        45,
+                        "    Name = \"web-alb\"\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    37,
+                    47
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.ELBv2AccessLogs",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "web-alb"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-logging-22",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_150",
+                "bc_check_id": "BC_AWS_NETWORKING_62",
+                "check_name": "Ensure that Load Balancer has deletion protection enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "enable_deletion_protection"
+                    ]
+                },
+                "code_block": [
+                    [
+                        37,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        38,
+                        "  name               = \"web-alb\"\n"
+                    ],
+                    [
+                        39,
+                        "  internal           = false\n"
+                    ],
+                    [
+                        40,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        41,
+                        "  security_groups    = [aws_security_group.web.id]\n"
+                    ],
+                    [
+                        42,
+                        "  subnets            = [\"subnet-pub1\", \"subnet-pub2\"]\n"
+                    ],
+                    [
+                        43,
+                        "\n"
+                    ],
+                    [
+                        44,
+                        "  tags = {\n"
+                    ],
+                    [
+                        45,
+                        "    Name = \"web-alb\"\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    37,
+                    47
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LBDeletionProtection",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "web-alb"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-150",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_2",
+                "bc_check_id": "BC_AWS_NETWORKING_29",
+                "check_name": "Ensure ALB protocol is HTTPS",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "protocol"
+                    ]
+                },
+                "code_block": [
+                    [
+                        65,
+                        "resource \"aws_lb_listener\" \"http\" {\n"
+                    ],
+                    [
+                        66,
+                        "  load_balancer_arn = aws_lb.web.arn\n"
+                    ],
+                    [
+                        67,
+                        "  port              = 80\n"
+                    ],
+                    [
+                        68,
+                        "  protocol          = \"HTTP\"\n"
+                    ],
+                    [
+                        69,
+                        "\n"
+                    ],
+                    [
+                        70,
+                        "  default_action {\n"
+                    ],
+                    [
+                        71,
+                        "    type             = \"forward\"\n"
+                    ],
+                    [
+                        72,
+                        "    target_group_arn = aws_lb_target_group.web.arn\n"
+                    ],
+                    [
+                        73,
+                        "  }\n"
+                    ],
+                    [
+                        74,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    65,
+                    74
+                ],
+                "resource": "aws_lb_listener.http",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.ALBListenerHTTPS",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-29",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_20",
+                "bc_check_id": "BC_AWS_NETWORKING_49",
+                "check_name": "Ensure that ALB redirects HTTP requests into HTTPS ones",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_lb": {
+                            "web": {
+                                "__end_line__": 47,
+                                "__start_line__": 37,
+                                "internal": [
+                                    false
+                                ],
+                                "load_balancer_type": [
+                                    "application"
+                                ],
+                                "name": [
+                                    "web-alb"
+                                ],
+                                "security_groups": [
+                                    [
+                                        "aws_security_group.web.id"
+                                    ]
+                                ],
+                                "subnets": [
+                                    [
+                                        "subnet-pub1",
+                                        "subnet-pub2"
+                                    ]
+                                ],
+                                "tags": [
+                                    {
+                                        "Name": "web-alb"
+                                    }
+                                ],
+                                "__address__": "aws_lb.web",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "port",
+                        "default_action/type",
+                        "default_action/redirect/*/port",
+                        "resource_type",
+                        "protocol",
+                        "default_action/redirect/*/protocol"
+                    ]
+                },
+                "code_block": [
+                    [
+                        37,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        38,
+                        "  name               = \"web-alb\"\n"
+                    ],
+                    [
+                        39,
+                        "  internal           = false\n"
+                    ],
+                    [
+                        40,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        41,
+                        "  security_groups    = [aws_security_group.web.id]\n"
+                    ],
+                    [
+                        42,
+                        "  subnets            = [\"subnet-pub1\", \"subnet-pub2\"]\n"
+                    ],
+                    [
+                        43,
+                        "\n"
+                    ],
+                    [
+                        44,
+                        "  tags = {\n"
+                    ],
+                    [
+                        45,
+                        "    Name = \"web-alb\"\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    37,
+                    47
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "web-alb"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": {
+                    "code_block": [
+                        [
+                            65,
+                            "resource \"aws_lb_listener\" \"http\" {\n"
+                        ],
+                        [
+                            66,
+                            "  load_balancer_arn = aws_lb.web.arn\n"
+                        ],
+                        [
+                            67,
+                            "  port              = 80\n"
+                        ],
+                        [
+                            68,
+                            "  protocol          = \"HTTP\"\n"
+                        ],
+                        [
+                            69,
+                            "\n"
+                        ],
+                        [
+                            70,
+                            "  default_action {\n"
+                        ],
+                        [
+                            71,
+                            "    type             = \"forward\"\n"
+                        ],
+                        [
+                            72,
+                            "    target_group_arn = aws_lb_target_group.web.arn\n"
+                        ],
+                        [
+                            73,
+                            "  }\n"
+                        ],
+                        [
+                            74,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_line_range": [
+                        65,
+                        74
+                    ],
+                    "resource": "aws_lb_listener.http",
+                    "entity_tags": {},
+                    "evaluations": null,
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                    "resource_address": null
+                },
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-alb-redirects-http-requests-into-https-ones",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_28",
+                "bc_check_id": "BC_AWS_NETWORKING_58",
+                "check_name": "Ensure public facing ALB are protected by WAF",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_lb": {
+                            "web": {
+                                "__end_line__": 47,
+                                "__start_line__": 37,
+                                "internal": [
+                                    false
+                                ],
+                                "load_balancer_type": [
+                                    "application"
+                                ],
+                                "name": [
+                                    "web-alb"
+                                ],
+                                "security_groups": [
+                                    [
+                                        "aws_security_group.web.id"
+                                    ]
+                                ],
+                                "subnets": [
+                                    [
+                                        "subnet-pub1",
+                                        "subnet-pub2"
+                                    ]
+                                ],
+                                "tags": [
+                                    {
+                                        "Name": "web-alb"
+                                    }
+                                ],
+                                "__address__": "aws_lb.web",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "load_balancer_type",
+                        "resource_type",
+                        "internal"
+                    ]
+                },
+                "code_block": [
+                    [
+                        37,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        38,
+                        "  name               = \"web-alb\"\n"
+                    ],
+                    [
+                        39,
+                        "  internal           = false\n"
+                    ],
+                    [
+                        40,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        41,
+                        "  security_groups    = [aws_security_group.web.id]\n"
+                    ],
+                    [
+                        42,
+                        "  subnets            = [\"subnet-pub1\", \"subnet-pub2\"]\n"
+                    ],
+                    [
+                        43,
+                        "\n"
+                    ],
+                    [
+                        44,
+                        "  tags = {\n"
+                    ],
+                    [
+                        45,
+                        "    Name = \"web-alb\"\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    37,
+                    47
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "web-alb"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-public-facing-alb-are-protected-by-waf",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_103",
+                "bc_check_id": "BC_AWS_GENERAL_43",
+                "check_name": "Ensure that load balancer is using at least TLS 1.2",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_lb_listener": {
+                            "http": {
+                                "__end_line__": 74,
+                                "__start_line__": 65,
+                                "default_action": [
+                                    {
+                                        "target_group_arn": [
+                                            "aws_lb_target_group.web.arn"
+                                        ],
+                                        "type": [
+                                            "forward"
+                                        ]
+                                    }
+                                ],
+                                "load_balancer_arn": [
+                                    "aws_lb.web.arn"
+                                ],
+                                "port": [
+                                    80
+                                ],
+                                "protocol": [
+                                    "HTTP"
+                                ],
+                                "__address__": "aws_lb_listener.http",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "default_action/type",
+                        "load_balancer_type",
+                        "resource_type",
+                        "ssl_policy",
+                        "protocol",
+                        "default_action/redirect/protocol"
+                    ]
+                },
+                "code_block": [
+                    [
+                        65,
+                        "resource \"aws_lb_listener\" \"http\" {\n"
+                    ],
+                    [
+                        66,
+                        "  load_balancer_arn = aws_lb.web.arn\n"
+                    ],
+                    [
+                        67,
+                        "  port              = 80\n"
+                    ],
+                    [
+                        68,
+                        "  protocol          = \"HTTP\"\n"
+                    ],
+                    [
+                        69,
+                        "\n"
+                    ],
+                    [
+                        70,
+                        "  default_action {\n"
+                    ],
+                    [
+                        71,
+                        "    type             = \"forward\"\n"
+                    ],
+                    [
+                        72,
+                        "    target_group_arn = aws_lb_target_group.web.arn\n"
+                    ],
+                    [
+                        73,
+                        "  }\n"
+                    ],
+                    [
+                        74,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    65,
+                    74
+                ],
+                "resource": "aws_lb_listener.http",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-43",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_378",
+                "bc_check_id": "BC_AWS_NETWORKING_103",
+                "check_name": "Ensure AWS Load Balancer doesn't use HTTP protocol",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_lb_target_group": {
+                            "web": {
+                                "__end_line__": 63,
+                                "__start_line__": 49,
+                                "health_check": [
+                                    {
+                                        "path": [
+                                            "/"
+                                        ],
+                                        "port": [
+                                            "80"
+                                        ]
+                                    }
+                                ],
+                                "name": [
+                                    "web-tg"
+                                ],
+                                "port": [
+                                    80
+                                ],
+                                "protocol": [
+                                    "HTTP"
+                                ],
+                                "tags": [
+                                    {
+                                        "Name": "web-tg"
+                                    }
+                                ],
+                                "vpc_id": [
+                                    "vpc-3c4d5e6f7a8b91213"
+                                ],
+                                "__address__": "aws_lb_target_group.web",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "protocol",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        49,
+                        "resource \"aws_lb_target_group\" \"web\" {\n"
+                    ],
+                    [
+                        50,
+                        "  name     = \"web-tg\"\n"
+                    ],
+                    [
+                        51,
+                        "  port     = 80\n"
+                    ],
+                    [
+                        52,
+                        "  protocol = \"HTTP\"\n"
+                    ],
+                    [
+                        53,
+                        "  vpc_id   = \"vpc-3c4d5e6f7a8b91213\"\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "  health_check {\n"
+                    ],
+                    [
+                        56,
+                        "    path = \"/\"\n"
+                    ],
+                    [
+                        57,
+                        "    port = \"80\"\n"
+                    ],
+                    [
+                        58,
+                        "  }\n"
+                    ],
+                    [
+                        59,
+                        "\n"
+                    ],
+                    [
+                        60,
+                        "  tags = {\n"
+                    ],
+                    [
+                        61,
+                        "    Name = \"web-tg\"\n"
+                    ],
+                    [
+                        62,
+                        "  }\n"
+                    ],
+                    [
+                        63,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                "file_line_range": [
+                    49,
+                    63
+                ],
+                "resource": "aws_lb_target_group.web",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "web-tg"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": {
+                    "code_block": [
+                        [
+                            65,
+                            "resource \"aws_lb_listener\" \"http\" {\n"
+                        ],
+                        [
+                            66,
+                            "  load_balancer_arn = aws_lb.web.arn\n"
+                        ],
+                        [
+                            67,
+                            "  port              = 80\n"
+                        ],
+                        [
+                            68,
+                            "  protocol          = \"HTTP\"\n"
+                        ],
+                        [
+                            69,
+                            "\n"
+                        ],
+                        [
+                            70,
+                            "  default_action {\n"
+                        ],
+                        [
+                            71,
+                            "    type             = \"forward\"\n"
+                        ],
+                        [
+                            72,
+                            "    target_group_arn = aws_lb_target_group.web.arn\n"
+                        ],
+                        [
+                            73,
+                            "  }\n"
+                        ],
+                        [
+                            74,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_line_range": [
+                        65,
+                        74
+                    ],
+                    "resource": "aws_lb_listener.http",
+                    "entity_tags": {},
+                    "evaluations": null,
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf",
+                    "resource_address": null
+                },
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-378",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t018/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 9,
+        "failed": 11,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 4,
+        "checkov_version": "3.3.26"
+    }
+}

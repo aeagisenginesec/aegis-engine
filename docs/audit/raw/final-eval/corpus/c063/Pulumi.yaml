@@ -1,0 +1,52 @@
+name: thumbnail-role
+runtime: yaml
+description: Least-privilege execution role for the thumbnail Lambda, scoped to one bucket prefix.
+template:
+  configuration:
+    appName:
+      type: String
+      default: thumbnail-gen
+    sourceBucket:
+      type: String
+  resources:
+    execRole:
+      type: aws:iam:Role
+      properties:
+        name: ${appName}-exec-role
+        assumeRolePolicy:
+          fn::toJSON:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service: lambda.amazonaws.com
+                Action: sts:AssumeRole
+                Condition:
+                  StringEquals:
+                    aws:SourceAccount:
+                      fn::invoke:
+                        Function: aws:getCallerIdentity
+                        Return: accountId
+    execPolicy:
+      type: aws:iam:RolePolicy
+      properties:
+        name: ${appName}-s3-read
+        role: ${execRole.id}
+        policy:
+          fn::toJSON:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: arn:aws:s3:::${sourceBucket}/uploads/*
+                Condition:
+                  Bool:
+                    aws:SecureTransport: "true"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:log-group:/aws/lambda/${appName}*
+  outputs:
+    roleArn: ${execRole.arn}

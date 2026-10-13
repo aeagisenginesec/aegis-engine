@@ -1,0 +1,670 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security group and rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_security_group\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name   = \"secure-app-sg\"\n"
+                    ],
+                    [
+                        3,
+                        "  vpc_id = aws_vpc.main.id\n"
+                    ],
+                    [
+                        4,
+                        "\n"
+                    ],
+                    [
+                        5,
+                        "  ingress {\n"
+                    ],
+                    [
+                        6,
+                        "    description = \"App from office\"\n"
+                    ],
+                    [
+                        7,
+                        "    from_port   = 8443\n"
+                    ],
+                    [
+                        8,
+                        "    to_port     = 8443\n"
+                    ],
+                    [
+                        9,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        10,
+                        "    cidr_blocks = [var.office_cidr]\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "\n"
+                    ],
+                    [
+                        13,
+                        "  egress {\n"
+                    ],
+                    [
+                        14,
+                        "    description = \"Outbound HTTPS\"\n"
+                    ],
+                    [
+                        15,
+                        "    from_port   = 443\n"
+                    ],
+                    [
+                        16,
+                        "    to_port     = 443\n"
+                    ],
+                    [
+                        17,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        18,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        19,
+                        "  }\n"
+                    ],
+                    [
+                        20,
+                        "\n"
+                    ],
+                    [
+                        21,
+                        "  tags = {\n"
+                    ],
+                    [
+                        22,
+                        "    Name = \"secure-app-sg\"\n"
+                    ],
+                    [
+                        23,
+                        "  }\n"
+                    ],
+                    [
+                        24,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/compute.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/compute.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/compute.tf",
+                "file_line_range": [
+                    1,
+                    24
+                ],
+                "resource": "aws_security_group.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "secure-app-sg"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/compute.tf"
+            },
+            {
+                "check_id": "CKV_AWS_135",
+                "bc_check_id": "BC_AWS_GENERAL_68",
+                "check_name": "Ensure that EC2 is EBS optimized",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ebs_optimized"
+                    ]
+                },
+                "code_block": [
+                    [
+                        26,
+                        "resource \"aws_instance\" \"app\" {\n"
+                    ],
+                    [
+                        27,
+                        "  ami                    = data.aws_ami.al2023.id\n"
+                    ],
+                    [
+                        28,
+                        "  instance_type          = \"t3.medium\"\n"
+                    ],
+                    [
+                        29,
+                        "  subnet_id              = aws_subnet.private_a.id\n"
+                    ],
+                    [
+                        30,
+                        "  vpc_security_group_ids = [aws_security_group.app.id]\n"
+                    ],
+                    [
+                        31,
+                        "  monitoring             = true\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  metadata_options {\n"
+                    ],
+                    [
+                        34,
+                        "    http_tokens = \"required\"\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "\n"
+                    ],
+                    [
+                        37,
+                        "  root_block_device {\n"
+                    ],
+                    [
+                        38,
+                        "    volume_size = 50\n"
+                    ],
+                    [
+                        39,
+                        "    volume_type = \"gp3\"\n"
+                    ],
+                    [
+                        40,
+                        "    encrypted   = true\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  tags = {\n"
+                    ],
+                    [
+                        44,
+                        "    Name = \"secure-app-01\"\n"
+                    ],
+                    [
+                        45,
+                        "  }\n"
+                    ],
+                    [
+                        46,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/compute.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/compute.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/compute.tf",
+                "file_line_range": [
+                    26,
+                    46
+                ],
+                "resource": "aws_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EC2EBSOptimized",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "secure-app-01"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-ec2-is-ebs-optimized",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/compute.tf"
+            },
+            {
+                "check_id": "CKV_AWS_158",
+                "bc_check_id": "BC_AWS_GENERAL_85",
+                "check_name": "Ensure that CloudWatch Log Group is encrypted by KMS",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "kms_key_id"
+                    ]
+                },
+                "code_block": [
+                    [
+                        34,
+                        "resource \"aws_cloudwatch_log_group\" \"vpc_flow\" {\n"
+                    ],
+                    [
+                        35,
+                        "  name              = \"/aws/vpc/secure-flow-logs\"\n"
+                    ],
+                    [
+                        36,
+                        "  retention_in_days = 90\n"
+                    ],
+                    [
+                        37,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/vpc.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/vpc.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/vpc.tf",
+                "file_line_range": [
+                    34,
+                    37
+                ],
+                "resource": "aws_cloudwatch_log_group.vpc_flow",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.CloudWatchLogGroupKMSKey",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-cloudwatch-log-group-is-encrypted-by-kms",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/vpc.tf"
+            },
+            {
+                "check_id": "CKV_AWS_338",
+                "bc_check_id": "BC_AWS_LOGGING_46",
+                "check_name": "Ensure CloudWatch log groups retains logs for at least 1 year",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "retention_in_days"
+                    ]
+                },
+                "code_block": [
+                    [
+                        34,
+                        "resource \"aws_cloudwatch_log_group\" \"vpc_flow\" {\n"
+                    ],
+                    [
+                        35,
+                        "  name              = \"/aws/vpc/secure-flow-logs\"\n"
+                    ],
+                    [
+                        36,
+                        "  retention_in_days = 90\n"
+                    ],
+                    [
+                        37,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/vpc.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/vpc.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/vpc.tf",
+                "file_line_range": [
+                    34,
+                    37
+                ],
+                "resource": "aws_cloudwatch_log_group.vpc_flow",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.CloudWatchLogGroupRetentionYear",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-338",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/vpc.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_41",
+                "bc_check_id": "BC_AWS_IAM_69",
+                "check_name": "Ensure an IAM role is attached to EC2 instance",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_instance": {
+                            "app": {
+                                "__end_line__": 46,
+                                "__start_line__": 26,
+                                "ami": [
+                                    "data.aws_ami.al2023.id"
+                                ],
+                                "instance_type": [
+                                    "t3.medium"
+                                ],
+                                "metadata_options": [
+                                    {
+                                        "http_tokens": [
+                                            "required"
+                                        ]
+                                    }
+                                ],
+                                "monitoring": [
+                                    true
+                                ],
+                                "root_block_device": [
+                                    {
+                                        "encrypted": [
+                                            true
+                                        ],
+                                        "volume_size": [
+                                            50
+                                        ],
+                                        "volume_type": [
+                                            "gp3"
+                                        ]
+                                    }
+                                ],
+                                "subnet_id": [
+                                    "aws_subnet.private_a.id"
+                                ],
+                                "tags": [
+                                    {
+                                        "Name": "secure-app-01"
+                                    }
+                                ],
+                                "vpc_security_group_ids": [
+                                    [
+                                        "aws_security_group.app.id"
+                                    ]
+                                ],
+                                "__address__": "aws_instance.app"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "iam_instance_profile"
+                    ]
+                },
+                "code_block": [
+                    [
+                        26,
+                        "resource \"aws_instance\" \"app\" {\n"
+                    ],
+                    [
+                        27,
+                        "  ami                    = data.aws_ami.al2023.id\n"
+                    ],
+                    [
+                        28,
+                        "  instance_type          = \"t3.medium\"\n"
+                    ],
+                    [
+                        29,
+                        "  subnet_id              = aws_subnet.private_a.id\n"
+                    ],
+                    [
+                        30,
+                        "  vpc_security_group_ids = [aws_security_group.app.id]\n"
+                    ],
+                    [
+                        31,
+                        "  monitoring             = true\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  metadata_options {\n"
+                    ],
+                    [
+                        34,
+                        "    http_tokens = \"required\"\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "\n"
+                    ],
+                    [
+                        37,
+                        "  root_block_device {\n"
+                    ],
+                    [
+                        38,
+                        "    volume_size = 50\n"
+                    ],
+                    [
+                        39,
+                        "    volume_type = \"gp3\"\n"
+                    ],
+                    [
+                        40,
+                        "    encrypted   = true\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  tags = {\n"
+                    ],
+                    [
+                        44,
+                        "    Name = \"secure-app-01\"\n"
+                    ],
+                    [
+                        45,
+                        "  }\n"
+                    ],
+                    [
+                        46,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/compute.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/compute.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/compute.tf",
+                "file_line_range": [
+                    26,
+                    46
+                ],
+                "resource": "aws_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "secure-app-01"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-an-iam-role-is-attached-to-ec2-instance",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/compute.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_12",
+                "bc_check_id": "BC_AWS_NETWORKING_4",
+                "check_name": "Ensure the default security group of every VPC restricts all traffic",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_vpc": {
+                            "main": {
+                                "__end_line__": 22,
+                                "__start_line__": 14,
+                                "cidr_block": [
+                                    "var.vpc_cidr"
+                                ],
+                                "enable_dns_hostnames": [
+                                    true
+                                ],
+                                "enable_dns_support": [
+                                    true
+                                ],
+                                "tags": [
+                                    {
+                                        "Name": "secure-vpc"
+                                    }
+                                ],
+                                "__address__": "aws_vpc.main",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "ingress/to_port",
+                        "ingress/protocol",
+                        "resource_type",
+                        "egress/cidr_blocks",
+                        "egress/from_port",
+                        "ingress/from_port",
+                        "egress/to_port",
+                        "egress/protocol",
+                        "ingress/self"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_vpc\" \"main\" {\n"
+                    ],
+                    [
+                        15,
+                        "  cidr_block           = var.vpc_cidr\n"
+                    ],
+                    [
+                        16,
+                        "  enable_dns_support   = true\n"
+                    ],
+                    [
+                        17,
+                        "  enable_dns_hostnames = true\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  tags = {\n"
+                    ],
+                    [
+                        20,
+                        "    Name = \"secure-vpc\"\n"
+                    ],
+                    [
+                        21,
+                        "  }\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/vpc.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/vpc.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/vpc.tf",
+                "file_line_range": [
+                    14,
+                    22
+                ],
+                "resource": "aws_vpc.main",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "secure-vpc"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t027/vpc.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 30,
+        "failed": 6,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 8,
+        "checkov_version": "3.3.26"
+    }
+}

@@ -1,0 +1,35 @@
+name: public-assets
+runtime: yaml
+description: Public asset bucket for the docs site.
+template:
+  configuration:
+    bucketName:
+      type: String
+      default: acme-docs-assets-pulumi
+  resources:
+    assetsBucket:
+      type: aws:s3:Bucket
+      properties:
+        bucket: ${bucketName}
+        acl: public-read
+        website:
+          indexDocument: index.html
+    assetsPolicy:
+      type: aws:s3:BucketPolicy
+      properties:
+        bucket: ${assetsBucket.id}
+        policy:
+          fn::toJSON:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PublicRead
+                Effect: Allow
+                Principal: "*"
+                Action: s3:GetObject
+                Resource: ${assetsBucket.arn}/*
+      options:
+        dependsOn:
+          - ${assetsBucket}
+  outputs:
+    bucketArn: ${assetsBucket.arn}
+    websiteEndpoint: ${assetsBucket.websiteEndpoint}

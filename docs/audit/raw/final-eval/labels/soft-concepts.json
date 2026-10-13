@@ -1,0 +1,245 @@
+[
+ {
+  "chunk": "chunk1",
+  "labeler": "A",
+  "project": "t030",
+  "resource": "aws_launch_template.web",
+  "condition": "Launch template assigns public IP addresses to ASG instances",
+  "severity": "medium",
+  "reason": "by-design config without context: associate_public_ip_address=true alone is not a weakness; SG sg-web01 rules not visible in code"
+ },
+ {
+  "chunk": "chunk1",
+  "labeler": "B",
+  "project": "t007",
+  "resource": "aws_db_instance.shop",
+  "condition": "Deletion protection disabled on database (deletion_protection = false)",
+  "severity": "medium",
+  "reason": "duplicate: deletion_protection=false subsumed by firm concept bundling it with skip_final_snapshot=true on same resource"
+ },
+ {
+  "chunk": "chunk1",
+  "labeler": "B",
+  "project": "t030",
+  "resource": "aws_launch_template.web",
+  "condition": "Launch template assigns public IP addresses to instances (associate_public_ip_address = true)",
+  "severity": "medium",
+  "reason": "by-design config without context: associate_public_ip_address=true alone is not a weakness; SG sg-web01 rules not visible in code"
+ },
+ {
+  "chunk": "chunk2",
+  "labeler": "A",
+  "project": "t037",
+  "resource": "azurerm_windows_web_app.shop",
+  "condition": "App settings embed a hardcoded Application Insights instrumentation key in code.",
+  "severity": "low",
+  "reason": "non-security pedantry: APPINSIGHTS_KEY is a non-secret telemetry identifier, not a credential"
+ },
+ {
+  "chunk": "chunk2",
+  "labeler": "A",
+  "project": "t061",
+  "resource": "google_compute_firewall.allow_all_egress",
+  "condition": "Firewall egress rule allows all protocols to 0.0.0.0/0 with no filtering, giving compromised hosts unrestricted outbound paths for exfiltration.",
+  "severity": "low",
+  "reason": "by-design config without context: default-allow egress is standard; not a vulnerability absent data-flow context"
+ },
+ {
+  "chunk": "chunk2",
+  "labeler": "A",
+  "project": "t066",
+  "resource": "google_storage_bucket_iam_binding.contractors",
+  "condition": "IAM binding grants the contractors group roles/storage.objectViewer, giving a third-party group read access to the pipeline logs bucket.",
+  "severity": "medium",
+  "reason": "by-design config without context: granting contractors group objectViewer may be intended; no evidence of excess"
+ },
+ {
+  "chunk": "chunk2",
+  "labeler": "B",
+  "project": "t053",
+  "resource": "google_compute_instance.legacy_app",
+  "condition": "Instance has an ephemeral external IP via access_config, directly exposing it to the internet",
+  "severity": "medium",
+  "reason": "by-design config without context: ephemeral external IP alone is not a weakness; exposure depends on firewall rules not shown"
+ },
+ {
+  "chunk": "chunk2",
+  "labeler": "B",
+  "project": "t065",
+  "resource": "google_compute_instance.dev",
+  "condition": "Dev VM has an ephemeral external IP via access_config, directly exposing it to the internet",
+  "severity": "medium",
+  "reason": "by-design config without context: ephemeral external IP alone is not a weakness"
+ },
+ {
+  "chunk": "chunk2",
+  "labeler": "B",
+  "project": "t065",
+  "resource": "google_compute_instance.dev",
+  "condition": "Project/instance metadata ssh-keys bypass OS Login centralized access control for SSH",
+  "severity": "medium",
+  "reason": "non-security pedantry: project metadata ssh-keys is a legitimate access mechanism, not a bypass vulnerability"
+ },
+ {
+  "chunk": "chunk2",
+  "labeler": "B",
+  "project": "t069",
+  "resource": "google_sql_database_instance.crm",
+  "condition": "ipv4_enabled is true with a public IP; authorized networks limit access to an office /24, a weak network boundary for a database",
+  "severity": "medium",
+  "reason": "by-design config without context: ipv4 public IP restricted to authorized 203.0.113.0/24 is a legitimate boundary, not a weakness"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "A",
+  "project": "c017",
+  "resource": "AnalyticsCluster (AWS::RDS::DBCluster)",
+  "condition": "MasterUsername is 'root', the default superuser account.",
+  "severity": "low",
+  "reason": "non-security pedantry: default username 'root' alone is not a vulnerability"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "A",
+  "project": "c028",
+  "resource": "Microsoft.KeyVault/vaults/secrets (api-key)",
+  "condition": "Secret value is the literal placeholder 'PLACEHOLDER_ROTATE_ME', a predictable credential if deployed as-is.",
+  "severity": "low",
+  "reason": "non-security pedantry: 'PLACEHOLDER_ROTATE_ME' is an explicit placeholder, not a real credential"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "A",
+  "project": "c036",
+  "resource": "Microsoft.KeyVault/vaults (teamvault)",
+  "condition": "enabledForTemplateDeployment is true, so ARM template deployments can retrieve secrets from the vault.",
+  "severity": "medium",
+  "reason": "by-design config without context: enabledForTemplateDeployment is a legitimate feature for template-driven secret use"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "A",
+  "project": "c036",
+  "resource": "Microsoft.KeyVault/vaults/secrets (db-password)",
+  "condition": "Secret value is the literal placeholder 'PLACEHOLDER_ROTATE_ME', a predictable credential if deployed as-is.",
+  "severity": "low",
+  "reason": "non-security pedantry: 'PLACEHOLDER_ROTATE_ME' is an explicit placeholder, not a real credential"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "A",
+  "project": "c042",
+  "resource": "seedSecret (Microsoft.KeyVault/vaults/secrets)",
+  "condition": "Secret value is the literal placeholder 'PLACEHOLDER_ROTATE_ME', a predictable credential if deployed as-is.",
+  "severity": "low",
+  "reason": "non-security pedantry: 'PLACEHOLDER_ROTATE_ME' is an explicit placeholder, not a real credential"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "A",
+  "project": "c048",
+  "resource": "seedSecret (Microsoft.KeyVault/vaults/secrets)",
+  "condition": "Secret value is the literal placeholder 'PLACEHOLDER_ROTATE_ME', a predictable credential if deployed as-is.",
+  "severity": "low",
+  "reason": "non-security pedantry: 'PLACEHOLDER_ROTATE_ME' is an explicit placeholder, not a real credential"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "A",
+  "project": "c053",
+  "resource": "toHub (Microsoft.Network/virtualNetworks/virtualNetworkPeerings)",
+  "condition": "allowForwardedTraffic is true on the hub peering, permitting transit-style forwarded traffic through the spoke.",
+  "severity": "medium",
+  "reason": "by-design config without context: allowForwardedTraffic on hub peering is normal hub-spoke design"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "A",
+  "project": "c054",
+  "resource": "secrets (Microsoft.KeyVault/vaults/secrets loop)",
+  "condition": "Three seeded secrets use the literal placeholder value 'PLACEHOLDER_ROTATE_ME', predictable credentials if deployed as-is.",
+  "severity": "low",
+  "reason": "non-security pedantry: 'PLACEHOLDER_ROTATE_ME' placeholders are not real credentials"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "B",
+  "project": "c007",
+  "resource": "ReportingDb (AWS::RDS::DBInstance)",
+  "condition": "The master username is the default guessable value 'admin'.",
+  "severity": "low",
+  "reason": "non-security pedantry: default username 'admin' alone is not a vulnerability"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "B",
+  "project": "c014",
+  "resource": "OnCallLoginProfile (AWS::IAM::UserLoginProfile)",
+  "condition": "PasswordResetRequired is false, so the initial console password never has to be changed by the user.",
+  "severity": "medium",
+  "reason": "minor hygiene: PasswordResetRequired=false; initial password strength unknown, not a demonstrable weakness"
+ },
+ {
+  "chunk": "chunk3",
+  "labeler": "B",
+  "project": "c017",
+  "resource": "AnalyticsCluster (AWS::RDS::DBCluster)",
+  "condition": "The master username is 'root', a default privileged and guessable account name.",
+  "severity": "low",
+  "reason": "non-security pedantry: default username 'root' alone is not a vulnerability"
+ },
+ {
+  "chunk": "chunk4",
+  "labeler": "A",
+  "project": "k014",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tag: FROM python:3.12",
+  "severity": "low",
+  "reason": "factually misleading: FROM python:3.12 is minor-version pinned, not :latest; patch-float is not a real weakness"
+ },
+ {
+  "chunk": "chunk4",
+  "labeler": "A",
+  "project": "k017",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tags: FROM node:20 and nginx:1.27 in the multi-stage build",
+  "severity": "low",
+  "reason": "factually misleading: FROM node:20 and nginx:1.27 are version-pinned tags, not :latest"
+ },
+ {
+  "chunk": "chunk4",
+  "labeler": "A",
+  "project": "k020",
+  "resource": "docker_stage.stage0",
+  "condition": "sshd_config sets PermitRootLogin yes",
+  "severity": "high",
+  "reason": "duplicate: PermitRootLogin yes already covered by firm sshd concept B#40 on same resource"
+ },
+ {
+  "chunk": "chunk4",
+  "labeler": "A",
+  "project": "k020",
+  "resource": "docker_stage.stage0",
+  "condition": "sshd_config enables password authentication",
+  "severity": "medium",
+  "reason": "duplicate: PasswordAuthentication yes already covered by firm sshd concept B#40 on same resource"
+ },
+ {
+  "chunk": "chunk4",
+  "labeler": "A",
+  "project": "k031",
+  "resource": "secret/db-creds",
+  "condition": "Credential committed in the manifest: Secret uses stringData with a hardcoded password in a checked-in YAML file",
+  "severity": "high",
+  "reason": "placeholder pedantry: secret.yaml password is 'example-only-replace-at-deploy', an explicit placeholder"
+ },
+ {
+  "chunk": "chunk4",
+  "labeler": "B",
+  "project": "k046",
+  "resource": "secrets/db_password",
+  "condition": "committed secret file contains a placeholder credential ('example-only-replace-me')",
+  "severity": "medium",
+  "reason": "placeholder pedantry: secret file holds 'example-only-replace-me', an explicit placeholder"
+ }
+]

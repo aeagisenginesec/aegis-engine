@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: MySQL database for the legacy reporting app.
+
+Parameters:
+  DBPassword:
+    Type: String
+    Description: Master password for the database.
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.medium
+
+Resources:
+  ReportingDbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Reporting database access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+
+  ReportingDb:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: mysql
+      EngineVersion: '8.0'
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: 100
+      DBName: reporting
+      MasterUsername: admin
+      MasterUserPassword: !Ref DBPassword
+      PubliclyAccessible: true
+      StorageEncrypted: false
+      BackupRetentionPeriod: 0
+      VPCSecurityGroups:
+        - !Ref ReportingDbSecurityGroup
+      Tags:
+        - Key: Name
+          Value: reporting-mysql
+
+Outputs:
+  DbEndpoint:
+    Value: !GetAtt ReportingDb.Endpoint.Address

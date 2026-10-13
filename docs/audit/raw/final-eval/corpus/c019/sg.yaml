@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Security group for the shared Postgres instance.
+
+Parameters:
+  VpcId:
+    Type: String
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Description: Master password for the shared database.
+  DBSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+
+Resources:
+  PostgresSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Shared Postgres access
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+          Description: Allow app servers
+
+  SharedDbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets for the shared Postgres instance
+      SubnetIds: !Ref DBSubnetIds
+
+  SharedPostgres:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: '15.4'
+      DBInstanceClass: db.t3.medium
+      AllocatedStorage: 50
+      DBName: sharedapp
+      MasterUsername: appuser
+      MasterUserPassword: !Ref DBPassword
+      StorageEncrypted: false
+      PubliclyAccessible: true
+      BackupRetentionPeriod: 0
+      DBSubnetGroupName: !Ref SharedDbSubnetGroup
+      VPCSecurityGroups:
+        - !Ref PostgresSecurityGroup
+      Tags:
+        - Key: Name
+          Value: shared-postgres
+
+Outputs:
+  SecurityGroupId:
+    Value: !Ref PostgresSecurityGroup
+  DbEndpoint:
+    Value: !GetAtt SharedPostgres.Endpoint.Address

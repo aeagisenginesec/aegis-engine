@@ -1,0 +1,2213 @@
+[
+ {
+  "sample_id": "aegis-00001",
+  "project": "c001",
+  "rule": "AEGIS-AWS-002",
+  "title": "S3 bucket with public ACL",
+  "verdict": "FP",
+  "justification": "SiteBucket is a static-website host (WebsiteConfiguration, index.html); PublicRead ACL is the by-design access model for a public website \u2014 flagged without security context."
+ },
+ {
+  "sample_id": "aegis-00006",
+  "project": "c001",
+  "rule": "AEGIS-AWS-601",
+  "title": "S3 bucket without lifecycle configuration",
+  "verdict": "FP",
+  "justification": "No LifecycleConfiguration present (true), but S3 lifecycle management is cost/ops hygiene, not a security control."
+ },
+ {
+  "sample_id": "aegis-00011",
+  "project": "c004",
+  "rule": "AEGIS-AWS-673",
+  "title": "IAM role has no description",
+  "verdict": "FP",
+  "justification": "ExecutionRole has no Description (true), but IAM descriptions are documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00016",
+  "project": "c005",
+  "rule": "AEGIS-AWS-604",
+  "title": "Security group or rule without description",
+  "verdict": "HYGIENE",
+  "justification": "Matches reclassified hygiene type 'firewall rule descriptions': the two ingress rules (22, 3389) lack Description fields."
+ },
+ {
+  "sample_id": "aegis-00021",
+  "project": "c006",
+  "rule": "AEGIS-AWS-683",
+  "title": "EC2 instance without termination protection",
+  "verdict": "TP",
+  "justification": "c006/bastion.yaml: DisableApiTermination absent \u2014 factually correct; missing availability control: termination protection, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00026",
+  "project": "c007",
+  "rule": "AEGIS-AWS-446",
+  "title": "RDS instance without Multi-AZ",
+  "verdict": "TP",
+  "justification": "c007/rds.yaml: MultiAZ absent \u2014 factually correct; missing availability control: Multi-AZ, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00031",
+  "project": "c007",
+  "rule": "AEGIS-AWS-605",
+  "title": "RDS instance without enhanced monitoring",
+  "verdict": "TP",
+  "justification": "c007/rds.yaml: MonitoringInterval absent \u2014 factually correct; missing detection control: enhanced monitoring, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00036",
+  "project": "c008",
+  "rule": "AEGIS-AWS-543",
+  "title": "RDS instance without CloudWatch log exports",
+  "verdict": "TP",
+  "justification": "c008/rds.yaml: EnableCloudwatchLogsExports absent \u2014 factually correct; missing detection control: log exports, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00041",
+  "project": "c008",
+  "rule": "AEGIS-AWS-608",
+  "title": "RDS instance without Performance Insights",
+  "verdict": "FP",
+  "justification": "c008/rds.yaml line 60: OrdersDb sets EnablePerformanceInsights: true \u2014 Performance Insights IS enabled; finding is factually wrong. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00046",
+  "project": "c009",
+  "rule": "AEGIS-AWS-548",
+  "title": "Lambda function without reserved concurrent executions",
+  "verdict": "FP",
+  "justification": "ReservedConcurrentExecutions absent (true), but reserved concurrency is a cost/throttling control, not a security weakness."
+ },
+ {
+  "sample_id": "aegis-00051",
+  "project": "c010",
+  "rule": "AEGIS-AWS-542",
+  "title": "Lambda function not deployed in a VPC",
+  "verdict": "FP",
+  "justification": "No VpcConfig (true), but function only calls SQS/DynamoDB via AWS APIs; VPC deployment adds no security \u2014 by-design serverless config flagged without context."
+ },
+ {
+  "sample_id": "aegis-00056",
+  "project": "c011",
+  "rule": "AEGIS-AWS-625",
+  "title": "CloudFront distribution without access logging",
+  "verdict": "FP",
+  "justification": "Factually wrong in default config: Logging is wired through the LoggingOn condition and EnableAccessLogging defaults to 'true'."
+ },
+ {
+  "sample_id": "aegis-00061",
+  "project": "c013",
+  "rule": "AEGIS-AWS-601",
+  "title": "S3 bucket without lifecycle configuration",
+  "verdict": "FP",
+  "justification": "Factually wrong: AccessLogsBucket HAS LifecycleConfiguration (expire-logs rule, 365 days, lines 14-18)."
+ },
+ {
+  "sample_id": "aegis-00066",
+  "project": "c015",
+  "rule": "AEGIS-AWS-601",
+  "title": "S3 bucket without lifecycle configuration",
+  "verdict": "FP",
+  "justification": "No LifecycleConfiguration on TrailBucket (true), but lifecycle management is cost/ops hygiene, not a security control."
+ },
+ {
+  "sample_id": "aegis-00071",
+  "project": "c016",
+  "rule": "AEGIS-AWS-004",
+  "title": "Security group ingress open to the world",
+  "verdict": "FP",
+  "justification": "Port 80 0.0.0.0/0 on an internet-facing ALB (GroupDescription 'ALB ingress') is by-design \u2014 a public load balancer must accept world traffic; flagged without security context."
+ },
+ {
+  "sample_id": "aegis-00076",
+  "project": "c016",
+  "rule": "AEGIS-AWS-329",
+  "title": "Load balancer target group uses plain HTTP",
+  "verdict": "FP",
+  "justification": "AppTargetGroup uses HTTP to instance targets behind the ALB in-VPC \u2014 the standard AWS backend pattern; no meaningful security impact, flagged without context."
+ },
+ {
+  "sample_id": "aegis-00081",
+  "project": "c016",
+  "rule": "AEGIS-AWS-604",
+  "title": "Security group or rule without description",
+  "verdict": "HYGIENE",
+  "justification": "Matches reclassified hygiene type 'firewall rule descriptions': the ingress rule lacks a Description field."
+ },
+ {
+  "sample_id": "aegis-00086",
+  "project": "c017",
+  "rule": "AEGIS-AWS-008",
+  "title": "RDS instance without deletion protection",
+  "verdict": "TP",
+  "justification": "c017/aurora.yaml: DeletionProtection absent on the RDS instance \u2014 factually correct; missing availability control: deletion protection, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00091",
+  "project": "c017",
+  "rule": "AEGIS-AWS-446",
+  "title": "RDS instance without Multi-AZ",
+  "verdict": "FP",
+  "justification": "c017/aurora.yaml: the instance sets DBClusterIdentifier (line 39) \u2014 it is an Aurora cluster member, so instance-level MultiAZ does not apply; Aurora HA is cluster-level and the finding misfires on this resource. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00096",
+  "project": "c017",
+  "rule": "AEGIS-AWS-605",
+  "title": "RDS instance without enhanced monitoring",
+  "verdict": "TP",
+  "justification": "c017/aurora.yaml: MonitoringInterval absent \u2014 factually correct; missing detection control: enhanced monitoring, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00101",
+  "project": "c017",
+  "rule": "AEGIS-AWS-634",
+  "title": "RDS Cluster not encrypted with customer-managed KMS key",
+  "verdict": "TP",
+  "justification": "AnalyticsCluster has StorageEncrypted: false \u2014 storage unencrypted at rest, a real actionable weakness (finding understates it as CMK-only)."
+ },
+ {
+  "sample_id": "aegis-00106",
+  "project": "c018",
+  "rule": "AEGIS-AWS-443",
+  "title": "S3 bucket policy does not enforce TLS (SecureTransport)",
+  "verdict": "TP",
+  "justification": "No AWS::S3::BucketPolicy exists in the file, so nothing enforces aws:SecureTransport \u2014 TLS enforcement is a real missing in-transit security control."
+ },
+ {
+  "sample_id": "aegis-00111",
+  "project": "c018",
+  "rule": "AEGIS-AWS-645",
+  "title": "Lambda function without code signing",
+  "verdict": "FP",
+  "justification": "No CodeSigningConfig on ResizerFunction (true), but Lambda code signing is an optional niche supply-chain control \u2014 no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00116",
+  "project": "c019",
+  "rule": "AEGIS-AWS-311",
+  "title": "RDS without IAM database authentication",
+  "verdict": "FP",
+  "justification": "EnableIAMDatabaseAuthentication absent (true), but password auth via DBPassword parameter is in use by design; IAM auth is an optional alternative, not a missing control creating a weakness."
+ },
+ {
+  "sample_id": "aegis-00121",
+  "project": "c019",
+  "rule": "AEGIS-AWS-605",
+  "title": "RDS instance without enhanced monitoring",
+  "verdict": "TP",
+  "justification": "c019/sg.yaml: MonitoringInterval absent on SharedPostgres \u2014 factually correct; missing detection control: enhanced monitoring, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00126",
+  "project": "c021",
+  "rule": "AEGIS-AWS-012",
+  "title": "S3 bucket without versioning",
+  "verdict": "TP",
+  "justification": "c021/template.json: no VersioningConfiguration on AssetsBucket \u2014 factually correct; missing availability control: versioning, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00131",
+  "project": "c022",
+  "rule": "AEGIS-AWS-502",
+  "title": "IAM policy allows privilege escalation via iam:PassRole on * with compute launch",
+  "verdict": "TP",
+  "justification": "SupportAdminPolicy grants Action '*' on Resource '*' to the support group \u2014 a genuine critical privilege-escalation/admin-grant weakness, however the title words it."
+ },
+ {
+  "sample_id": "aegis-00136",
+  "project": "c022",
+  "rule": "AEGIS-AWS-672",
+  "title": "IAM user has no tags",
+  "verdict": "FP",
+  "justification": "SupportUser has no Tags (true), but tags are non-security pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00141",
+  "project": "c023",
+  "rule": "AEGIS-AWS-692",
+  "title": "EC2 instance without an IAM instance profile",
+  "verdict": "FP",
+  "justification": "No IamInstanceProfile on AppServer (true), but absence of a profile means no AWS credentials on the instance \u2014 least-privilege default, not a weakness."
+ },
+ {
+  "sample_id": "aegis-00146",
+  "project": "c024",
+  "rule": "AEGIS-AWS-543",
+  "title": "RDS instance without CloudWatch log exports",
+  "verdict": "TP",
+  "justification": "c024/template.json: EnableCloudwatchLogsExports absent on CustomerDb \u2014 factually correct; missing detection control: log exports, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00151",
+  "project": "c024",
+  "rule": "AEGIS-AWS-608",
+  "title": "RDS instance without Performance Insights",
+  "verdict": "TP",
+  "justification": "c024/template.json: EnablePerformanceInsights absent on CustomerDb \u2014 factually correct; missing detection control: Performance Insights, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00156",
+  "project": "c025",
+  "rule": "AEGIS-AWS-667",
+  "title": "IAM role has no permissions boundary",
+  "verdict": "FP",
+  "justification": "No PermissionsBoundary on PartnerRole (true), but its inline policies are already tightly scoped (one DynamoDB table, one log group) and it is assumable only by the Lambda service \u2014 no security impact."
+ },
+ {
+  "sample_id": "aegis-00161",
+  "project": "c026",
+  "rule": "AEGIS-AZURE-027",
+  "title": "Storage account allows weak TLS version",
+  "verdict": "TP",
+  "justification": "minimumTlsVersion is 'TLS1_0' (line 32) and supportsHttpsTrafficOnly is false \u2014 weak/outdated TLS permitted, a real in-transit weakness."
+ },
+ {
+  "sample_id": "aegis-00166",
+  "project": "c026",
+  "rule": "AEGIS-AZURE-034",
+  "title": "Storage account queue without logging",
+  "verdict": "FP",
+  "justification": "No Storage Analytics queue logging configured (true), but classic queue logging is legacy observability diagnostics, not a security control."
+ },
+ {
+  "sample_id": "aegis-00171",
+  "project": "c026",
+  "rule": "AEGIS-AZURE-125",
+  "title": "Storage account without SAS expiry policy",
+  "verdict": "FP",
+  "justification": "No sasPolicy/keyPolicy present (true), but SAS expiry policy is an optional lifetime-hardening enhancement \u2014 technically true with no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00176",
+  "project": "c026",
+  "rule": "AEGIS-AZURE-191",
+  "title": "Storage account with shared key access enabled",
+  "verdict": "TP",
+  "justification": "allowSharedKeyAccess is unset so shared-key auth stays enabled by default \u2014 account-key authentication permitted alongside AAD, a real authentication-control weakness."
+ },
+ {
+  "sample_id": "aegis-00181",
+  "project": "c027",
+  "rule": "AEGIS-AZURE-032",
+  "title": "Storage account without infrastructure encryption",
+  "verdict": "FP",
+  "justification": "requireInfrastructureEncryption absent (true), but data is already encrypted at rest (Microsoft.Storage keys); double encryption is defense-in-depth pedantry with no demonstrated need."
+ },
+ {
+  "sample_id": "aegis-00186",
+  "project": "c027",
+  "rule": "AEGIS-AZURE-147",
+  "title": "Storage account without blob change feed",
+  "verdict": "FP",
+  "justification": "Blob change feed not configured (true), but change feed is a data/eventing feature, not a security control."
+ },
+ {
+  "sample_id": "aegis-00191",
+  "project": "c029",
+  "rule": "AEGIS-AZURE-205",
+  "title": "Key Vault firewall without IP rules",
+  "verdict": "FP",
+  "justification": "No ipRules in networkAcls (true), but publicNetworkAccess is 'Disabled' with defaultAction 'Deny' \u2014 the vault is unreachable publicly, so IP rules are moot; flagged without context."
+ },
+ {
+  "sample_id": "aegis-00196",
+  "project": "c030",
+  "rule": "AEGIS-AZURE-047",
+  "title": "MSSQL server without Azure AD administrator",
+  "verdict": "FP",
+  "justification": "No Azure AD administrator block (true), but SQL authentication via administratorLogin is configured by design \u2014 AAD admin is an optional alternative auth mechanism, not a missing control creating a weakness."
+ },
+ {
+  "sample_id": "aegis-00201",
+  "project": "c030",
+  "rule": "AEGIS-AZURE-106",
+  "title": "MSSQL server allows public network access",
+  "verdict": "TP",
+  "justification": "publicNetworkAccess is 'Enabled' (line 28) \u2014 the SQL server is internet-reachable, a real network-exposure weakness."
+ },
+ {
+  "sample_id": "aegis-00206",
+  "project": "c031",
+  "rule": "AEGIS-AZURE-008",
+  "title": "SQL server without Azure AD authentication",
+  "verdict": "FP",
+  "justification": "Factually wrong: the server configures administrators with administratorType 'ActiveDirectory' and azureADOnlyAuthentication: true (lines 30-36) \u2014 Azure AD authentication IS enabled."
+ },
+ {
+  "sample_id": "aegis-00211",
+  "project": "c031",
+  "rule": "AEGIS-AZURE-045",
+  "title": "MSSQL server without extended auditing",
+  "verdict": "FP",
+  "justification": "c031/azuredeploy.json: auditingSettings '/default' state Enabled, isAzureMonitorTargetEnabled true \u2014 extended auditing IS on; finding is factually wrong. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00216",
+  "project": "c031",
+  "rule": "AEGIS-AZURE-101",
+  "title": "MSSQL server without auditing enabled",
+  "verdict": "FP",
+  "justification": "c031/azuredeploy.json: auditingSettings '/default' state Enabled (line 50) \u2014 auditing IS enabled; finding is factually wrong. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00221",
+  "project": "c031",
+  "rule": "AEGIS-AZURE-106",
+  "title": "MSSQL server allows public network access",
+  "verdict": "FP",
+  "justification": "Factually wrong: the c031 SQL server sets publicNetworkAccess to 'Disabled' \u2014 the finding's claim is incorrect."
+ },
+ {
+  "sample_id": "aegis-00226",
+  "project": "c031",
+  "rule": "AEGIS-AZURE-180",
+  "title": "SQL server without managed identity",
+  "verdict": "FP",
+  "justification": "No managed identity on the c031 SQL server (true), but managed identity is an optional credential-management enhancement \u2014 no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00231",
+  "project": "c032",
+  "rule": "AEGIS-AZURE-057",
+  "title": "Virtual network without DDoS protection plan",
+  "verdict": "FP",
+  "justification": "No DDoS protection plan on dev-vnet (true), but a paid DDoS plan is cost/availability pedantry \u2014 no security impact demonstrated for this finding."
+ },
+ {
+  "sample_id": "aegis-00236",
+  "project": "c034",
+  "rule": "AEGIS-AZURE-028",
+  "title": "Storage account without blob versioning",
+  "verdict": "TP",
+  "justification": "c034/azuredeploy.json: blob versioning not configured (no is_versioning_enabled) \u2014 factually correct; missing availability control: versioning, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00241",
+  "project": "c034",
+  "rule": "AEGIS-AZURE-124",
+  "title": "Storage account without private endpoint",
+  "verdict": "FP",
+  "justification": "No private endpoint (true), but publicNetworkAccess is 'Disabled' with network ACLs default-Deny \u2014 the account is already locked down; flagged without security context."
+ },
+ {
+  "sample_id": "aegis-00246",
+  "project": "c034",
+  "rule": "AEGIS-AZURE-191",
+  "title": "Storage account with shared key access enabled",
+  "verdict": "TP",
+  "justification": "allowSharedKeyAccess is unset so shared-key authentication stays enabled by default \u2014 account-key auth permitted, a real authentication-control weakness."
+ },
+ {
+  "sample_id": "aegis-00251",
+  "project": "c035",
+  "rule": "AEGIS-AZURE-008",
+  "title": "SQL server without Azure AD authentication",
+  "verdict": "FP",
+  "justification": "No Azure AD administrator block (true), but SQL authentication via administratorLogin is configured by design \u2014 AAD admin is an optional alternative, not a missing control creating a weakness."
+ },
+ {
+  "sample_id": "aegis-00256",
+  "project": "c035",
+  "rule": "AEGIS-AZURE-046",
+  "title": "MSSQL server without security alert policy",
+  "verdict": "TP",
+  "justification": "No Microsoft.Sql/servers/securityAlertPolicies resource exists \u2014 SQL threat-detection alerting is a genuine missing detective security control."
+ },
+ {
+  "sample_id": "aegis-00261",
+  "project": "c035",
+  "rule": "AEGIS-AZURE-101",
+  "title": "MSSQL server without auditing enabled",
+  "verdict": "FP",
+  "justification": "c035/azuredeploy.json: auditingSettings '/default' state Enabled (line 40) \u2014 auditing IS enabled; finding is factually wrong. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00266",
+  "project": "c035",
+  "rule": "AEGIS-AZURE-106",
+  "title": "MSSQL server allows public network access",
+  "verdict": "TP",
+  "justification": "The c035 SQL server sets publicNetworkAccess to 'Enabled' (line 28) \u2014 internet-reachable database, a real network-exposure weakness."
+ },
+ {
+  "sample_id": "aegis-00271",
+  "project": "c035",
+  "rule": "AEGIS-AZURE-108",
+  "title": "MSSQL server without private endpoint",
+  "verdict": "FP",
+  "justification": "No private endpoint (true), but that is an architectural option, not the weakness \u2014 the actual exposure is public network access, covered separately; the finding prescribes architecture rather than identifying a weakness."
+ },
+ {
+  "sample_id": "aegis-00276",
+  "project": "c036",
+  "rule": "AEGIS-AZURE-038",
+  "title": "Key Vault not using RBAC authorization",
+  "verdict": "FP",
+  "justification": "enableRbacAuthorization is false (true), but vault access-policy authz is a legitimate model and the configured policy is least-privilege (secrets get/list only) \u2014 by-design config flagged without security context."
+ },
+ {
+  "sample_id": "aegis-00281",
+  "project": "c037",
+  "rule": "AEGIS-AZURE-055",
+  "title": "NSG rule allows all destination ports from the internet",
+  "verdict": "TP",
+  "justification": "Allow-All-Inbound permits protocol *, all ports, from source * \u2014 a blatantly over-permissive NSG rule, a real critical network-exposure weakness."
+ },
+ {
+  "sample_id": "aegis-00286",
+  "project": "c038",
+  "rule": "AEGIS-AZURE-027",
+  "title": "Storage account allows weak TLS version",
+  "verdict": "TP",
+  "justification": "minimumTlsVersion is 'TLS1_0' (line 27) and supportsHttpsTrafficOnly is false \u2014 weak/outdated TLS permitted, a real in-transit weakness."
+ },
+ {
+  "sample_id": "aegis-00291",
+  "project": "c038",
+  "rule": "AEGIS-AZURE-031",
+  "title": "Storage account allows shared key access",
+  "verdict": "TP",
+  "justification": "Parent storage account omits allowSharedKeyAccess, so shared-key auth stays enabled by default \u2014 a real authentication-control weakness."
+ },
+ {
+  "sample_id": "aegis-00296",
+  "project": "c038",
+  "rule": "AEGIS-AZURE-034",
+  "title": "Storage account queue without logging",
+  "verdict": "FP",
+  "justification": "No Storage Analytics queue logging configured (true), but classic queue logging is legacy observability diagnostics, not a security control."
+ },
+ {
+  "sample_id": "aegis-00301",
+  "project": "c038",
+  "rule": "AEGIS-AZURE-122",
+  "title": "Storage blobs allow public access",
+  "verdict": "FP",
+  "justification": "Static website hosting is enabled (staticWebsite.enabled=true), which requires public blob readability \u2014 the flagged public access is by-design for the website; no security context."
+ },
+ {
+  "sample_id": "aegis-00306",
+  "project": "c038",
+  "rule": "AEGIS-AZURE-125",
+  "title": "Storage account without SAS expiry policy",
+  "verdict": "FP",
+  "justification": "No sasPolicy/keyPolicy present (true), but SAS expiry policy is an optional lifetime-hardening enhancement \u2014 technically true with no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00311",
+  "project": "c038",
+  "rule": "AEGIS-AZURE-148",
+  "title": "Storage account with public network access (default)",
+  "verdict": "TP",
+  "justification": "publicNetworkAccess is explicitly 'Enabled' (line 29) \u2014 the storage account is reachable over the public network, a real exposure weakness."
+ },
+ {
+  "sample_id": "aegis-00316",
+  "project": "c038",
+  "rule": "AEGIS-AZURE-191",
+  "title": "Storage account with shared key access enabled",
+  "verdict": "TP",
+  "justification": "Parent storage account omits allowSharedKeyAccess, so shared-key auth stays enabled by default \u2014 a real authentication-control weakness."
+ },
+ {
+  "sample_id": "aegis-00321",
+  "project": "c038",
+  "rule": "AEGIS-AZURE-195",
+  "title": "Storage account allows nested public items",
+  "verdict": "FP",
+  "justification": "allowBlobPublicAccess true is required by the enabled static website (by-design public hosting) \u2014 flagged without security context."
+ },
+ {
+  "sample_id": "aegis-00326",
+  "project": "c039",
+  "rule": "AEGIS-AZURE-058",
+  "title": "Virtual network without custom DNS servers",
+  "verdict": "FP",
+  "justification": "VNet has no custom DNS servers (uses Azure default DNS) \u2014 a networking preference, not a security weakness."
+ },
+ {
+  "sample_id": "aegis-00331",
+  "project": "c041",
+  "rule": "AEGIS-AZURE-026",
+  "title": "Storage account allows HTTP traffic",
+  "verdict": "TP",
+  "justification": "supportsHttpsTrafficOnly is false (line 13) \u2014 plaintext HTTP traffic permitted to the storage account, a real in-transit weakness."
+ },
+ {
+  "sample_id": "aegis-00336",
+  "project": "c041",
+  "rule": "AEGIS-AZURE-032",
+  "title": "Storage account without infrastructure encryption",
+  "verdict": "FP",
+  "justification": "requireInfrastructureEncryption absent (true), but data is encrypted at rest by default \u2014 double encryption is defense-in-depth pedantry with no demonstrated need."
+ },
+ {
+  "sample_id": "aegis-00341",
+  "project": "c041",
+  "rule": "AEGIS-AZURE-124",
+  "title": "Storage account without private endpoint",
+  "verdict": "FP",
+  "justification": "No private endpoint (true), but this is a deliberately public gallery app ('Media storage for the public gallery app') \u2014 a private endpoint is not applicable; by-design flagged without context."
+ },
+ {
+  "sample_id": "aegis-00346",
+  "project": "c041",
+  "rule": "AEGIS-AZURE-181",
+  "title": "Storage account without managed identity",
+  "verdict": "FP",
+  "justification": "No managed identity on the storage account (true), but managed identity is an optional credential-management enhancement \u2014 no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00351",
+  "project": "c042",
+  "rule": "AEGIS-AZURE-205",
+  "title": "Key Vault firewall without IP rules",
+  "verdict": "FP",
+  "justification": "No ipRules in networkAcls (true), but publicNetworkAccess is 'Disabled' with defaultAction 'Deny' \u2014 the vault is unreachable publicly, so IP rules are moot; flagged without context."
+ },
+ {
+  "sample_id": "aegis-00356",
+  "project": "c044",
+  "rule": "AEGIS-AZURE-047",
+  "title": "MSSQL server without Azure AD administrator",
+  "verdict": "FP",
+  "justification": "No Azure AD administrator (true), but SQL authentication via adminLogin is configured by design for this legacy ERP \u2014 AAD admin is an optional alternative, not a missing control creating a weakness."
+ },
+ {
+  "sample_id": "aegis-00361",
+  "project": "c044",
+  "rule": "AEGIS-AZURE-106",
+  "title": "MSSQL server allows public network access",
+  "verdict": "TP",
+  "justification": "publicNetworkAccess is 'Enabled' (line 15), compounded by an AllowAll firewall rule (0.0.0.0-255.255.255.255) \u2014 internet-reachable SQL server, a real exposure."
+ },
+ {
+  "sample_id": "aegis-00366",
+  "project": "c045",
+  "rule": "AEGIS-AZURE-027",
+  "title": "Storage account allows weak TLS version",
+  "verdict": "TP",
+  "justification": "minimumTlsVersion is 'TLS1_0' (line 29) \u2014 weak/outdated TLS permitted, a real in-transit weakness (code comment confirms it was never raised)."
+ },
+ {
+  "sample_id": "aegis-00371",
+  "project": "c045",
+  "rule": "AEGIS-AZURE-034",
+  "title": "Storage account queue without logging",
+  "verdict": "FP",
+  "justification": "No Storage Analytics queue logging configured (true), but classic queue logging is legacy observability diagnostics, not a security control."
+ },
+ {
+  "sample_id": "aegis-00376",
+  "project": "c045",
+  "rule": "AEGIS-AZURE-147",
+  "title": "Storage account without blob change feed",
+  "verdict": "FP",
+  "justification": "Blob change feed not configured (true), but change feed is a data/eventing feature, not a security control."
+ },
+ {
+  "sample_id": "aegis-00381",
+  "project": "c045",
+  "rule": "AEGIS-AZURE-195",
+  "title": "Storage account allows nested public items",
+  "verdict": "FP",
+  "justification": "Factually wrong: the account sets allowBlobPublicAccess: false (line 30) \u2014 nested public items are not allowed."
+ },
+ {
+  "sample_id": "aegis-00386",
+  "project": "c046",
+  "rule": "AEGIS-AZURE-034",
+  "title": "Storage account queue without logging",
+  "verdict": "FP",
+  "justification": "No Storage Analytics queue logging configured (true), but classic queue logging is legacy observability diagnostics, not a security control."
+ },
+ {
+  "sample_id": "aegis-00391",
+  "project": "c046",
+  "rule": "AEGIS-AZURE-145",
+  "title": "Storage account allows cross-tenant replication",
+  "verdict": "TP",
+  "justification": "allowCrossTenantReplication is unset so cross-tenant replication stays enabled by default \u2014 a real data-exfiltration control gap."
+ },
+ {
+  "sample_id": "aegis-00396",
+  "project": "c046",
+  "rule": "AEGIS-AZURE-195",
+  "title": "Storage account allows nested public items",
+  "verdict": "FP",
+  "justification": "Account sets allowBlobPublicAccess: true but the only container's publicAccess is parameter-controlled defaulting to 'None' (private) \u2014 no actual public exposure; the finding flags a latent possibility, not a real weakness."
+ },
+ {
+  "sample_id": "aegis-00401",
+  "project": "c047",
+  "rule": "AEGIS-AZURE-034",
+  "title": "Storage account queue without logging",
+  "verdict": "FP",
+  "justification": "No Storage Analytics queue logging configured (true), but classic queue logging is legacy observability diagnostics, not a security control."
+ },
+ {
+  "sample_id": "aegis-00406",
+  "project": "c047",
+  "rule": "AEGIS-AZURE-181",
+  "title": "Storage account without managed identity",
+  "verdict": "FP",
+  "justification": "No managed identity on the storage account (true), but managed identity is an optional credential-management enhancement \u2014 no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00411",
+  "project": "c050",
+  "rule": "AEGIS-AZURE-249",
+  "title": "Log Analytics workspace with public ingestion",
+  "verdict": "TP",
+  "justification": "publicNetworkAccessForIngestion is 'Enabled' (line 17) \u2014 log ingestion endpoint is internet-reachable instead of private-link; the code comment confirms this was left enabled unintentionally."
+ },
+ {
+  "sample_id": "aegis-00416",
+  "project": "c051",
+  "rule": "AEGIS-AZURE-009",
+  "title": "SQL server without auditing",
+  "verdict": "FP",
+  "justification": "c051/main.bicep: auditingSettings 'default' state Enabled (line 25) \u2014 auditing IS on; finding is factually wrong. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00421",
+  "project": "c051",
+  "rule": "AEGIS-AZURE-046",
+  "title": "MSSQL server without security alert policy",
+  "verdict": "TP",
+  "justification": "No Microsoft.Sql/servers/securityAlertPolicies resource exists \u2014 SQL threat-detection alerting is a genuine missing detective security control."
+ },
+ {
+  "sample_id": "aegis-00426",
+  "project": "c051",
+  "rule": "AEGIS-AZURE-101",
+  "title": "MSSQL server without auditing enabled",
+  "verdict": "FP",
+  "justification": "c051/main.bicep: auditingSettings 'default' state Enabled (line 25) \u2014 auditing IS enabled; finding is factually wrong. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00431",
+  "project": "c051",
+  "rule": "AEGIS-AZURE-106",
+  "title": "MSSQL server allows public network access",
+  "verdict": "TP",
+  "justification": "publicNetworkAccess is 'Enabled' (line 16) \u2014 internet-reachable SQL server, a real network-exposure weakness."
+ },
+ {
+  "sample_id": "aegis-00436",
+  "project": "c051",
+  "rule": "AEGIS-AZURE-180",
+  "title": "SQL server without managed identity",
+  "verdict": "FP",
+  "justification": "No managed identity on the SQL server (true), but managed identity is an optional credential-management enhancement \u2014 no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00441",
+  "project": "c052",
+  "rule": "AEGIS-AZURE-029",
+  "title": "Storage account without blob soft delete",
+  "verdict": "TP",
+  "justification": "c052/main.bicep storage account: properties set no blobServices/deleteRetentionPolicy; GT-firm class -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00446",
+  "project": "c052",
+  "rule": "AEGIS-AZURE-145",
+  "title": "Storage account allows cross-tenant replication",
+  "verdict": "TP",
+  "justification": "allowCrossTenantReplication is unset so cross-tenant replication stays enabled by default \u2014 a real data-exfiltration control gap."
+ },
+ {
+  "sample_id": "aegis-00451",
+  "project": "c053",
+  "rule": "AEGIS-AZURE-057",
+  "title": "Virtual network without DDoS protection plan",
+  "verdict": "FP",
+  "justification": "No DDoS protection plan on spoke-vnet (true), but a paid DDoS plan is cost/availability pedantry \u2014 no security impact demonstrated."
+ },
+ {
+  "sample_id": "aegis-00456",
+  "project": "k001",
+  "rule": "AEGIS-DOCKER-007",
+  "title": "apt-get install without --no-install-recommends",
+  "verdict": "FP",
+  "justification": "apt-get install lacks --no-install-recommends (true), but that flag only trims image size \u2014 build hygiene with no security impact."
+ },
+ {
+  "sample_id": "aegis-00461",
+  "project": "k002",
+  "rule": "AEGIS-DOCKER-003",
+  "title": "Secret in ENV directive",
+  "verdict": "TP",
+  "justification": "ENV bakes a real-looking AWS secret access key (wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY) into the image \u2014 genuine secret exposure in image layers."
+ },
+ {
+  "sample_id": "aegis-00466",
+  "project": "k003",
+  "rule": "AEGIS-DOCKER-017",
+  "title": "No maintainer label",
+  "verdict": "FP",
+  "justification": "No maintainer label (true) \u2014 documentation pedantry; the maintainer label is deprecated and has no security impact."
+ },
+ {
+  "sample_id": "aegis-00471",
+  "project": "k004",
+  "rule": "AEGIS-DOCKER-007",
+  "title": "apt-get install without --no-install-recommends",
+  "verdict": "FP",
+  "justification": "apt-get install lacks --no-install-recommends (true) \u2014 build hygiene with no security impact."
+ },
+ {
+  "sample_id": "aegis-00476",
+  "project": "k004",
+  "rule": "AEGIS-DOCKER-018",
+  "title": "No STOPSIGNAL directive",
+  "verdict": "FP",
+  "justification": "No STOPSIGNAL directive (true) \u2014 container lifecycle pedantry, not a security control."
+ },
+ {
+  "sample_id": "aegis-00481",
+  "project": "k005",
+  "rule": "AEGIS-DOCKER-005",
+  "title": "No HEALTHCHECK directive",
+  "verdict": "TP",
+  "justification": "k005/Dockerfile: zero HEALTHCHECK mentions in file; No HEALTHCHECK: GT-firm concept \"No HEALTHCHECK instruction\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00486",
+  "project": "k005",
+  "rule": "AEGIS-DOCKER-018",
+  "title": "No STOPSIGNAL directive",
+  "verdict": "FP",
+  "justification": "No STOPSIGNAL directive on the builder stage (true) \u2014 container lifecycle pedantry, not a security control."
+ },
+ {
+  "sample_id": "aegis-00491",
+  "project": "k006",
+  "rule": "AEGIS-DOCKER-018",
+  "title": "No STOPSIGNAL directive",
+  "verdict": "FP",
+  "justification": "No STOPSIGNAL directive (true) \u2014 container lifecycle pedantry, not a security control."
+ },
+ {
+  "sample_id": "aegis-00496",
+  "project": "k007",
+  "rule": "AEGIS-DOCKER-022",
+  "title": "COPY of entire build context",
+  "verdict": "FP",
+  "justification": "COPY . . copies the whole build context (true), but no secret exposure is demonstrable from the Dockerfile alone \u2014 build-hygiene nudge with no shown security impact."
+ },
+ {
+  "sample_id": "aegis-00501",
+  "project": "k008",
+  "rule": "AEGIS-DOCKER-017",
+  "title": "No maintainer label",
+  "verdict": "FP",
+  "justification": "No maintainer label (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00506",
+  "project": "k009",
+  "rule": "AEGIS-DOCKER-018",
+  "title": "No STOPSIGNAL directive",
+  "verdict": "FP",
+  "justification": "No STOPSIGNAL directive (true) \u2014 container lifecycle pedantry, not a security control."
+ },
+ {
+  "sample_id": "aegis-00511",
+  "project": "k010",
+  "rule": "AEGIS-DOCKER-025",
+  "title": "Build toolchain shipped in final image",
+  "verdict": "FP",
+  "justification": "Single-stage node:latest image ships npm toolchain (true), but that is image-size/attack-surface guidance \u2014 no specific vulnerability demonstrated."
+ },
+ {
+  "sample_id": "aegis-00516",
+  "project": "k011",
+  "rule": "AEGIS-DOCKER-026",
+  "title": "Full OS base image",
+  "verdict": "FP",
+  "justification": "FROM ubuntu:22.04 is a full OS base (true), but base-image choice is not a vulnerability \u2014 no security impact demonstrated."
+ },
+ {
+  "sample_id": "aegis-00521",
+  "project": "k013",
+  "rule": "AEGIS-DOCKER-002",
+  "title": "Container runs as root",
+  "verdict": "TP",
+  "justification": "Final stage sets USER root explicitly (line 19, 'Run as root so on-call can exec in and debug') \u2014 container runs as root, a real privilege weakness."
+ },
+ {
+  "sample_id": "aegis-00526",
+  "project": "k013",
+  "rule": "AEGIS-DOCKER-018",
+  "title": "No STOPSIGNAL directive",
+  "verdict": "FP",
+  "justification": "No STOPSIGNAL directive on the builder stage (true) \u2014 container lifecycle pedantry, not a security control."
+ },
+ {
+  "sample_id": "aegis-00531",
+  "project": "k014",
+  "rule": "AEGIS-DOCKER-022",
+  "title": "COPY of entire build context",
+  "verdict": "FP",
+  "justification": "COPY . . copies the whole build context (true), but no secret exposure is demonstrable from the Dockerfile alone \u2014 build-hygiene nudge with no shown security impact."
+ },
+ {
+  "sample_id": "aegis-00536",
+  "project": "k015",
+  "rule": "AEGIS-DOCKER-022",
+  "title": "COPY of entire build context",
+  "verdict": "FP",
+  "justification": "COPY . . copies the whole build context (true), but no secret exposure is demonstrable from the Dockerfile alone \u2014 build-hygiene nudge with no shown security impact."
+ },
+ {
+  "sample_id": "aegis-00541",
+  "project": "k016",
+  "rule": "AEGIS-DOCKER-017",
+  "title": "No maintainer label",
+  "verdict": "FP",
+  "justification": "No maintainer label (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00546",
+  "project": "k017",
+  "rule": "AEGIS-DOCKER-017",
+  "title": "No maintainer label",
+  "verdict": "FP",
+  "justification": "No maintainer label on the builder stage (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00551",
+  "project": "k017",
+  "rule": "AEGIS-DOCKER-027",
+  "title": "Base image uses floating major-only tag",
+  "verdict": "FP",
+  "justification": "FROM node:20 is a floating major-only tag (true), but image-tag pinning is version-pinning pedantry \u2014 no vulnerability demonstrated."
+ },
+ {
+  "sample_id": "aegis-00556",
+  "project": "k019",
+  "rule": "AEGIS-DOCKER-018",
+  "title": "No STOPSIGNAL directive",
+  "verdict": "FP",
+  "justification": "No STOPSIGNAL directive (true) \u2014 container lifecycle pedantry, not a security control."
+ },
+ {
+  "sample_id": "aegis-00561",
+  "project": "k020",
+  "rule": "AEGIS-DOCKER-015",
+  "title": "No WORKDIR directive",
+  "verdict": "FP",
+  "justification": "No WORKDIR directive (true) \u2014 Dockerfile style pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00566",
+  "project": "k021",
+  "rule": "AEGIS-K8S-015",
+  "title": "Container without readiness probe",
+  "verdict": "TP",
+  "justification": "k021/deployment.yaml Deployment webapp: no readinessProbe on its container; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00571",
+  "project": "k024",
+  "rule": "AEGIS-K8S-015",
+  "title": "Container without readiness probe",
+  "verdict": "TP",
+  "justification": "k024/deployment.yaml Deployment monitor: no readinessProbe on its container; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00576",
+  "project": "k031",
+  "rule": "AEGIS-K8S-015",
+  "title": "Container without readiness probe",
+  "verdict": "TP",
+  "justification": "k031/deployment.yaml Deployment orders: no readinessProbe on its container; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00581",
+  "project": "k035",
+  "rule": "AEGIS-K8S-015",
+  "title": "Container without readiness probe",
+  "verdict": "TP",
+  "justification": "k035/deployment.yaml Deployment ci-runner: no readinessProbe on its container; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00586",
+  "project": "k037",
+  "rule": "AEGIS-K8S-015",
+  "title": "Container without readiness probe",
+  "verdict": "TP",
+  "justification": "k037/deployment.yaml Deployment gateway: no readinessProbe on its container; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00591",
+  "project": "k040",
+  "rule": "AEGIS-K8S-015",
+  "title": "Container without readiness probe",
+  "verdict": "TP",
+  "justification": "k040/daemonset.yaml DaemonSet sysconf-agent: no readinessProbe on its container; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00596",
+  "project": "k042",
+  "rule": "AEGIS-COMPOSE-006",
+  "title": "Secret in service environment",
+  "verdict": "TP",
+  "justification": "DATABASE_URL embeds a plaintext password (postgres://app:s3cr3tP@ss@db:5432/appdb) in the compose environment \u2014 real secret exposure."
+ },
+ {
+  "sample_id": "aegis-00601",
+  "project": "k050",
+  "rule": "AEGIS-COMPOSE-006",
+  "title": "Secret in service environment",
+  "verdict": "TP",
+  "justification": "Admin service environment sets ADMIN_PASSWORD to the hardcoded weak value 'admin123' \u2014 real secret exposure."
+ },
+ {
+  "sample_id": "aegis-00606",
+  "project": "k052",
+  "rule": "AEGIS-DOCKER-017",
+  "title": "No maintainer label",
+  "verdict": "FP",
+  "justification": "No maintainer label (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00611",
+  "project": "k054",
+  "rule": "AEGIS-DOCKER-022",
+  "title": "COPY of entire build context",
+  "verdict": "FP",
+  "justification": "COPY . . copies the whole build context (true), but no secret exposure is demonstrable from the Dockerfile alone \u2014 build-hygiene nudge with no shown security impact."
+ },
+ {
+  "sample_id": "aegis-00616",
+  "project": "k055",
+  "rule": "AEGIS-DOCKER-032",
+  "title": "pip install without --no-cache-dir",
+  "verdict": "FP",
+  "justification": "pip install lacks --no-cache-dir (true) \u2014 build hygiene that only trims image size, no security impact."
+ },
+ {
+  "sample_id": "aegis-00621",
+  "project": "k057",
+  "rule": "AEGIS-DOCKER-017",
+  "title": "No maintainer label",
+  "verdict": "FP",
+  "justification": "No maintainer label (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00626",
+  "project": "k058",
+  "rule": "AEGIS-DOCKER-017",
+  "title": "No maintainer label",
+  "verdict": "FP",
+  "justification": "No maintainer label (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00631",
+  "project": "k059",
+  "rule": "AEGIS-DOCKER-017",
+  "title": "No maintainer label",
+  "verdict": "FP",
+  "justification": "No maintainer label (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00636",
+  "project": "k059",
+  "rule": "AEGIS-K8S-015",
+  "title": "Container without readiness probe",
+  "verdict": "TP",
+  "justification": "k059/pod.yaml Pod legacy-app: no readinessProbe on its container; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00641",
+  "project": "k060",
+  "rule": "AEGIS-DOCKER-015",
+  "title": "No WORKDIR directive",
+  "verdict": "FP",
+  "justification": "No WORKDIR in the final distroless stage (true) \u2014 Dockerfile style pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00646",
+  "project": "k060",
+  "rule": "AEGIS-DOCKER-022",
+  "title": "COPY of entire build context",
+  "verdict": "FP",
+  "justification": "COPY . . in the builder stage (true), but no secret exposure is demonstrable from the Dockerfile alone \u2014 build-hygiene nudge with no shown security impact."
+ },
+ {
+  "sample_id": "aegis-00651",
+  "project": "k062",
+  "rule": "AEGIS-K8S-015",
+  "title": "Container without readiness probe",
+  "verdict": "TP",
+  "justification": "k062/deployment.yaml Deployment reporter: no readinessProbe on its container; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00656",
+  "project": "k064",
+  "rule": "AEGIS-COMPOSE-006",
+  "title": "Secret in service environment",
+  "verdict": "TP",
+  "justification": "Service environment sets DB_PASSWORD to the hardcoded value 'db-P@ss-2024' \u2014 real secret exposure."
+ },
+ {
+  "sample_id": "aegis-00661",
+  "project": "k064",
+  "rule": "AEGIS-DOCKER-018",
+  "title": "No STOPSIGNAL directive",
+  "verdict": "FP",
+  "justification": "No STOPSIGNAL directive (true) \u2014 container lifecycle pedantry, not a security control."
+ },
+ {
+  "sample_id": "aegis-00666",
+  "project": "k065",
+  "rule": "AEGIS-K8S-015",
+  "title": "Container without readiness probe",
+  "verdict": "TP",
+  "justification": "k065/deployment.yaml Deployment hello: no readinessProbe on its container; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00671",
+  "project": "t001",
+  "rule": "AEGIS-AWS-445",
+  "title": "S3 bucket without server access logging",
+  "verdict": "TP",
+  "justification": "No server access logging configured on the site bucket (true) \u2014 S3 access logging is a genuine audit-trail control; its absence is a missing detective control."
+ },
+ {
+  "sample_id": "aegis-00676",
+  "project": "t003",
+  "rule": "AEGIS-AWS-004",
+  "title": "Security group ingress open to the world",
+  "verdict": "TP",
+  "justification": "Bastion SG opens SSH (22) and RDP (3389) to 0.0.0.0/0 ('SSH from anywhere', 'RDP from anywhere') \u2014 real remote-admin exposure, unlike a public ALB listener."
+ },
+ {
+  "sample_id": "aegis-00681",
+  "project": "t003",
+  "rule": "AEGIS-AWS-692",
+  "title": "EC2 instance without an IAM instance profile",
+  "verdict": "FP",
+  "justification": "No iam_instance_profile on the bastion instance (true), but absence of a profile means no AWS credentials on the box \u2014 least-privilege default, not a weakness."
+ },
+ {
+  "sample_id": "aegis-00686",
+  "project": "t005",
+  "rule": "AEGIS-AWS-501",
+  "title": "IAM policy allows privilege escalation (create policy + attach policy)",
+  "verdict": "TP",
+  "justification": "deploy_wildcard grants Action '*' on Resource '*' as an inline user policy \u2014 a genuine critical privilege-escalation/admin-grant weakness."
+ },
+ {
+  "sample_id": "aegis-00691",
+  "project": "t005",
+  "rule": "AEGIS-AWS-659",
+  "title": "IAM user uses an inline policy",
+  "verdict": "FP",
+  "justification": "Inline user policy present (true), but inline-vs-managed is a manageability preference, not a security weakness (the *:* content is the real issue, flagged separately as AEGIS-AWS-501)."
+ },
+ {
+  "sample_id": "aegis-00696",
+  "project": "t006",
+  "rule": "AEGIS-AWS-673",
+  "title": "IAM role has no description",
+  "verdict": "FP",
+  "justification": "readonly_dev role has no description (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00701",
+  "project": "t007",
+  "rule": "AEGIS-AWS-544",
+  "title": "RDS instance without auto minor version upgrades",
+  "verdict": "FP",
+  "justification": "Factually wrong about effective config: auto_minor_version_upgrade defaults to true in the AWS provider, so unset does not mean disabled; also patch-hygiene, not a weakness."
+ },
+ {
+  "sample_id": "aegis-00706",
+  "project": "t007",
+  "rule": "AEGIS-AWS-605",
+  "title": "RDS instance without enhanced monitoring",
+  "verdict": "TP",
+  "justification": "t007/main.tf: no monitoring_interval on the shop DB \u2014 factually correct; missing detection control: enhanced monitoring, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00711",
+  "project": "t008",
+  "rule": "AEGIS-AWS-540",
+  "title": "RDS MySQL/Postgres instance without IAM database authentication",
+  "verdict": "FP",
+  "justification": "iam_database_authentication_enabled absent (true), but the instance manages its master password via Secrets Manager by design \u2014 IAM auth is an optional alternative, not a missing control creating a weakness."
+ },
+ {
+  "sample_id": "aegis-00716",
+  "project": "t008",
+  "rule": "AEGIS-AWS-608",
+  "title": "RDS instance without Performance Insights",
+  "verdict": "TP",
+  "justification": "t008/main.tf: no performance_insights_enabled on the analytics DB \u2014 factually correct; missing detection control: Performance Insights, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00721",
+  "project": "t009",
+  "rule": "AEGIS-AWS-445",
+  "title": "S3 bucket without server access logging",
+  "verdict": "TP",
+  "justification": "No server access logging configured on the uploads bucket (true) \u2014 S3 access logging is a genuine audit-trail control; its absence is a missing detective control."
+ },
+ {
+  "sample_id": "aegis-00726",
+  "project": "t009",
+  "rule": "AEGIS-AWS-601",
+  "title": "S3 bucket without lifecycle configuration",
+  "verdict": "FP",
+  "justification": "No lifecycle configuration on the uploads bucket (true), but lifecycle management is cost/ops hygiene, not a security control."
+ },
+ {
+  "sample_id": "aegis-00731",
+  "project": "t010",
+  "rule": "AEGIS-AWS-312",
+  "title": "DynamoDB table without point-in-time recovery",
+  "verdict": "TP",
+  "justification": "t010/main.tf aws_dynamodb_table orders: no point_in_time_recovery block; GT-firm backup/recovery class (BackupRetentionPeriod 0) -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00736",
+  "project": "t010",
+  "rule": "AEGIS-AWS-667",
+  "title": "IAM role has no permissions boundary",
+  "verdict": "FP",
+  "justification": "No permissions_boundary on the orders role (true), but permissions boundaries are defense-in-depth for delegated role administration \u2014 no demonstrated security impact here."
+ },
+ {
+  "sample_id": "aegis-00741",
+  "project": "t011",
+  "rule": "AEGIS-AWS-567",
+  "title": "Security Hub not enabled in module",
+  "verdict": "FP",
+  "justification": "Factually untethered: t011 contains no module blocks at all (data.tf, main.tf, nodegroups.tf, variables.tf) \u2014 there is no module in which Security Hub could be 'not enabled'."
+ },
+ {
+  "sample_id": "aegis-00746",
+  "project": "t011",
+  "rule": "AEGIS-AWS-673",
+  "title": "IAM role has no description",
+  "verdict": "FP",
+  "justification": "nodes role has no description (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00751",
+  "project": "t012",
+  "rule": "AEGIS-AWS-673",
+  "title": "IAM role has no description",
+  "verdict": "FP",
+  "justification": "cluster role has no description (true) \u2014 documentation pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00756",
+  "project": "t014",
+  "rule": "AEGIS-AWS-012",
+  "title": "S3 bucket without versioning",
+  "verdict": "TP",
+  "justification": "t014/main.tf: no versioning on the trail bucket \u2014 factually correct; missing availability control: versioning, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00761",
+  "project": "t014",
+  "rule": "AEGIS-AWS-568",
+  "title": "CloudTrail trail without KMS encryption",
+  "verdict": "FP",
+  "justification": "No kms_key_id on the trail (true), but CloudTrail log files are encrypted by default with SSE-S3 \u2014 the finding flags only the absence of a customer-managed key, with no actual unencrypted-data weakness."
+ },
+ {
+  "sample_id": "aegis-00766",
+  "project": "t015",
+  "rule": "AEGIS-AWS-206",
+  "title": "S3 bucket without public access block",
+  "verdict": "FP",
+  "justification": "No aws_s3_bucket_public_access_block (true), but the bucket policy grants access only to the cloudtrail.amazonaws.com service principal \u2014 no public grant exists, so this is a latent guardrail gap with no actual exposure."
+ },
+ {
+  "sample_id": "aegis-00771",
+  "project": "t015",
+  "rule": "AEGIS-AWS-610",
+  "title": "CloudWatch log group without retention period",
+  "verdict": "FP",
+  "justification": "t015/main.tf: the log group sets no retention_in_days, so CloudWatch retains the logs indefinitely by default \u2014 the finding mistakes 'no explicit retention period' for a data-loss weakness; no retention control is actually missing. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00776",
+  "project": "t018",
+  "rule": "AEGIS-AWS-005",
+  "title": "Security group egress open to the world",
+  "verdict": "FP",
+  "justification": "Egress 0.0.0.0/0 on the ALB SG (true), but unrestricted egress is the standard AWS default pattern \u2014 flagged without security context."
+ },
+ {
+  "sample_id": "aegis-00781",
+  "project": "t018",
+  "rule": "AEGIS-AWS-506",
+  "title": "Public load balancer without WAF",
+  "verdict": "FP",
+  "justification": "No WAF associated with the public ALB (true), but WAF is an optional protective layer, not a required control \u2014 its absence is not a vulnerability."
+ },
+ {
+  "sample_id": "aegis-00786",
+  "project": "t018",
+  "rule": "AEGIS-AWS-609",
+  "title": "Load balancer without access logging",
+  "verdict": "TP",
+  "justification": "No access_logs block on the public ALB (true) \u2014 ALB access logging is a genuine audit-trail control; its absence is a missing detective control."
+ },
+ {
+  "sample_id": "aegis-00791",
+  "project": "t019",
+  "rule": "AEGIS-AWS-202",
+  "title": "Load balancer listener uses plain HTTP",
+  "verdict": "FP",
+  "justification": "The HTTP:80 listener's only action is a 301 redirect to HTTPS:443 (lines 91-99) \u2014 a by-design TLS upgrade, not plaintext serving; flagged without context."
+ },
+ {
+  "sample_id": "aegis-00796",
+  "project": "t020",
+  "rule": "AEGIS-AWS-312",
+  "title": "DynamoDB table without point-in-time recovery",
+  "verdict": "TP",
+  "justification": "t020/main.tf aws_dynamodb_table audit_events: no point_in_time_recovery block; GT-firm backup/recovery class -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00801",
+  "project": "t020",
+  "rule": "AEGIS-AWS-417",
+  "title": "DynamoDB table without deletion protection",
+  "verdict": "TP",
+  "justification": "t020/main.tf: no deletion_protection_enabled on the sessions table \u2014 factually correct; missing availability control: deletion protection, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00806",
+  "project": "t023",
+  "rule": "AEGIS-AWS-341",
+  "title": "SNS topic without KMS encryption",
+  "verdict": "TP",
+  "justification": "No kms_master_key_id on the orders SNS topic (true) \u2014 SNS messages are unencrypted at rest without it, a real data-protection weakness (unlike CloudTrail, SNS has no default encryption)."
+ },
+ {
+  "sample_id": "aegis-00811",
+  "project": "t024",
+  "rule": "AEGIS-AWS-005",
+  "title": "Security group egress open to the world",
+  "verdict": "FP",
+  "justification": "Egress 0.0.0.0/0 on the data-tier SG (true), but unrestricted egress is the standard default pattern \u2014 the finding ignores the actual issue (world-open ingress) and flags noise."
+ },
+ {
+  "sample_id": "aegis-00816",
+  "project": "t025",
+  "rule": "AEGIS-AWS-502",
+  "title": "IAM policy allows privilege escalation via iam:PassRole on * with compute launch",
+  "verdict": "TP",
+  "justification": "admin_wildcard grants Action '*' on Resource '*' \u2014 a genuine critical privilege-escalation/admin-grant weakness, however the title words it."
+ },
+ {
+  "sample_id": "aegis-00821",
+  "project": "t025",
+  "rule": "AEGIS-AWS-604",
+  "title": "Security group or rule without description",
+  "verdict": "HYGIENE",
+  "justification": "Matches reclassified hygiene type 'firewall rule descriptions': the egress rule (and the SG itself) lack Description fields."
+ },
+ {
+  "sample_id": "aegis-00826",
+  "project": "t025",
+  "rule": "AEGIS-AWS-677",
+  "title": "IAM policy statement has no Sid",
+  "verdict": "FP",
+  "justification": "No Sid on the policy statement (true), but Sid is an optional statement label with no security impact \u2014 non-security pedantry."
+ },
+ {
+  "sample_id": "aegis-00831",
+  "project": "t026",
+  "rule": "AEGIS-AWS-311",
+  "title": "RDS without IAM database authentication",
+  "verdict": "FP",
+  "justification": "iam_database_authentication_enabled absent (true), but password auth via var.db_password is in use by design \u2014 IAM auth is an optional alternative, not a missing control creating a weakness."
+ },
+ {
+  "sample_id": "aegis-00836",
+  "project": "t026",
+  "rule": "AEGIS-AWS-546",
+  "title": "RDS instance without copy_tags_to_snapshot",
+  "verdict": "FP",
+  "justification": "copy_tags_to_snapshot absent (true) \u2014 tag propagation to snapshots is non-security pedantry with no security impact."
+ },
+ {
+  "sample_id": "aegis-00841",
+  "project": "t026",
+  "rule": "AEGIS-AWS-667",
+  "title": "IAM role has no permissions boundary",
+  "verdict": "FP",
+  "justification": "No permissions_boundary on the rds_export role (true), but permissions boundaries are defense-in-depth for delegated role administration \u2014 no demonstrated security impact here."
+ },
+ {
+  "sample_id": "aegis-00846",
+  "project": "t027",
+  "rule": "AEGIS-AWS-567",
+  "title": "Security Hub not enabled in module",
+  "verdict": "FP",
+  "justification": "Factually untethered: t027 contains no module blocks (compute.tf, data.tf, variables.tf, vpc.tf) \u2014 there is no module in which Security Hub could be 'not enabled'."
+ },
+ {
+  "sample_id": "aegis-00851",
+  "project": "t027",
+  "rule": "AEGIS-AWS-683",
+  "title": "EC2 instance without termination protection",
+  "verdict": "TP",
+  "justification": "t027: no disable_api_termination on the app instance (any .tf) \u2014 factually correct; missing availability control: termination protection, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00856",
+  "project": "t028",
+  "rule": "AEGIS-AWS-417",
+  "title": "DynamoDB table without deletion protection",
+  "verdict": "TP",
+  "justification": "t028: no deletion_protection_enabled on the api table (any .tf) \u2014 factually correct; missing availability control: deletion protection, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00861",
+  "project": "t028",
+  "rule": "AEGIS-AWS-645",
+  "title": "Lambda function without code signing",
+  "verdict": "FP",
+  "justification": "No code signing config on the api Lambda (true), but Lambda code signing is an optional niche supply-chain control \u2014 no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00866",
+  "project": "t029",
+  "rule": "AEGIS-AWS-305",
+  "title": "EKS cluster with public endpoint",
+  "verdict": "TP",
+  "justification": "endpoint_public_access=true with public_access_cidrs 0.0.0.0/0 and endpoint_private_access=false \u2014 the EKS control plane is internet-reachable, a real exposure weakness."
+ },
+ {
+  "sample_id": "aegis-00871",
+  "project": "t030",
+  "rule": "AEGIS-AWS-203",
+  "title": "Load balancer not dropping invalid headers",
+  "verdict": "FP",
+  "justification": "drop_invalid_header_fields unset (defaults false) (true), but header-dropping is a niche ALB hardening toggle \u2014 no demonstrated weakness from its absence."
+ },
+ {
+  "sample_id": "aegis-00876",
+  "project": "t030",
+  "rule": "AEGIS-AWS-609",
+  "title": "Load balancer without access logging",
+  "verdict": "TP",
+  "justification": "No access_logs block on the public ALB (true) \u2014 ALB access logging is a genuine audit-trail control; its absence is a missing detective control."
+ },
+ {
+  "sample_id": "aegis-00881",
+  "project": "t031",
+  "rule": "AEGIS-AZURE-027",
+  "title": "Storage account allows weak TLS version",
+  "verdict": "TP",
+  "justification": "min_tls_version is 'TLS1_0' (line 25) \u2014 weak/outdated TLS permitted, a real in-transit weakness."
+ },
+ {
+  "sample_id": "aegis-00886",
+  "project": "t031",
+  "rule": "AEGIS-AZURE-119",
+  "title": "Storage account allows public nested item access",
+  "verdict": "TP",
+  "justification": "allow_blob_public_access is true (line 24) \u2014 public blob access permitted on the media account, a real exposure weakness."
+ },
+ {
+  "sample_id": "aegis-00891",
+  "project": "t031",
+  "rule": "AEGIS-AZURE-145",
+  "title": "Storage account allows cross-tenant replication",
+  "verdict": "TP",
+  "justification": "cross_tenant_replication not set so it stays enabled by default \u2014 a real data-exfiltration control gap."
+ },
+ {
+  "sample_id": "aegis-00896",
+  "project": "t031",
+  "rule": "AEGIS-AZURE-191",
+  "title": "Storage account with shared key access enabled",
+  "verdict": "TP",
+  "justification": "shared_access_key_enabled is explicitly true (line 26) \u2014 account-key authentication permitted, a real authentication-control weakness."
+ },
+ {
+  "sample_id": "aegis-00901",
+  "project": "t032",
+  "rule": "AEGIS-AZURE-030",
+  "title": "Storage account without container soft delete",
+  "verdict": "TP",
+  "justification": "t032/main.tf azurerm_storage_account backups: no container_delete_retention_policy; GT-firm class -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-00906",
+  "project": "t032",
+  "rule": "AEGIS-AZURE-124",
+  "title": "Storage account without private endpoint",
+  "verdict": "FP",
+  "justification": "No private endpoint (true), but the account is already locked down (public access false, TLS1_2, shared-key disabled, network rules default-Deny) \u2014 flagged without security context."
+ },
+ {
+  "sample_id": "aegis-00911",
+  "project": "t032",
+  "rule": "AEGIS-AZURE-181",
+  "title": "Storage account without managed identity",
+  "verdict": "FP",
+  "justification": "No managed identity on the storage account (true), but managed identity is an optional credential-management enhancement \u2014 no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00916",
+  "project": "t033",
+  "rule": "AEGIS-AZURE-187",
+  "title": "Key Vault network ACLs allow public traffic",
+  "verdict": "TP",
+  "justification": "The vault defines no network_acls block, so it inherits the Azure default (Allow all networks) \u2014 the Key Vault is publicly reachable, a real network-exposure weakness."
+ },
+ {
+  "sample_id": "aegis-00921",
+  "project": "t034",
+  "rule": "AEGIS-AZURE-250",
+  "title": "Log Analytics workspace with public query access",
+  "verdict": "TP",
+  "justification": "internet_query_enabled is unset so public query access stays enabled by default \u2014 the workspace query endpoint is internet-reachable, a real network-hardening gap."
+ },
+ {
+  "sample_id": "aegis-00926",
+  "project": "t035",
+  "rule": "AEGIS-AZURE-046",
+  "title": "MSSQL server without security alert policy",
+  "verdict": "TP",
+  "justification": "No azurerm_mssql_server_security_alert_policy exists \u2014 SQL threat-detection alerting is a genuine missing detective security control."
+ },
+ {
+  "sample_id": "aegis-00931",
+  "project": "t035",
+  "rule": "AEGIS-AZURE-102",
+  "title": "MSSQL auditing retention less than 90 days",
+  "verdict": "FP",
+  "justification": "t035/main.tf: no auditing policy exists at all, so the 'retention less than 90 days' claim describes nothing in the code \u2014 factually inapplicable; the absent-auditing gap is a different finding. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00936",
+  "project": "t035",
+  "rule": "AEGIS-AZURE-180",
+  "title": "SQL server without managed identity",
+  "verdict": "FP",
+  "justification": "No managed identity on the SQL server (true), but managed identity is an optional credential-management enhancement \u2014 no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-00941",
+  "project": "t036",
+  "rule": "AEGIS-AZURE-031",
+  "title": "Storage account allows shared key access",
+  "verdict": "TP",
+  "justification": "shared_access_key_enabled is unset so shared-key auth stays enabled by default \u2014 account-key authentication permitted, a real authentication-control weakness."
+ },
+ {
+  "sample_id": "aegis-00946",
+  "project": "t036",
+  "rule": "AEGIS-AZURE-108",
+  "title": "MSSQL server without private endpoint",
+  "verdict": "FP",
+  "justification": "No private endpoint (true), but public_network_access_enabled is false \u2014 the server is already off the public network; flagged without security context."
+ },
+ {
+  "sample_id": "aegis-00951",
+  "project": "t036",
+  "rule": "AEGIS-AZURE-148",
+  "title": "Storage account with public network access (default)",
+  "verdict": "FP",
+  "justification": "public_network_access_enabled is unset (defaults true) but network_rules default_action is 'Deny' with no allow rules \u2014 no actual public exposure; the finding flags the default while ignoring the effective Deny."
+ },
+ {
+  "sample_id": "aegis-00956",
+  "project": "t036",
+  "rule": "AEGIS-AZURE-195",
+  "title": "Storage account allows nested public items",
+  "verdict": "FP",
+  "justification": "Factually wrong: allow_blob_public_access is false (line 34) \u2014 nested public items are not allowed."
+ },
+ {
+  "sample_id": "aegis-00961",
+  "project": "t037",
+  "rule": "AEGIS-AZURE-114",
+  "title": "App Service without HTTP logging",
+  "verdict": "TP",
+  "justification": "No logs block on the App Service (true) \u2014 HTTP/diagnostic logging is a genuine audit-trail control; its absence is a missing detective control."
+ },
+ {
+  "sample_id": "aegis-00966",
+  "project": "t037",
+  "rule": "AEGIS-AZURE-140",
+  "title": "App Service without backup configuration",
+  "verdict": "TP",
+  "justification": "t037/main.tf: no backup block on the App Service \u2014 factually correct; missing availability control: App Service backup, covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-00971",
+  "project": "t038",
+  "rule": "AEGIS-AZURE-061",
+  "title": "App Service without authentication",
+  "verdict": "FP",
+  "justification": "No auth_settings on the API app (true), but platform auth is optional \u2014 APIs commonly authenticate in code (e.g. JWT); the finding assumes a weakness without security context."
+ },
+ {
+  "sample_id": "aegis-00976",
+  "project": "t038",
+  "rule": "AEGIS-AZURE-138",
+  "title": "App Service SCM site without access restrictions",
+  "verdict": "FP",
+  "justification": "No scm IP restriction (true), but the SCM/Kudu site is credential-gated \u2014 IP restriction is optional hardening with no demonstrated weakness."
+ },
+ {
+  "sample_id": "aegis-00981",
+  "project": "t038",
+  "rule": "AEGIS-AZURE-223",
+  "title": "App Service without virtual network integration",
+  "verdict": "FP",
+  "justification": "No virtual_network_integration (true), but VNet integration is an architectural option, not a required control \u2014 no demonstrated weakness."
+ },
+ {
+  "sample_id": "aegis-00986",
+  "project": "t039",
+  "rule": "AEGIS-AZURE-074",
+  "title": "AKS cluster without disk encryption set",
+  "verdict": "FP",
+  "justification": "No disk_encryption_set_id (true), but AKS node OS disks are encrypted by default with platform keys \u2014 a customer-managed disk encryption set is key-management preference, not a weakness."
+ },
+ {
+  "sample_id": "aegis-00991",
+  "project": "t039",
+  "rule": "AEGIS-AZURE-130",
+  "title": "AKS cluster without Microsoft Defender for Containers",
+  "verdict": "TP",
+  "justification": "No Microsoft Defender for Containers configured on the AKS cluster (true) \u2014 container threat detection is a genuine missing detective security control."
+ },
+ {
+  "sample_id": "aegis-00996",
+  "project": "t039",
+  "rule": "AEGIS-AZURE-135",
+  "title": "AKS cluster without automatic upgrade channel",
+  "verdict": "FP",
+  "justification": "No automatic_upgrade_channel (true), but upgrade-channel choice is patch-management/ops hygiene \u2014 no vulnerable version demonstrated."
+ },
+ {
+  "sample_id": "aegis-01001",
+  "project": "t039",
+  "rule": "AEGIS-AZURE-230",
+  "title": "AKS cluster without Entra ID RBAC",
+  "verdict": "TP",
+  "justification": "role_based_access_control_enabled is explicitly false (line 31) with no Entra ID RBAC \u2014 the cluster has no Kubernetes authorization control, a real access-control weakness."
+ },
+ {
+  "sample_id": "aegis-01006",
+  "project": "t040",
+  "rule": "AEGIS-AZURE-058",
+  "title": "Virtual network without custom DNS servers",
+  "verdict": "FP",
+  "justification": "VNet has no custom DNS servers (uses Azure default DNS) \u2014 a networking preference, not a security weakness."
+ },
+ {
+  "sample_id": "aegis-01011",
+  "project": "t040",
+  "rule": "AEGIS-AZURE-130",
+  "title": "AKS cluster without Microsoft Defender for Containers",
+  "verdict": "TP",
+  "justification": "No Microsoft Defender for Containers configured (true) \u2014 container threat detection is a genuine missing detective security control, even on this otherwise-hardened cluster."
+ },
+ {
+  "sample_id": "aegis-01016",
+  "project": "t040",
+  "rule": "AEGIS-AZURE-135",
+  "title": "AKS cluster without automatic upgrade channel",
+  "verdict": "FP",
+  "justification": "No automatic_upgrade_channel (true), but upgrade-channel choice is patch-management/ops hygiene \u2014 no vulnerable version demonstrated."
+ },
+ {
+  "sample_id": "aegis-01021",
+  "project": "t040",
+  "rule": "AEGIS-AZURE-233",
+  "title": "AKS node pool without ephemeral OS disk",
+  "verdict": "FP",
+  "justification": "No ephemeral OS disk on the node pool (true), but ephemeral disks are niche data-remanence hardening \u2014 no demonstrated weakness."
+ },
+ {
+  "sample_id": "aegis-01026",
+  "project": "t041",
+  "rule": "AEGIS-AZURE-058",
+  "title": "Virtual network without custom DNS servers",
+  "verdict": "FP",
+  "justification": "VNet has no custom DNS servers (uses Azure default DNS) \u2014 a networking preference, not a security weakness."
+ },
+ {
+  "sample_id": "aegis-01031",
+  "project": "t042",
+  "rule": "AEGIS-AZURE-060",
+  "title": "Subnet without service endpoints for PaaS",
+  "verdict": "FP",
+  "justification": "No service_endpoints on snet-web (true), but service endpoints are a network-architecture option \u2014 no demonstrated weakness."
+ },
+ {
+  "sample_id": "aegis-01036",
+  "project": "t043",
+  "rule": "AEGIS-AZURE-265",
+  "title": "Cosmos DB account with local authentication enabled",
+  "verdict": "TP",
+  "justification": "local_authentication_disabled is unset so key-based local auth stays enabled by default \u2014 real authentication-control weakness (key auth permitted alongside/instead of AAD)."
+ },
+ {
+  "sample_id": "aegis-01041",
+  "project": "t044",
+  "rule": "AEGIS-AZURE-263",
+  "title": "Cosmos DB account with public network access enabled",
+  "verdict": "TP",
+  "justification": "public_network_access_enabled is explicitly true (line 40) \u2014 the Cosmos DB account is internet-reachable, a real network-exposure weakness."
+ },
+ {
+  "sample_id": "aegis-01046",
+  "project": "t045",
+  "rule": "AEGIS-AZURE-032",
+  "title": "Storage account without infrastructure encryption",
+  "verdict": "FP",
+  "justification": "require_infrastructure_encryption absent (true), but data is encrypted at rest by default \u2014 double encryption is defense-in-depth pedantry with no demonstrated need."
+ },
+ {
+  "sample_id": "aegis-01051",
+  "project": "t045",
+  "rule": "AEGIS-AZURE-125",
+  "title": "Storage account without SAS expiry policy",
+  "verdict": "FP",
+  "justification": "No sas_policy present (true), but SAS expiry policy is an optional lifetime-hardening enhancement \u2014 technically true with no demonstrated security impact."
+ },
+ {
+  "sample_id": "aegis-01056",
+  "project": "t045",
+  "rule": "AEGIS-AZURE-192",
+  "title": "Storage account not defaulting to OAuth authentication",
+  "verdict": "FP",
+  "justification": "default_to_oauth_authentication unset (true), but shared_access_key_enabled is already false \u2014 AAD auth is effectively forced, so the default flag is moot; flagged without security context."
+ },
+ {
+  "sample_id": "aegis-01061",
+  "project": "t046",
+  "rule": "AEGIS-AZURE-046",
+  "title": "MSSQL server without security alert policy",
+  "verdict": "TP",
+  "justification": "No azurerm_mssql_server_security_alert_policy exists \u2014 SQL threat-detection alerting is a genuine missing detective security control."
+ },
+ {
+  "sample_id": "aegis-01066",
+  "project": "t046",
+  "rule": "AEGIS-AZURE-102",
+  "title": "MSSQL auditing retention less than 90 days",
+  "verdict": "FP",
+  "justification": "t046: no extended auditing policy exists in any .tf file, so the 'retention less than 90 days' claim describes nothing in the code \u2014 factually inapplicable. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "aegis-01071",
+  "project": "t046",
+  "rule": "AEGIS-AZURE-114",
+  "title": "App Service without HTTP logging",
+  "verdict": "TP",
+  "justification": "No logs block on the portal App Service (true) \u2014 HTTP/diagnostic logging is a genuine audit-trail control; its absence is a missing detective control."
+ },
+ {
+  "sample_id": "aegis-01076",
+  "project": "t046",
+  "rule": "AEGIS-AZURE-141",
+  "title": "App Service without application logs",
+  "verdict": "FP",
+  "justification": "No application logging configured (true), but application logs are developer diagnostics/observability, not an audit/security control."
+ },
+ {
+  "sample_id": "aegis-01081",
+  "project": "t046",
+  "rule": "AEGIS-AZURE-223",
+  "title": "App Service without virtual network integration",
+  "verdict": "FP",
+  "justification": "No virtual_network_integration (true), but VNet integration is an architectural option, not a required control \u2014 no demonstrated weakness."
+ },
+ {
+  "sample_id": "aegis-01086",
+  "project": "t047",
+  "rule": "AEGIS-AZURE-060",
+  "title": "Subnet without service endpoints for PaaS",
+  "verdict": "FP",
+  "justification": "No service_endpoints on snet-data (true), but service endpoints are a network-architecture option \u2014 no demonstrated weakness."
+ },
+ {
+  "sample_id": "aegis-01091",
+  "project": "t048",
+  "rule": "AEGIS-AZURE-074",
+  "title": "AKS cluster without disk encryption set",
+  "verdict": "FP",
+  "justification": "No disk_encryption_set_id (true), but AKS node OS disks are encrypted by default with platform keys \u2014 a customer-managed disk encryption set is key-management preference, not a weakness."
+ },
+ {
+  "sample_id": "aegis-01096",
+  "project": "t048",
+  "rule": "AEGIS-AZURE-131",
+  "title": "AKS cluster without image cleaner",
+  "verdict": "FP",
+  "justification": "No image cleaner configured (true), but image cleaning is cluster hygiene \u2014 no demonstrated weakness from unused images."
+ },
+ {
+  "sample_id": "aegis-01101",
+  "project": "t048",
+  "rule": "AEGIS-AZURE-136",
+  "title": "AKS cluster without OIDC issuer",
+  "verdict": "FP",
+  "justification": "No oidc_issuer_enabled on the AKS cluster (true), but the OIDC issuer is an optional workload-identity federation feature \u2014 no demonstrated weakness from its absence."
+ },
+ {
+  "sample_id": "aegis-01106",
+  "project": "t048",
+  "rule": "AEGIS-AZURE-231",
+  "title": "AKS cluster with run command enabled",
+  "verdict": "TP",
+  "justification": "run_command_enabled is unset so the AKS run command stays enabled by default \u2014 a real alternate root command-execution path on nodes bypassing Kubernetes RBAC."
+ },
+ {
+  "sample_id": "aegis-01111",
+  "project": "t048",
+  "rule": "AEGIS-AZURE-257",
+  "title": "Container Registry without customer-managed key",
+  "verdict": "FP",
+  "justification": "No customer-managed key on the Container Registry (true), but ACR encrypts with Microsoft-managed keys by default \u2014 CMK is key-management preference, not a weakness."
+ },
+ {
+  "sample_id": "aegis-01116",
+  "project": "t050",
+  "rule": "AEGIS-AZURE-057",
+  "title": "Virtual network without DDoS protection plan",
+  "verdict": "FP",
+  "justification": "No DDoS protection plan on vnet-hub (true), but a paid DDoS plan is cost/availability pedantry \u2014 no security impact demonstrated."
+ },
+ {
+  "sample_id": "aegis-01121",
+  "project": "t051",
+  "rule": "AEGIS-GCP-005",
+  "title": "GCS bucket without uniform bucket-level access",
+  "verdict": "FP",
+  "justification": "uniform_bucket_level_access unset (defaults false) (true), but no permissive object ACLs are granted in the code \u2014 the finding flags the access-model default with no actual exposure demonstrated."
+ },
+ {
+  "sample_id": "aegis-01126",
+  "project": "t051",
+  "rule": "AEGIS-GCP-032",
+  "title": "GCS bucket without public access prevention",
+  "verdict": "FP",
+  "justification": "public_access_prevention unset (true), but no public grants exist in the code \u2014 a latent guardrail gap with no actual exposure, flagged without security context."
+ },
+ {
+  "sample_id": "aegis-01131",
+  "project": "t052",
+  "rule": "AEGIS-GCP-183",
+  "title": "GCS bucket without soft-delete protection",
+  "verdict": "TP",
+  "justification": "t052/main.tf google_storage_bucket finance: no soft_delete_policy; same data-recovery class as GT-firm soft-delete concepts -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "aegis-01136",
+  "project": "t053",
+  "rule": "AEGIS-GCP-061",
+  "title": "Compute instance boot disk without customer-managed encryption",
+  "verdict": "FP",
+  "justification": "No kms_key_self_link on the boot disk (true), but GCE disks are encrypted by default with Google-managed keys \u2014 CMK is key-management preference, not a weakness."
+ },
+ {
+  "sample_id": "aegis-01141",
+  "project": "t053",
+  "rule": "AEGIS-GCP-063",
+  "title": "Compute instance with full cloud-platform access scope",
+  "verdict": "TP",
+  "justification": "Service account uses the full 'cloud-platform' OAuth scope (line 61) \u2014 overly broad instance permissions; a compromised instance yields full GCP API access, a real privilege weakness."
+ },
+ {
+  "sample_id": "aegis-01146",
+  "project": "t054",
+  "rule": "AEGIS-GCP-061",
+  "title": "Compute instance boot disk without customer-managed encryption",
+  "verdict": "FP",
+  "justification": "No kms_key_self_link on the boot disk (true), but GCE disks are encrypted by default with Google-managed keys \u2014 CMK is key-management preference, not a weakness."
+ },
+ {
+  "sample_id": "aegis-01151",
+  "project": "t055",
+  "rule": "AEGIS-GCP-004",
+  "title": "GKE cluster without master authorized networks",
+  "verdict": "TP",
+  "justification": "No master_authorized_networks_config on the GKE cluster (true) \u2014 the control plane has no IP allowlisting, a real network-exposure weakness."
+ },
+ {
+  "sample_id": "aegis-01156",
+  "project": "t055",
+  "rule": "AEGIS-GCP-051",
+  "title": "GKE cluster with basic authentication enabled",
+  "verdict": "TP",
+  "justification": "master_auth sets username 'admin' with password 'ChangeMe123!' (lines 22-23) \u2014 legacy basic authentication is enabled with a hardcoded weak password, a real critical auth weakness."
+ },
+ {
+  "sample_id": "aegis-01161",
+  "project": "t055",
+  "rule": "AEGIS-GCP-111",
+  "title": "GKE cluster without network policy enforcement",
+  "verdict": "FP",
+  "justification": "No network_policy block (true), but pod network policy is optional microsegmentation hardening \u2014 no malicious workload or exposure demonstrated."
+ },
+ {
+  "sample_id": "aegis-01166",
+  "project": "t055",
+  "rule": "AEGIS-GCP-164",
+  "title": "GKE cluster nodes with legacy metadata endpoints enabled",
+  "verdict": "FP",
+  "justification": "Factually unsubstantiated: no legacy-endpoint/metadata settings exist in the node config, and GKE disables legacy metadata endpoints by default \u2014 the finding asserts something not in the code."
+ },
+ {
+  "sample_id": "aegis-01171",
+  "project": "t055",
+  "rule": "AEGIS-GCP-172",
+  "title": "GKE node boot disks without customer-managed encryption",
+  "verdict": "FP",
+  "justification": "No boot_disk_kms_key on the node pool (true), but GKE node disks are encrypted by default \u2014 CMK is key-management preference, not a weakness."
+ },
+ {
+  "sample_id": "aegis-01176",
+  "project": "t056",
+  "rule": "AEGIS-GCP-164",
+  "title": "GKE cluster nodes with legacy metadata endpoints enabled",
+  "verdict": "FP",
+  "justification": "Factually unsubstantiated: no legacy-endpoint/metadata settings exist in the node config, and GKE disables legacy metadata endpoints by default \u2014 the finding asserts something not in the code."
+ },
+ {
+  "sample_id": "aegis-01181",
+  "project": "t056",
+  "rule": "AEGIS-GCP-172",
+  "title": "GKE node boot disks without customer-managed encryption",
+  "verdict": "FP",
+  "justification": "No boot_disk_kms_key on the secure node pool (true), but GKE node disks are encrypted by default \u2014 CMK is key-management preference, not a weakness."
+ },
+ {
+  "sample_id": "aegis-01186",
+  "project": "t057",
+  "rule": "AEGIS-GCP-046",
+  "title": "Cloud SQL instance without log_disconnections",
+  "verdict": "FP",
+  "justification": "No log_disconnections database flag (true), but granular PG log-verbosity flags are observability tuning, not a security control."
+ },
+ {
+  "sample_id": "aegis-01191",
+  "project": "t057",
+  "rule": "AEGIS-GCP-105",
+  "title": "Cloud SQL PostgreSQL without log_duration",
+  "verdict": "FP",
+  "justification": "No log_duration database flag (true), but granular PG log-verbosity flags are observability tuning, not a security control."
+ },
+ {
+  "sample_id": "aegis-01196",
+  "project": "t057",
+  "rule": "AEGIS-GCP-155",
+  "title": "Cloud SQL user password stored in Terraform configuration",
+  "verdict": "TP",
+  "justification": "google_sql_user.app sets password to the hardcoded plaintext 'shopapp123' (line 43) \u2014 real secret stored in Terraform configuration."
+ },
+ {
+  "sample_id": "aegis-01201",
+  "project": "t058",
+  "rule": "AEGIS-GCP-046",
+  "title": "Cloud SQL instance without log_disconnections",
+  "verdict": "FP",
+  "justification": "No log_disconnections database flag (true), but granular PG log-verbosity flags are observability tuning, not a security control."
+ },
+ {
+  "sample_id": "aegis-01206",
+  "project": "t058",
+  "rule": "AEGIS-GCP-105",
+  "title": "Cloud SQL PostgreSQL without log_duration",
+  "verdict": "FP",
+  "justification": "No log_duration database flag (true), but granular PG log-verbosity flags are observability tuning, not a security control."
+ },
+ {
+  "sample_id": "aegis-01211",
+  "project": "t058",
+  "rule": "AEGIS-GCP-157",
+  "title": "Cloud SQL instance without password validation policy",
+  "verdict": "FP",
+  "justification": "No password_validation_policy (true), but password-complexity policy is optional auth hardening \u2014 no weak password demonstrated."
+ },
+ {
+  "sample_id": "aegis-01216",
+  "project": "t060",
+  "rule": "AEGIS-GCP-073",
+  "title": "Project IAM binding grants Editor role",
+  "verdict": "TP",
+  "justification": "roles/editor granted to user:dev@example.com on the prod project (acme-prod-418201) \u2014 Editor is a broad basic role; a real over-privileged grant."
+ },
+ {
+  "sample_id": "aegis-01221",
+  "project": "t061",
+  "rule": "AEGIS-GCP-071",
+  "title": "Firewall egress rule allows all destinations",
+  "verdict": "FP",
+  "justification": "EGRESS allow-all to 0.0.0.0/0 (true), but unrestricted egress is the standard default pattern \u2014 flagged without security context."
+ },
+ {
+  "sample_id": "aegis-01226",
+  "project": "t063",
+  "rule": "AEGIS-GCP-027",
+  "title": "GCS bucket without access logging",
+  "verdict": "TP",
+  "justification": "No logging block on the data bucket (true) \u2014 GCS access logging is a genuine audit-trail control; its absence is a missing detective control."
+ },
+ {
+  "sample_id": "aegis-01231",
+  "project": "t063",
+  "rule": "AEGIS-GCP-122",
+  "title": "GCS bucket without enforced public access prevention",
+  "verdict": "FP",
+  "justification": "public_access_prevention unset (true), but no public grants exist in the code \u2014 a latent guardrail gap with no actual exposure, flagged without security context."
+ },
+ {
+  "sample_id": "aegis-01236",
+  "project": "t064",
+  "rule": "AEGIS-GCP-042",
+  "title": "Cloud SQL instance without maintenance window",
+  "verdict": "FP",
+  "justification": "No maintenance_window (true), but maintenance windows are ops/patching-scheduling hygiene, not a security weakness."
+ },
+ {
+  "sample_id": "aegis-01241",
+  "project": "t064",
+  "rule": "AEGIS-GCP-055",
+  "title": "GKE cluster without shielded nodes",
+  "verdict": "FP",
+  "justification": "No shielded_instance_config on the app node pool (true), but shielded nodes are optional integrity hardening \u2014 no demonstrated weakness."
+ },
+ {
+  "sample_id": "aegis-01246",
+  "project": "t064",
+  "rule": "AEGIS-GCP-105",
+  "title": "Cloud SQL PostgreSQL without log_duration",
+  "verdict": "FP",
+  "justification": "No log_duration database flag (true), but granular PG log-verbosity flags are observability tuning, not a security control."
+ },
+ {
+  "sample_id": "aegis-01251",
+  "project": "t064",
+  "rule": "AEGIS-GCP-116",
+  "title": "GKE node pool without auto-repair",
+  "verdict": "FP",
+  "justification": "Factually wrong about effective config: management.auto_repair defaults to true in the GCP provider; also auto-repair is ops health, not a security control."
+ },
+ {
+  "sample_id": "aegis-01256",
+  "project": "t064",
+  "rule": "AEGIS-GCP-160",
+  "title": "Cloud SQL MySQL instance without binary logging",
+  "verdict": "FP",
+  "justification": "Factually wrong: the instance is POSTGRES_15, not MySQL \u2014 MySQL binary logging does not apply to PostgreSQL."
+ },
+ {
+  "sample_id": "aegis-01261",
+  "project": "t064",
+  "rule": "AEGIS-GCP-171",
+  "title": "GKE node pool with legacy metadata endpoints enabled",
+  "verdict": "FP",
+  "justification": "Factually unsubstantiated: the node pool has no metadata/legacy-endpoint settings, and GKE disables legacy metadata endpoints by default \u2014 the finding asserts something not in the code."
+ },
+ {
+  "sample_id": "aegis-01266",
+  "project": "t065",
+  "rule": "AEGIS-GCP-059",
+  "title": "Compute instance without secure boot",
+  "verdict": "FP",
+  "justification": "No shielded_instance_config (no secure boot) on dev-vm-01 (true), but secure boot is optional integrity hardening \u2014 no demonstrated weakness."
+ },
+ {
+  "sample_id": "aegis-01271",
+  "project": "t065",
+  "rule": "AEGIS-GCP-062",
+  "title": "Compute instance with default service account",
+  "verdict": "TP",
+  "justification": "qa-vm-01 uses the default service account (no email set) with the full cloud-platform scope \u2014 overly broad instance identity, a real privilege weakness."
+ },
+ {
+  "sample_id": "aegis-01276",
+  "project": "t066",
+  "rule": "AEGIS-GCP-025",
+  "title": "GCS bucket without customer-managed encryption",
+  "verdict": "FP",
+  "justification": "No encryption block on the logs bucket (true), but GCS encrypts by default with Google-managed keys \u2014 CMK is key-management preference, not a weakness."
+ },
+ {
+  "sample_id": "aegis-01281",
+  "project": "t067",
+  "rule": "AEGIS-GCP-004",
+  "title": "GKE cluster without master authorized networks",
+  "verdict": "TP",
+  "justification": "No master_authorized_networks_config on the workloads GKE cluster (true) \u2014 the control plane has no IP allowlisting, a real network-exposure weakness."
+ },
+ {
+  "sample_id": "aegis-01286",
+  "project": "t067",
+  "rule": "AEGIS-GCP-109",
+  "title": "GKE cluster with binary authorization disabled",
+  "verdict": "FP",
+  "justification": "No binary_authorization block (true), but image-signature enforcement is optional supply-chain hardening \u2014 no compromised-image threat demonstrated; consistent with code-signing treatment."
+ },
+ {
+  "sample_id": "aegis-01291",
+  "project": "t067",
+  "rule": "AEGIS-GCP-163",
+  "title": "GKE cluster without security posture management",
+  "verdict": "FP",
+  "justification": "No security_posture_config (true), but the security-posture dashboard is observability, not a security control."
+ },
+ {
+  "sample_id": "aegis-01296",
+  "project": "t067",
+  "rule": "AEGIS-GCP-172",
+  "title": "GKE node boot disks without customer-managed encryption",
+  "verdict": "FP",
+  "justification": "No boot_disk_kms_key on the node config (true), but GKE node disks are encrypted by default \u2014 CMK is key-management preference, not a weakness."
+ },
+ {
+  "sample_id": "aegis-01301",
+  "project": "t068",
+  "rule": "AEGIS-GCP-221",
+  "title": "VPC network with auto-created subnetworks",
+  "verdict": "FP",
+  "justification": "auto_create_subnetworks is true (true), but auto-mode VPCs are a valid architecture choice \u2014 flagged without security context, not a weakness."
+ },
+ {
+  "sample_id": "aegis-01306",
+  "project": "t069",
+  "rule": "AEGIS-GCP-101",
+  "title": "Cloud SQL PostgreSQL without log_checkpoints",
+  "verdict": "FP",
+  "justification": "No log_checkpoints database flag (true), but granular PG log-verbosity flags are observability tuning, not a security control."
+ },
+ {
+  "sample_id": "aegis-01311",
+  "project": "t069",
+  "rule": "AEGIS-GCP-106",
+  "title": "Cloud SQL PostgreSQL without pgAudit logging",
+  "verdict": "TP",
+  "justification": "No pgAudit configuration on the crm Postgres instance (true) \u2014 pgAudit is the primary database audit trail; its absence is a real missing detective control."
+ },
+ {
+  "sample_id": "aegis-01316",
+  "project": "t069",
+  "rule": "AEGIS-GCP-160",
+  "title": "Cloud SQL MySQL instance without binary logging",
+  "verdict": "FP",
+  "justification": "Factually wrong: the instance is POSTGRES_15, not MySQL \u2014 MySQL binary logging does not apply to PostgreSQL."
+ },
+ {
+  "sample_id": "aegis-01321",
+  "project": "t070",
+  "rule": "AEGIS-GCP-010",
+  "title": "GKE cluster without network policy",
+  "verdict": "FP",
+  "justification": "No network_policy block (true), but pod network policy is optional microsegmentation hardening \u2014 no malicious workload or exposure demonstrated."
+ },
+ {
+  "sample_id": "aegis-01326",
+  "project": "t070",
+  "rule": "AEGIS-GCP-048",
+  "title": "GKE cluster without binary authorization",
+  "verdict": "FP",
+  "justification": "No binary_authorization block (true), but image-signature enforcement is optional supply-chain hardening \u2014 no compromised-image threat demonstrated."
+ },
+ {
+  "sample_id": "aegis-01331",
+  "project": "t070",
+  "rule": "AEGIS-GCP-103",
+  "title": "Cloud SQL PostgreSQL without log_disconnections",
+  "verdict": "FP",
+  "justification": "No log_disconnections database flag (true), but granular PG log-verbosity flags are observability tuning, not a security control."
+ },
+ {
+  "sample_id": "aegis-01336",
+  "project": "t070",
+  "rule": "AEGIS-GCP-109",
+  "title": "GKE cluster with binary authorization disabled",
+  "verdict": "FP",
+  "justification": "No binary_authorization block (true), but image-signature enforcement is optional supply-chain hardening \u2014 no compromised-image threat demonstrated."
+ },
+ {
+  "sample_id": "aegis-01341",
+  "project": "t070",
+  "rule": "AEGIS-GCP-120",
+  "title": "Compute subnetwork without VPC flow logs",
+  "verdict": "TP",
+  "justification": "The module's subnetwork (t070/modules/network/main.tf) defines no log_config \u2014 VPC flow logs are a genuine network audit-trail control; their absence is a missing detective control."
+ },
+ {
+  "sample_id": "aegis-01346",
+  "project": "t070",
+  "rule": "AEGIS-GCP-163",
+  "title": "GKE cluster without security posture management",
+  "verdict": "FP",
+  "justification": "No security_posture_config (true), but the security-posture dashboard is observability, not a security control."
+ },
+ {
+  "sample_id": "aegis-01351",
+  "project": "t070",
+  "rule": "AEGIS-GCP-172",
+  "title": "GKE node boot disks without customer-managed encryption",
+  "verdict": "FP",
+  "justification": "No boot_disk_kms_key on the node config (true), but GKE node disks are encrypted by default \u2014 CMK is key-management preference, not a weakness."
+ }
+]

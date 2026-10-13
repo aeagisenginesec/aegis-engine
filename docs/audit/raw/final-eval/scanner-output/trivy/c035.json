@@ -1,0 +1,298 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1328d-f3c8-748e-bd12-c6e3bcc4e6d5",
+  "CreatedAt": "2026-10-12T23:58:46.216303554Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c035",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "azuredeploy.json",
+      "Class": "config",
+      "Type": "azure-arm",
+      "MisconfSummary": {
+        "Successes": 10,
+        "Failures": 2
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Azure ARM Security Check",
+          "ID": "AZU-0022",
+          "Title": "Ensure databases are not publicly accessible",
+          "Description": "Database resources should not publicly available. You should limit all access to the minimum that is required for your application to function.\n",
+          "Message": "Database server has public network access enabled.",
+          "Namespace": "builtin.azure.database.azure0022",
+          "Query": "data.builtin.azure.database.azure0022.deny",
+          "Resolution": "Disable public access to database when not required",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0022",
+          "References": [
+            "https://avd.aquasec.com/misconfig/azu-0022"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Azure",
+            "Service": "database",
+            "StartLine": 20,
+            "EndLine": 31,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "{",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "{",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "    {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "      \"type\": \"Microsoft.Sql/servers\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"type\"\u001b[0m: \u001b[38;5;37m\"Microsoft.Sql/servers\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "      \"apiVersion\": \"2023-05-01-preview\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"apiVersion\"\u001b[0m: \u001b[38;5;37m\"2023-05-01-preview\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "      \"name\": \"[parameters('serverName')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"name\"\u001b[0m: \u001b[38;5;37m\"[parameters('serverName')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "      \"location\": \"[parameters('location')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"location\"\u001b[0m: \u001b[38;5;37m\"[parameters('location')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "      \"properties\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"properties\"\u001b[0m: {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "        \"administratorLogin\": \"[parameters('adminLogin')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"administratorLogin\"\u001b[0m: \u001b[38;5;37m\"[parameters('adminLogin')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 27,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 84
+                }
+              },
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {}
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Azure ARM Security Check",
+          "ID": "AZU-0027",
+          "Title": "Auditing should be enabled on Azure SQL Databases",
+          "Description": "Auditing helps you maintain regulatory compliance, understand database activity, and gain insight into discrepancies and anomalies that could indicate business concerns or suspected security violations.\n",
+          "Message": "Server does not have an extended audit policy configured.",
+          "Namespace": "builtin.azure.database.azure0027",
+          "Query": "data.builtin.azure.database.azure0027.deny",
+          "Resolution": "Enable auditing on Azure SQL databases",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0027",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/azure-sql/database/auditing-overview",
+            "https://avd.aquasec.com/misconfig/azu-0027"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Azure",
+            "Service": "database",
+            "StartLine": 20,
+            "EndLine": 31,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "{",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "{",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "    {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "      \"type\": \"Microsoft.Sql/servers\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"type\"\u001b[0m: \u001b[38;5;37m\"Microsoft.Sql/servers\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "      \"apiVersion\": \"2023-05-01-preview\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"apiVersion\"\u001b[0m: \u001b[38;5;37m\"2023-05-01-preview\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "      \"name\": \"[parameters('serverName')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"name\"\u001b[0m: \u001b[38;5;37m\"[parameters('serverName')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "      \"location\": \"[parameters('location')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"location\"\u001b[0m: \u001b[38;5;37m\"[parameters('location')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "      \"properties\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"properties\"\u001b[0m: {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "        \"administratorLogin\": \"[parameters('adminLogin')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"administratorLogin\"\u001b[0m: \u001b[38;5;37m\"[parameters('adminLogin')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 27,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 84
+                }
+              },
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

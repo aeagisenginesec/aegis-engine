@@ -1,0 +1,56 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Hardened app server: encrypted root volume, IMDSv2 required, office-only SSH.",
+  "Parameters": {
+    "AmiId": { "Type": "String" },
+    "OfficeCidr": { "Type": "String", "Default": "203.0.113.0/24" },
+    "KeyPairName": { "Type": "String" }
+  },
+  "Resources": {
+    "AppSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "App server ingress",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIp": { "Ref": "OfficeCidr" }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": { "Ref": "OfficeCidr" }
+          }
+        ]
+      }
+    },
+    "AppServer": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": { "Ref": "AmiId" },
+        "InstanceType": "t3.medium",
+        "KeyName": { "Ref": "KeyPairName" },
+        "SecurityGroupIds": [{ "Ref": "AppSecurityGroup" }],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": { "VolumeSize": 50, "Encrypted": true, "VolumeType": "gp3" }
+          }
+        ],
+        "MetadataOptions": {
+          "HttpTokens": "required",
+          "HttpPutResponseHopLimit": 1,
+          "HttpEndpoint": "enabled"
+        },
+        "Monitoring": true,
+        "Tags": [{ "Key": "Name", "Value": "hardened-app-01" }]
+      }
+    }
+  },
+  "Outputs": {
+    "InstanceId": { "Value": { "Ref": "AppServer" } }
+  }
+}

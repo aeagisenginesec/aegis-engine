@@ -1,0 +1,946 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_62",
+                "bc_check_id": "BC_AWS_IAM_47",
+                "check_name": "Ensure no IAM policies that allow full \"*-*\" administrative privileges are not created",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/Policies/[0]/PolicyDocument"
+                    ]
+                },
+                "code_block": [
+                    [
+                        12,
+                        "  DeployRole:\n"
+                    ],
+                    [
+                        13,
+                        "    Type: AWS::IAM::Role\n"
+                    ],
+                    [
+                        14,
+                        "    Properties:\n"
+                    ],
+                    [
+                        15,
+                        "      RoleName: !Ref RoleName\n"
+                    ],
+                    [
+                        16,
+                        "      AssumeRolePolicyDocument:\n"
+                    ],
+                    [
+                        17,
+                        "        Version: '2012-10-17'\n"
+                    ],
+                    [
+                        18,
+                        "        Statement:\n"
+                    ],
+                    [
+                        19,
+                        "          - Effect: Allow\n"
+                    ],
+                    [
+                        20,
+                        "            Principal:\n"
+                    ],
+                    [
+                        21,
+                        "              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'\n"
+                    ],
+                    [
+                        22,
+                        "            Action: sts:AssumeRole\n"
+                    ],
+                    [
+                        23,
+                        "      ManagedPolicyArns:\n"
+                    ],
+                    [
+                        24,
+                        "        - arn:aws:iam::aws:policy/AdministratorAccess\n"
+                    ],
+                    [
+                        25,
+                        "      Policies:\n"
+                    ],
+                    [
+                        26,
+                        "        - PolicyName: extra-permissions\n"
+                    ],
+                    [
+                        27,
+                        "          PolicyDocument:\n"
+                    ],
+                    [
+                        28,
+                        "            Version: '2012-10-17'\n"
+                    ],
+                    [
+                        29,
+                        "            Statement:\n"
+                    ],
+                    [
+                        30,
+                        "              - Effect: Allow\n"
+                    ],
+                    [
+                        31,
+                        "                Action: '*'\n"
+                    ],
+                    [
+                        32,
+                        "                Resource: '*'\n"
+                    ]
+                ],
+                "file_path": "/iam.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "file_line_range": [
+                    12,
+                    32
+                ],
+                "resource": "AWS::IAM::Role.DeployRole",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.IAMAdminPolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-iam-45",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "RoleName": [
+                        {
+                            "type": "parameters",
+                            "name": "RoleName",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_107",
+                "bc_check_id": "BC_AWS_IAM_54",
+                "check_name": "Ensure IAM policies does not allow credentials exposure",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/PolicyDocument/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        12,
+                        "  DeployRole:\n"
+                    ],
+                    [
+                        13,
+                        "    Type: AWS::IAM::Role\n"
+                    ],
+                    [
+                        14,
+                        "    Properties:\n"
+                    ],
+                    [
+                        15,
+                        "      RoleName: !Ref RoleName\n"
+                    ],
+                    [
+                        16,
+                        "      AssumeRolePolicyDocument:\n"
+                    ],
+                    [
+                        17,
+                        "        Version: '2012-10-17'\n"
+                    ],
+                    [
+                        18,
+                        "        Statement:\n"
+                    ],
+                    [
+                        19,
+                        "          - Effect: Allow\n"
+                    ],
+                    [
+                        20,
+                        "            Principal:\n"
+                    ],
+                    [
+                        21,
+                        "              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'\n"
+                    ],
+                    [
+                        22,
+                        "            Action: sts:AssumeRole\n"
+                    ],
+                    [
+                        23,
+                        "      ManagedPolicyArns:\n"
+                    ],
+                    [
+                        24,
+                        "        - arn:aws:iam::aws:policy/AdministratorAccess\n"
+                    ],
+                    [
+                        25,
+                        "      Policies:\n"
+                    ],
+                    [
+                        26,
+                        "        - PolicyName: extra-permissions\n"
+                    ],
+                    [
+                        27,
+                        "          PolicyDocument:\n"
+                    ],
+                    [
+                        28,
+                        "            Version: '2012-10-17'\n"
+                    ],
+                    [
+                        29,
+                        "            Statement:\n"
+                    ],
+                    [
+                        30,
+                        "              - Effect: Allow\n"
+                    ],
+                    [
+                        31,
+                        "                Action: '*'\n"
+                    ],
+                    [
+                        32,
+                        "                Resource: '*'\n"
+                    ]
+                ],
+                "file_path": "/iam.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "file_line_range": [
+                    12,
+                    32
+                ],
+                "resource": "AWS::IAM::Role.DeployRole",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.IAMCredentialsExposure",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-do-not-allow-credentials-exposure",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "RoleName": [
+                        {
+                            "type": "parameters",
+                            "name": "RoleName",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_108",
+                "bc_check_id": "BC_AWS_IAM_55",
+                "check_name": "Ensure IAM policies does not allow data exfiltration",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/PolicyDocument/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        12,
+                        "  DeployRole:\n"
+                    ],
+                    [
+                        13,
+                        "    Type: AWS::IAM::Role\n"
+                    ],
+                    [
+                        14,
+                        "    Properties:\n"
+                    ],
+                    [
+                        15,
+                        "      RoleName: !Ref RoleName\n"
+                    ],
+                    [
+                        16,
+                        "      AssumeRolePolicyDocument:\n"
+                    ],
+                    [
+                        17,
+                        "        Version: '2012-10-17'\n"
+                    ],
+                    [
+                        18,
+                        "        Statement:\n"
+                    ],
+                    [
+                        19,
+                        "          - Effect: Allow\n"
+                    ],
+                    [
+                        20,
+                        "            Principal:\n"
+                    ],
+                    [
+                        21,
+                        "              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'\n"
+                    ],
+                    [
+                        22,
+                        "            Action: sts:AssumeRole\n"
+                    ],
+                    [
+                        23,
+                        "      ManagedPolicyArns:\n"
+                    ],
+                    [
+                        24,
+                        "        - arn:aws:iam::aws:policy/AdministratorAccess\n"
+                    ],
+                    [
+                        25,
+                        "      Policies:\n"
+                    ],
+                    [
+                        26,
+                        "        - PolicyName: extra-permissions\n"
+                    ],
+                    [
+                        27,
+                        "          PolicyDocument:\n"
+                    ],
+                    [
+                        28,
+                        "            Version: '2012-10-17'\n"
+                    ],
+                    [
+                        29,
+                        "            Statement:\n"
+                    ],
+                    [
+                        30,
+                        "              - Effect: Allow\n"
+                    ],
+                    [
+                        31,
+                        "                Action: '*'\n"
+                    ],
+                    [
+                        32,
+                        "                Resource: '*'\n"
+                    ]
+                ],
+                "file_path": "/iam.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "file_line_range": [
+                    12,
+                    32
+                ],
+                "resource": "AWS::IAM::Role.DeployRole",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.IAMDataExfiltration",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-do-not-allow-data-exfiltration",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "RoleName": [
+                        {
+                            "type": "parameters",
+                            "name": "RoleName",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_109",
+                "bc_check_id": "BC_AWS_IAM_56",
+                "check_name": "Ensure IAM policies does not allow permissions management without constraints",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/PolicyDocument/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        12,
+                        "  DeployRole:\n"
+                    ],
+                    [
+                        13,
+                        "    Type: AWS::IAM::Role\n"
+                    ],
+                    [
+                        14,
+                        "    Properties:\n"
+                    ],
+                    [
+                        15,
+                        "      RoleName: !Ref RoleName\n"
+                    ],
+                    [
+                        16,
+                        "      AssumeRolePolicyDocument:\n"
+                    ],
+                    [
+                        17,
+                        "        Version: '2012-10-17'\n"
+                    ],
+                    [
+                        18,
+                        "        Statement:\n"
+                    ],
+                    [
+                        19,
+                        "          - Effect: Allow\n"
+                    ],
+                    [
+                        20,
+                        "            Principal:\n"
+                    ],
+                    [
+                        21,
+                        "              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'\n"
+                    ],
+                    [
+                        22,
+                        "            Action: sts:AssumeRole\n"
+                    ],
+                    [
+                        23,
+                        "      ManagedPolicyArns:\n"
+                    ],
+                    [
+                        24,
+                        "        - arn:aws:iam::aws:policy/AdministratorAccess\n"
+                    ],
+                    [
+                        25,
+                        "      Policies:\n"
+                    ],
+                    [
+                        26,
+                        "        - PolicyName: extra-permissions\n"
+                    ],
+                    [
+                        27,
+                        "          PolicyDocument:\n"
+                    ],
+                    [
+                        28,
+                        "            Version: '2012-10-17'\n"
+                    ],
+                    [
+                        29,
+                        "            Statement:\n"
+                    ],
+                    [
+                        30,
+                        "              - Effect: Allow\n"
+                    ],
+                    [
+                        31,
+                        "                Action: '*'\n"
+                    ],
+                    [
+                        32,
+                        "                Resource: '*'\n"
+                    ]
+                ],
+                "file_path": "/iam.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "file_line_range": [
+                    12,
+                    32
+                ],
+                "resource": "AWS::IAM::Role.DeployRole",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.IAMPermissionsManagement",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-do-not-allow-permissions-management-resource-exposure-without-constraint",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "RoleName": [
+                        {
+                            "type": "parameters",
+                            "name": "RoleName",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_110",
+                "bc_check_id": "BC_AWS_IAM_64",
+                "check_name": "Ensure IAM policies does not allow privilege escalation",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/PolicyDocument/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        12,
+                        "  DeployRole:\n"
+                    ],
+                    [
+                        13,
+                        "    Type: AWS::IAM::Role\n"
+                    ],
+                    [
+                        14,
+                        "    Properties:\n"
+                    ],
+                    [
+                        15,
+                        "      RoleName: !Ref RoleName\n"
+                    ],
+                    [
+                        16,
+                        "      AssumeRolePolicyDocument:\n"
+                    ],
+                    [
+                        17,
+                        "        Version: '2012-10-17'\n"
+                    ],
+                    [
+                        18,
+                        "        Statement:\n"
+                    ],
+                    [
+                        19,
+                        "          - Effect: Allow\n"
+                    ],
+                    [
+                        20,
+                        "            Principal:\n"
+                    ],
+                    [
+                        21,
+                        "              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'\n"
+                    ],
+                    [
+                        22,
+                        "            Action: sts:AssumeRole\n"
+                    ],
+                    [
+                        23,
+                        "      ManagedPolicyArns:\n"
+                    ],
+                    [
+                        24,
+                        "        - arn:aws:iam::aws:policy/AdministratorAccess\n"
+                    ],
+                    [
+                        25,
+                        "      Policies:\n"
+                    ],
+                    [
+                        26,
+                        "        - PolicyName: extra-permissions\n"
+                    ],
+                    [
+                        27,
+                        "          PolicyDocument:\n"
+                    ],
+                    [
+                        28,
+                        "            Version: '2012-10-17'\n"
+                    ],
+                    [
+                        29,
+                        "            Statement:\n"
+                    ],
+                    [
+                        30,
+                        "              - Effect: Allow\n"
+                    ],
+                    [
+                        31,
+                        "                Action: '*'\n"
+                    ],
+                    [
+                        32,
+                        "                Resource: '*'\n"
+                    ]
+                ],
+                "file_path": "/iam.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "file_line_range": [
+                    12,
+                    32
+                ],
+                "resource": "AWS::IAM::Role.DeployRole",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.IAMPrivilegeEscalation",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-does-not-allow-privilege-escalation",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "RoleName": [
+                        {
+                            "type": "parameters",
+                            "name": "RoleName",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_63",
+                "bc_check_id": "BC_AWS_IAM_48",
+                "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's actions",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/Policies/0/PolicyDocument"
+                    ]
+                },
+                "code_block": [
+                    [
+                        12,
+                        "  DeployRole:\n"
+                    ],
+                    [
+                        13,
+                        "    Type: AWS::IAM::Role\n"
+                    ],
+                    [
+                        14,
+                        "    Properties:\n"
+                    ],
+                    [
+                        15,
+                        "      RoleName: !Ref RoleName\n"
+                    ],
+                    [
+                        16,
+                        "      AssumeRolePolicyDocument:\n"
+                    ],
+                    [
+                        17,
+                        "        Version: '2012-10-17'\n"
+                    ],
+                    [
+                        18,
+                        "        Statement:\n"
+                    ],
+                    [
+                        19,
+                        "          - Effect: Allow\n"
+                    ],
+                    [
+                        20,
+                        "            Principal:\n"
+                    ],
+                    [
+                        21,
+                        "              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'\n"
+                    ],
+                    [
+                        22,
+                        "            Action: sts:AssumeRole\n"
+                    ],
+                    [
+                        23,
+                        "      ManagedPolicyArns:\n"
+                    ],
+                    [
+                        24,
+                        "        - arn:aws:iam::aws:policy/AdministratorAccess\n"
+                    ],
+                    [
+                        25,
+                        "      Policies:\n"
+                    ],
+                    [
+                        26,
+                        "        - PolicyName: extra-permissions\n"
+                    ],
+                    [
+                        27,
+                        "          PolicyDocument:\n"
+                    ],
+                    [
+                        28,
+                        "            Version: '2012-10-17'\n"
+                    ],
+                    [
+                        29,
+                        "            Statement:\n"
+                    ],
+                    [
+                        30,
+                        "              - Effect: Allow\n"
+                    ],
+                    [
+                        31,
+                        "                Action: '*'\n"
+                    ],
+                    [
+                        32,
+                        "                Resource: '*'\n"
+                    ]
+                ],
+                "file_path": "/iam.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "file_line_range": [
+                    12,
+                    32
+                ],
+                "resource": "AWS::IAM::Role.DeployRole",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.IAMStarActionPolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/iam-48",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "RoleName": [
+                        {
+                            "type": "parameters",
+                            "name": "RoleName",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_111",
+                "bc_check_id": "BC_AWS_IAM_57",
+                "check_name": "Ensure IAM policies does not allow write access without constraints",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/PolicyDocument/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        12,
+                        "  DeployRole:\n"
+                    ],
+                    [
+                        13,
+                        "    Type: AWS::IAM::Role\n"
+                    ],
+                    [
+                        14,
+                        "    Properties:\n"
+                    ],
+                    [
+                        15,
+                        "      RoleName: !Ref RoleName\n"
+                    ],
+                    [
+                        16,
+                        "      AssumeRolePolicyDocument:\n"
+                    ],
+                    [
+                        17,
+                        "        Version: '2012-10-17'\n"
+                    ],
+                    [
+                        18,
+                        "        Statement:\n"
+                    ],
+                    [
+                        19,
+                        "          - Effect: Allow\n"
+                    ],
+                    [
+                        20,
+                        "            Principal:\n"
+                    ],
+                    [
+                        21,
+                        "              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'\n"
+                    ],
+                    [
+                        22,
+                        "            Action: sts:AssumeRole\n"
+                    ],
+                    [
+                        23,
+                        "      ManagedPolicyArns:\n"
+                    ],
+                    [
+                        24,
+                        "        - arn:aws:iam::aws:policy/AdministratorAccess\n"
+                    ],
+                    [
+                        25,
+                        "      Policies:\n"
+                    ],
+                    [
+                        26,
+                        "        - PolicyName: extra-permissions\n"
+                    ],
+                    [
+                        27,
+                        "          PolicyDocument:\n"
+                    ],
+                    [
+                        28,
+                        "            Version: '2012-10-17'\n"
+                    ],
+                    [
+                        29,
+                        "            Statement:\n"
+                    ],
+                    [
+                        30,
+                        "              - Effect: Allow\n"
+                    ],
+                    [
+                        31,
+                        "                Action: '*'\n"
+                    ],
+                    [
+                        32,
+                        "                Resource: '*'\n"
+                    ]
+                ],
+                "file_path": "/iam.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                "file_line_range": [
+                    12,
+                    32
+                ],
+                "resource": "AWS::IAM::Role.DeployRole",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.IAMWriteAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-do-not-allow-write-access-without-constraint",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "RoleName": [
+                        {
+                            "type": "parameters",
+                            "name": "RoleName",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c003/iam.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 2,
+        "failed": 7,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

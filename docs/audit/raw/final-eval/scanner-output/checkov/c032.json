@@ -1,0 +1,196 @@
+{
+    "check_type": "arm",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_9",
+                "bc_check_id": null,
+                "check_name": "Ensure that RDP access is restricted from the internet",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        19,
+                        "    {\n"
+                    ],
+                    [
+                        20,
+                        "      \"type\": \"Microsoft.Network/networkSecurityGroups\",\n"
+                    ],
+                    [
+                        21,
+                        "      \"apiVersion\": \"2023-09-01\",\n"
+                    ],
+                    [
+                        22,
+                        "      \"name\": \"[variables('nsgName')]\",\n"
+                    ],
+                    [
+                        23,
+                        "      \"location\": \"[parameters('location')]\",\n"
+                    ],
+                    [
+                        24,
+                        "      \"properties\": {\n"
+                    ],
+                    [
+                        25,
+                        "        \"securityRules\": [\n"
+                    ],
+                    [
+                        26,
+                        "          {\n"
+                    ],
+                    [
+                        27,
+                        "            \"name\": \"Allow-RDP-Any\",\n"
+                    ],
+                    [
+                        28,
+                        "            \"properties\": {\n"
+                    ],
+                    [
+                        29,
+                        "              \"priority\": 100,\n"
+                    ],
+                    [
+                        30,
+                        "              \"direction\": \"Inbound\",\n"
+                    ],
+                    [
+                        31,
+                        "              \"access\": \"Allow\",\n"
+                    ],
+                    [
+                        32,
+                        "              \"protocol\": \"Tcp\",\n"
+                    ],
+                    [
+                        33,
+                        "              \"sourcePortRange\": \"*\",\n"
+                    ],
+                    [
+                        34,
+                        "              \"destinationPortRange\": \"3389\",\n"
+                    ],
+                    [
+                        35,
+                        "              \"sourceAddressPrefix\": \"*\",\n"
+                    ],
+                    [
+                        36,
+                        "              \"destinationAddressPrefix\": \"*\"\n"
+                    ],
+                    [
+                        37,
+                        "            }\n"
+                    ],
+                    [
+                        38,
+                        "          },\n"
+                    ],
+                    [
+                        39,
+                        "          {\n"
+                    ],
+                    [
+                        40,
+                        "            \"name\": \"Allow-SSH-Any\",\n"
+                    ],
+                    [
+                        41,
+                        "            \"properties\": {\n"
+                    ],
+                    [
+                        42,
+                        "              \"priority\": 110,\n"
+                    ],
+                    [
+                        43,
+                        "              \"direction\": \"Inbound\",\n"
+                    ],
+                    [
+                        44,
+                        "              \"access\": \"Allow\",\n"
+                    ],
+                    [
+                        45,
+                        "              \"protocol\": \"Tcp\",\n"
+                    ],
+                    [
+                        46,
+                        "              \"sourcePortRange\": \"*\",\n"
+                    ],
+                    [
+                        47,
+                        "              \"destinationPortRange\": \"22\",\n"
+                    ],
+                    [
+                        48,
+                        "              \"sourceAddressPrefix\": \"Internet\",\n"
+                    ],
+                    [
+                        49,
+                        "              \"destinationAddressPrefix\": \"*\"\n"
+                    ],
+                    [
+                        50,
+                        "            }\n"
+                    ],
+                    [
+                        51,
+                        "          }\n"
+                    ],
+                    [
+                        52,
+                        "        ]\n"
+                    ],
+                    [
+                        53,
+                        "      }\n"
+                    ],
+                    [
+                        54,
+                        "    },\n"
+                    ]
+                ],
+                "file_path": "/azuredeploy.json",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c032/azuredeploy.json",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c032/azuredeploy.json",
+                "file_line_range": [
+                    19,
+                    54
+                ],
+                "resource": "Microsoft.Network/networkSecurityGroups.dev-nsg",
+                "evaluations": {},
+                "check_class": "checkov.arm.checks.resource.NSGRuleRDPAccessRestricted",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": null,
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 4,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

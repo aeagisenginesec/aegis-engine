@@ -1,0 +1,1125 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1329e-0af7-7891-a259-2a022a0772e7",
+  "CreatedAt": "2026-10-13T00:16:20.727565536Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t057",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 56,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 9
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0014",
+          "Title": "Temporary file logging should be enabled for all temporary files.",
+          "Description": "Temporary files are not logged by default. To log all temporary files, a value of `0` should set in the `log_temp_files` flag - as all files greater in size than the number of bytes set in this flag will be logged.\n",
+          "Message": "Database instance has temporary file logging disabled.",
+          "Namespace": "builtin.google.sql.google0014",
+          "Query": "data.builtin.google.sql.google0014.deny",
+          "Resolution": "Enable temporary file logging for all files",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0014",
+          "References": [
+            "https://postgresqlco.nf/doc/en/param/log_temp_files/",
+            "https://avd.aquasec.com/misconfig/gcp-0014"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.shop",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 15,
+            "EndLine": 38,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "resource \"google_sql_database_instance\" \"shop\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "  name             = \"shop-postgres\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"shop-postgres\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "  region           = \"us-central1\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;37m\"us-central1\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "    tier = \"db-custom-2-7680\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;37m\"db-custom-2-7680\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 24,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0015",
+          "Title": "SSL connections to a SQL database instance should be enforced.",
+          "Description": "In-transit data should be encrypted so that if traffic is intercepted data will not be exposed in plaintext to attackers.\n",
+          "Message": "Database instance does not require TLS for all connections.",
+          "Namespace": "builtin.google.sql.google0015",
+          "Query": "data.builtin.google.sql.google0015.deny",
+          "Resolution": "Enforce SSL for all connections",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0015",
+          "References": [
+            "https://cloud.google.com/sql/docs/mysql/configure-ssl-instance",
+            "https://avd.aquasec.com/misconfig/gcp-0015"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.shop",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 23,
+            "EndLine": 30,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "resource \"google_sql_database_instance\" \"shop\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "      ipv4_enabled = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;245mipv4_enabled\u001b[0m = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "      authorized_networks {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      authorized_networks {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "        name  = \"anywhere\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;245mname\u001b[0m  = \u001b[38;5;37m\"anywhere\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "        value = \"0.0.0.0/0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;245mvalue\u001b[0m = \u001b[38;5;37m\"0.0.0.0/0\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "      }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      }",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 30,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "settings",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 20,
+                  "EndLine": 35
+                }
+              },
+              {
+                "Resource": "google_sql_database_instance.shop",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 15,
+                  "EndLine": 38
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0016",
+          "Title": "Ensure that logging of connections is enabled.",
+          "Description": "Logging connections provides useful diagnostic data such as session length, which can identify performance issues in an application and potential DoS vectors.\n",
+          "Message": "Database instance is not configured to log connections.",
+          "Namespace": "builtin.google.sql.google0016",
+          "Query": "data.builtin.google.sql.google0016.deny",
+          "Resolution": "Enable connection logging.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0016",
+          "References": [
+            "https://www.postgresql.org/docs/13/runtime-config-logging.html#GUC-LOG-CONNECTIONS",
+            "https://avd.aquasec.com/misconfig/gcp-0016"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.shop",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 15,
+            "EndLine": 38,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "resource \"google_sql_database_instance\" \"shop\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "  name             = \"shop-postgres\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"shop-postgres\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "  region           = \"us-central1\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;37m\"us-central1\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "    tier = \"db-custom-2-7680\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;37m\"db-custom-2-7680\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 24,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0017",
+          "Title": "Ensure that Cloud SQL Database Instances are not publicly exposed",
+          "Description": "Database instances should be configured so that they are not available over the public internet, but to internal compute resources which access them.\n",
+          "Message": "Database instance allows access from the public internet.",
+          "Namespace": "builtin.google.sql.google0017",
+          "Query": "data.builtin.google.sql.google0017.deny",
+          "Resolution": "Remove public access from database instances",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0017",
+          "References": [
+            "https://www.cloudconformity.com/knowledge-base/gcp/CloudSQL/publicly-accessible-cloud-sql-instances.html",
+            "https://avd.aquasec.com/misconfig/gcp-0017"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.shop",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 28,
+            "EndLine": 28,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "resource \"google_sql_database_instance\" \"shop\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "        value = \"0.0.0.0/0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;245mvalue\u001b[0m = \u001b[38;5;37m\"0.0.0.0/0\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 37,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 38,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "authorized_networks",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 26,
+                  "EndLine": 29
+                }
+              },
+              {
+                "Resource": "ip_configuration",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 23,
+                  "EndLine": 30
+                }
+              },
+              {
+                "Resource": "settings",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 20,
+                  "EndLine": 35
+                }
+              },
+              {
+                "Resource": "google_sql_database_instance.shop",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 15,
+                  "EndLine": 38
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0017",
+          "Title": "Ensure that Cloud SQL Database Instances are not publicly exposed",
+          "Description": "Database instances should be configured so that they are not available over the public internet, but to internal compute resources which access them.\n",
+          "Message": "Database instance is granted a public internet address.",
+          "Namespace": "builtin.google.sql.google0017",
+          "Query": "data.builtin.google.sql.google0017.deny",
+          "Resolution": "Remove public access from database instances",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0017",
+          "References": [
+            "https://www.cloudconformity.com/knowledge-base/gcp/CloudSQL/publicly-accessible-cloud-sql-instances.html",
+            "https://avd.aquasec.com/misconfig/gcp-0017"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.shop",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 24,
+            "EndLine": 24,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "resource \"google_sql_database_instance\" \"shop\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "      ipv4_enabled = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;245mipv4_enabled\u001b[0m = \u001b[38;5;166mtrue",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 37,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 38,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "ip_configuration",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 23,
+                  "EndLine": 30
+                }
+              },
+              {
+                "Resource": "settings",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 20,
+                  "EndLine": 35
+                }
+              },
+              {
+                "Resource": "google_sql_database_instance.shop",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 15,
+                  "EndLine": 38
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0020",
+          "Title": "Ensure that logging of lock waits is enabled.",
+          "Description": "Lock waits are often an indication of poor performance and often an indicator of a potential denial of service vulnerability, therefore occurrences should be logged for analysis.\n",
+          "Message": "Database instance is not configured to log lock waits.",
+          "Namespace": "builtin.google.sql.google0020",
+          "Query": "data.builtin.google.sql.google0020.deny",
+          "Resolution": "Enable lock wait logging.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0020",
+          "References": [
+            "https://www.postgresql.org/docs/13/runtime-config-logging.html#GUC-LOG-LOCK-WAITS",
+            "https://avd.aquasec.com/misconfig/gcp-0020"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.shop",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 15,
+            "EndLine": 38,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "resource \"google_sql_database_instance\" \"shop\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "  name             = \"shop-postgres\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"shop-postgres\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "  region           = \"us-central1\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;37m\"us-central1\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "    tier = \"db-custom-2-7680\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;37m\"db-custom-2-7680\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 24,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0022",
+          "Title": "Ensure that logging of disconnections is enabled.",
+          "Description": "Logging disconnections provides useful diagnostic data such as session length, which can identify performance issues in an application and potential DoS vectors.\n",
+          "Message": "Database instance is not configured to log disconnections.",
+          "Namespace": "builtin.google.sql.google0022",
+          "Query": "data.builtin.google.sql.google0022.deny",
+          "Resolution": "Enable disconnection logging.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0022",
+          "References": [
+            "https://www.postgresql.org/docs/13/runtime-config-logging.html#GUC-LOG-DISCONNECTIONS",
+            "https://avd.aquasec.com/misconfig/gcp-0022"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.shop",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 15,
+            "EndLine": 38,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "resource \"google_sql_database_instance\" \"shop\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "  name             = \"shop-postgres\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"shop-postgres\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "  region           = \"us-central1\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;37m\"us-central1\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "    tier = \"db-custom-2-7680\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;37m\"db-custom-2-7680\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 24,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0024",
+          "Title": "Enable automated backups to recover from data-loss",
+          "Description": "Automated backups are not enabled by default. Backups are an easy way to restore data in a corruption or data-loss scenario.\n",
+          "Message": "Database instance does not have backups enabled.",
+          "Namespace": "builtin.google.sql.google0024",
+          "Query": "data.builtin.google.sql.google0024.deny",
+          "Resolution": "Enable automated backups",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0024",
+          "References": [
+            "https://cloud.google.com/sql/docs/mysql/backup-recovery/backups",
+            "https://avd.aquasec.com/misconfig/gcp-0024"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.shop",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 33,
+            "EndLine": 33,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "resource \"google_sql_database_instance\" \"shop\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "      enabled = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 37,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 38,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "backup_configuration",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 32,
+                  "EndLine": 34
+                }
+              },
+              {
+                "Resource": "settings",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 20,
+                  "EndLine": 35
+                }
+              },
+              {
+                "Resource": "google_sql_database_instance.shop",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 15,
+                  "EndLine": 38
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0025",
+          "Title": "Ensure that logging of checkpoints is enabled.",
+          "Description": "Logging checkpoints provides useful diagnostic data, which can identify performance issues in an application and potential DoS vectors.\n",
+          "Message": "Database instance is not configured to log checkpoints.",
+          "Namespace": "builtin.google.sql.google0025",
+          "Query": "data.builtin.google.sql.google0025.deny",
+          "Resolution": "Enable checkpoints logging.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0025",
+          "References": [
+            "https://www.postgresql.org/docs/13/runtime-config-logging.html#GUC-LOG-CHECKPOINTS",
+            "https://avd.aquasec.com/misconfig/gcp-0025"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.shop",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 15,
+            "EndLine": 38,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "resource \"google_sql_database_instance\" \"shop\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "  name             = \"shop-postgres\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"shop-postgres\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "  region           = \"us-central1\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;37m\"us-central1\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "    tier = \"db-custom-2-7680\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;37m\"db-custom-2-7680\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 24,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

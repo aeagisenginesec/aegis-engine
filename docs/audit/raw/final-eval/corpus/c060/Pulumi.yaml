@@ -1,0 +1,45 @@
+name: app-secrets
+runtime: yaml
+description: App secrets vault. RBAC-only and private, but purge protection was skipped.
+template:
+  configuration:
+    location:
+      type: String
+      default: westeurope
+    adminObjectId:
+      type: String
+  variables:
+    rgName: rg-app-prod
+    vaultName: appsecretsvault
+  resources:
+    resourceGroup:
+      type: azure-native:resources:ResourceGroup
+      properties:
+        resourceGroupName: ${rgName}
+        location: ${location}
+    vault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: ${vaultName}
+        resourceGroupName: ${resourceGroup.name}
+        location: ${location}
+        properties:
+          tenantId: ${tenantId}
+          sku:
+            family: A
+            name: standard
+          enableSoftDelete: true
+          enablePurgeProtection: false
+          enableRbacAuthorization: true
+          publicNetworkAccess: Disabled
+          networkAcls:
+            bypass: None
+            defaultAction: Deny
+    secretsAdmin:
+      type: azure-native:authorization:RoleAssignment
+      properties:
+        principalId: ${adminObjectId}
+        roleDefinitionId: /providers/Microsoft.Authorization/roleDefinitions/00482a5a-887f-4fb3-b363-3b7fe8e74483
+        scope: ${vault.id}
+  outputs:
+    vaultUri: ${vault.properties.vaultUri}

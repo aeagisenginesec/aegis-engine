@@ -1,0 +1,1246 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security group and rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "description",
+                        "egress/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"bastion\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name        = \"bastion-open\"\n"
+                    ],
+                    [
+                        16,
+                        "  description = \"Bastion host security group\"\n"
+                    ],
+                    [
+                        17,
+                        "  vpc_id      = \"vpc-0a1b2c3d4e5f60718\"\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  ingress {\n"
+                    ],
+                    [
+                        20,
+                        "    description = \"SSH from anywhere\"\n"
+                    ],
+                    [
+                        21,
+                        "    from_port   = 22\n"
+                    ],
+                    [
+                        22,
+                        "    to_port     = 22\n"
+                    ],
+                    [
+                        23,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        24,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        25,
+                        "  }\n"
+                    ],
+                    [
+                        26,
+                        "\n"
+                    ],
+                    [
+                        27,
+                        "  ingress {\n"
+                    ],
+                    [
+                        28,
+                        "    description = \"RDP from anywhere\"\n"
+                    ],
+                    [
+                        29,
+                        "    from_port   = 3389\n"
+                    ],
+                    [
+                        30,
+                        "    to_port     = 3389\n"
+                    ],
+                    [
+                        31,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        32,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        33,
+                        "  }\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  egress {\n"
+                    ],
+                    [
+                        36,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        37,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        38,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        39,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        40,
+                        "  }\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  tags = {\n"
+                    ],
+                    [
+                        43,
+                        "    Name = \"bastion-open\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "file_line_range": [
+                    14,
+                    45
+                ],
+                "resource": "aws_security_group.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "bastion-open"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_382",
+                "bc_check_id": "BC_AWS_IAM_93",
+                "check_name": "Ensure no security groups allow egress from 0.0.0.0:0 to port -1",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]/from_port",
+                        "egress/[0]/to_port",
+                        "egress/[0]/cidr_blocks",
+                        "egress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"bastion\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name        = \"bastion-open\"\n"
+                    ],
+                    [
+                        16,
+                        "  description = \"Bastion host security group\"\n"
+                    ],
+                    [
+                        17,
+                        "  vpc_id      = \"vpc-0a1b2c3d4e5f60718\"\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  ingress {\n"
+                    ],
+                    [
+                        20,
+                        "    description = \"SSH from anywhere\"\n"
+                    ],
+                    [
+                        21,
+                        "    from_port   = 22\n"
+                    ],
+                    [
+                        22,
+                        "    to_port     = 22\n"
+                    ],
+                    [
+                        23,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        24,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        25,
+                        "  }\n"
+                    ],
+                    [
+                        26,
+                        "\n"
+                    ],
+                    [
+                        27,
+                        "  ingress {\n"
+                    ],
+                    [
+                        28,
+                        "    description = \"RDP from anywhere\"\n"
+                    ],
+                    [
+                        29,
+                        "    from_port   = 3389\n"
+                    ],
+                    [
+                        30,
+                        "    to_port     = 3389\n"
+                    ],
+                    [
+                        31,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        32,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        33,
+                        "  }\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  egress {\n"
+                    ],
+                    [
+                        36,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        37,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        38,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        39,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        40,
+                        "  }\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  tags = {\n"
+                    ],
+                    [
+                        43,
+                        "    Name = \"bastion-open\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "file_line_range": [
+                    14,
+                    45
+                ],
+                "resource": "aws_security_group.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedEgressAny",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "bastion-open"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_24",
+                "bc_check_id": "BC_AWS_NETWORKING_1",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ingress/[0]/from_port",
+                        "ingress/[0]/to_port",
+                        "ingress/[0]/cidr_blocks",
+                        "ingress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"bastion\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name        = \"bastion-open\"\n"
+                    ],
+                    [
+                        16,
+                        "  description = \"Bastion host security group\"\n"
+                    ],
+                    [
+                        17,
+                        "  vpc_id      = \"vpc-0a1b2c3d4e5f60718\"\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  ingress {\n"
+                    ],
+                    [
+                        20,
+                        "    description = \"SSH from anywhere\"\n"
+                    ],
+                    [
+                        21,
+                        "    from_port   = 22\n"
+                    ],
+                    [
+                        22,
+                        "    to_port     = 22\n"
+                    ],
+                    [
+                        23,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        24,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        25,
+                        "  }\n"
+                    ],
+                    [
+                        26,
+                        "\n"
+                    ],
+                    [
+                        27,
+                        "  ingress {\n"
+                    ],
+                    [
+                        28,
+                        "    description = \"RDP from anywhere\"\n"
+                    ],
+                    [
+                        29,
+                        "    from_port   = 3389\n"
+                    ],
+                    [
+                        30,
+                        "    to_port     = 3389\n"
+                    ],
+                    [
+                        31,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        32,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        33,
+                        "  }\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  egress {\n"
+                    ],
+                    [
+                        36,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        37,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        38,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        39,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        40,
+                        "  }\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  tags = {\n"
+                    ],
+                    [
+                        43,
+                        "    Name = \"bastion-open\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "file_line_range": [
+                    14,
+                    45
+                ],
+                "resource": "aws_security_group.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress22",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "bastion-open"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_25",
+                "bc_check_id": "BC_AWS_NETWORKING_2",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ingress/[1]/from_port",
+                        "ingress/[1]/to_port",
+                        "ingress/[1]/cidr_blocks",
+                        "ingress/[1]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"bastion\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name        = \"bastion-open\"\n"
+                    ],
+                    [
+                        16,
+                        "  description = \"Bastion host security group\"\n"
+                    ],
+                    [
+                        17,
+                        "  vpc_id      = \"vpc-0a1b2c3d4e5f60718\"\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  ingress {\n"
+                    ],
+                    [
+                        20,
+                        "    description = \"SSH from anywhere\"\n"
+                    ],
+                    [
+                        21,
+                        "    from_port   = 22\n"
+                    ],
+                    [
+                        22,
+                        "    to_port     = 22\n"
+                    ],
+                    [
+                        23,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        24,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        25,
+                        "  }\n"
+                    ],
+                    [
+                        26,
+                        "\n"
+                    ],
+                    [
+                        27,
+                        "  ingress {\n"
+                    ],
+                    [
+                        28,
+                        "    description = \"RDP from anywhere\"\n"
+                    ],
+                    [
+                        29,
+                        "    from_port   = 3389\n"
+                    ],
+                    [
+                        30,
+                        "    to_port     = 3389\n"
+                    ],
+                    [
+                        31,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        32,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        33,
+                        "  }\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  egress {\n"
+                    ],
+                    [
+                        36,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        37,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        38,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        39,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        40,
+                        "  }\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  tags = {\n"
+                    ],
+                    [
+                        43,
+                        "    Name = \"bastion-open\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "file_line_range": [
+                    14,
+                    45
+                ],
+                "resource": "aws_security_group.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress3389",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "bastion-open"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_126",
+                "bc_check_id": "BC_AWS_LOGGING_26",
+                "check_name": "Ensure that detailed monitoring is enabled for EC2 instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "monitoring"
+                    ]
+                },
+                "code_block": [
+                    [
+                        47,
+                        "resource \"aws_instance\" \"bastion\" {\n"
+                    ],
+                    [
+                        48,
+                        "  ami                    = \"ami-0c55b159cbfafe1f0\"\n"
+                    ],
+                    [
+                        49,
+                        "  instance_type          = \"t3.micro\"\n"
+                    ],
+                    [
+                        50,
+                        "  vpc_security_group_ids = [aws_security_group.bastion.id]\n"
+                    ],
+                    [
+                        51,
+                        "\n"
+                    ],
+                    [
+                        52,
+                        "  root_block_device {\n"
+                    ],
+                    [
+                        53,
+                        "    volume_size = 30\n"
+                    ],
+                    [
+                        54,
+                        "    volume_type = \"gp3\"\n"
+                    ],
+                    [
+                        55,
+                        "    encrypted   = false\n"
+                    ],
+                    [
+                        56,
+                        "  }\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "  tags = {\n"
+                    ],
+                    [
+                        59,
+                        "    Name = \"bastion-host\"\n"
+                    ],
+                    [
+                        60,
+                        "  }\n"
+                    ],
+                    [
+                        61,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "file_line_range": [
+                    47,
+                    61
+                ],
+                "resource": "aws_instance.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EC2DetailedMonitoringEnabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "bastion-host"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-detailed-monitoring-is-enabled-for-ec2-instances",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_135",
+                "bc_check_id": "BC_AWS_GENERAL_68",
+                "check_name": "Ensure that EC2 is EBS optimized",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ebs_optimized"
+                    ]
+                },
+                "code_block": [
+                    [
+                        47,
+                        "resource \"aws_instance\" \"bastion\" {\n"
+                    ],
+                    [
+                        48,
+                        "  ami                    = \"ami-0c55b159cbfafe1f0\"\n"
+                    ],
+                    [
+                        49,
+                        "  instance_type          = \"t3.micro\"\n"
+                    ],
+                    [
+                        50,
+                        "  vpc_security_group_ids = [aws_security_group.bastion.id]\n"
+                    ],
+                    [
+                        51,
+                        "\n"
+                    ],
+                    [
+                        52,
+                        "  root_block_device {\n"
+                    ],
+                    [
+                        53,
+                        "    volume_size = 30\n"
+                    ],
+                    [
+                        54,
+                        "    volume_type = \"gp3\"\n"
+                    ],
+                    [
+                        55,
+                        "    encrypted   = false\n"
+                    ],
+                    [
+                        56,
+                        "  }\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "  tags = {\n"
+                    ],
+                    [
+                        59,
+                        "    Name = \"bastion-host\"\n"
+                    ],
+                    [
+                        60,
+                        "  }\n"
+                    ],
+                    [
+                        61,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "file_line_range": [
+                    47,
+                    61
+                ],
+                "resource": "aws_instance.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EC2EBSOptimized",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "bastion-host"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-ec2-is-ebs-optimized",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_79",
+                "bc_check_id": "BC_AWS_GENERAL_31",
+                "check_name": "Ensure Instance Metadata Service Version 1 is not enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "metadata_options/[0]/http_tokens"
+                    ]
+                },
+                "code_block": [
+                    [
+                        47,
+                        "resource \"aws_instance\" \"bastion\" {\n"
+                    ],
+                    [
+                        48,
+                        "  ami                    = \"ami-0c55b159cbfafe1f0\"\n"
+                    ],
+                    [
+                        49,
+                        "  instance_type          = \"t3.micro\"\n"
+                    ],
+                    [
+                        50,
+                        "  vpc_security_group_ids = [aws_security_group.bastion.id]\n"
+                    ],
+                    [
+                        51,
+                        "\n"
+                    ],
+                    [
+                        52,
+                        "  root_block_device {\n"
+                    ],
+                    [
+                        53,
+                        "    volume_size = 30\n"
+                    ],
+                    [
+                        54,
+                        "    volume_type = \"gp3\"\n"
+                    ],
+                    [
+                        55,
+                        "    encrypted   = false\n"
+                    ],
+                    [
+                        56,
+                        "  }\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "  tags = {\n"
+                    ],
+                    [
+                        59,
+                        "    Name = \"bastion-host\"\n"
+                    ],
+                    [
+                        60,
+                        "  }\n"
+                    ],
+                    [
+                        61,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "file_line_range": [
+                    47,
+                    61
+                ],
+                "resource": "aws_instance.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IMDSv1Disabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "bastion-host"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_8",
+                "bc_check_id": "BC_AWS_GENERAL_13",
+                "check_name": "Ensure all data stored in the Launch configuration or instance Elastic Blocks Store is securely encrypted",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "root_block_device",
+                        "ebs_block_device"
+                    ]
+                },
+                "code_block": [
+                    [
+                        47,
+                        "resource \"aws_instance\" \"bastion\" {\n"
+                    ],
+                    [
+                        48,
+                        "  ami                    = \"ami-0c55b159cbfafe1f0\"\n"
+                    ],
+                    [
+                        49,
+                        "  instance_type          = \"t3.micro\"\n"
+                    ],
+                    [
+                        50,
+                        "  vpc_security_group_ids = [aws_security_group.bastion.id]\n"
+                    ],
+                    [
+                        51,
+                        "\n"
+                    ],
+                    [
+                        52,
+                        "  root_block_device {\n"
+                    ],
+                    [
+                        53,
+                        "    volume_size = 30\n"
+                    ],
+                    [
+                        54,
+                        "    volume_type = \"gp3\"\n"
+                    ],
+                    [
+                        55,
+                        "    encrypted   = false\n"
+                    ],
+                    [
+                        56,
+                        "  }\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "  tags = {\n"
+                    ],
+                    [
+                        59,
+                        "    Name = \"bastion-host\"\n"
+                    ],
+                    [
+                        60,
+                        "  }\n"
+                    ],
+                    [
+                        61,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "file_line_range": [
+                    47,
+                    61
+                ],
+                "resource": "aws_instance.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LaunchConfigurationEBSEncryption",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "bastion-host"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-13",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_41",
+                "bc_check_id": "BC_AWS_IAM_69",
+                "check_name": "Ensure an IAM role is attached to EC2 instance",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_instance": {
+                            "bastion": {
+                                "__end_line__": 61,
+                                "__start_line__": 47,
+                                "ami": [
+                                    "ami-0c55b159cbfafe1f0"
+                                ],
+                                "instance_type": [
+                                    "t3.micro"
+                                ],
+                                "root_block_device": [
+                                    {
+                                        "encrypted": [
+                                            false
+                                        ],
+                                        "volume_size": [
+                                            30
+                                        ],
+                                        "volume_type": [
+                                            "gp3"
+                                        ]
+                                    }
+                                ],
+                                "tags": [
+                                    {
+                                        "Name": "bastion-host"
+                                    }
+                                ],
+                                "vpc_security_group_ids": [
+                                    [
+                                        "aws_security_group.bastion.id"
+                                    ]
+                                ],
+                                "__address__": "aws_instance.bastion",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "iam_instance_profile"
+                    ]
+                },
+                "code_block": [
+                    [
+                        47,
+                        "resource \"aws_instance\" \"bastion\" {\n"
+                    ],
+                    [
+                        48,
+                        "  ami                    = \"ami-0c55b159cbfafe1f0\"\n"
+                    ],
+                    [
+                        49,
+                        "  instance_type          = \"t3.micro\"\n"
+                    ],
+                    [
+                        50,
+                        "  vpc_security_group_ids = [aws_security_group.bastion.id]\n"
+                    ],
+                    [
+                        51,
+                        "\n"
+                    ],
+                    [
+                        52,
+                        "  root_block_device {\n"
+                    ],
+                    [
+                        53,
+                        "    volume_size = 30\n"
+                    ],
+                    [
+                        54,
+                        "    volume_type = \"gp3\"\n"
+                    ],
+                    [
+                        55,
+                        "    encrypted   = false\n"
+                    ],
+                    [
+                        56,
+                        "  }\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "  tags = {\n"
+                    ],
+                    [
+                        59,
+                        "    Name = \"bastion-host\"\n"
+                    ],
+                    [
+                        60,
+                        "  }\n"
+                    ],
+                    [
+                        61,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf",
+                "file_line_range": [
+                    47,
+                    61
+                ],
+                "resource": "aws_instance.bastion",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "bastion-host"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-an-iam-role-is-attached-to-ec2-instance",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t003/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 6,
+        "failed": 9,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

@@ -1,0 +1,40 @@
+projects=205 concepts=416
+aegis: adjudicated eff=1324 (FP=670 TP-missed=654 hygiene=28 uncertain=3)
+checkov: adjudicated eff=1036 (FP=565 TP-missed=471 hygiene=19 uncertain=4)
+kics: adjudicated eff=400 (FP=250 TP-missed=150 hygiene=0 uncertain=0)
+trivy: adjudicated eff=383 (FP=32 TP-missed=351 hygiene=14 uncertain=3)
+full-adjudication scanners: ['aegis', 'checkov']
+
+=== per-scanner metrics (point + 95% CI) ===
+aegis: F1=0.367 [0.323,0.411] P=0.267 R=0.587 FP=0.733 [0.690,0.773] FN=0.413
+checkov: F1=0.245 [0.207,0.283] P=0.195 R=0.329 FP=0.805 [0.770,0.838] FN=0.671
+kics: F1=0.144 [0.119,0.170] P=0.107 R=0.221 FP=0.893 [0.873,0.913] FN=0.779
+trivy: F1=0.382 [0.326,0.437] P=0.658 R=0.269 FP=0.342 [0.250,0.432] FN=0.731
+
+=== pairwise differences (95% CI) ===
+f1_aegis-checkov: [+0.0857,+0.1591] mean=+0.1222
+f1_aegis-kics: [+0.1806,+0.2653] mean=+0.2233
+f1_aegis-trivy: [-0.0728,+0.0419] mean=-0.0148
+fp_checkov-aegis: [+0.0424,+0.1035] mean=+0.0721
+fp_kics-aegis: [+0.1226,+0.2010] mean=+0.1609
+fp_trivy-aegis: [-0.4834,-0.3017] mean=-0.3917
+
+=== timing (median of per-project medians, s) ===
+aegis: 0.05572994099998141
+checkov: 6.3629295665004975
+kics: 28.913631496500102
+trivy: 6.596555520000038
+
+=== decision ===
+{
+ "a_f1": false,
+ "b_fp_pass": true,
+ "b_fp_tie": false,
+ "c_speed": true,
+ "c_ratios": {
+  "checkov": 114.17434600375084,
+  "kics": 518.8168330648286,
+  "trivy": 118.36645439840387
+ },
+ "verdict": "NOT YET"
+}

@@ -1,0 +1,50 @@
+name: dev-network
+runtime: yaml
+description: Dev VNet with an RDP rule so contractors can reach the test VMs.
+template:
+  configuration:
+    location:
+      type: String
+      default: westeurope
+  variables:
+    rgName: rg-dev-network
+    vnetName: dev-vnet
+    nsgName: dev-nsg
+  resources:
+    resourceGroup:
+      type: azure-native:resources:ResourceGroup
+      properties:
+        resourceGroupName: ${rgName}
+        location: ${location}
+    nsg:
+      type: azure-native:network:NetworkSecurityGroup
+      properties:
+        networkSecurityGroupName: ${nsgName}
+        resourceGroupName: ${resourceGroup.name}
+        location: ${location}
+        securityRules:
+          - name: Allow-RDP-Any
+            priority: 100
+            direction: Inbound
+            access: Allow
+            protocol: Tcp
+            sourcePortRange: "*"
+            destinationPortRange: "3389"
+            sourceAddressPrefix: "*"
+            destinationAddressPrefix: "*"
+    vnet:
+      type: azure-native:network:VirtualNetwork
+      properties:
+        virtualNetworkName: ${vnetName}
+        resourceGroupName: ${resourceGroup.name}
+        location: ${location}
+        addressSpace:
+          addressPrefixes:
+            - 10.30.0.0/16
+        subnets:
+          - name: dev-subnet
+            addressPrefix: 10.30.0.0/24
+            networkSecurityGroup:
+              id: ${nsg.id}
+  outputs:
+    vnetId: ${vnet.id}

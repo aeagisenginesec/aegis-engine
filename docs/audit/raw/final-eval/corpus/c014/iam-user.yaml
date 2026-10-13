@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Break-glass style admin user for the on-call engineer.
+
+Parameters:
+  UserName:
+    Type: String
+    Default: oncall-admin
+  InitialPassword:
+    Type: String
+    NoEcho: true
+
+Resources:
+  OnCallUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Ref UserName
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+  OnCallLoginProfile:
+    Type: AWS::IAM::UserLoginProfile
+    Properties:
+      UserName: !Ref OnCallUser
+      Password: !Ref InitialPassword
+      PasswordResetRequired: false
+
+  OnCallAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref OnCallUser
+      Status: Active
+
+Outputs:
+  UserArn:
+    Value: !GetAtt OnCallUser.Arn

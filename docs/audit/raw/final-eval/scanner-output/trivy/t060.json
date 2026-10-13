@@ -1,0 +1,210 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1329e-51de-7cd4-bcd2-052027db8ca9",
+  "CreatedAt": "2026-10-13T00:16:38.878845245Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t060",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 62,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 2
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0003",
+          "Title": "IAM granted directly to user.",
+          "Description": "Permissions should not be directly granted to users, you identify roles that contain the appropriate permissions, and then grant those roles to the user.\n\nGranting permissions to users quickly become unwieldy and complex to make large scale changes to remove access to a particular resource.\n\nPermissions should be granted on roles, groups, services accounts instead.\n",
+          "Message": "Permissions are granted directly to a user.",
+          "Namespace": "builtin.google.iam.google0003",
+          "Query": "data.builtin.google.iam.google0003.deny",
+          "Resolution": "Roles should be granted permissions and assigned to users",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0003",
+          "References": [
+            "https://cloud.google.com/iam/docs/overview#permissions",
+            "https://cloud.google.com/resource-manager/reference/rest/v1/projects/setIamPolicy",
+            "https://avd.aquasec.com/misconfig/gcp-0003"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_project_iam_member.analyst",
+            "Provider": "Google",
+            "Service": "iam",
+            "StartLine": 29,
+            "EndLine": 29,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 26,
+                  "Content": "resource \"google_project_iam_member\" \"analyst\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_project_iam_member\"\u001b[0m \u001b[38;5;37m\"analyst\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  project = \"acme-prod-418201\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mproject\u001b[0m = \u001b[38;5;37m\"acme-prod-418201\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  role    = google_project_iam_custom_role.logviewer.id",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mrole\u001b[0m    = google_project_iam_custom_role.logviewer.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "  member  = \"user:analyst@example.com\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mmember\u001b[0m  = \u001b[38;5;37m\"user:analyst@example.com\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 30,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "google_project_iam_member.analyst",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 26,
+                  "EndLine": 30
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0003",
+          "Title": "IAM granted directly to user.",
+          "Description": "Permissions should not be directly granted to users, you identify roles that contain the appropriate permissions, and then grant those roles to the user.\n\nGranting permissions to users quickly become unwieldy and complex to make large scale changes to remove access to a particular resource.\n\nPermissions should be granted on roles, groups, services accounts instead.\n",
+          "Message": "Permissions are granted directly to a user.",
+          "Namespace": "builtin.google.iam.google0003",
+          "Query": "data.builtin.google.iam.google0003.deny",
+          "Resolution": "Roles should be granted permissions and assigned to users",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0003",
+          "References": [
+            "https://cloud.google.com/iam/docs/overview#permissions",
+            "https://cloud.google.com/resource-manager/reference/rest/v1/projects/setIamPolicy",
+            "https://avd.aquasec.com/misconfig/gcp-0003"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_project_iam_member.dev_editor",
+            "Provider": "Google",
+            "Service": "iam",
+            "StartLine": 35,
+            "EndLine": 35,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 32,
+                  "Content": "resource \"google_project_iam_member\" \"dev_editor\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_project_iam_member\"\u001b[0m \u001b[38;5;37m\"dev_editor\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "  project = \"acme-prod-418201\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mproject\u001b[0m = \u001b[38;5;37m\"acme-prod-418201\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "  role    = \"roles/editor\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mrole\u001b[0m    = \u001b[38;5;37m\"roles/editor\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
+                  "Content": "  member  = \"user:dev@example.com\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mmember\u001b[0m  = \u001b[38;5;37m\"user:dev@example.com\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 36,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "google_project_iam_member.dev_editor",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 32,
+                  "EndLine": 36
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,418 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security groups rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "  AnalyticsDbSg:\n"
+                    ],
+                    [
+                        14,
+                        "    Type: AWS::EC2::SecurityGroup\n"
+                    ],
+                    [
+                        15,
+                        "    Properties:\n"
+                    ],
+                    [
+                        16,
+                        "      GroupDescription: Analytics database\n"
+                    ],
+                    [
+                        17,
+                        "      SecurityGroupIngress:\n"
+                    ],
+                    [
+                        18,
+                        "        - IpProtocol: tcp\n"
+                    ],
+                    [
+                        19,
+                        "          FromPort: 3306\n"
+                    ],
+                    [
+                        20,
+                        "          ToPort: 3306\n"
+                    ],
+                    [
+                        21,
+                        "          CidrIp: 0.0.0.0/0\n"
+                    ]
+                ],
+                "file_path": "/aurora.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "file_line_range": [
+                    13,
+                    21
+                ],
+                "resource": "AWS::EC2::SecurityGroup.AnalyticsDbSg",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_96",
+                "bc_check_id": "BC_AWS_GENERAL_38",
+                "check_name": "Ensure all data stored in Aurora is securely encrypted at rest",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/StorageEncrypted"
+                    ]
+                },
+                "code_block": [
+                    [
+                        23,
+                        "  AnalyticsCluster:\n"
+                    ],
+                    [
+                        24,
+                        "    Type: AWS::RDS::DBCluster\n"
+                    ],
+                    [
+                        25,
+                        "    Properties:\n"
+                    ],
+                    [
+                        26,
+                        "      Engine: aurora-mysql\n"
+                    ],
+                    [
+                        27,
+                        "      EngineVersion: '8.0.mysql_aurora.3.05.2'\n"
+                    ],
+                    [
+                        28,
+                        "      MasterUsername: root\n"
+                    ],
+                    [
+                        29,
+                        "      MasterUserPassword: !Ref MasterPassword\n"
+                    ],
+                    [
+                        30,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        31,
+                        "      BackupRetentionPeriod: 1\n"
+                    ],
+                    [
+                        32,
+                        "      Port: 3306\n"
+                    ],
+                    [
+                        33,
+                        "      VpcSecurityGroupIds:\n"
+                    ],
+                    [
+                        34,
+                        "        - !Ref AnalyticsDbSg\n"
+                    ]
+                ],
+                "file_path": "/aurora.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "file_line_range": [
+                    23,
+                    34
+                ],
+                "resource": "AWS::RDS::DBCluster.AnalyticsCluster",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.AuroraEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-38",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_162",
+                "bc_check_id": "BC_AWS_IAM_66",
+                "check_name": "Ensure RDS cluster has IAM authentication enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/EnableIAMDatabaseAuthentication"
+                    ]
+                },
+                "code_block": [
+                    [
+                        23,
+                        "  AnalyticsCluster:\n"
+                    ],
+                    [
+                        24,
+                        "    Type: AWS::RDS::DBCluster\n"
+                    ],
+                    [
+                        25,
+                        "    Properties:\n"
+                    ],
+                    [
+                        26,
+                        "      Engine: aurora-mysql\n"
+                    ],
+                    [
+                        27,
+                        "      EngineVersion: '8.0.mysql_aurora.3.05.2'\n"
+                    ],
+                    [
+                        28,
+                        "      MasterUsername: root\n"
+                    ],
+                    [
+                        29,
+                        "      MasterUserPassword: !Ref MasterPassword\n"
+                    ],
+                    [
+                        30,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        31,
+                        "      BackupRetentionPeriod: 1\n"
+                    ],
+                    [
+                        32,
+                        "      Port: 3306\n"
+                    ],
+                    [
+                        33,
+                        "      VpcSecurityGroupIds:\n"
+                    ],
+                    [
+                        34,
+                        "        - !Ref AnalyticsDbSg\n"
+                    ]
+                ],
+                "file_path": "/aurora.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "file_line_range": [
+                    23,
+                    34
+                ],
+                "resource": "AWS::RDS::DBCluster.AnalyticsCluster",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSClusterIAMAuthentication",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-rds-cluster-has-iam-authentication-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_118",
+                "bc_check_id": "BC_AWS_LOGGING_28",
+                "check_name": "Ensure that enhanced monitoring is enabled for Amazon RDS instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/MonitoringInterval"
+                    ]
+                },
+                "code_block": [
+                    [
+                        36,
+                        "  AnalyticsInstance:\n"
+                    ],
+                    [
+                        37,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        38,
+                        "    Properties:\n"
+                    ],
+                    [
+                        39,
+                        "      DBClusterIdentifier: !Ref AnalyticsCluster\n"
+                    ],
+                    [
+                        40,
+                        "      DBInstanceClass: !Ref DBClusterClass\n"
+                    ],
+                    [
+                        41,
+                        "      Engine: aurora-mysql\n"
+                    ],
+                    [
+                        42,
+                        "      PubliclyAccessible: true\n"
+                    ]
+                ],
+                "file_path": "/aurora.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "file_line_range": [
+                    36,
+                    42
+                ],
+                "resource": "AWS::RDS::DBInstance.AnalyticsInstance",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSEnhancedMonitorEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DBInstanceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "DBClusterClass",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_17",
+                "bc_check_id": "BC_AWS_PUBLIC_2",
+                "check_name": "Ensure all data stored in RDS is not publicly accessible",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/PubliclyAccessible"
+                    ]
+                },
+                "code_block": [
+                    [
+                        36,
+                        "  AnalyticsInstance:\n"
+                    ],
+                    [
+                        37,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        38,
+                        "    Properties:\n"
+                    ],
+                    [
+                        39,
+                        "      DBClusterIdentifier: !Ref AnalyticsCluster\n"
+                    ],
+                    [
+                        40,
+                        "      DBInstanceClass: !Ref DBClusterClass\n"
+                    ],
+                    [
+                        41,
+                        "      Engine: aurora-mysql\n"
+                    ],
+                    [
+                        42,
+                        "      PubliclyAccessible: true\n"
+                    ]
+                ],
+                "file_path": "/aurora.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                "file_line_range": [
+                    36,
+                    42
+                ],
+                "resource": "AWS::RDS::DBInstance.AnalyticsInstance",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSPubliclyAccessible",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/public-policies/public-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DBInstanceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "DBClusterClass",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c017/aurora.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 4,
+        "failed": 5,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 3,
+        "checkov_version": "3.3.26"
+    }
+}

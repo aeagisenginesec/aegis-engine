@@ -1,0 +1,286 @@
+[
+    {
+        "check_type": "dockerfile",
+        "results": {
+            "failed_checks": [
+                {
+                    "check_id": "CKV_DOCKER_2",
+                    "bc_check_id": null,
+                    "check_name": "Ensure that HEALTHCHECK instructions have been added to container images",
+                    "check_result": {
+                        "result": "FAILED",
+                        "results_configuration": null
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "FROM debian:bookworm-slim\n"
+                        ],
+                        [
+                            2,
+                            "\n"
+                        ],
+                        [
+                            3,
+                            "ENV GITHUB_TOKEN=\"ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789\"\n"
+                        ],
+                        [
+                            4,
+                            "ENV DEBIAN_FRONTEND=noninteractive\n"
+                        ],
+                        [
+                            5,
+                            "\n"
+                        ],
+                        [
+                            6,
+                            "RUN apt-get update && apt-get install -y --no-install-recommends \\\n"
+                        ],
+                        [
+                            7,
+                            "    sudo \\\n"
+                        ],
+                        [
+                            8,
+                            "    openssh-client \\\n"
+                        ],
+                        [
+                            9,
+                            "    ca-certificates \\\n"
+                        ],
+                        [
+                            10,
+                            "    && echo \"appuser ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers \\\n"
+                        ],
+                        [
+                            11,
+                            "    && useradd -m -s /bin/bash appuser \\\n"
+                        ],
+                        [
+                            12,
+                            "    && chmod u+s /usr/bin/find\n"
+                        ],
+                        [
+                            13,
+                            "\n"
+                        ],
+                        [
+                            14,
+                            "WORKDIR /home/appuser/app\n"
+                        ],
+                        [
+                            15,
+                            "COPY --chown=appuser:appuser . .\n"
+                        ],
+                        [
+                            16,
+                            "\n"
+                        ],
+                        [
+                            17,
+                            "USER appuser\n"
+                        ],
+                        [
+                            18,
+                            "\n"
+                        ],
+                        [
+                            19,
+                            "EXPOSE 8080\n"
+                        ],
+                        [
+                            20,
+                            "\n"
+                        ],
+                        [
+                            21,
+                            "CMD [\"./run.sh\"]"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k008/Dockerfile",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k008/Dockerfile",
+                    "file_line_range": [
+                        1,
+                        21
+                    ],
+                    "resource": "/Dockerfile.",
+                    "evaluations": null,
+                    "check_class": "checkov.dockerfile.checks.HealthcheckExists",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": null,
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_DOCKER_1",
+                    "bc_check_id": null,
+                    "check_name": "Ensure that sudo isn't used",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "block_name_": "RUN",
+                            "block_type_": "resource",
+                            "file_path_": "/Dockerfile",
+                            "config_": {
+                                "content": "RUN apt-get update && apt-get install -y --no-install-recommends \\\n    sudo \\\n    openssh-client \\\n    ca-certificates \\\n    && echo \"appuser ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers \\\n    && useradd -m -s /bin/bash appuser \\\n    && chmod u+s /usr/bin/find\n",
+                                "value": "apt-get update && apt-get install -y --no-install-recommends     sudo     openssh-client     ca-certificates     && echo \"appuser ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers     && useradd -m -s /bin/bash appuser     && chmod u+s /usr/bin/find",
+                                "__startline__": 5,
+                                "__endline__": 11
+                            },
+                            "label_": "resource: RUN",
+                            "id_": "RUN",
+                            "source_": "Dockerfile",
+                            "content": "RUN apt-get update && apt-get install -y --no-install-recommends \\\n    sudo \\\n    openssh-client \\\n    ca-certificates \\\n    && echo \"appuser ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers \\\n    && useradd -m -s /bin/bash appuser \\\n    && chmod u+s /usr/bin/find\n",
+                            "value": "apt-get update && apt-get install -y --no-install-recommends     sudo     openssh-client     ca-certificates     && echo \"appuser ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers     && useradd -m -s /bin/bash appuser     && chmod u+s /usr/bin/find",
+                            "__startline__": 5,
+                            "__endline__": 11,
+                            "resource_type": "RUN",
+                            "hash": "393637d957495113c822a8724adab55248e24f3b56597f675d545dc802fcd42f"
+                        },
+                        "evaluated_keys": [
+                            "value"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            6,
+                            "RUN apt-get update && apt-get install -y --no-install-recommends \\\n"
+                        ],
+                        [
+                            7,
+                            "    sudo \\\n"
+                        ],
+                        [
+                            8,
+                            "    openssh-client \\\n"
+                        ],
+                        [
+                            9,
+                            "    ca-certificates \\\n"
+                        ],
+                        [
+                            10,
+                            "    && echo \"appuser ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers \\\n"
+                        ],
+                        [
+                            11,
+                            "    && useradd -m -s /bin/bash appuser \\\n"
+                        ],
+                        [
+                            12,
+                            "    && chmod u+s /usr/bin/find\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k008/Dockerfile",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k008/Dockerfile",
+                    "file_line_range": [
+                        6,
+                        12
+                    ],
+                    "resource": "/Dockerfile.RUN",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": null,
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                }
+            ]
+        },
+        "summary": {
+            "passed": 34,
+            "failed": 2,
+            "skipped": 0,
+            "parsing_errors": 0,
+            "resource_count": 1,
+            "checkov_version": "3.3.26"
+        }
+    },
+    {
+        "check_type": "secrets",
+        "results": {
+            "failed_checks": [
+                {
+                    "check_id": "CKV_SECRET_6",
+                    "bc_check_id": null,
+                    "check_name": "Base64 High Entropy String",
+                    "check_result": {
+                        "result": "FAILED"
+                    },
+                    "code_block": [
+                        [
+                            3,
+                            "ENV GITHUB_TOKEN=\"ghp_aB**********\"\n"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k008/Dockerfile",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k008/Dockerfile",
+                    "file_line_range": [
+                        3,
+                        4
+                    ],
+                    "resource": "bd82ca5baa312d951121a9e0d6a505e0ba94a398",
+                    "evaluations": null,
+                    "check_class": "",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": null,
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null,
+                    "validation_status": "Unavailable",
+                    "added_commit_hash": "",
+                    "removed_commit_hash": "",
+                    "added_by": "",
+                    "removed_date": "",
+                    "added_date": ""
+                }
+            ]
+        },
+        "summary": {
+            "passed": 0,
+            "failed": 1,
+            "skipped": 0,
+            "parsing_errors": 0,
+            "resource_count": 1,
+            "checkov_version": "3.3.26"
+        }
+    }
+]

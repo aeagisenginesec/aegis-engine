@@ -1,0 +1,1307 @@
+[
+    {
+        "check_type": "secrets",
+        "results": {
+            "failed_checks": [
+                {
+                    "check_id": "CKV_SECRET_6",
+                    "bc_check_id": "BC_GIT_6",
+                    "check_name": "Base64 High Entropy String",
+                    "check_result": {
+                        "result": "FAILED"
+                    },
+                    "code_block": [
+                        [
+                            45,
+                            "          STRIPE_API_KEY: sk_liv**********\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        45,
+                        46
+                    ],
+                    "resource": "c4be85db792c01cecbba8e1e7f698f847d6315e3",
+                    "evaluations": null,
+                    "check_class": "",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/secrets-policies/secrets-policy-index/git-secrets-6",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null,
+                    "validation_status": "Unavailable",
+                    "added_commit_hash": "",
+                    "removed_commit_hash": "",
+                    "added_by": "",
+                    "removed_date": "",
+                    "added_date": ""
+                }
+            ]
+        },
+        "summary": {
+            "passed": 0,
+            "failed": 1,
+            "skipped": 0,
+            "parsing_errors": 0,
+            "resource_count": 1,
+            "checkov_version": "3.3.26"
+        }
+    },
+    {
+        "check_type": "cloudformation",
+        "results": {
+            "failed_checks": [
+                {
+                    "check_id": "CKV_AWS_62",
+                    "bc_check_id": "BC_AWS_IAM_47",
+                    "check_name": "Ensure no IAM policies that allow full \"*-*\" administrative privileges are not created",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/Policies/[0]/PolicyDocument"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            13,
+                            "  WebhookRole:\n"
+                        ],
+                        [
+                            14,
+                            "    Type: AWS::IAM::Role\n"
+                        ],
+                        [
+                            15,
+                            "    Properties:\n"
+                        ],
+                        [
+                            16,
+                            "      AssumeRolePolicyDocument:\n"
+                        ],
+                        [
+                            17,
+                            "        Version: '2012-10-17'\n"
+                        ],
+                        [
+                            18,
+                            "        Statement:\n"
+                        ],
+                        [
+                            19,
+                            "          - Effect: Allow\n"
+                        ],
+                        [
+                            20,
+                            "            Principal:\n"
+                        ],
+                        [
+                            21,
+                            "              Service: lambda.amazonaws.com\n"
+                        ],
+                        [
+                            22,
+                            "            Action: sts:AssumeRole\n"
+                        ],
+                        [
+                            23,
+                            "      Policies:\n"
+                        ],
+                        [
+                            24,
+                            "        - PolicyName: allow-everything\n"
+                        ],
+                        [
+                            25,
+                            "          PolicyDocument:\n"
+                        ],
+                        [
+                            26,
+                            "            Version: '2012-10-17'\n"
+                        ],
+                        [
+                            27,
+                            "            Statement:\n"
+                        ],
+                        [
+                            28,
+                            "              - Effect: Allow\n"
+                        ],
+                        [
+                            29,
+                            "                Action: '*'\n"
+                        ],
+                        [
+                            30,
+                            "                Resource: '*'\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        13,
+                        30
+                    ],
+                    "resource": "AWS::IAM::Role.WebhookRole",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.IAMAdminPolicyDocument",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-iam-45",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_AWS_107",
+                    "bc_check_id": "BC_AWS_IAM_54",
+                    "check_name": "Ensure IAM policies does not allow credentials exposure",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/PolicyDocument/Statement/[0]/Action"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            13,
+                            "  WebhookRole:\n"
+                        ],
+                        [
+                            14,
+                            "    Type: AWS::IAM::Role\n"
+                        ],
+                        [
+                            15,
+                            "    Properties:\n"
+                        ],
+                        [
+                            16,
+                            "      AssumeRolePolicyDocument:\n"
+                        ],
+                        [
+                            17,
+                            "        Version: '2012-10-17'\n"
+                        ],
+                        [
+                            18,
+                            "        Statement:\n"
+                        ],
+                        [
+                            19,
+                            "          - Effect: Allow\n"
+                        ],
+                        [
+                            20,
+                            "            Principal:\n"
+                        ],
+                        [
+                            21,
+                            "              Service: lambda.amazonaws.com\n"
+                        ],
+                        [
+                            22,
+                            "            Action: sts:AssumeRole\n"
+                        ],
+                        [
+                            23,
+                            "      Policies:\n"
+                        ],
+                        [
+                            24,
+                            "        - PolicyName: allow-everything\n"
+                        ],
+                        [
+                            25,
+                            "          PolicyDocument:\n"
+                        ],
+                        [
+                            26,
+                            "            Version: '2012-10-17'\n"
+                        ],
+                        [
+                            27,
+                            "            Statement:\n"
+                        ],
+                        [
+                            28,
+                            "              - Effect: Allow\n"
+                        ],
+                        [
+                            29,
+                            "                Action: '*'\n"
+                        ],
+                        [
+                            30,
+                            "                Resource: '*'\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        13,
+                        30
+                    ],
+                    "resource": "AWS::IAM::Role.WebhookRole",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.IAMCredentialsExposure",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-do-not-allow-credentials-exposure",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_AWS_108",
+                    "bc_check_id": "BC_AWS_IAM_55",
+                    "check_name": "Ensure IAM policies does not allow data exfiltration",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/PolicyDocument/Statement/[0]/Action"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            13,
+                            "  WebhookRole:\n"
+                        ],
+                        [
+                            14,
+                            "    Type: AWS::IAM::Role\n"
+                        ],
+                        [
+                            15,
+                            "    Properties:\n"
+                        ],
+                        [
+                            16,
+                            "      AssumeRolePolicyDocument:\n"
+                        ],
+                        [
+                            17,
+                            "        Version: '2012-10-17'\n"
+                        ],
+                        [
+                            18,
+                            "        Statement:\n"
+                        ],
+                        [
+                            19,
+                            "          - Effect: Allow\n"
+                        ],
+                        [
+                            20,
+                            "            Principal:\n"
+                        ],
+                        [
+                            21,
+                            "              Service: lambda.amazonaws.com\n"
+                        ],
+                        [
+                            22,
+                            "            Action: sts:AssumeRole\n"
+                        ],
+                        [
+                            23,
+                            "      Policies:\n"
+                        ],
+                        [
+                            24,
+                            "        - PolicyName: allow-everything\n"
+                        ],
+                        [
+                            25,
+                            "          PolicyDocument:\n"
+                        ],
+                        [
+                            26,
+                            "            Version: '2012-10-17'\n"
+                        ],
+                        [
+                            27,
+                            "            Statement:\n"
+                        ],
+                        [
+                            28,
+                            "              - Effect: Allow\n"
+                        ],
+                        [
+                            29,
+                            "                Action: '*'\n"
+                        ],
+                        [
+                            30,
+                            "                Resource: '*'\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        13,
+                        30
+                    ],
+                    "resource": "AWS::IAM::Role.WebhookRole",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.IAMDataExfiltration",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-do-not-allow-data-exfiltration",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_AWS_109",
+                    "bc_check_id": "BC_AWS_IAM_56",
+                    "check_name": "Ensure IAM policies does not allow permissions management without constraints",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/PolicyDocument/Statement/[0]/Action"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            13,
+                            "  WebhookRole:\n"
+                        ],
+                        [
+                            14,
+                            "    Type: AWS::IAM::Role\n"
+                        ],
+                        [
+                            15,
+                            "    Properties:\n"
+                        ],
+                        [
+                            16,
+                            "      AssumeRolePolicyDocument:\n"
+                        ],
+                        [
+                            17,
+                            "        Version: '2012-10-17'\n"
+                        ],
+                        [
+                            18,
+                            "        Statement:\n"
+                        ],
+                        [
+                            19,
+                            "          - Effect: Allow\n"
+                        ],
+                        [
+                            20,
+                            "            Principal:\n"
+                        ],
+                        [
+                            21,
+                            "              Service: lambda.amazonaws.com\n"
+                        ],
+                        [
+                            22,
+                            "            Action: sts:AssumeRole\n"
+                        ],
+                        [
+                            23,
+                            "      Policies:\n"
+                        ],
+                        [
+                            24,
+                            "        - PolicyName: allow-everything\n"
+                        ],
+                        [
+                            25,
+                            "          PolicyDocument:\n"
+                        ],
+                        [
+                            26,
+                            "            Version: '2012-10-17'\n"
+                        ],
+                        [
+                            27,
+                            "            Statement:\n"
+                        ],
+                        [
+                            28,
+                            "              - Effect: Allow\n"
+                        ],
+                        [
+                            29,
+                            "                Action: '*'\n"
+                        ],
+                        [
+                            30,
+                            "                Resource: '*'\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        13,
+                        30
+                    ],
+                    "resource": "AWS::IAM::Role.WebhookRole",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.IAMPermissionsManagement",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-do-not-allow-permissions-management-resource-exposure-without-constraint",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_AWS_110",
+                    "bc_check_id": "BC_AWS_IAM_64",
+                    "check_name": "Ensure IAM policies does not allow privilege escalation",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/PolicyDocument/Statement/[0]/Action"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            13,
+                            "  WebhookRole:\n"
+                        ],
+                        [
+                            14,
+                            "    Type: AWS::IAM::Role\n"
+                        ],
+                        [
+                            15,
+                            "    Properties:\n"
+                        ],
+                        [
+                            16,
+                            "      AssumeRolePolicyDocument:\n"
+                        ],
+                        [
+                            17,
+                            "        Version: '2012-10-17'\n"
+                        ],
+                        [
+                            18,
+                            "        Statement:\n"
+                        ],
+                        [
+                            19,
+                            "          - Effect: Allow\n"
+                        ],
+                        [
+                            20,
+                            "            Principal:\n"
+                        ],
+                        [
+                            21,
+                            "              Service: lambda.amazonaws.com\n"
+                        ],
+                        [
+                            22,
+                            "            Action: sts:AssumeRole\n"
+                        ],
+                        [
+                            23,
+                            "      Policies:\n"
+                        ],
+                        [
+                            24,
+                            "        - PolicyName: allow-everything\n"
+                        ],
+                        [
+                            25,
+                            "          PolicyDocument:\n"
+                        ],
+                        [
+                            26,
+                            "            Version: '2012-10-17'\n"
+                        ],
+                        [
+                            27,
+                            "            Statement:\n"
+                        ],
+                        [
+                            28,
+                            "              - Effect: Allow\n"
+                        ],
+                        [
+                            29,
+                            "                Action: '*'\n"
+                        ],
+                        [
+                            30,
+                            "                Resource: '*'\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        13,
+                        30
+                    ],
+                    "resource": "AWS::IAM::Role.WebhookRole",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.IAMPrivilegeEscalation",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-does-not-allow-privilege-escalation",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_AWS_63",
+                    "bc_check_id": "BC_AWS_IAM_48",
+                    "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's actions",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/Policies/0/PolicyDocument"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            13,
+                            "  WebhookRole:\n"
+                        ],
+                        [
+                            14,
+                            "    Type: AWS::IAM::Role\n"
+                        ],
+                        [
+                            15,
+                            "    Properties:\n"
+                        ],
+                        [
+                            16,
+                            "      AssumeRolePolicyDocument:\n"
+                        ],
+                        [
+                            17,
+                            "        Version: '2012-10-17'\n"
+                        ],
+                        [
+                            18,
+                            "        Statement:\n"
+                        ],
+                        [
+                            19,
+                            "          - Effect: Allow\n"
+                        ],
+                        [
+                            20,
+                            "            Principal:\n"
+                        ],
+                        [
+                            21,
+                            "              Service: lambda.amazonaws.com\n"
+                        ],
+                        [
+                            22,
+                            "            Action: sts:AssumeRole\n"
+                        ],
+                        [
+                            23,
+                            "      Policies:\n"
+                        ],
+                        [
+                            24,
+                            "        - PolicyName: allow-everything\n"
+                        ],
+                        [
+                            25,
+                            "          PolicyDocument:\n"
+                        ],
+                        [
+                            26,
+                            "            Version: '2012-10-17'\n"
+                        ],
+                        [
+                            27,
+                            "            Statement:\n"
+                        ],
+                        [
+                            28,
+                            "              - Effect: Allow\n"
+                        ],
+                        [
+                            29,
+                            "                Action: '*'\n"
+                        ],
+                        [
+                            30,
+                            "                Resource: '*'\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        13,
+                        30
+                    ],
+                    "resource": "AWS::IAM::Role.WebhookRole",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.IAMStarActionPolicyDocument",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/iam-48",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_AWS_111",
+                    "bc_check_id": "BC_AWS_IAM_57",
+                    "check_name": "Ensure IAM policies does not allow write access without constraints",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/PolicyDocument/Statement/[0]/Action"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            13,
+                            "  WebhookRole:\n"
+                        ],
+                        [
+                            14,
+                            "    Type: AWS::IAM::Role\n"
+                        ],
+                        [
+                            15,
+                            "    Properties:\n"
+                        ],
+                        [
+                            16,
+                            "      AssumeRolePolicyDocument:\n"
+                        ],
+                        [
+                            17,
+                            "        Version: '2012-10-17'\n"
+                        ],
+                        [
+                            18,
+                            "        Statement:\n"
+                        ],
+                        [
+                            19,
+                            "          - Effect: Allow\n"
+                        ],
+                        [
+                            20,
+                            "            Principal:\n"
+                        ],
+                        [
+                            21,
+                            "              Service: lambda.amazonaws.com\n"
+                        ],
+                        [
+                            22,
+                            "            Action: sts:AssumeRole\n"
+                        ],
+                        [
+                            23,
+                            "      Policies:\n"
+                        ],
+                        [
+                            24,
+                            "        - PolicyName: allow-everything\n"
+                        ],
+                        [
+                            25,
+                            "          PolicyDocument:\n"
+                        ],
+                        [
+                            26,
+                            "            Version: '2012-10-17'\n"
+                        ],
+                        [
+                            27,
+                            "            Statement:\n"
+                        ],
+                        [
+                            28,
+                            "              - Effect: Allow\n"
+                        ],
+                        [
+                            29,
+                            "                Action: '*'\n"
+                        ],
+                        [
+                            30,
+                            "                Resource: '*'\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        13,
+                        30
+                    ],
+                    "resource": "AWS::IAM::Role.WebhookRole",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.IAMWriteAccess",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-iam-policies-do-not-allow-write-access-without-constraint",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_AWS_116",
+                    "bc_check_id": "BC_AWS_GENERAL_64",
+                    "check_name": "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/DeadLetterConfig/TargetArn"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            32,
+                            "  WebhookFunction:\n"
+                        ],
+                        [
+                            33,
+                            "    Type: AWS::Lambda::Function\n"
+                        ],
+                        [
+                            34,
+                            "    Properties:\n"
+                        ],
+                        [
+                            35,
+                            "      FunctionName: webhook-receiver\n"
+                        ],
+                        [
+                            36,
+                            "      Runtime: python3.12\n"
+                        ],
+                        [
+                            37,
+                            "      Handler: app.handler\n"
+                        ],
+                        [
+                            38,
+                            "      Role: !GetAtt WebhookRole.Arn\n"
+                        ],
+                        [
+                            39,
+                            "      Code:\n"
+                        ],
+                        [
+                            40,
+                            "        S3Bucket: !Ref S3Bucket\n"
+                        ],
+                        [
+                            41,
+                            "        S3Key: !Ref S3Key\n"
+                        ],
+                        [
+                            42,
+                            "      Environment:\n"
+                        ],
+                        [
+                            43,
+                            "        Variables:\n"
+                        ],
+                        [
+                            44,
+                            "          DB_PASSWORD: Sup3rSecret123!\n"
+                        ],
+                        [
+                            45,
+                            "          STRIPE_API_KEY: sk_live_51H7xYzAbCdEfGhIjKlMn\n"
+                        ],
+                        [
+                            46,
+                            "      Timeout: 60\n"
+                        ],
+                        [
+                            47,
+                            "      MemorySize: 512\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        32,
+                        47
+                    ],
+                    "resource": "AWS::Lambda::Function.WebhookFunction",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.LambdaDLQConfigured",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-a-dead-letter-queue-dlq",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null,
+                    "breadcrumbs": {
+                        "Code.S3Key": [
+                            {
+                                "type": "parameters",
+                                "name": "S3Key",
+                                "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                                "attribute_key": "Default"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "check_id": "CKV_AWS_173",
+                    "bc_check_id": "BC_AWS_SERVERLESS_5",
+                    "check_name": "Check encryption settings for Lambda environment variable",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/KmsKeyArn"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            32,
+                            "  WebhookFunction:\n"
+                        ],
+                        [
+                            33,
+                            "    Type: AWS::Lambda::Function\n"
+                        ],
+                        [
+                            34,
+                            "    Properties:\n"
+                        ],
+                        [
+                            35,
+                            "      FunctionName: webhook-receiver\n"
+                        ],
+                        [
+                            36,
+                            "      Runtime: python3.12\n"
+                        ],
+                        [
+                            37,
+                            "      Handler: app.handler\n"
+                        ],
+                        [
+                            38,
+                            "      Role: !GetAtt WebhookRole.Arn\n"
+                        ],
+                        [
+                            39,
+                            "      Code:\n"
+                        ],
+                        [
+                            40,
+                            "        S3Bucket: !Ref S3Bucket\n"
+                        ],
+                        [
+                            41,
+                            "        S3Key: !Ref S3Key\n"
+                        ],
+                        [
+                            42,
+                            "      Environment:\n"
+                        ],
+                        [
+                            43,
+                            "        Variables:\n"
+                        ],
+                        [
+                            44,
+                            "          DB_PASSWORD: Sup3rSecret123!\n"
+                        ],
+                        [
+                            45,
+                            "          STRIPE_API_KEY: sk_live_51H7xYzAbCdEfGhIjKlMn\n"
+                        ],
+                        [
+                            46,
+                            "      Timeout: 60\n"
+                        ],
+                        [
+                            47,
+                            "      MemorySize: 512\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        32,
+                        47
+                    ],
+                    "resource": "AWS::Lambda::Function.WebhookFunction",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.LambdaEnvironmentEncryptionSettings",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-serverless-policies/bc-aws-serverless-5",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null,
+                    "breadcrumbs": {
+                        "Code.S3Key": [
+                            {
+                                "type": "parameters",
+                                "name": "S3Key",
+                                "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                                "attribute_key": "Default"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "check_id": "CKV_AWS_115",
+                    "bc_check_id": "BC_AWS_GENERAL_63",
+                    "check_name": "Ensure that AWS Lambda function is configured for function-level concurrent execution limit",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/ReservedConcurrentExecutions"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            32,
+                            "  WebhookFunction:\n"
+                        ],
+                        [
+                            33,
+                            "    Type: AWS::Lambda::Function\n"
+                        ],
+                        [
+                            34,
+                            "    Properties:\n"
+                        ],
+                        [
+                            35,
+                            "      FunctionName: webhook-receiver\n"
+                        ],
+                        [
+                            36,
+                            "      Runtime: python3.12\n"
+                        ],
+                        [
+                            37,
+                            "      Handler: app.handler\n"
+                        ],
+                        [
+                            38,
+                            "      Role: !GetAtt WebhookRole.Arn\n"
+                        ],
+                        [
+                            39,
+                            "      Code:\n"
+                        ],
+                        [
+                            40,
+                            "        S3Bucket: !Ref S3Bucket\n"
+                        ],
+                        [
+                            41,
+                            "        S3Key: !Ref S3Key\n"
+                        ],
+                        [
+                            42,
+                            "      Environment:\n"
+                        ],
+                        [
+                            43,
+                            "        Variables:\n"
+                        ],
+                        [
+                            44,
+                            "          DB_PASSWORD: Sup3rSecret123!\n"
+                        ],
+                        [
+                            45,
+                            "          STRIPE_API_KEY: sk_live_51H7xYzAbCdEfGhIjKlMn\n"
+                        ],
+                        [
+                            46,
+                            "      Timeout: 60\n"
+                        ],
+                        [
+                            47,
+                            "      MemorySize: 512\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        32,
+                        47
+                    ],
+                    "resource": "AWS::Lambda::Function.WebhookFunction",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.LambdaFunctionLevelConcurrentExecutionLimit",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-function-level-concurrent-execution-limit",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null,
+                    "breadcrumbs": {
+                        "Code.S3Key": [
+                            {
+                                "type": "parameters",
+                                "name": "S3Key",
+                                "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                                "attribute_key": "Default"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "check_id": "CKV_AWS_117",
+                    "bc_check_id": "BC_AWS_GENERAL_65",
+                    "check_name": "Ensure that AWS Lambda function is configured inside a VPC",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "Properties/VpcConfig"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            32,
+                            "  WebhookFunction:\n"
+                        ],
+                        [
+                            33,
+                            "    Type: AWS::Lambda::Function\n"
+                        ],
+                        [
+                            34,
+                            "    Properties:\n"
+                        ],
+                        [
+                            35,
+                            "      FunctionName: webhook-receiver\n"
+                        ],
+                        [
+                            36,
+                            "      Runtime: python3.12\n"
+                        ],
+                        [
+                            37,
+                            "      Handler: app.handler\n"
+                        ],
+                        [
+                            38,
+                            "      Role: !GetAtt WebhookRole.Arn\n"
+                        ],
+                        [
+                            39,
+                            "      Code:\n"
+                        ],
+                        [
+                            40,
+                            "        S3Bucket: !Ref S3Bucket\n"
+                        ],
+                        [
+                            41,
+                            "        S3Key: !Ref S3Key\n"
+                        ],
+                        [
+                            42,
+                            "      Environment:\n"
+                        ],
+                        [
+                            43,
+                            "        Variables:\n"
+                        ],
+                        [
+                            44,
+                            "          DB_PASSWORD: Sup3rSecret123!\n"
+                        ],
+                        [
+                            45,
+                            "          STRIPE_API_KEY: sk_live_51H7xYzAbCdEfGhIjKlMn\n"
+                        ],
+                        [
+                            46,
+                            "      Timeout: 60\n"
+                        ],
+                        [
+                            47,
+                            "      MemorySize: 512\n"
+                        ]
+                    ],
+                    "file_path": "/lambda.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                    "file_line_range": [
+                        32,
+                        47
+                    ],
+                    "resource": "AWS::Lambda::Function.WebhookFunction",
+                    "evaluations": {},
+                    "check_class": "checkov.cloudformation.checks.resource.aws.LambdaInVPC",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-inside-a-vpc-1",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null,
+                    "breadcrumbs": {
+                        "Code.S3Key": [
+                            {
+                                "type": "parameters",
+                                "name": "S3Key",
+                                "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c009/lambda.yaml",
+                                "attribute_key": "Default"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "summary": {
+            "passed": 5,
+            "failed": 11,
+            "skipped": 0,
+            "parsing_errors": 0,
+            "resource_count": 2,
+            "checkov_version": "3.3.26"
+        }
+    }
+]

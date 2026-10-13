@@ -1,0 +1,323 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_189",
+                "bc_check_id": "BC_AZR_NETWORKING_71",
+                "check_name": "Ensure that Azure Key Vault disables public network access",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "public_network_access_enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        20,
+                        "resource \"azurerm_key_vault\" \"app\" {\n"
+                    ],
+                    [
+                        21,
+                        "  name                       = \"acme-secrets-kv\"\n"
+                    ],
+                    [
+                        22,
+                        "  location                   = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        23,
+                        "  resource_group_name        = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        24,
+                        "  tenant_id                  = data.azurerm_client_config.current.tenant_id\n"
+                    ],
+                    [
+                        25,
+                        "  sku_name                   = \"standard\"\n"
+                    ],
+                    [
+                        26,
+                        "  soft_delete_retention_days = 90\n"
+                    ],
+                    [
+                        27,
+                        "  purge_protection_enabled   = true\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  network_acls {\n"
+                    ],
+                    [
+                        30,
+                        "    default_action = \"Deny\"\n"
+                    ],
+                    [
+                        31,
+                        "    bypass         = \"AzureServices\"\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "\n"
+                    ],
+                    [
+                        34,
+                        "  tags = {\n"
+                    ],
+                    [
+                        35,
+                        "    environment = \"prod\"\n"
+                    ],
+                    [
+                        36,
+                        "  }\n"
+                    ],
+                    [
+                        37,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                "file_line_range": [
+                    20,
+                    37
+                ],
+                "resource": "azurerm_key_vault.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.KeyVaultDisablesPublicNetworkAccess",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-189",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AZURE_32",
+                "bc_check_id": "BC_AZR_GENERAL_125",
+                "check_name": "Ensure private endpoint is configured to key vault",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "azurerm_key_vault": {
+                            "app": {
+                                "__end_line__": 37,
+                                "__start_line__": 20,
+                                "location": [
+                                    "North Europe"
+                                ],
+                                "name": [
+                                    "acme-secrets-kv"
+                                ],
+                                "network_acls": [
+                                    {
+                                        "bypass": [
+                                            "AzureServices"
+                                        ],
+                                        "default_action": [
+                                            "Deny"
+                                        ]
+                                    }
+                                ],
+                                "purge_protection_enabled": [
+                                    true
+                                ],
+                                "resource_group_name": [
+                                    "rg-secrets-prod"
+                                ],
+                                "sku_name": [
+                                    "standard"
+                                ],
+                                "soft_delete_retention_days": [
+                                    90
+                                ],
+                                "tags": [
+                                    {
+                                        "environment": "prod"
+                                    }
+                                ],
+                                "tenant_id": [
+                                    "data.azurerm_client_config.current.tenant_id"
+                                ],
+                                "__address__": "azurerm_key_vault.app",
+                                "__provider_address__": "azurerm.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        20,
+                        "resource \"azurerm_key_vault\" \"app\" {\n"
+                    ],
+                    [
+                        21,
+                        "  name                       = \"acme-secrets-kv\"\n"
+                    ],
+                    [
+                        22,
+                        "  location                   = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        23,
+                        "  resource_group_name        = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        24,
+                        "  tenant_id                  = data.azurerm_client_config.current.tenant_id\n"
+                    ],
+                    [
+                        25,
+                        "  sku_name                   = \"standard\"\n"
+                    ],
+                    [
+                        26,
+                        "  soft_delete_retention_days = 90\n"
+                    ],
+                    [
+                        27,
+                        "  purge_protection_enabled   = true\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  network_acls {\n"
+                    ],
+                    [
+                        30,
+                        "    default_action = \"Deny\"\n"
+                    ],
+                    [
+                        31,
+                        "    bypass         = \"AzureServices\"\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "\n"
+                    ],
+                    [
+                        34,
+                        "  tags = {\n"
+                    ],
+                    [
+                        35,
+                        "    environment = \"prod\"\n"
+                    ],
+                    [
+                        36,
+                        "  }\n"
+                    ],
+                    [
+                        37,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                "file_line_range": [
+                    20,
+                    37
+                ],
+                "resource": "azurerm_key_vault.app",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/bc-azure-2-32",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t049/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 4,
+        "failed": 2,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

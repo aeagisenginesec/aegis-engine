@@ -1,0 +1,724 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security group and rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "description",
+                        "egress/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"data\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name        = \"data-tier\"\n"
+                    ],
+                    [
+                        16,
+                        "  description = \"Database tier security group\"\n"
+                    ],
+                    [
+                        17,
+                        "  vpc_id      = \"vpc-2b3c4d5e6f7a81920\"\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  ingress {\n"
+                    ],
+                    [
+                        20,
+                        "    description = \"Postgres from anywhere\"\n"
+                    ],
+                    [
+                        21,
+                        "    from_port   = 5432\n"
+                    ],
+                    [
+                        22,
+                        "    to_port     = 5432\n"
+                    ],
+                    [
+                        23,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        24,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        25,
+                        "  }\n"
+                    ],
+                    [
+                        26,
+                        "\n"
+                    ],
+                    [
+                        27,
+                        "  ingress {\n"
+                    ],
+                    [
+                        28,
+                        "    description = \"Redis from anywhere\"\n"
+                    ],
+                    [
+                        29,
+                        "    from_port   = 6379\n"
+                    ],
+                    [
+                        30,
+                        "    to_port     = 6379\n"
+                    ],
+                    [
+                        31,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        32,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        33,
+                        "  }\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  ingress {\n"
+                    ],
+                    [
+                        36,
+                        "    description = \"MongoDB from anywhere\"\n"
+                    ],
+                    [
+                        37,
+                        "    from_port   = 27017\n"
+                    ],
+                    [
+                        38,
+                        "    to_port     = 27017\n"
+                    ],
+                    [
+                        39,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        40,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  egress {\n"
+                    ],
+                    [
+                        44,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        45,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        46,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        47,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  tags = {\n"
+                    ],
+                    [
+                        51,
+                        "    Name = \"data-tier\"\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t024/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t024/main.tf",
+                "file_line_range": [
+                    14,
+                    53
+                ],
+                "resource": "aws_security_group.data",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "data-tier"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t024/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_382",
+                "bc_check_id": "BC_AWS_IAM_93",
+                "check_name": "Ensure no security groups allow egress from 0.0.0.0:0 to port -1",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]/from_port",
+                        "egress/[0]/to_port",
+                        "egress/[0]/cidr_blocks",
+                        "egress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"data\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name        = \"data-tier\"\n"
+                    ],
+                    [
+                        16,
+                        "  description = \"Database tier security group\"\n"
+                    ],
+                    [
+                        17,
+                        "  vpc_id      = \"vpc-2b3c4d5e6f7a81920\"\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  ingress {\n"
+                    ],
+                    [
+                        20,
+                        "    description = \"Postgres from anywhere\"\n"
+                    ],
+                    [
+                        21,
+                        "    from_port   = 5432\n"
+                    ],
+                    [
+                        22,
+                        "    to_port     = 5432\n"
+                    ],
+                    [
+                        23,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        24,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        25,
+                        "  }\n"
+                    ],
+                    [
+                        26,
+                        "\n"
+                    ],
+                    [
+                        27,
+                        "  ingress {\n"
+                    ],
+                    [
+                        28,
+                        "    description = \"Redis from anywhere\"\n"
+                    ],
+                    [
+                        29,
+                        "    from_port   = 6379\n"
+                    ],
+                    [
+                        30,
+                        "    to_port     = 6379\n"
+                    ],
+                    [
+                        31,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        32,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        33,
+                        "  }\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  ingress {\n"
+                    ],
+                    [
+                        36,
+                        "    description = \"MongoDB from anywhere\"\n"
+                    ],
+                    [
+                        37,
+                        "    from_port   = 27017\n"
+                    ],
+                    [
+                        38,
+                        "    to_port     = 27017\n"
+                    ],
+                    [
+                        39,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        40,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  egress {\n"
+                    ],
+                    [
+                        44,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        45,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        46,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        47,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  tags = {\n"
+                    ],
+                    [
+                        51,
+                        "    Name = \"data-tier\"\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t024/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t024/main.tf",
+                "file_line_range": [
+                    14,
+                    53
+                ],
+                "resource": "aws_security_group.data",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedEgressAny",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "data-tier"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t024/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_5",
+                "bc_check_id": "BC_AWS_NETWORKING_51",
+                "check_name": "Ensure that Security Groups are attached to another resource",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_security_group": {
+                            "data": {
+                                "__end_line__": 53,
+                                "__start_line__": 14,
+                                "description": [
+                                    "Database tier security group"
+                                ],
+                                "egress": [
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "0.0.0.0/0"
+                                            ]
+                                        ],
+                                        "from_port": [
+                                            0
+                                        ],
+                                        "protocol": [
+                                            "-1"
+                                        ],
+                                        "to_port": [
+                                            0
+                                        ]
+                                    }
+                                ],
+                                "ingress": [
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "0.0.0.0/0"
+                                            ]
+                                        ],
+                                        "description": [
+                                            "Postgres from anywhere"
+                                        ],
+                                        "from_port": [
+                                            5432
+                                        ],
+                                        "protocol": [
+                                            "tcp"
+                                        ],
+                                        "to_port": [
+                                            5432
+                                        ]
+                                    },
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "0.0.0.0/0"
+                                            ]
+                                        ],
+                                        "description": [
+                                            "Redis from anywhere"
+                                        ],
+                                        "from_port": [
+                                            6379
+                                        ],
+                                        "protocol": [
+                                            "tcp"
+                                        ],
+                                        "to_port": [
+                                            6379
+                                        ]
+                                    },
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "0.0.0.0/0"
+                                            ]
+                                        ],
+                                        "description": [
+                                            "MongoDB from anywhere"
+                                        ],
+                                        "from_port": [
+                                            27017
+                                        ],
+                                        "protocol": [
+                                            "tcp"
+                                        ],
+                                        "to_port": [
+                                            27017
+                                        ]
+                                    }
+                                ],
+                                "name": [
+                                    "data-tier"
+                                ],
+                                "tags": [
+                                    {
+                                        "Name": "data-tier"
+                                    }
+                                ],
+                                "vpc_id": [
+                                    "vpc-2b3c4d5e6f7a81920"
+                                ],
+                                "__address__": "aws_security_group.data",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "networking"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"data\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name        = \"data-tier\"\n"
+                    ],
+                    [
+                        16,
+                        "  description = \"Database tier security group\"\n"
+                    ],
+                    [
+                        17,
+                        "  vpc_id      = \"vpc-2b3c4d5e6f7a81920\"\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  ingress {\n"
+                    ],
+                    [
+                        20,
+                        "    description = \"Postgres from anywhere\"\n"
+                    ],
+                    [
+                        21,
+                        "    from_port   = 5432\n"
+                    ],
+                    [
+                        22,
+                        "    to_port     = 5432\n"
+                    ],
+                    [
+                        23,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        24,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        25,
+                        "  }\n"
+                    ],
+                    [
+                        26,
+                        "\n"
+                    ],
+                    [
+                        27,
+                        "  ingress {\n"
+                    ],
+                    [
+                        28,
+                        "    description = \"Redis from anywhere\"\n"
+                    ],
+                    [
+                        29,
+                        "    from_port   = 6379\n"
+                    ],
+                    [
+                        30,
+                        "    to_port     = 6379\n"
+                    ],
+                    [
+                        31,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        32,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        33,
+                        "  }\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  ingress {\n"
+                    ],
+                    [
+                        36,
+                        "    description = \"MongoDB from anywhere\"\n"
+                    ],
+                    [
+                        37,
+                        "    from_port   = 27017\n"
+                    ],
+                    [
+                        38,
+                        "    to_port     = 27017\n"
+                    ],
+                    [
+                        39,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        40,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  egress {\n"
+                    ],
+                    [
+                        44,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        45,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        46,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        47,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  tags = {\n"
+                    ],
+                    [
+                        51,
+                        "    Name = \"data-tier\"\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t024/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t024/main.tf",
+                "file_line_range": [
+                    14,
+                    53
+                ],
+                "resource": "aws_security_group.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "data-tier"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t024/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 10,
+        "failed": 3,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

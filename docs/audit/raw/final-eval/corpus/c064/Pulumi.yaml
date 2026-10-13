@@ -1,0 +1,53 @@
+name: analytics-sql
+runtime: yaml
+description: Analytics SQL Server. Auditing and TDE are on, but the firewall still allows the whole internet.
+template:
+  configuration:
+    location:
+      type: String
+      default: westeurope
+    adminLogin:
+      type: String
+      default: sqladmin
+    adminPassword:
+      type: String
+      secret: true
+  variables:
+    rgName: rg-analytics
+    serverName: analyticsqlsrv
+  resources:
+    resourceGroup:
+      type: azure-native:resources:ResourceGroup
+      properties:
+        resourceGroupName: ${rgName}
+        location: ${location}
+    sqlServer:
+      type: azure-native:sql:Server
+      properties:
+        serverName: ${serverName}
+        resourceGroupName: ${resourceGroup.name}
+        location: ${location}
+        administratorLogin: ${adminLogin}
+        administratorLoginPassword: ${adminPassword}
+        publicNetworkAccess: Enabled
+        minimalTlsVersion: "1.2"
+    firewallRule:
+      type: azure-native:sql:FirewallRule
+      properties:
+        firewallRuleName: DataScienceVPN
+        resourceGroupName: ${resourceGroup.name}
+        serverName: ${sqlServer.name}
+        startIpAddress: 0.0.0.0
+        endIpAddress: 255.255.255.255
+    database:
+      type: azure-native:sql:Database
+      properties:
+        databaseName: analytics
+        resourceGroupName: ${resourceGroup.name}
+        serverName: ${sqlServer.name}
+        location: ${location}
+        sku:
+          name: S0
+          tier: Standard
+  outputs:
+    serverFqdn: ${sqlServer.fullyQualifiedDomainName}

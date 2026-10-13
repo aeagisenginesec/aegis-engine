@@ -1,0 +1,900 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_99",
+                "bc_check_id": "BC_AZR_NETWORKING_26",
+                "check_name": "Ensure Cosmos DB accounts have restricted access",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "public_network_access_enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"azurerm_cosmosdb_account\" \"orders\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name                = \"acme-orders-cosmos\"\n"
+                    ],
+                    [
+                        20,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        21,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        22,
+                        "  kind                = \"GlobalDocumentDB\"\n"
+                    ],
+                    [
+                        23,
+                        "  offer_type          = \"Standard\"\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "  consistency_policy {\n"
+                    ],
+                    [
+                        26,
+                        "    consistency_level = \"Session\"\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        30,
+                        "    location          = \"North Europe\"\n"
+                    ],
+                    [
+                        31,
+                        "    failover_priority = 0\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "\n"
+                    ],
+                    [
+                        34,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        35,
+                        "    location          = \"West Europe\"\n"
+                    ],
+                    [
+                        36,
+                        "    failover_priority = 1\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "\n"
+                    ],
+                    [
+                        39,
+                        "  ip_range_filter                 = \"203.0.113.0/24\"\n"
+                    ],
+                    [
+                        40,
+                        "  public_network_access_enabled   = true\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  backup {\n"
+                    ],
+                    [
+                        43,
+                        "    type                = \"Periodic\"\n"
+                    ],
+                    [
+                        44,
+                        "    interval_in_minutes = 60\n"
+                    ],
+                    [
+                        45,
+                        "    retention_in_hours  = 168\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "file_line_range": [
+                    18,
+                    47
+                ],
+                "resource": "azurerm_cosmosdb_account.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.CosmosDBAccountsRestrictedAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/ensure-cosmos-db-accounts-have-restricted-access",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_132",
+                "bc_check_id": "BC_AZR_STORAGE_4",
+                "check_name": "Ensure cosmosdb does not allow privileged escalation by restricting management plane changes",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "access_key_metadata_writes_enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"azurerm_cosmosdb_account\" \"orders\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name                = \"acme-orders-cosmos\"\n"
+                    ],
+                    [
+                        20,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        21,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        22,
+                        "  kind                = \"GlobalDocumentDB\"\n"
+                    ],
+                    [
+                        23,
+                        "  offer_type          = \"Standard\"\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "  consistency_policy {\n"
+                    ],
+                    [
+                        26,
+                        "    consistency_level = \"Session\"\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        30,
+                        "    location          = \"North Europe\"\n"
+                    ],
+                    [
+                        31,
+                        "    failover_priority = 0\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "\n"
+                    ],
+                    [
+                        34,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        35,
+                        "    location          = \"West Europe\"\n"
+                    ],
+                    [
+                        36,
+                        "    failover_priority = 1\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "\n"
+                    ],
+                    [
+                        39,
+                        "  ip_range_filter                 = \"203.0.113.0/24\"\n"
+                    ],
+                    [
+                        40,
+                        "  public_network_access_enabled   = true\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  backup {\n"
+                    ],
+                    [
+                        43,
+                        "    type                = \"Periodic\"\n"
+                    ],
+                    [
+                        44,
+                        "    interval_in_minutes = 60\n"
+                    ],
+                    [
+                        45,
+                        "    retention_in_hours  = 168\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "file_line_range": [
+                    18,
+                    47
+                ],
+                "resource": "azurerm_cosmosdb_account.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.CosmosDBDisableAccessKeyWrite",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-storage-policies/bc-azr-storage-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_101",
+                "bc_check_id": "BC_AZR_NETWORKING_28",
+                "check_name": "Ensure that Azure Cosmos DB disables public network access",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "public_network_access_enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"azurerm_cosmosdb_account\" \"orders\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name                = \"acme-orders-cosmos\"\n"
+                    ],
+                    [
+                        20,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        21,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        22,
+                        "  kind                = \"GlobalDocumentDB\"\n"
+                    ],
+                    [
+                        23,
+                        "  offer_type          = \"Standard\"\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "  consistency_policy {\n"
+                    ],
+                    [
+                        26,
+                        "    consistency_level = \"Session\"\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        30,
+                        "    location          = \"North Europe\"\n"
+                    ],
+                    [
+                        31,
+                        "    failover_priority = 0\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "\n"
+                    ],
+                    [
+                        34,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        35,
+                        "    location          = \"West Europe\"\n"
+                    ],
+                    [
+                        36,
+                        "    failover_priority = 1\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "\n"
+                    ],
+                    [
+                        39,
+                        "  ip_range_filter                 = \"203.0.113.0/24\"\n"
+                    ],
+                    [
+                        40,
+                        "  public_network_access_enabled   = true\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  backup {\n"
+                    ],
+                    [
+                        43,
+                        "    type                = \"Periodic\"\n"
+                    ],
+                    [
+                        44,
+                        "    interval_in_minutes = 60\n"
+                    ],
+                    [
+                        45,
+                        "    retention_in_hours  = 168\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "file_line_range": [
+                    18,
+                    47
+                ],
+                "resource": "azurerm_cosmosdb_account.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.CosmosDBDisablesPublicNetwork",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/ensure-that-azure-cosmos-db-disables-public-network-access",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_100",
+                "bc_check_id": "BC_AZR_GENERAL_21",
+                "check_name": "Ensure that Cosmos DB accounts have customer-managed keys to encrypt data at rest",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "key_vault_key_id"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"azurerm_cosmosdb_account\" \"orders\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name                = \"acme-orders-cosmos\"\n"
+                    ],
+                    [
+                        20,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        21,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        22,
+                        "  kind                = \"GlobalDocumentDB\"\n"
+                    ],
+                    [
+                        23,
+                        "  offer_type          = \"Standard\"\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "  consistency_policy {\n"
+                    ],
+                    [
+                        26,
+                        "    consistency_level = \"Session\"\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        30,
+                        "    location          = \"North Europe\"\n"
+                    ],
+                    [
+                        31,
+                        "    failover_priority = 0\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "\n"
+                    ],
+                    [
+                        34,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        35,
+                        "    location          = \"West Europe\"\n"
+                    ],
+                    [
+                        36,
+                        "    failover_priority = 1\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "\n"
+                    ],
+                    [
+                        39,
+                        "  ip_range_filter                 = \"203.0.113.0/24\"\n"
+                    ],
+                    [
+                        40,
+                        "  public_network_access_enabled   = true\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  backup {\n"
+                    ],
+                    [
+                        43,
+                        "    type                = \"Periodic\"\n"
+                    ],
+                    [
+                        44,
+                        "    interval_in_minutes = 60\n"
+                    ],
+                    [
+                        45,
+                        "    retention_in_hours  = 168\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "file_line_range": [
+                    18,
+                    47
+                ],
+                "resource": "azurerm_cosmosdb_account.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.CosmosDBHaveCMK",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-that-cosmos-db-accounts-have-customer-managed-keys-to-encrypt-data-at-rest",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_140",
+                "bc_check_id": "BC_AZR_IAM_5",
+                "check_name": "Ensure that Local Authentication is disabled on CosmosDB",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "local_authentication_disabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"azurerm_cosmosdb_account\" \"orders\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name                = \"acme-orders-cosmos\"\n"
+                    ],
+                    [
+                        20,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        21,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        22,
+                        "  kind                = \"GlobalDocumentDB\"\n"
+                    ],
+                    [
+                        23,
+                        "  offer_type          = \"Standard\"\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "  consistency_policy {\n"
+                    ],
+                    [
+                        26,
+                        "    consistency_level = \"Session\"\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        30,
+                        "    location          = \"North Europe\"\n"
+                    ],
+                    [
+                        31,
+                        "    failover_priority = 0\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "\n"
+                    ],
+                    [
+                        34,
+                        "  geo_location {\n"
+                    ],
+                    [
+                        35,
+                        "    location          = \"West Europe\"\n"
+                    ],
+                    [
+                        36,
+                        "    failover_priority = 1\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "\n"
+                    ],
+                    [
+                        39,
+                        "  ip_range_filter                 = \"203.0.113.0/24\"\n"
+                    ],
+                    [
+                        40,
+                        "  public_network_access_enabled   = true\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  backup {\n"
+                    ],
+                    [
+                        43,
+                        "    type                = \"Periodic\"\n"
+                    ],
+                    [
+                        44,
+                        "    interval_in_minutes = 60\n"
+                    ],
+                    [
+                        45,
+                        "    retention_in_hours  = 168\n"
+                    ],
+                    [
+                        46,
+                        "  }\n"
+                    ],
+                    [
+                        47,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "file_line_range": [
+                    18,
+                    47
+                ],
+                "resource": "azurerm_cosmosdb_account.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.CosmosDBLocalAuthDisabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-iam-policies/ensure-azure-acr-admin-account-is-disabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t044/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 0,
+        "failed": 5,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 3,
+        "checkov_version": "3.3.26"
+    }
+}

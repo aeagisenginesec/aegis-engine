@@ -1,0 +1,556 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_18",
+                "bc_check_id": "BC_AWS_S3_13",
+                "check_name": "Ensure the S3 bucket has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/LoggingConfiguration"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "  IntakeBucket:\n"
+                    ],
+                    [
+                        15,
+                        "    Type: AWS::S3::Bucket\n"
+                    ],
+                    [
+                        16,
+                        "    Properties:\n"
+                    ],
+                    [
+                        17,
+                        "      BucketName: !Sub 'acme-image-intake-${Environment}-${AWS::AccountId}'\n"
+                    ],
+                    [
+                        18,
+                        "      OwnershipControls:\n"
+                    ],
+                    [
+                        19,
+                        "        Rules:\n"
+                    ],
+                    [
+                        20,
+                        "          - ObjectOwnership: BucketOwnerEnforced\n"
+                    ],
+                    [
+                        21,
+                        "      PublicAccessBlockConfiguration:\n"
+                    ],
+                    [
+                        22,
+                        "        BlockPublicAcls: true\n"
+                    ],
+                    [
+                        23,
+                        "        BlockPublicPolicy: true\n"
+                    ],
+                    [
+                        24,
+                        "        IgnorePublicAcls: true\n"
+                    ],
+                    [
+                        25,
+                        "        RestrictPublicBuckets: true\n"
+                    ],
+                    [
+                        26,
+                        "      VersioningConfiguration:\n"
+                    ],
+                    [
+                        27,
+                        "        Status: Enabled\n"
+                    ],
+                    [
+                        28,
+                        "      BucketEncryption:\n"
+                    ],
+                    [
+                        29,
+                        "        ServerSideEncryptionConfiguration:\n"
+                    ],
+                    [
+                        30,
+                        "          - ServerSideEncryptionByDefault:\n"
+                    ],
+                    [
+                        31,
+                        "              SSEAlgorithm: aws:kms\n"
+                    ],
+                    [
+                        32,
+                        "              KMSMasterKeyID: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        33,
+                        "            BucketKeyEnabled: true\n"
+                    ],
+                    [
+                        34,
+                        "      NotificationConfiguration:\n"
+                    ],
+                    [
+                        35,
+                        "        LambdaConfigurations:\n"
+                    ],
+                    [
+                        36,
+                        "          - Event: s3:ObjectCreated:*\n"
+                    ],
+                    [
+                        37,
+                        "            Function: !GetAtt ResizerFunction.Arn\n"
+                    ],
+                    [
+                        38,
+                        "            Filter:\n"
+                    ],
+                    [
+                        39,
+                        "              S3Key:\n"
+                    ],
+                    [
+                        40,
+                        "                Rules:\n"
+                    ],
+                    [
+                        41,
+                        "                  - Name: suffix\n"
+                    ],
+                    [
+                        42,
+                        "                    Value: .jpg\n"
+                    ]
+                ],
+                "file_path": "/s3-lambda-trigger.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "file_line_range": [
+                    14,
+                    42
+                ],
+                "resource": "AWS::S3::Bucket.IntakeBucket",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.S3AccessLogs",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "BucketName": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_116",
+                "bc_check_id": "BC_AWS_GENERAL_64",
+                "check_name": "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/DeadLetterConfig/TargetArn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        73,
+                        "  ResizerFunction:\n"
+                    ],
+                    [
+                        74,
+                        "    Type: AWS::Lambda::Function\n"
+                    ],
+                    [
+                        75,
+                        "    Properties:\n"
+                    ],
+                    [
+                        76,
+                        "      FunctionName: image-resizer\n"
+                    ],
+                    [
+                        77,
+                        "      Runtime: python3.12\n"
+                    ],
+                    [
+                        78,
+                        "      Handler: resize.handler\n"
+                    ],
+                    [
+                        79,
+                        "      Role: !GetAtt ResizerRole.Arn\n"
+                    ],
+                    [
+                        80,
+                        "      Code:\n"
+                    ],
+                    [
+                        81,
+                        "        ZipFile: |\n"
+                    ],
+                    [
+                        82,
+                        "          def handler(event, context):\n"
+                    ],
+                    [
+                        83,
+                        "              return {\"statusCode\": 200}\n"
+                    ],
+                    [
+                        84,
+                        "      KmsKeyArn: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        85,
+                        "      TracingConfig:\n"
+                    ],
+                    [
+                        86,
+                        "        Mode: Active\n"
+                    ],
+                    [
+                        87,
+                        "      Timeout: 90\n"
+                    ],
+                    [
+                        88,
+                        "      MemorySize: 1024\n"
+                    ]
+                ],
+                "file_path": "/s3-lambda-trigger.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "file_line_range": [
+                    73,
+                    88
+                ],
+                "resource": "AWS::Lambda::Function.ResizerFunction",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.LambdaDLQConfigured",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-a-dead-letter-queue-dlq",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_115",
+                "bc_check_id": "BC_AWS_GENERAL_63",
+                "check_name": "Ensure that AWS Lambda function is configured for function-level concurrent execution limit",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/ReservedConcurrentExecutions"
+                    ]
+                },
+                "code_block": [
+                    [
+                        73,
+                        "  ResizerFunction:\n"
+                    ],
+                    [
+                        74,
+                        "    Type: AWS::Lambda::Function\n"
+                    ],
+                    [
+                        75,
+                        "    Properties:\n"
+                    ],
+                    [
+                        76,
+                        "      FunctionName: image-resizer\n"
+                    ],
+                    [
+                        77,
+                        "      Runtime: python3.12\n"
+                    ],
+                    [
+                        78,
+                        "      Handler: resize.handler\n"
+                    ],
+                    [
+                        79,
+                        "      Role: !GetAtt ResizerRole.Arn\n"
+                    ],
+                    [
+                        80,
+                        "      Code:\n"
+                    ],
+                    [
+                        81,
+                        "        ZipFile: |\n"
+                    ],
+                    [
+                        82,
+                        "          def handler(event, context):\n"
+                    ],
+                    [
+                        83,
+                        "              return {\"statusCode\": 200}\n"
+                    ],
+                    [
+                        84,
+                        "      KmsKeyArn: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        85,
+                        "      TracingConfig:\n"
+                    ],
+                    [
+                        86,
+                        "        Mode: Active\n"
+                    ],
+                    [
+                        87,
+                        "      Timeout: 90\n"
+                    ],
+                    [
+                        88,
+                        "      MemorySize: 1024\n"
+                    ]
+                ],
+                "file_path": "/s3-lambda-trigger.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "file_line_range": [
+                    73,
+                    88
+                ],
+                "resource": "AWS::Lambda::Function.ResizerFunction",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.LambdaFunctionLevelConcurrentExecutionLimit",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-function-level-concurrent-execution-limit",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_117",
+                "bc_check_id": "BC_AWS_GENERAL_65",
+                "check_name": "Ensure that AWS Lambda function is configured inside a VPC",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/VpcConfig"
+                    ]
+                },
+                "code_block": [
+                    [
+                        73,
+                        "  ResizerFunction:\n"
+                    ],
+                    [
+                        74,
+                        "    Type: AWS::Lambda::Function\n"
+                    ],
+                    [
+                        75,
+                        "    Properties:\n"
+                    ],
+                    [
+                        76,
+                        "      FunctionName: image-resizer\n"
+                    ],
+                    [
+                        77,
+                        "      Runtime: python3.12\n"
+                    ],
+                    [
+                        78,
+                        "      Handler: resize.handler\n"
+                    ],
+                    [
+                        79,
+                        "      Role: !GetAtt ResizerRole.Arn\n"
+                    ],
+                    [
+                        80,
+                        "      Code:\n"
+                    ],
+                    [
+                        81,
+                        "        ZipFile: |\n"
+                    ],
+                    [
+                        82,
+                        "          def handler(event, context):\n"
+                    ],
+                    [
+                        83,
+                        "              return {\"statusCode\": 200}\n"
+                    ],
+                    [
+                        84,
+                        "      KmsKeyArn: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        85,
+                        "      TracingConfig:\n"
+                    ],
+                    [
+                        86,
+                        "        Mode: Active\n"
+                    ],
+                    [
+                        87,
+                        "      Timeout: 90\n"
+                    ],
+                    [
+                        88,
+                        "      MemorySize: 1024\n"
+                    ]
+                ],
+                "file_path": "/s3-lambda-trigger.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "file_line_range": [
+                    73,
+                    88
+                ],
+                "resource": "AWS::Lambda::Function.ResizerFunction",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.LambdaInVPC",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-inside-a-vpc-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_258",
+                "bc_check_id": "BC_AWS_GENERAL_132",
+                "check_name": "Ensure that Lambda function URLs AuthType is not None",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/AuthType"
+                    ]
+                },
+                "code_block": [
+                    [
+                        98,
+                        "  ResizerUrl:\n"
+                    ],
+                    [
+                        99,
+                        "    Type: AWS::Lambda::Url\n"
+                    ],
+                    [
+                        100,
+                        "    Properties:\n"
+                    ],
+                    [
+                        101,
+                        "      TargetFunctionArn: !GetAtt ResizerFunction.Arn\n"
+                    ],
+                    [
+                        102,
+                        "      AuthType: NONE\n"
+                    ],
+                    [
+                        103,
+                        "      Cors:\n"
+                    ],
+                    [
+                        104,
+                        "        AllowOrigins: ['*']\n"
+                    ]
+                ],
+                "file_path": "/s3-lambda-trigger.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c018/s3-lambda-trigger.yaml",
+                "file_line_range": [
+                    98,
+                    104
+                ],
+                "resource": "AWS::Lambda::Url.ResizerUrl",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.LambdaFunctionURLAuth",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-aws-authtype-for-your-lambda-function-urls-is-defined",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 22,
+        "failed": 5,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 5,
+        "checkov_version": "3.3.26"
+    }
+}

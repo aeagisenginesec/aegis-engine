@@ -1,0 +1,1154 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_GCP_32",
+                "bc_check_id": "BC_GCP_NETWORKING_8",
+                "check_name": "Ensure 'Block Project-wide SSH keys' is enabled for VM instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "metadata/block-project-ssh-keys"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"app\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"app-web-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-standard-2\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"ubuntu-os-cloud/ubuntu-2204-lts\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  shielded_instance_config {\n"
+                    ],
+                    [
+                        27,
+                        "    enable_secure_boot          = true\n"
+                    ],
+                    [
+                        28,
+                        "    enable_vtpm                 = true\n"
+                    ],
+                    [
+                        29,
+                        "    enable_integrity_monitoring = true\n"
+                    ],
+                    [
+                        30,
+                        "  }\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        33,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "    access_config {\n"
+                    ],
+                    [
+                        36,
+                        "    }\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "\n"
+                    ],
+                    [
+                        39,
+                        "  service_account {\n"
+                    ],
+                    [
+                        40,
+                        "    scopes = [\"logging-write\", \"monitoring-write\"]\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        44,
+                        "    enable-oslogin = \"TRUE\"\n"
+                    ],
+                    [
+                        45,
+                        "  }\n"
+                    ],
+                    [
+                        46,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "file_line_range": [
+                    15,
+                    46
+                ],
+                "resource": "google_compute_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBlockProjectSSH",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_38",
+                "bc_check_id": "BC_GCP_GENERAL_2",
+                "check_name": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "boot_disk",
+                        "boot_disk/[0]/disk_encryption_key_raw",
+                        "boot_disk/[0]/kms_key_self_link"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"app\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"app-web-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-standard-2\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"ubuntu-os-cloud/ubuntu-2204-lts\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  shielded_instance_config {\n"
+                    ],
+                    [
+                        27,
+                        "    enable_secure_boot          = true\n"
+                    ],
+                    [
+                        28,
+                        "    enable_vtpm                 = true\n"
+                    ],
+                    [
+                        29,
+                        "    enable_integrity_monitoring = true\n"
+                    ],
+                    [
+                        30,
+                        "  }\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        33,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "    access_config {\n"
+                    ],
+                    [
+                        36,
+                        "    }\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "\n"
+                    ],
+                    [
+                        39,
+                        "  service_account {\n"
+                    ],
+                    [
+                        40,
+                        "    scopes = [\"logging-write\", \"monitoring-write\"]\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        44,
+                        "    enable-oslogin = \"TRUE\"\n"
+                    ],
+                    [
+                        45,
+                        "  }\n"
+                    ],
+                    [
+                        46,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "file_line_range": [
+                    15,
+                    46
+                ],
+                "resource": "google_compute_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBootDiskEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/encrypt-boot-disks-for-instances-with-cseks",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_30",
+                "bc_check_id": "BC_GCP_IAM_1",
+                "check_name": "Ensure that instances are not configured to use the default service account",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "service_account/[0]/email",
+                        "name"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"app\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"app-web-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-standard-2\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"ubuntu-os-cloud/ubuntu-2204-lts\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  shielded_instance_config {\n"
+                    ],
+                    [
+                        27,
+                        "    enable_secure_boot          = true\n"
+                    ],
+                    [
+                        28,
+                        "    enable_vtpm                 = true\n"
+                    ],
+                    [
+                        29,
+                        "    enable_integrity_monitoring = true\n"
+                    ],
+                    [
+                        30,
+                        "  }\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        33,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "    access_config {\n"
+                    ],
+                    [
+                        36,
+                        "    }\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "\n"
+                    ],
+                    [
+                        39,
+                        "  service_account {\n"
+                    ],
+                    [
+                        40,
+                        "    scopes = [\"logging-write\", \"monitoring-write\"]\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        44,
+                        "    enable-oslogin = \"TRUE\"\n"
+                    ],
+                    [
+                        45,
+                        "  }\n"
+                    ],
+                    [
+                        46,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "file_line_range": [
+                    15,
+                    46
+                ],
+                "resource": "google_compute_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeDefaultServiceAccount",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_40",
+                "bc_check_id": "BC_GCP_PUBLIC_2",
+                "check_name": "Ensure that Compute instances do not have public IP addresses",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "network_interface/[0]/access_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"app\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"app-web-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-standard-2\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"ubuntu-os-cloud/ubuntu-2204-lts\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  shielded_instance_config {\n"
+                    ],
+                    [
+                        27,
+                        "    enable_secure_boot          = true\n"
+                    ],
+                    [
+                        28,
+                        "    enable_vtpm                 = true\n"
+                    ],
+                    [
+                        29,
+                        "    enable_integrity_monitoring = true\n"
+                    ],
+                    [
+                        30,
+                        "  }\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        33,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "    access_config {\n"
+                    ],
+                    [
+                        36,
+                        "    }\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "\n"
+                    ],
+                    [
+                        39,
+                        "  service_account {\n"
+                    ],
+                    [
+                        40,
+                        "    scopes = [\"logging-write\", \"monitoring-write\"]\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        44,
+                        "    enable-oslogin = \"TRUE\"\n"
+                    ],
+                    [
+                        45,
+                        "  }\n"
+                    ],
+                    [
+                        46,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "file_line_range": [
+                    15,
+                    46
+                ],
+                "resource": "google_compute_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeExternalIP",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-public-policies/bc-gcp-public-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_32",
+                "bc_check_id": "BC_GCP_NETWORKING_8",
+                "check_name": "Ensure 'Block Project-wide SSH keys' is enabled for VM instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "metadata/block-project-ssh-keys"
+                    ]
+                },
+                "code_block": [
+                    [
+                        48,
+                        "resource \"google_compute_instance\" \"worker\" {\n"
+                    ],
+                    [
+                        49,
+                        "  name         = \"app-worker-01\"\n"
+                    ],
+                    [
+                        50,
+                        "  machine_type = \"e2-standard-2\"\n"
+                    ],
+                    [
+                        51,
+                        "  zone         = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        54,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        55,
+                        "      image = \"ubuntu-os-cloud/ubuntu-2204-lts\"\n"
+                    ],
+                    [
+                        56,
+                        "    }\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "  shielded_instance_config {\n"
+                    ],
+                    [
+                        60,
+                        "    enable_secure_boot          = true\n"
+                    ],
+                    [
+                        61,
+                        "    enable_vtpm                 = true\n"
+                    ],
+                    [
+                        62,
+                        "    enable_integrity_monitoring = true\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        66,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        67,
+                        "  }\n"
+                    ],
+                    [
+                        68,
+                        "\n"
+                    ],
+                    [
+                        69,
+                        "  service_account {\n"
+                    ],
+                    [
+                        70,
+                        "    scopes = [\"logging-write\", \"monitoring-write\"]\n"
+                    ],
+                    [
+                        71,
+                        "  }\n"
+                    ],
+                    [
+                        72,
+                        "\n"
+                    ],
+                    [
+                        73,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        74,
+                        "    enable-oslogin = \"TRUE\"\n"
+                    ],
+                    [
+                        75,
+                        "  }\n"
+                    ],
+                    [
+                        76,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "file_line_range": [
+                    48,
+                    76
+                ],
+                "resource": "google_compute_instance.worker",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBlockProjectSSH",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_38",
+                "bc_check_id": "BC_GCP_GENERAL_2",
+                "check_name": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "boot_disk",
+                        "boot_disk/[0]/disk_encryption_key_raw",
+                        "boot_disk/[0]/kms_key_self_link"
+                    ]
+                },
+                "code_block": [
+                    [
+                        48,
+                        "resource \"google_compute_instance\" \"worker\" {\n"
+                    ],
+                    [
+                        49,
+                        "  name         = \"app-worker-01\"\n"
+                    ],
+                    [
+                        50,
+                        "  machine_type = \"e2-standard-2\"\n"
+                    ],
+                    [
+                        51,
+                        "  zone         = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        54,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        55,
+                        "      image = \"ubuntu-os-cloud/ubuntu-2204-lts\"\n"
+                    ],
+                    [
+                        56,
+                        "    }\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "  shielded_instance_config {\n"
+                    ],
+                    [
+                        60,
+                        "    enable_secure_boot          = true\n"
+                    ],
+                    [
+                        61,
+                        "    enable_vtpm                 = true\n"
+                    ],
+                    [
+                        62,
+                        "    enable_integrity_monitoring = true\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        66,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        67,
+                        "  }\n"
+                    ],
+                    [
+                        68,
+                        "\n"
+                    ],
+                    [
+                        69,
+                        "  service_account {\n"
+                    ],
+                    [
+                        70,
+                        "    scopes = [\"logging-write\", \"monitoring-write\"]\n"
+                    ],
+                    [
+                        71,
+                        "  }\n"
+                    ],
+                    [
+                        72,
+                        "\n"
+                    ],
+                    [
+                        73,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        74,
+                        "    enable-oslogin = \"TRUE\"\n"
+                    ],
+                    [
+                        75,
+                        "  }\n"
+                    ],
+                    [
+                        76,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "file_line_range": [
+                    48,
+                    76
+                ],
+                "resource": "google_compute_instance.worker",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBootDiskEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/encrypt-boot-disks-for-instances-with-cseks",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_30",
+                "bc_check_id": "BC_GCP_IAM_1",
+                "check_name": "Ensure that instances are not configured to use the default service account",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "service_account/[0]/email",
+                        "name"
+                    ]
+                },
+                "code_block": [
+                    [
+                        48,
+                        "resource \"google_compute_instance\" \"worker\" {\n"
+                    ],
+                    [
+                        49,
+                        "  name         = \"app-worker-01\"\n"
+                    ],
+                    [
+                        50,
+                        "  machine_type = \"e2-standard-2\"\n"
+                    ],
+                    [
+                        51,
+                        "  zone         = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        54,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        55,
+                        "      image = \"ubuntu-os-cloud/ubuntu-2204-lts\"\n"
+                    ],
+                    [
+                        56,
+                        "    }\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "  shielded_instance_config {\n"
+                    ],
+                    [
+                        60,
+                        "    enable_secure_boot          = true\n"
+                    ],
+                    [
+                        61,
+                        "    enable_vtpm                 = true\n"
+                    ],
+                    [
+                        62,
+                        "    enable_integrity_monitoring = true\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        66,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        67,
+                        "  }\n"
+                    ],
+                    [
+                        68,
+                        "\n"
+                    ],
+                    [
+                        69,
+                        "  service_account {\n"
+                    ],
+                    [
+                        70,
+                        "    scopes = [\"logging-write\", \"monitoring-write\"]\n"
+                    ],
+                    [
+                        71,
+                        "  }\n"
+                    ],
+                    [
+                        72,
+                        "\n"
+                    ],
+                    [
+                        73,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        74,
+                        "    enable-oslogin = \"TRUE\"\n"
+                    ],
+                    [
+                        75,
+                        "  }\n"
+                    ],
+                    [
+                        76,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf",
+                "file_line_range": [
+                    48,
+                    76
+                ],
+                "resource": "google_compute_instance.worker",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeDefaultServiceAccount",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t054/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 11,
+        "failed": 7,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

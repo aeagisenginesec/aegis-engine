@@ -1,0 +1,1138 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_355",
+                "bc_check_id": "BC_AWS_IAM_88",
+                "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's resource for restrictable actions",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[2]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        29,
+                        "resource \"aws_iam_policy\" \"orders_scoped\" {\n"
+                    ],
+                    [
+                        30,
+                        "  name = \"orders-scoped\"\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        33,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        34,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        35,
+                        "      {\n"
+                    ],
+                    [
+                        36,
+                        "        Effect = \"Allow\"\n"
+                    ],
+                    [
+                        37,
+                        "        Action = [\n"
+                    ],
+                    [
+                        38,
+                        "          \"dynamodb:GetItem\",\n"
+                    ],
+                    [
+                        39,
+                        "          \"dynamodb:PutItem\",\n"
+                    ],
+                    [
+                        40,
+                        "          \"dynamodb:UpdateItem\"\n"
+                    ],
+                    [
+                        41,
+                        "        ]\n"
+                    ],
+                    [
+                        42,
+                        "        Resource = aws_dynamodb_table.orders.arn\n"
+                    ],
+                    [
+                        43,
+                        "      },\n"
+                    ],
+                    [
+                        44,
+                        "      {\n"
+                    ],
+                    [
+                        45,
+                        "        Effect = \"Allow\"\n"
+                    ],
+                    [
+                        46,
+                        "        Action = [\n"
+                    ],
+                    [
+                        47,
+                        "          \"logs:CreateLogGroup\",\n"
+                    ],
+                    [
+                        48,
+                        "          \"logs:CreateLogStream\",\n"
+                    ],
+                    [
+                        49,
+                        "          \"logs:PutLogEvents\"\n"
+                    ],
+                    [
+                        50,
+                        "        ]\n"
+                    ],
+                    [
+                        51,
+                        "        Resource = \"arn:aws:logs:us-west-2:123456789012:log-group:/aws/lambda/orders-processor:*\"\n"
+                    ],
+                    [
+                        52,
+                        "      },\n"
+                    ],
+                    [
+                        53,
+                        "      {\n"
+                    ],
+                    [
+                        54,
+                        "        Effect = \"Allow\"\n"
+                    ],
+                    [
+                        55,
+                        "        Action = [\n"
+                    ],
+                    [
+                        56,
+                        "          \"ec2:CreateNetworkInterface\",\n"
+                    ],
+                    [
+                        57,
+                        "          \"ec2:DescribeNetworkInterfaces\",\n"
+                    ],
+                    [
+                        58,
+                        "          \"ec2:DeleteNetworkInterface\"\n"
+                    ],
+                    [
+                        59,
+                        "        ]\n"
+                    ],
+                    [
+                        60,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        61,
+                        "      }\n"
+                    ],
+                    [
+                        62,
+                        "    ]\n"
+                    ],
+                    [
+                        63,
+                        "  })\n"
+                    ],
+                    [
+                        64,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "file_line_range": [
+                    29,
+                    64
+                ],
+                "resource": "aws_iam_policy.orders_scoped",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMStarResourcePolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-355",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_290",
+                "bc_check_id": "BC_AWS_IAM_85",
+                "check_name": "Ensure IAM policies does not allow write access without constraints",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[2]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        29,
+                        "resource \"aws_iam_policy\" \"orders_scoped\" {\n"
+                    ],
+                    [
+                        30,
+                        "  name = \"orders-scoped\"\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        33,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        34,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        35,
+                        "      {\n"
+                    ],
+                    [
+                        36,
+                        "        Effect = \"Allow\"\n"
+                    ],
+                    [
+                        37,
+                        "        Action = [\n"
+                    ],
+                    [
+                        38,
+                        "          \"dynamodb:GetItem\",\n"
+                    ],
+                    [
+                        39,
+                        "          \"dynamodb:PutItem\",\n"
+                    ],
+                    [
+                        40,
+                        "          \"dynamodb:UpdateItem\"\n"
+                    ],
+                    [
+                        41,
+                        "        ]\n"
+                    ],
+                    [
+                        42,
+                        "        Resource = aws_dynamodb_table.orders.arn\n"
+                    ],
+                    [
+                        43,
+                        "      },\n"
+                    ],
+                    [
+                        44,
+                        "      {\n"
+                    ],
+                    [
+                        45,
+                        "        Effect = \"Allow\"\n"
+                    ],
+                    [
+                        46,
+                        "        Action = [\n"
+                    ],
+                    [
+                        47,
+                        "          \"logs:CreateLogGroup\",\n"
+                    ],
+                    [
+                        48,
+                        "          \"logs:CreateLogStream\",\n"
+                    ],
+                    [
+                        49,
+                        "          \"logs:PutLogEvents\"\n"
+                    ],
+                    [
+                        50,
+                        "        ]\n"
+                    ],
+                    [
+                        51,
+                        "        Resource = \"arn:aws:logs:us-west-2:123456789012:log-group:/aws/lambda/orders-processor:*\"\n"
+                    ],
+                    [
+                        52,
+                        "      },\n"
+                    ],
+                    [
+                        53,
+                        "      {\n"
+                    ],
+                    [
+                        54,
+                        "        Effect = \"Allow\"\n"
+                    ],
+                    [
+                        55,
+                        "        Action = [\n"
+                    ],
+                    [
+                        56,
+                        "          \"ec2:CreateNetworkInterface\",\n"
+                    ],
+                    [
+                        57,
+                        "          \"ec2:DescribeNetworkInterfaces\",\n"
+                    ],
+                    [
+                        58,
+                        "          \"ec2:DeleteNetworkInterface\"\n"
+                    ],
+                    [
+                        59,
+                        "        ]\n"
+                    ],
+                    [
+                        60,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        61,
+                        "      }\n"
+                    ],
+                    [
+                        62,
+                        "    ]\n"
+                    ],
+                    [
+                        63,
+                        "  })\n"
+                    ],
+                    [
+                        64,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "file_line_range": [
+                    29,
+                    64
+                ],
+                "resource": "aws_iam_policy.orders_scoped",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMWriteAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-290",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_27",
+                "bc_check_id": "BC_AWS_GENERAL_16",
+                "check_name": "Ensure all data stored in the SQS queue is encrypted",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "sqs_managed_sse_enabled",
+                        "kms_master_key_id"
+                    ]
+                },
+                "code_block": [
+                    [
+                        71,
+                        "resource \"aws_sqs_queue\" \"orders_dlq\" {\n"
+                    ],
+                    [
+                        72,
+                        "  name = \"orders-dlq\"\n"
+                    ],
+                    [
+                        73,
+                        "\n"
+                    ],
+                    [
+                        74,
+                        "  tags = {\n"
+                    ],
+                    [
+                        75,
+                        "    Name = \"orders-dlq\"\n"
+                    ],
+                    [
+                        76,
+                        "  }\n"
+                    ],
+                    [
+                        77,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "file_line_range": [
+                    71,
+                    77
+                ],
+                "resource": "aws_sqs_queue.orders_dlq",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SQSQueueEncryption",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "orders-dlq"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-16-encrypt-sqs-queue",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_119",
+                "bc_check_id": "BC_AWS_GENERAL_52",
+                "check_name": "Ensure DynamoDB Tables are encrypted using a KMS Customer Managed CMK",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "server_side_encryption/[0]/enabled",
+                        "server_side_encryption/[0]/kms_key_arn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        79,
+                        "resource \"aws_dynamodb_table\" \"orders\" {\n"
+                    ],
+                    [
+                        80,
+                        "  name         = \"orders\"\n"
+                    ],
+                    [
+                        81,
+                        "  billing_mode = \"PAY_PER_REQUEST\"\n"
+                    ],
+                    [
+                        82,
+                        "  hash_key     = \"order_id\"\n"
+                    ],
+                    [
+                        83,
+                        "\n"
+                    ],
+                    [
+                        84,
+                        "  attribute {\n"
+                    ],
+                    [
+                        85,
+                        "    name = \"order_id\"\n"
+                    ],
+                    [
+                        86,
+                        "    type = \"S\"\n"
+                    ],
+                    [
+                        87,
+                        "  }\n"
+                    ],
+                    [
+                        88,
+                        "\n"
+                    ],
+                    [
+                        89,
+                        "  tags = {\n"
+                    ],
+                    [
+                        90,
+                        "    Name = \"orders\"\n"
+                    ],
+                    [
+                        91,
+                        "  }\n"
+                    ],
+                    [
+                        92,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "file_line_range": [
+                    79,
+                    92
+                ],
+                "resource": "aws_dynamodb_table.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.DynamoDBTablesEncrypted",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "orders"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-52",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_28",
+                "bc_check_id": "BC_AWS_GENERAL_6",
+                "check_name": "Ensure DynamoDB point in time recovery (backup) is enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "point_in_time_recovery/[0]/enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        79,
+                        "resource \"aws_dynamodb_table\" \"orders\" {\n"
+                    ],
+                    [
+                        80,
+                        "  name         = \"orders\"\n"
+                    ],
+                    [
+                        81,
+                        "  billing_mode = \"PAY_PER_REQUEST\"\n"
+                    ],
+                    [
+                        82,
+                        "  hash_key     = \"order_id\"\n"
+                    ],
+                    [
+                        83,
+                        "\n"
+                    ],
+                    [
+                        84,
+                        "  attribute {\n"
+                    ],
+                    [
+                        85,
+                        "    name = \"order_id\"\n"
+                    ],
+                    [
+                        86,
+                        "    type = \"S\"\n"
+                    ],
+                    [
+                        87,
+                        "  }\n"
+                    ],
+                    [
+                        88,
+                        "\n"
+                    ],
+                    [
+                        89,
+                        "  tags = {\n"
+                    ],
+                    [
+                        90,
+                        "    Name = \"orders\"\n"
+                    ],
+                    [
+                        91,
+                        "  }\n"
+                    ],
+                    [
+                        92,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "file_line_range": [
+                    79,
+                    92
+                ],
+                "resource": "aws_dynamodb_table.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.DynamodbRecovery",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "orders"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-6",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_158",
+                "bc_check_id": "BC_AWS_GENERAL_85",
+                "check_name": "Ensure that CloudWatch Log Group is encrypted by KMS",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "kms_key_id"
+                    ]
+                },
+                "code_block": [
+                    [
+                        94,
+                        "resource \"aws_cloudwatch_log_group\" \"orders\" {\n"
+                    ],
+                    [
+                        95,
+                        "  name              = \"/aws/lambda/orders-processor\"\n"
+                    ],
+                    [
+                        96,
+                        "  retention_in_days = 30\n"
+                    ],
+                    [
+                        97,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "file_line_range": [
+                    94,
+                    97
+                ],
+                "resource": "aws_cloudwatch_log_group.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.CloudWatchLogGroupKMSKey",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-cloudwatch-log-group-is-encrypted-by-kms",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_338",
+                "bc_check_id": "BC_AWS_LOGGING_46",
+                "check_name": "Ensure CloudWatch log groups retains logs for at least 1 year",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "retention_in_days"
+                    ]
+                },
+                "code_block": [
+                    [
+                        94,
+                        "resource \"aws_cloudwatch_log_group\" \"orders\" {\n"
+                    ],
+                    [
+                        95,
+                        "  name              = \"/aws/lambda/orders-processor\"\n"
+                    ],
+                    [
+                        96,
+                        "  retention_in_days = 30\n"
+                    ],
+                    [
+                        97,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "file_line_range": [
+                    94,
+                    97
+                ],
+                "resource": "aws_cloudwatch_log_group.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.CloudWatchLogGroupRetentionYear",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-338",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_272",
+                "bc_check_id": "BC_AWS_General_201",
+                "check_name": "Ensure AWS Lambda function is configured to validate code-signing",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "code_signing_config_arn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        99,
+                        "resource \"aws_lambda_function\" \"orders\" {\n"
+                    ],
+                    [
+                        100,
+                        "  function_name                  = \"orders-processor\"\n"
+                    ],
+                    [
+                        101,
+                        "  role                           = aws_iam_role.orders.arn\n"
+                    ],
+                    [
+                        102,
+                        "  handler                        = \"app.handler\"\n"
+                    ],
+                    [
+                        103,
+                        "  runtime                        = \"python3.12\"\n"
+                    ],
+                    [
+                        104,
+                        "  filename                       = \"orders.zip\"\n"
+                    ],
+                    [
+                        105,
+                        "  reserved_concurrent_executions = 50\n"
+                    ],
+                    [
+                        106,
+                        "\n"
+                    ],
+                    [
+                        107,
+                        "  dead_letter_config {\n"
+                    ],
+                    [
+                        108,
+                        "    target_arn = aws_sqs_queue.orders_dlq.arn\n"
+                    ],
+                    [
+                        109,
+                        "  }\n"
+                    ],
+                    [
+                        110,
+                        "\n"
+                    ],
+                    [
+                        111,
+                        "  tracing_config {\n"
+                    ],
+                    [
+                        112,
+                        "    mode = \"Active\"\n"
+                    ],
+                    [
+                        113,
+                        "  }\n"
+                    ],
+                    [
+                        114,
+                        "\n"
+                    ],
+                    [
+                        115,
+                        "  vpc_config {\n"
+                    ],
+                    [
+                        116,
+                        "    subnet_ids         = [\"subnet-priv1\", \"subnet-priv2\"]\n"
+                    ],
+                    [
+                        117,
+                        "    security_group_ids = [\"sg-lambda01\"]\n"
+                    ],
+                    [
+                        118,
+                        "  }\n"
+                    ],
+                    [
+                        119,
+                        "\n"
+                    ],
+                    [
+                        120,
+                        "  environment {\n"
+                    ],
+                    [
+                        121,
+                        "    variables = {\n"
+                    ],
+                    [
+                        122,
+                        "      TABLE_NAME = aws_dynamodb_table.orders.name\n"
+                    ],
+                    [
+                        123,
+                        "    }\n"
+                    ],
+                    [
+                        124,
+                        "  }\n"
+                    ],
+                    [
+                        125,
+                        "\n"
+                    ],
+                    [
+                        126,
+                        "  depends_on = [aws_cloudwatch_log_group.orders]\n"
+                    ],
+                    [
+                        127,
+                        "\n"
+                    ],
+                    [
+                        128,
+                        "  tags = {\n"
+                    ],
+                    [
+                        129,
+                        "    Name = \"orders-processor\"\n"
+                    ],
+                    [
+                        130,
+                        "  }\n"
+                    ],
+                    [
+                        131,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "file_line_range": [
+                    99,
+                    131
+                ],
+                "resource": "aws_lambda_function.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LambdaCodeSigningConfigured",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "orders-processor"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-272",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "breadcrumbs": {
+                    "environment.variables.TABLE_NAME": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.orders",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "environment.variables": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.orders",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_173",
+                "bc_check_id": "BC_AWS_SERVERLESS_5",
+                "check_name": "Check encryption settings for Lambda environmental variable",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "kms_key_arn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        99,
+                        "resource \"aws_lambda_function\" \"orders\" {\n"
+                    ],
+                    [
+                        100,
+                        "  function_name                  = \"orders-processor\"\n"
+                    ],
+                    [
+                        101,
+                        "  role                           = aws_iam_role.orders.arn\n"
+                    ],
+                    [
+                        102,
+                        "  handler                        = \"app.handler\"\n"
+                    ],
+                    [
+                        103,
+                        "  runtime                        = \"python3.12\"\n"
+                    ],
+                    [
+                        104,
+                        "  filename                       = \"orders.zip\"\n"
+                    ],
+                    [
+                        105,
+                        "  reserved_concurrent_executions = 50\n"
+                    ],
+                    [
+                        106,
+                        "\n"
+                    ],
+                    [
+                        107,
+                        "  dead_letter_config {\n"
+                    ],
+                    [
+                        108,
+                        "    target_arn = aws_sqs_queue.orders_dlq.arn\n"
+                    ],
+                    [
+                        109,
+                        "  }\n"
+                    ],
+                    [
+                        110,
+                        "\n"
+                    ],
+                    [
+                        111,
+                        "  tracing_config {\n"
+                    ],
+                    [
+                        112,
+                        "    mode = \"Active\"\n"
+                    ],
+                    [
+                        113,
+                        "  }\n"
+                    ],
+                    [
+                        114,
+                        "\n"
+                    ],
+                    [
+                        115,
+                        "  vpc_config {\n"
+                    ],
+                    [
+                        116,
+                        "    subnet_ids         = [\"subnet-priv1\", \"subnet-priv2\"]\n"
+                    ],
+                    [
+                        117,
+                        "    security_group_ids = [\"sg-lambda01\"]\n"
+                    ],
+                    [
+                        118,
+                        "  }\n"
+                    ],
+                    [
+                        119,
+                        "\n"
+                    ],
+                    [
+                        120,
+                        "  environment {\n"
+                    ],
+                    [
+                        121,
+                        "    variables = {\n"
+                    ],
+                    [
+                        122,
+                        "      TABLE_NAME = aws_dynamodb_table.orders.name\n"
+                    ],
+                    [
+                        123,
+                        "    }\n"
+                    ],
+                    [
+                        124,
+                        "  }\n"
+                    ],
+                    [
+                        125,
+                        "\n"
+                    ],
+                    [
+                        126,
+                        "  depends_on = [aws_cloudwatch_log_group.orders]\n"
+                    ],
+                    [
+                        127,
+                        "\n"
+                    ],
+                    [
+                        128,
+                        "  tags = {\n"
+                    ],
+                    [
+                        129,
+                        "    Name = \"orders-processor\"\n"
+                    ],
+                    [
+                        130,
+                        "  }\n"
+                    ],
+                    [
+                        131,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "file_line_range": [
+                    99,
+                    131
+                ],
+                "resource": "aws_lambda_function.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LambdaEnvironmentEncryptionSettings",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "orders-processor"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-serverless-policies/bc-aws-serverless-5",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                "breadcrumbs": {
+                    "environment.variables.TABLE_NAME": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.orders",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "environment.variables": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.orders",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t010/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 25,
+        "failed": 9,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 7,
+        "checkov_version": "3.3.26"
+    }
+}

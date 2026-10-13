@@ -1,0 +1,744 @@
+[
+  {
+    "project": "c001",
+    "resource": "SiteBucket (AWS::S3::Bucket)",
+    "condition": "S3 static website hosting serves the site over plain HTTP only; no TLS is possible on the S3 website endpoint.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c003",
+    "resource": "DeployRole (AWS::IAM::Role)",
+    "condition": "Role carries the AdministratorAccess managed policy plus an inline policy allowing all actions on all resources, and its trust policy lets any principal in the account root assume it.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c005",
+    "resource": "JumpSecurityGroup (AWS::EC2::SecurityGroup)",
+    "condition": "Security group allows SSH (port 22) and RDP (port 3389) inbound from 0.0.0.0/0.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c005",
+    "resource": "JumpBox (AWS::EC2::Instance)",
+    "condition": "EC2 instance has no EBS encryption configured on its block devices; the root volume is unencrypted.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c006",
+    "resource": "BastionHost (AWS::EC2::Instance)",
+    "condition": "MetadataOptions has HttpTokens set to optional, so IMDSv1 is allowed and instance credentials can be stolen via SSRF.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c007",
+    "resource": "ReportingDbSecurityGroup (AWS::EC2::SecurityGroup)",
+    "condition": "Security group allows MySQL (port 3306) inbound from 0.0.0.0/0.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c007",
+    "resource": "ReportingDb (AWS::RDS::DBInstance)",
+    "condition": "Database instance is publicly accessible from the internet.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c007",
+    "resource": "ReportingDb (AWS::RDS::DBInstance)",
+    "condition": "StorageEncrypted is false, so database data at rest is not encrypted.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c007",
+    "resource": "ReportingDb (AWS::RDS::DBInstance)",
+    "condition": "BackupRetentionPeriod is 0, so automated backups are disabled and there is no recovery path.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c009",
+    "resource": "WebhookRole (AWS::IAM::Role)",
+    "condition": "Inline policy allows all actions (*) on all resources (*), giving the Lambda full administrative access.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c009",
+    "resource": "WebhookFunction (AWS::Lambda::Function)",
+    "condition": "Hardcoded secrets in plaintext environment variables (DB_PASSWORD and STRIPE_API_KEY); values are redacted in the corpus but the keys show live credentials were embedded in the template.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c011",
+    "resource": "DocsDistribution (AWS::CloudFront::Distribution)",
+    "condition": "ViewerProtocolPolicy is allow-all, so the docs portal answers plain HTTP with no TLS enforcement.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c011",
+    "resource": "DocsDistribution (AWS::CloudFront::Distribution)",
+    "condition": "No WAF is attached to the public CloudFront distribution.",
+    "severity": "low",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c012",
+    "resource": "PublicNaclAllowAll (AWS::EC2::NetworkAclEntry)",
+    "condition": "NACL rule allows all protocols and ports inbound from 0.0.0.0/0; the public NACL was left wide open after debugging.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c013",
+    "resource": "AccessLogsBucket (AWS::S3::Bucket)",
+    "condition": "Central bucket collecting S3 access logs has no default server-side encryption configured.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c013",
+    "resource": "AccessLogsBucket (AWS::S3::Bucket)",
+    "condition": "Bucket has no PublicAccessBlockConfiguration, so public access blocks are not enforced at the bucket level.",
+    "severity": "low",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c014",
+    "resource": "OnCallUser (AWS::IAM::User)",
+    "condition": "Standing IAM user has the AdministratorAccess managed policy attached, granting permanent full administrative privileges.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c014",
+    "resource": "OnCallAccessKey (AWS::IAM::AccessKey)",
+    "condition": "Active long-term access key is created for the admin-privileged user, a persistent credential with full permissions.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c016",
+    "resource": "HttpListener (AWS::ElasticLoadBalancingV2::Listener)",
+    "condition": "Internet-facing ALB listener is plain HTTP on port 80; TLS termination was deferred so all client traffic is unencrypted.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c017",
+    "resource": "AnalyticsDbSg (AWS::EC2::SecurityGroup)",
+    "condition": "Security group allows MySQL (port 3306) inbound from 0.0.0.0/0.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c017",
+    "resource": "AnalyticsInstance (AWS::RDS::DBInstance)",
+    "condition": "Aurora instance is publicly accessible from the internet.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c017",
+    "resource": "AnalyticsCluster (AWS::RDS::DBCluster)",
+    "condition": "StorageEncrypted is false, so cluster data at rest is not encrypted.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c017",
+    "resource": "AnalyticsCluster (AWS::RDS::DBCluster)",
+    "condition": "BackupRetentionPeriod is only 1 day, giving almost no recovery window.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c017",
+    "resource": "AnalyticsCluster (AWS::RDS::DBCluster)",
+    "condition": "MasterUsername is 'root', the default superuser account.",
+    "severity": "low",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c018",
+    "resource": "ResizerUrl (AWS::Lambda::Url)",
+    "condition": "Function URL has AuthType NONE, so the Lambda is publicly invokable by anyone on the internet with no authentication.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c018",
+    "resource": "ResizerUrl (AWS::Lambda::Url)",
+    "condition": "CORS configuration allows all origins ('*') on the public function URL.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c019",
+    "resource": "PostgresSecurityGroup (AWS::EC2::SecurityGroup)",
+    "condition": "Security group allows Postgres (port 5432) inbound from 0.0.0.0/0.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c019",
+    "resource": "SharedPostgres (AWS::RDS::DBInstance)",
+    "condition": "Database instance is publicly accessible from the internet.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c019",
+    "resource": "SharedPostgres (AWS::RDS::DBInstance)",
+    "condition": "StorageEncrypted is false, so database data at rest is not encrypted.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c019",
+    "resource": "SharedPostgres (AWS::RDS::DBInstance)",
+    "condition": "BackupRetentionPeriod is 0, so automated backups are disabled.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c020",
+    "resource": "FlowLogBucket (AWS::S3::Bucket)",
+    "condition": "VPC flow log destination bucket has no default server-side encryption; captured network metadata is stored unencrypted.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c021",
+    "resource": "AssetsBucket (AWS::S3::Bucket)",
+    "condition": "S3 static website hosting serves the assets over plain HTTP only; no TLS is possible on the S3 website endpoint.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c022",
+    "resource": "SupportAdminPolicy (AWS::IAM::ManagedPolicy)",
+    "condition": "Managed policy allows all actions (*) on all resources (*) and is attached to the support team group, giving every member full admin rights.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c022",
+    "resource": "SupportUserKey (AWS::IAM::AccessKey)",
+    "condition": "Active long-term access key created for the admin-privileged support user.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c024",
+    "resource": "CustomerDbSg (AWS::EC2::SecurityGroup)",
+    "condition": "Security group allows Postgres (port 5432) inbound from 0.0.0.0/0.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c024",
+    "resource": "CustomerDb (AWS::RDS::DBInstance)",
+    "condition": "Customer database instance is publicly accessible from the internet.",
+    "severity": "high",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c025",
+    "resource": "ApiStage (AWS::ApiGateway::Stage)",
+    "condition": "MethodSettings has LoggingLevel OFF and MetricsEnabled false, so access logging for the partner API is disabled.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c025",
+    "resource": "PartnerApi (AWS::ApiGateway::RestApi)",
+    "condition": "No WAF is configured in front of the partner-facing API.",
+    "severity": "medium",
+    "format": "cloudformation"
+  },
+  {
+    "project": "c026",
+    "resource": "Microsoft.Storage/storageAccounts (acmegallerymedia)",
+    "condition": "supportsHttpsTrafficOnly is false, so the storage account accepts unencrypted HTTP traffic.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c026",
+    "resource": "Microsoft.Storage/storageAccounts (acmegallerymedia)",
+    "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c026",
+    "resource": "gallery-images container (Microsoft.Storage/storageAccounts/blobServices/containers)",
+    "condition": "Account-level allowBlobPublicAccess is true and the gallery-images container has publicAccess Blob, allowing anonymous public read of blobs.",
+    "severity": "medium",
+    "format": "arm"
+  },
+  {
+    "project": "c028",
+    "resource": "Microsoft.KeyVault/vaults (devshared)",
+    "condition": "enableSoftDelete is false, so deleted secrets cannot be recovered.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c028",
+    "resource": "Microsoft.KeyVault/vaults (devshared)",
+    "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged by anyone with access.",
+    "severity": "medium",
+    "format": "arm"
+  },
+  {
+    "project": "c028",
+    "resource": "Microsoft.KeyVault/vaults (devshared)",
+    "condition": "networkAcls defaultAction is Allow, so the vault is reachable from the public internet.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c028",
+    "resource": "Microsoft.KeyVault/vaults (devshared)",
+    "condition": "Access policy grants 'all' permissions on keys, secrets and certificates to a single deployer principal.",
+    "severity": "medium",
+    "format": "arm"
+  },
+  {
+    "project": "c028",
+    "resource": "Microsoft.KeyVault/vaults/secrets (api-key)",
+    "condition": "Secret value is the literal placeholder 'PLACEHOLDER_ROTATE_ME', a predictable credential if deployed as-is.",
+    "severity": "low",
+    "format": "arm"
+  },
+  {
+    "project": "c030",
+    "resource": "Microsoft.Sql/servers (erpsql)",
+    "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c030",
+    "resource": "Microsoft.Sql/servers/firewallRules (AllowAll)",
+    "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), effectively opening the SQL server to the whole internet.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c030",
+    "resource": "Microsoft.Sql/servers (erpsql)",
+    "condition": "minimalTlsVersion is 1.0, allowing weak TLS 1.0 connections to the SQL server.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c032",
+    "resource": "Microsoft.Network/networkSecurityGroups (dev-nsg) rule Allow-RDP-Any",
+    "condition": "NSG rule allows RDP (port 3389) inbound from any source (*).",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c032",
+    "resource": "Microsoft.Network/networkSecurityGroups (dev-nsg) rule Allow-SSH-Any",
+    "condition": "NSG rule allows SSH (port 22) inbound from the Internet service tag.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c034",
+    "resource": "Microsoft.KeyVault/vaults (reportsecrets)",
+    "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged.",
+    "severity": "medium",
+    "format": "arm"
+  },
+  {
+    "project": "c035",
+    "resource": "Microsoft.Sql/servers (analyticsql)",
+    "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c035",
+    "resource": "Microsoft.Sql/servers/firewallRules (DataScienceVPN)",
+    "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), opening the SQL server to the whole internet.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c036",
+    "resource": "Microsoft.KeyVault/vaults (teamvault)",
+    "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged.",
+    "severity": "medium",
+    "format": "arm"
+  },
+  {
+    "project": "c036",
+    "resource": "Microsoft.KeyVault/vaults (teamvault)",
+    "condition": "enabledForTemplateDeployment is true, so ARM template deployments can retrieve secrets from the vault.",
+    "severity": "medium",
+    "format": "arm"
+  },
+  {
+    "project": "c036",
+    "resource": "Microsoft.KeyVault/vaults/secrets (db-password)",
+    "condition": "Secret value is the literal placeholder 'PLACEHOLDER_ROTATE_ME', a predictable credential if deployed as-is.",
+    "severity": "low",
+    "format": "arm"
+  },
+  {
+    "project": "c037",
+    "resource": "Microsoft.Network/networkSecurityGroups (loadtest-nsg) rule Allow-All-Inbound",
+    "condition": "NSG rule allows all protocols and ports inbound from any source (*); the temporary rule allows everything.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c038",
+    "resource": "Microsoft.Storage/storageAccounts (statuspage)",
+    "condition": "supportsHttpsTrafficOnly is false, so the static-website storage account accepts unencrypted HTTP traffic.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c038",
+    "resource": "Microsoft.Storage/storageAccounts (statuspage)",
+    "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c038",
+    "resource": "Microsoft.Storage/storageAccounts (statuspage)",
+    "condition": "allowBlobPublicAccess is true, enabling anonymous public access to blobs.",
+    "severity": "medium",
+    "format": "arm"
+  },
+  {
+    "project": "c039",
+    "resource": "Microsoft.Network/networkSecurityGroups (legacy-app-nsg) rule Allow-All-TCP",
+    "condition": "NSG rule allows all TCP ports inbound from any source (*), on a VM that has a public IP address.",
+    "severity": "high",
+    "format": "arm"
+  },
+  {
+    "project": "c039",
+    "resource": "Microsoft.Compute/virtualMachines (legacy-app-01)",
+    "condition": "OS disk has no encryption settings; the VM disk is unencrypted at rest.",
+    "severity": "medium",
+    "format": "arm"
+  },
+  {
+    "project": "c039",
+    "resource": "Microsoft.Compute/virtualMachines (legacy-app-01)",
+    "condition": "linuxConfiguration has disablePasswordAuthentication false, so SSH password login is permitted.",
+    "severity": "medium",
+    "format": "arm"
+  },
+  {
+    "project": "c041",
+    "resource": "gallery (Microsoft.Storage/storageAccounts)",
+    "condition": "supportsHttpsTrafficOnly is false, so the storage account accepts unencrypted HTTP traffic.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c041",
+    "resource": "gallery (Microsoft.Storage/storageAccounts)",
+    "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c041",
+    "resource": "container (Microsoft.Storage/storageAccounts/blobServices/containers)",
+    "condition": "gallery-images container has publicAccess Blob, allowing anonymous public read of blobs.",
+    "severity": "medium",
+    "format": "bicep"
+  },
+  {
+    "project": "c042",
+    "resource": "seedSecret (Microsoft.KeyVault/vaults/secrets)",
+    "condition": "Secret value is the literal placeholder 'PLACEHOLDER_ROTATE_ME', a predictable credential if deployed as-is.",
+    "severity": "low",
+    "format": "bicep"
+  },
+  {
+    "project": "c043",
+    "resource": "nsg (Microsoft.Network/networkSecurityGroups) rule Allow-Contractor-RDP",
+    "condition": "NSG rule allows RDP (port 3389) inbound from any source (*); left internet-wide after the migration weekend.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c044",
+    "resource": "server (Microsoft.Sql/servers)",
+    "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c044",
+    "resource": "server (Microsoft.Sql/servers)",
+    "condition": "minimalTlsVersion is 1.0, allowing weak TLS 1.0 connections to the SQL server.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c044",
+    "resource": "allowAll (Microsoft.Sql/servers/firewallRules)",
+    "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), effectively opening the SQL server to the whole internet.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c045",
+    "resource": "data (Microsoft.Storage/storageAccounts)",
+    "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections; the draft value was never raised.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c046",
+    "resource": "container (Microsoft.Storage/storageAccounts/blobServices/containers, via module)",
+    "condition": "Caller overrides the hardened module and sets containerPublicAccess to Blob, so the uploads container is anonymously readable from the internet.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c047",
+    "resource": "diagnostics (Microsoft.Insights/diagnosticSettings)",
+    "condition": "Diagnostic log and metric retention is only 7 days, below the 90-day retention the compliance team requires.",
+    "severity": "medium",
+    "format": "bicep"
+  },
+  {
+    "project": "c048",
+    "resource": "vault (Microsoft.KeyVault/vaults)",
+    "condition": "enableSoftDelete is false, so deleted secrets cannot be recovered.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c048",
+    "resource": "vault (Microsoft.KeyVault/vaults)",
+    "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged by anyone with access.",
+    "severity": "medium",
+    "format": "bicep"
+  },
+  {
+    "project": "c048",
+    "resource": "vault (Microsoft.KeyVault/vaults)",
+    "condition": "networkAcls defaultAction is Allow, so the vault is reachable from the public internet.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c048",
+    "resource": "vault (Microsoft.KeyVault/vaults)",
+    "condition": "Access policy grants 'all' permissions on keys, secrets and certificates to a single deployer principal.",
+    "severity": "medium",
+    "format": "bicep"
+  },
+  {
+    "project": "c048",
+    "resource": "seedSecret (Microsoft.KeyVault/vaults/secrets)",
+    "condition": "Secret value is the literal placeholder 'PLACEHOLDER_ROTATE_ME', a predictable credential if deployed as-is.",
+    "severity": "low",
+    "format": "bicep"
+  },
+  {
+    "project": "c050",
+    "resource": "workspace (Microsoft.OperationalInsights/workspaces)",
+    "condition": "publicNetworkAccessForIngestion and publicNetworkAccessForQuery are both Enabled, so log data flows over the public internet instead of a private link.",
+    "severity": "medium",
+    "format": "bicep"
+  },
+  {
+    "project": "c051",
+    "resource": "server (Microsoft.Sql/servers)",
+    "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c051",
+    "resource": "vpnRule (Microsoft.Sql/servers/firewallRules)",
+    "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), opening the SQL server to the whole internet.",
+    "severity": "high",
+    "format": "bicep"
+  },
+  {
+    "project": "c053",
+    "resource": "nsg (Microsoft.Network/networkSecurityGroups) rule Allow-Hub-All",
+    "condition": "NSG rule allows all protocols and ports inbound from the entire 10.0.0.0/8 range, far wider than the actual peered spoke.",
+    "severity": "medium",
+    "format": "bicep"
+  },
+  {
+    "project": "c053",
+    "resource": "toHub (Microsoft.Network/virtualNetworks/virtualNetworkPeerings)",
+    "condition": "allowForwardedTraffic is true on the hub peering, permitting transit-style forwarded traffic through the spoke.",
+    "severity": "medium",
+    "format": "bicep"
+  },
+  {
+    "project": "c054",
+    "resource": "vault (Microsoft.KeyVault/vaults)",
+    "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged.",
+    "severity": "medium",
+    "format": "bicep"
+  },
+  {
+    "project": "c054",
+    "resource": "secrets (Microsoft.KeyVault/vaults/secrets loop)",
+    "condition": "Three seeded secrets use the literal placeholder value 'PLACEHOLDER_ROTATE_ME', predictable credentials if deployed as-is.",
+    "severity": "low",
+    "format": "bicep"
+  },
+  {
+    "project": "c056",
+    "resource": "assetsBucket (aws:s3:Bucket)",
+    "condition": "S3 website hosting serves the assets over plain HTTP only; no TLS is possible on the S3 website endpoint.",
+    "severity": "medium",
+    "format": "pulumi"
+  },
+  {
+    "project": "c057",
+    "resource": "jumpSg (aws:ec2:SecurityGroup)",
+    "condition": "SSH (port 22) is allowed from 0.0.0.0/0 because the officeCidr config defaults to 0.0.0.0/0.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c057",
+    "resource": "jumpSg (aws:ec2:SecurityGroup)",
+    "condition": "RDP (port 3389) is allowed inbound from 0.0.0.0/0.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c059",
+    "resource": "dbSg (aws:ec2:SecurityGroup)",
+    "condition": "Security group allows Postgres (port 5432) inbound from 0.0.0.0/0.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c059",
+    "resource": "customerDb (aws:rds:Instance)",
+    "condition": "Customer database instance is publicly accessible from the internet.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c060",
+    "resource": "vault (azure-native:keyvault:Vault)",
+    "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged.",
+    "severity": "medium",
+    "format": "pulumi"
+  },
+  {
+    "project": "c061",
+    "resource": "processorPolicy (aws:iam:RolePolicy)",
+    "condition": "Policy allows dynamodb:* and sqs:* on all resources (*), far broader than the order-events function needs.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c062",
+    "resource": "nsg (azure-native:network:NetworkSecurityGroup) rule Allow-RDP-Any",
+    "condition": "NSG rule allows RDP (port 3389) inbound from any source (*).",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c064",
+    "resource": "sqlServer (azure-native:sql:Server)",
+    "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c064",
+    "resource": "firewallRule (azure-native:sql:FirewallRule)",
+    "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), opening the SQL server to the whole internet.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c065",
+    "resource": "publicNaclAllowAll (aws:ec2:NetworkAclRule)",
+    "condition": "NACL rule allows all protocols and ports inbound from 0.0.0.0/0; the public NACL was left wide open after debugging.",
+    "severity": "medium",
+    "format": "pulumi"
+  },
+  {
+    "project": "c066",
+    "resource": "storageAccount (azure-native:storage:StorageAccount)",
+    "condition": "supportsHttpsTrafficOnly is false, so the storage account accepts unencrypted HTTP traffic.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c066",
+    "resource": "storageAccount (azure-native:storage:StorageAccount)",
+    "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c066",
+    "resource": "container (azure-native:storage:BlobContainer)",
+    "condition": "gallery-images container has publicAccess Blob, allowing anonymous public read of blobs.",
+    "severity": "medium",
+    "format": "pulumi"
+  },
+  {
+    "project": "c068",
+    "resource": "vault (azure-native:keyvault:Vault)",
+    "condition": "enableSoftDelete is false, so deleted secrets cannot be recovered.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c068",
+    "resource": "vault (azure-native:keyvault:Vault)",
+    "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged by anyone with access.",
+    "severity": "medium",
+    "format": "pulumi"
+  },
+  {
+    "project": "c068",
+    "resource": "vault (azure-native:keyvault:Vault)",
+    "condition": "networkAcls defaultAction is Allow, so the vault is reachable from the public internet.",
+    "severity": "high",
+    "format": "pulumi"
+  },
+  {
+    "project": "c068",
+    "resource": "vault (azure-native:keyvault:Vault)",
+    "condition": "Access policy grants 'all' permissions on keys, secrets and certificates to a single deployer principal.",
+    "severity": "medium",
+    "format": "pulumi"
+  },
+  {
+    "project": "c070",
+    "resource": "azureStorage (azure-native:storage:StorageAccount)",
+    "condition": "allowBlobPublicAccess is true, enabling anonymous public access to blob containers while the AWS side is locked down.",
+    "severity": "high",
+    "format": "pulumi"
+  }
+]

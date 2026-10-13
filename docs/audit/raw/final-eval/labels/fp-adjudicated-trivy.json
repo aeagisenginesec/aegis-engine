@@ -1,0 +1,3205 @@
+[
+ {
+  "sample_id": "trivy-00003",
+  "project": "c001",
+  "rule": "AWS-0090",
+  "title": "S3 Data should be versioned",
+  "verdict": "TP",
+  "justification": "SiteBucket has no VersioningConfiguration at all; missing versioning is a real recoverability control gap."
+ },
+ {
+  "sample_id": "trivy-00004",
+  "project": "c001",
+  "rule": "AWS-0091",
+  "title": "S3 Access Block should Ignore Public ACL",
+  "verdict": "TP",
+  "justification": "No PublicAccessBlockConfiguration defined on SiteBucket; ignore-public-acls hardening control is genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00006",
+  "project": "c001",
+  "rule": "AWS-0093",
+  "title": "S3 Access block should restrict public bucket to limit access",
+  "verdict": "TP",
+  "justification": "No PublicAccessBlockConfiguration defined on SiteBucket; restrict-public-buckets control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00007",
+  "project": "c001",
+  "rule": "AWS-0094",
+  "title": "S3 buckets should each define an aws_s3_bucket_public_access_block",
+  "verdict": "TP",
+  "justification": "Factually correct: neither SiteBucket nor any bucket defines a public access block."
+ },
+ {
+  "sample_id": "trivy-00008",
+  "project": "c001",
+  "rule": "AWS-0132",
+  "title": "S3 encryption should use Customer Managed Keys",
+  "verdict": "TP",
+  "justification": "SiteBucket has zero BucketEncryption configured; the finding correctly identifies missing CMK encryption."
+ },
+ {
+  "sample_id": "trivy-00010",
+  "project": "c002",
+  "rule": "AWS-0132",
+  "title": "S3 encryption should use Customer Managed Keys",
+  "verdict": "FP",
+  "justification": "RawZoneBucket already encrypts with aws:kms and KMSMasterKeyID: !Ref KmsKeyArn (a CMK); the check claim is factually wrong."
+ },
+ {
+  "sample_id": "trivy-00011",
+  "project": "c002",
+  "rule": "AWS-0132",
+  "title": "S3 encryption should use Customer Managed Keys",
+  "verdict": "FP",
+  "justification": "AccessLogBucket already encrypts with aws:kms and KMSMasterKeyID: !Ref KmsKeyArn (a CMK); the check claim is factually wrong."
+ },
+ {
+  "sample_id": "trivy-00013",
+  "project": "c005",
+  "rule": "AWS-0028",
+  "title": "aws_instance should activate session tokens for Instance Metadata Service.",
+  "verdict": "TP",
+  "justification": "JumpBox defines no MetadataOptions, so IMDSv2 (HttpTokens required) is not enforced; real SSRF-era hardening gap."
+ },
+ {
+  "sample_id": "trivy-00015",
+  "project": "c005",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00016",
+  "project": "c005",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00018",
+  "project": "c006",
+  "rule": "AWS-0028",
+  "title": "aws_instance should activate session tokens for Instance Metadata Service.",
+  "verdict": "TP",
+  "justification": "BastionHost MetadataOptions sets HttpTokens: optional, so IMDSv2 session tokens are not required; real SSRF-era gap on a bastion."
+ },
+ {
+  "sample_id": "trivy-00021",
+  "project": "c007",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00023",
+  "project": "c007",
+  "rule": "AWS-0176",
+  "title": "RDS IAM Database Authentication Disabled",
+  "verdict": "TP",
+  "justification": "ReportingDb sets no EnableIAMDatabaseAuthentication, so IAM DB auth is genuinely disabled on a publicly accessible MySQL instance."
+ },
+ {
+  "sample_id": "trivy-00024",
+  "project": "c007",
+  "rule": "AWS-0177",
+  "title": "RDS Deletion Protection Disabled",
+  "verdict": "TP",
+  "justification": "ReportingDb sets no DeletionProtection, so deletion protection is genuinely disabled; real safety-control gap."
+ },
+ {
+  "sample_id": "trivy-00025",
+  "project": "c008",
+  "rule": "AWS-0078",
+  "title": "Performance Insights encryption should use Customer Managed Keys",
+  "verdict": "FP",
+  "justification": "OrdersDb sets PerformanceInsightsKMSKeyId: !Ref KmsKeyArn, i.e. already encrypted with a CMK; the check claim is factually wrong."
+ },
+ {
+  "sample_id": "trivy-00027",
+  "project": "c008",
+  "rule": "AWS-0176",
+  "title": "RDS IAM Database Authentication Disabled",
+  "verdict": "TP",
+  "justification": "OrdersDb sets no EnableIAMDatabaseAuthentication; IAM DB auth is genuinely disabled, a real missing hardening control."
+ },
+ {
+  "sample_id": "trivy-00029",
+  "project": "c011",
+  "rule": "AWS-0012",
+  "title": "CloudFront distribution allows unencrypted (HTTP) communications.",
+  "verdict": "TP",
+  "justification": "DefaultCacheBehavior sets ViewerProtocolPolicy: allow-all, so plain HTTP is genuinely permitted; real weakness."
+ },
+ {
+  "sample_id": "trivy-00030",
+  "project": "c011",
+  "rule": "AWS-0013",
+  "title": "CloudFront distribution uses outdated SSL/TLS protocols.",
+  "verdict": "FP",
+  "justification": "No ViewerCertificate is set, so the distribution uses CloudFront's default TLS 1.2 policy; it does not use outdated SSL/TLS protocols."
+ },
+ {
+  "sample_id": "trivy-00032",
+  "project": "c012",
+  "rule": "AWS-0102",
+  "title": "An Network ACL rule allows ALL ports.",
+  "verdict": "TP",
+  "justification": "PublicNaclAllowAll allows Protocol -1 from 0.0.0.0/0 ingress; genuinely allows all ports, real exposure."
+ },
+ {
+  "sample_id": "trivy-00033",
+  "project": "c012",
+  "rule": "AWS-0105",
+  "title": "Network ACLs should not allow unrestricted ingress to SSH or RDP from any IP address.",
+  "verdict": "TP",
+  "justification": "The same allow-all NACL entry permits SSH/RDP from 0.0.0.0/0; factually correct."
+ },
+ {
+  "sample_id": "trivy-00036",
+  "project": "c013",
+  "rule": "AWS-0086",
+  "title": "S3 Access block should block public ACL",
+  "verdict": "TP",
+  "justification": "AccessLogsBucket defines no PublicAccessBlockConfiguration; block-public-acls control genuinely absent on a logs bucket."
+ },
+ {
+  "sample_id": "trivy-00037",
+  "project": "c013",
+  "rule": "AWS-0087",
+  "title": "S3 Access block should block public policy",
+  "verdict": "TP",
+  "justification": "AccessLogsBucket defines no PublicAccessBlockConfiguration; block-public-policy control genuinely absent on a logs bucket."
+ },
+ {
+  "sample_id": "trivy-00039",
+  "project": "c013",
+  "rule": "AWS-0090",
+  "title": "S3 Data should be versioned",
+  "verdict": "TP",
+  "justification": "AccessLogsBucket has no VersioningConfiguration; missing versioning on an audit-log bucket is a real control gap."
+ },
+ {
+  "sample_id": "trivy-00041",
+  "project": "c013",
+  "rule": "AWS-0093",
+  "title": "S3 Access block should restrict public bucket to limit access",
+  "verdict": "TP",
+  "justification": "AccessLogsBucket defines no PublicAccessBlockConfiguration; restrict-public-buckets control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00045",
+  "project": "c015",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "TrailBucket has no LoggingConfiguration; missing S3 access logging on the audit-trail bucket is a real audit-control gap."
+ },
+ {
+  "sample_id": "trivy-00046",
+  "project": "c015",
+  "rule": "AWS-0132",
+  "title": "S3 encryption should use Customer Managed Keys",
+  "verdict": "FP",
+  "justification": "TrailBucket already encrypts with aws:kms and KMSMasterKeyID: !Ref KmsKeyArn (a CMK); the check claim is factually wrong."
+ },
+ {
+  "sample_id": "trivy-00048",
+  "project": "c016",
+  "rule": "AWS-0053",
+  "title": "Load balancer is exposed to the internet.",
+  "verdict": "FP",
+  "justification": "WebAlb Scheme: internet-facing is by design for a public web tier; flagging it as a weakness lacks security context."
+ },
+ {
+  "sample_id": "trivy-00050",
+  "project": "c016",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00051",
+  "project": "c017",
+  "rule": "AWS-0079",
+  "title": "There is no encryption specified or encryption is disabled on the RDS Cluster.",
+  "verdict": "TP",
+  "justification": "AnalyticsCluster sets StorageEncrypted: false; unencrypted Aurora cluster is a real weakness."
+ },
+ {
+  "sample_id": "trivy-00052",
+  "project": "c017",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00055",
+  "project": "c018",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "IntakeBucket has no LoggingConfiguration; missing S3 access logging is a real audit-control gap."
+ },
+ {
+  "sample_id": "trivy-00059",
+  "project": "c019",
+  "rule": "AWS-0176",
+  "title": "RDS IAM Database Authentication Disabled",
+  "verdict": "TP",
+  "justification": "SharedPostgres sets no EnableIAMDatabaseAuthentication; IAM DB auth genuinely disabled on a publicly accessible Postgres."
+ },
+ {
+  "sample_id": "trivy-00060",
+  "project": "c019",
+  "rule": "AWS-0177",
+  "title": "RDS Deletion Protection Disabled",
+  "verdict": "TP",
+  "justification": "SharedPostgres sets no DeletionProtection; deletion protection genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00061",
+  "project": "c020",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "FlowLogBucket has no LoggingConfiguration; missing access logging on a SOC log bucket is a real audit gap."
+ },
+ {
+  "sample_id": "trivy-00063",
+  "project": "c021",
+  "rule": "AWS-0086",
+  "title": "S3 Access block should block public ACL",
+  "verdict": "TP",
+  "justification": "AssetsBucket defines no PublicAccessBlockConfiguration; block-public-acls control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00065",
+  "project": "c021",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "AssetsBucket has no LoggingConfiguration; missing access logging is a real audit gap."
+ },
+ {
+  "sample_id": "trivy-00067",
+  "project": "c021",
+  "rule": "AWS-0091",
+  "title": "S3 Access Block should Ignore Public ACL",
+  "verdict": "TP",
+  "justification": "AssetsBucket defines no PublicAccessBlockConfiguration; ignore-public-acls control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00068",
+  "project": "c021",
+  "rule": "AWS-0093",
+  "title": "S3 Access block should restrict public bucket to limit access",
+  "verdict": "TP",
+  "justification": "AssetsBucket defines no PublicAccessBlockConfiguration; restrict-public-buckets control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00069",
+  "project": "c021",
+  "rule": "AWS-0094",
+  "title": "S3 buckets should each define an aws_s3_bucket_public_access_block",
+  "verdict": "TP",
+  "justification": "Factually correct: AssetsBucket has no public access block defined."
+ },
+ {
+  "sample_id": "trivy-00073",
+  "project": "c023",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00074",
+  "project": "c024",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00075",
+  "project": "c024",
+  "rule": "AWS-0133",
+  "title": "Enable Performance Insights to detect potential problems",
+  "verdict": "TP",
+  "justification": "c024/template.json: no EnablePerformanceInsights on CustomerDb \u2014 factually correct; missing detection control: Performance Insights, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "trivy-00079",
+  "project": "c025",
+  "rule": "AWS-0190",
+  "title": "Ensure that response caching is enabled for your Amazon API Gateway REST APIs.",
+  "verdict": "FP",
+  "justification": "Technically true (no CachingEnabled) but response caching is a performance/cost control, not a security control; no security impact."
+ },
+ {
+  "sample_id": "trivy-00082",
+  "project": "c026",
+  "rule": "AZU-0056",
+  "title": "Storage account should have blob soft delete enabled",
+  "verdict": "TP",
+  "justification": "No blobServices deleteRetentionPolicy configured; missing soft delete is a real data-protection gap on a media account."
+ },
+ {
+  "sample_id": "trivy-00083",
+  "project": "c026",
+  "rule": "AZU-0057",
+  "title": "Storage account should have logging enabled",
+  "verdict": "TP",
+  "justification": "No diagnostic settings configured for the storage account; missing audit logging is a real gap."
+ },
+ {
+  "sample_id": "trivy-00084",
+  "project": "c026",
+  "rule": "AZU-0058",
+  "title": "Storage account should use geo-redundant replication",
+  "verdict": "FP",
+  "justification": "Technically true (Standard_LRS) but replication is an availability, not security, control; no security impact."
+ },
+ {
+  "sample_id": "trivy-00085",
+  "project": "c026",
+  "rule": "AZU-0059",
+  "title": "Storage account should have secure transfer and minimum TLS version configured",
+  "verdict": "TP",
+  "justification": "supportsHttpsTrafficOnly: false and minimumTlsVersion: TLS1_0 on a public gallery account; real encryption-in-transit weakness."
+ },
+ {
+  "sample_id": "trivy-00087",
+  "project": "c026",
+  "rule": "AZU-0061",
+  "title": "Storage account should have infrastructure encryption enabled",
+  "verdict": "TP",
+  "justification": "No infrastructure encryption configured on the storage account; real missing defense-in-depth control."
+ },
+ {
+  "sample_id": "trivy-00088",
+  "project": "c027",
+  "rule": "AZU-0010",
+  "title": "Trusted Microsoft Services should have bypass access to Storage accounts",
+  "verdict": "FP",
+  "justification": "bypass: None with defaultAction: Deny is the stated deny-by-default hardened posture; flagging it contradicts the by-design configuration."
+ },
+ {
+  "sample_id": "trivy-00089",
+  "project": "c027",
+  "rule": "AZU-0011",
+  "title": "The minimum TLS version for Storage Accounts should be TLS1_2 or higher",
+  "verdict": "FP",
+  "justification": "minimumTlsVersion resolves to TLS1_2 via variables('tlsVersion'); the claim that TLS is below 1.2 is factually wrong."
+ },
+ {
+  "sample_id": "trivy-00091",
+  "project": "c027",
+  "rule": "AZU-0057",
+  "title": "Storage account should have logging enabled",
+  "verdict": "TP",
+  "justification": "No diagnostic settings configured; missing audit logging on a finance storage account is a real gap."
+ },
+ {
+  "sample_id": "trivy-00094",
+  "project": "c027",
+  "rule": "AZU-0061",
+  "title": "Storage account should have infrastructure encryption enabled",
+  "verdict": "TP",
+  "justification": "encryption block sets keySource Microsoft.Storage but not requireInfrastructureEncryption; double-encryption control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00098",
+  "project": "c034",
+  "rule": "AZU-0010",
+  "title": "Trusted Microsoft Services should have bypass access to Storage accounts",
+  "verdict": "FP",
+  "justification": "bypass: None with defaultAction: Deny and publicNetworkAccess: Disabled is the explicitly tight by-design posture; not a security weakness."
+ },
+ {
+  "sample_id": "trivy-00101",
+  "project": "c034",
+  "rule": "AZU-0058",
+  "title": "Storage account should use geo-redundant replication",
+  "verdict": "FP",
+  "justification": "Technically true (Standard_LRS) but replication is availability, not security; no security impact."
+ },
+ {
+  "sample_id": "trivy-00102",
+  "project": "c034",
+  "rule": "AZU-0061",
+  "title": "Storage account should have infrastructure encryption enabled",
+  "verdict": "TP",
+  "justification": "No infrastructure encryption configured; real missing defense-in-depth control."
+ },
+ {
+  "sample_id": "trivy-00108",
+  "project": "c038",
+  "rule": "AZU-0057",
+  "title": "Storage account should have logging enabled",
+  "verdict": "TP",
+  "justification": "No diagnostic settings configured; missing audit logging is a real gap."
+ },
+ {
+  "sample_id": "trivy-00109",
+  "project": "c038",
+  "rule": "AZU-0058",
+  "title": "Storage account should use geo-redundant replication",
+  "verdict": "FP",
+  "justification": "Technically true (Standard_LRS) but availability, not security; no security impact."
+ },
+ {
+  "sample_id": "trivy-00110",
+  "project": "c038",
+  "rule": "AZU-0059",
+  "title": "Storage account should have secure transfer and minimum TLS version configured",
+  "verdict": "TP",
+  "justification": "supportsHttpsTrafficOnly: false and minimumTlsVersion: TLS1_0 on a public static-website account; real weakness."
+ },
+ {
+  "sample_id": "trivy-00111",
+  "project": "c038",
+  "rule": "AZU-0059",
+  "title": "Storage account should have secure transfer and minimum TLS version configured",
+  "verdict": "TP",
+  "justification": "Same storage account genuinely has supportsHttpsTrafficOnly: false and TLS1_0; duplicate instance of a real weakness."
+ },
+ {
+  "sample_id": "trivy-00112",
+  "project": "c038",
+  "rule": "AZU-0061",
+  "title": "Storage account should have infrastructure encryption enabled",
+  "verdict": "TP",
+  "justification": "No infrastructure encryption configured; real missing defense-in-depth control."
+ },
+ {
+  "sample_id": "trivy-00115",
+  "project": "k001",
+  "rule": "DS-0029",
+  "title": "'apt-get' missing '--no-install-recommends'",
+  "verdict": "TP",
+  "justification": "apt-get install -y runs without --no-install-recommends; real (minor) image-bloat/attack-surface hardening gap."
+ },
+ {
+  "sample_id": "trivy-00116",
+  "project": "k002",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive in the Dockerfile; the image runs as root. Factually correct."
+ },
+ {
+  "sample_id": "trivy-00118",
+  "project": "k002",
+  "rule": "DS-0031",
+  "title": "Secrets passed via `build-args` or envs or copied secret files",
+  "verdict": "TP",
+  "justification": "ENV hardcodes DATABASE_URL password, sk_live Stripe key, and AWS secret key; real embedded-secrets weakness."
+ },
+ {
+  "sample_id": "trivy-00119",
+  "project": "k004",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; runtime stage runs as root. Factually correct."
+ },
+ {
+  "sample_id": "trivy-00126",
+  "project": "k011",
+  "rule": "DS-0029",
+  "title": "'apt-get' missing '--no-install-recommends'",
+  "verdict": "TP",
+  "justification": "apt-get install -y without --no-install-recommends; real (minor) attack-surface hardening gap."
+ },
+ {
+  "sample_id": "trivy-00128",
+  "project": "k013",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "Dockerfile ends with explicit 'USER root' (comment admits it is for debugging); runs as root, real weakness."
+ },
+ {
+  "sample_id": "trivy-00129",
+  "project": "k014",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; the Flask image runs as root. Factually correct."
+ },
+ {
+  "sample_id": "trivy-00130",
+  "project": "k015",
+  "rule": "DS-0029",
+  "title": "'apt-get' missing '--no-install-recommends'",
+  "verdict": "TP",
+  "justification": "apt-get install -y without --no-install-recommends; real (minor) hardening gap despite the later USER appuser."
+ },
+ {
+  "sample_id": "trivy-00131",
+  "project": "k016",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; redis runs as root. Factually correct."
+ },
+ {
+  "sample_id": "trivy-00132",
+  "project": "k017",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; nginx image runs as root. Factually correct."
+ },
+ {
+  "sample_id": "trivy-00133",
+  "project": "k020",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; the sshd image runs as root alongside PermitRootLogin yes. Factually correct."
+ },
+ {
+  "sample_id": "trivy-00135",
+  "project": "k020",
+  "rule": "DS-0029",
+  "title": "'apt-get' missing '--no-install-recommends'",
+  "verdict": "TP",
+  "justification": "apt-get install -y openssh-server without --no-install-recommends; real (minor) hardening gap."
+ },
+ {
+  "sample_id": "trivy-00136",
+  "project": "k021",
+  "rule": "KSV-0001",
+  "title": "Can elevate its own privileges",
+  "verdict": "TP",
+  "justification": "Container sets no securityContext.allowPrivilegeEscalation, so privilege escalation is allowed; real weakness."
+ },
+ {
+  "sample_id": "trivy-00138",
+  "project": "k021",
+  "rule": "KSV-0004",
+  "title": "Default capabilities: some containers do not drop any",
+  "verdict": "TP",
+  "justification": "No capabilities.drop configured; default capabilities retained, factually correct."
+ },
+ {
+  "sample_id": "trivy-00139",
+  "project": "k021",
+  "rule": "KSV-0011",
+  "title": "CPU not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits set at all; CPU genuinely not limited, real DoS/resource control gap."
+ },
+ {
+  "sample_id": "trivy-00140",
+  "project": "k021",
+  "rule": "KSV-0014",
+  "title": "Root file system is not read-only",
+  "verdict": "TP",
+  "justification": "No readOnlyRootFilesystem set; root filesystem genuinely writable, real weakness."
+ },
+ {
+  "sample_id": "trivy-00141",
+  "project": "k021",
+  "rule": "KSV-0015",
+  "title": "CPU requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests set; CPU requests genuinely unspecified, real control gap."
+ },
+ {
+  "sample_id": "trivy-00142",
+  "project": "k021",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests set; memory requests genuinely unspecified, real control gap."
+ },
+ {
+  "sample_id": "trivy-00143",
+  "project": "k021",
+  "rule": "KSV-0018",
+  "title": "Memory not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits set; memory genuinely not limited, real control gap."
+ },
+ {
+  "sample_id": "trivy-00146",
+  "project": "k021",
+  "rule": "KSV-0030",
+  "title": "Runtime/Default Seccomp profile not set",
+  "verdict": "TP",
+  "justification": "No seccompProfile configured; seccomp genuinely not set, real control gap."
+ },
+ {
+  "sample_id": "trivy-00147",
+  "project": "k021",
+  "rule": "KSV-0104",
+  "title": "Seccomp policies disabled",
+  "verdict": "TP",
+  "justification": "No seccomp configuration anywhere; seccomp genuinely disabled, factually correct."
+ },
+ {
+  "sample_id": "trivy-00152",
+  "project": "k021",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image myregistry/webapp:latest comes from an unknown registry, not a trusted one; factually correct."
+ },
+ {
+  "sample_id": "trivy-00154",
+  "project": "k022",
+  "rule": "KSV-0004",
+  "title": "Default capabilities: some containers do not drop any",
+  "verdict": "TP",
+  "justification": "privileged: true means no capabilities are dropped; factually correct."
+ },
+ {
+  "sample_id": "trivy-00158",
+  "project": "k022",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "No resources block at all; memory requests genuinely unspecified."
+ },
+ {
+  "sample_id": "trivy-00159",
+  "project": "k022",
+  "rule": "KSV-0017",
+  "title": "Privileged",
+  "verdict": "TP",
+  "justification": "securityContext.privileged: true with hostNetwork and hostPath /; genuinely privileged, real critical weakness."
+ },
+ {
+  "sample_id": "trivy-00162",
+  "project": "k022",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "No pod-level securityContext/runAsGroup set; group identity genuinely unspecified, factually correct."
+ },
+ {
+  "sample_id": "trivy-00163",
+  "project": "k022",
+  "rule": "KSV-0030",
+  "title": "Runtime/Default Seccomp profile not set",
+  "verdict": "TP",
+  "justification": "No seccompProfile configured; genuinely not set."
+ },
+ {
+  "sample_id": "trivy-00164",
+  "project": "k022",
+  "rule": "KSV-0104",
+  "title": "Seccomp policies disabled",
+  "verdict": "TP",
+  "justification": "No seccomp configuration anywhere; genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00165",
+  "project": "k022",
+  "rule": "KSV-0106",
+  "title": "Container capabilities must only include NET_BIND_SERVICE",
+  "verdict": "TP",
+  "justification": "privileged: true grants all capabilities, far beyond NET_BIND_SERVICE; factually correct."
+ },
+ {
+  "sample_id": "trivy-00166",
+  "project": "k022",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata, so the pod lands in default; real (minor) organizational control gap."
+ },
+ {
+  "sample_id": "trivy-00167",
+  "project": "k022",
+  "rule": "KSV-0118",
+  "title": "Default security context configured",
+  "verdict": "TP",
+  "justification": "No pod-level securityContext set; default security context genuinely in effect."
+ },
+ {
+  "sample_id": "trivy-00169",
+  "project": "k022",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/node-agent:2.1 is from an unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00170",
+  "project": "k023",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata, so the deployment lands in default; real (minor) organizational control gap."
+ },
+ {
+  "sample_id": "trivy-00173",
+  "project": "k024",
+  "rule": "KSV-0003",
+  "title": "Default capabilities: some containers do not drop all",
+  "verdict": "TP",
+  "justification": "No capabilities.drop configured; genuinely does not drop all."
+ },
+ {
+  "sample_id": "trivy-00174",
+  "project": "k024",
+  "rule": "KSV-0004",
+  "title": "Default capabilities: some containers do not drop any",
+  "verdict": "TP",
+  "justification": "No capabilities.drop configured; genuinely drops none."
+ },
+ {
+  "sample_id": "trivy-00176",
+  "project": "k024",
+  "rule": "KSV-0014",
+  "title": "Root file system is not read-only",
+  "verdict": "TP",
+  "justification": "No readOnlyRootFilesystem; root fs writable."
+ },
+ {
+  "sample_id": "trivy-00177",
+  "project": "k024",
+  "rule": "KSV-0015",
+  "title": "CPU requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests; CPU requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00178",
+  "project": "k024",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests; memory requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00179",
+  "project": "k024",
+  "rule": "KSV-0018",
+  "title": "Memory not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits; memory genuinely unlimited."
+ },
+ {
+  "sample_id": "trivy-00180",
+  "project": "k024",
+  "rule": "KSV-0020",
+  "title": "Runs with UID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsUser set; UID unspecified, factually correct."
+ },
+ {
+  "sample_id": "trivy-00182",
+  "project": "k024",
+  "rule": "KSV-0030",
+  "title": "Runtime/Default Seccomp profile not set",
+  "verdict": "TP",
+  "justification": "No seccompProfile; genuinely not set."
+ },
+ {
+  "sample_id": "trivy-00185",
+  "project": "k024",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00187",
+  "project": "k024",
+  "rule": "KSV-0118",
+  "title": "Default security context configured",
+  "verdict": "TP",
+  "justification": "No pod-level securityContext; default in effect."
+ },
+ {
+  "sample_id": "trivy-00189",
+  "project": "k025",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/checkout:2.2.0 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00190",
+  "project": "k026",
+  "rule": "KSV-0003",
+  "title": "Default capabilities: some containers do not drop all",
+  "verdict": "TP",
+  "justification": "No capabilities.drop despite other hardening; genuinely does not drop all."
+ },
+ {
+  "sample_id": "trivy-00194",
+  "project": "k026",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "runAsGroup not set; GID unspecified, factually correct."
+ },
+ {
+  "sample_id": "trivy-00195",
+  "project": "k026",
+  "rule": "KSV-0030",
+  "title": "Runtime/Default Seccomp profile not set",
+  "verdict": "TP",
+  "justification": "No seccompProfile; genuinely not set."
+ },
+ {
+  "sample_id": "trivy-00197",
+  "project": "k026",
+  "rule": "KSV-0106",
+  "title": "Container capabilities must only include NET_BIND_SERVICE",
+  "verdict": "TP",
+  "justification": "No capability drop configured; genuinely includes more than NET_BIND_SERVICE."
+ },
+ {
+  "sample_id": "trivy-00198",
+  "project": "k026",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00199",
+  "project": "k026",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/worker:latest from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00200",
+  "project": "k027",
+  "rule": "KSV-0111",
+  "title": "User with admin access",
+  "verdict": "TP",
+  "justification": "ClusterRoleBinding grants cluster-admin to the default ServiceAccount in default ns; real critical RBAC weakness."
+ },
+ {
+  "sample_id": "trivy-00201",
+  "project": "k029",
+  "rule": "KSV-0001",
+  "title": "Can elevate its own privileges",
+  "verdict": "TP",
+  "justification": "privileged: true without allowPrivilegeEscalation: false; can genuinely elevate."
+ },
+ {
+  "sample_id": "trivy-00204",
+  "project": "k029",
+  "rule": "KSV-0014",
+  "title": "Root file system is not read-only",
+  "verdict": "TP",
+  "justification": "No readOnlyRootFilesystem; root fs writable."
+ },
+ {
+  "sample_id": "trivy-00206",
+  "project": "k029",
+  "rule": "KSV-0020",
+  "title": "Runs with UID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsUser set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00207",
+  "project": "k029",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsGroup set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00208",
+  "project": "k029",
+  "rule": "KSV-0030",
+  "title": "Runtime/Default Seccomp profile not set",
+  "verdict": "TP",
+  "justification": "No seccompProfile; genuinely not set."
+ },
+ {
+  "sample_id": "trivy-00211",
+  "project": "k029",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00213",
+  "project": "k029",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/profiler:1.9.0 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00214",
+  "project": "k030",
+  "rule": "KSV-0001",
+  "title": "Can elevate its own privileges",
+  "verdict": "TP",
+  "justification": "No securityContext at all; privilege escalation allowed."
+ },
+ {
+  "sample_id": "trivy-00215",
+  "project": "k030",
+  "rule": "KSV-0003",
+  "title": "Default capabilities: some containers do not drop all",
+  "verdict": "TP",
+  "justification": "No capabilities.drop; genuinely does not drop all."
+ },
+ {
+  "sample_id": "trivy-00219",
+  "project": "k030",
+  "rule": "KSV-0015",
+  "title": "CPU requests not specified",
+  "verdict": "TP",
+  "justification": "No resources block; CPU requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00220",
+  "project": "k030",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "No resources block; memory requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00221",
+  "project": "k030",
+  "rule": "KSV-0018",
+  "title": "Memory not limited",
+  "verdict": "TP",
+  "justification": "No resources block; memory genuinely unlimited."
+ },
+ {
+  "sample_id": "trivy-00222",
+  "project": "k030",
+  "rule": "KSV-0020",
+  "title": "Runs with UID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsUser set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00226",
+  "project": "k030",
+  "rule": "KSV-0106",
+  "title": "Container capabilities must only include NET_BIND_SERVICE",
+  "verdict": "TP",
+  "justification": "No capability drop; genuinely includes more than NET_BIND_SERVICE."
+ },
+ {
+  "sample_id": "trivy-00227",
+  "project": "k030",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00228",
+  "project": "k030",
+  "rule": "KSV-0118",
+  "title": "Default security context configured",
+  "verdict": "TP",
+  "justification": "No pod-level securityContext; default in effect."
+ },
+ {
+  "sample_id": "trivy-00230",
+  "project": "k030",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/payments:2.3.1 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00231",
+  "project": "k031",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "fsGroup set but runAsGroup not set; GID identity genuinely unspecified."
+ },
+ {
+  "sample_id": "trivy-00233",
+  "project": "k031",
+  "rule": "KSV-0104",
+  "title": "Seccomp policies disabled",
+  "verdict": "TP",
+  "justification": "No seccompProfile configured; seccomp genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00235",
+  "project": "k032",
+  "rule": "KSV-0001",
+  "title": "Can elevate its own privileges",
+  "verdict": "TP",
+  "justification": "No allowPrivilegeEscalation: false with runAsUser: 0; can genuinely elevate."
+ },
+ {
+  "sample_id": "trivy-00236",
+  "project": "k032",
+  "rule": "KSV-0003",
+  "title": "Default capabilities: some containers do not drop all",
+  "verdict": "TP",
+  "justification": "No capabilities.drop; genuinely does not drop all."
+ },
+ {
+  "sample_id": "trivy-00239",
+  "project": "k032",
+  "rule": "KSV-0014",
+  "title": "Root file system is not read-only",
+  "verdict": "TP",
+  "justification": "No readOnlyRootFilesystem; root fs writable."
+ },
+ {
+  "sample_id": "trivy-00240",
+  "project": "k032",
+  "rule": "KSV-0015",
+  "title": "CPU requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests; CPU requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00241",
+  "project": "k032",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests; memory requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00244",
+  "project": "k032",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsGroup set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00246",
+  "project": "k032",
+  "rule": "KSV-0104",
+  "title": "Seccomp policies disabled",
+  "verdict": "TP",
+  "justification": "No seccompProfile; seccomp genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00247",
+  "project": "k032",
+  "rule": "KSV-0105",
+  "title": "Containers must not set runAsUser to 0",
+  "verdict": "TP",
+  "justification": "securityContext.runAsUser: 0 set explicitly; factually correct."
+ },
+ {
+  "sample_id": "trivy-00249",
+  "project": "k032",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00251",
+  "project": "k032",
+  "rule": "KSV-0121",
+  "title": "Kubernetes resource with disallowed volumes mounted",
+  "verdict": "TP",
+  "justification": "hostPath volume mounting / at /host; genuinely a disallowed host volume."
+ },
+ {
+  "sample_id": "trivy-00254",
+  "project": "k033",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "Only limits set, no requests; memory requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00255",
+  "project": "k033",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "runAsGroup not set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00257",
+  "project": "k033",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/billing:3.3.1 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00258",
+  "project": "k034",
+  "rule": "KSV-0003",
+  "title": "Default capabilities: some containers do not drop all",
+  "verdict": "TP",
+  "justification": "No capabilities.drop; genuinely does not drop all."
+ },
+ {
+  "sample_id": "trivy-00260",
+  "project": "k034",
+  "rule": "KSV-0011",
+  "title": "CPU not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits; CPU genuinely not limited."
+ },
+ {
+  "sample_id": "trivy-00264",
+  "project": "k034",
+  "rule": "KSV-0018",
+  "title": "Memory not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits; memory genuinely not limited."
+ },
+ {
+  "sample_id": "trivy-00265",
+  "project": "k034",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsGroup set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00266",
+  "project": "k034",
+  "rule": "KSV-0030",
+  "title": "Runtime/Default Seccomp profile not set",
+  "verdict": "TP",
+  "justification": "No seccompProfile; genuinely not set."
+ },
+ {
+  "sample_id": "trivy-00267",
+  "project": "k034",
+  "rule": "KSV-0104",
+  "title": "Seccomp policies disabled",
+  "verdict": "TP",
+  "justification": "No seccompProfile; seccomp genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00268",
+  "project": "k034",
+  "rule": "KSV-0106",
+  "title": "Container capabilities must only include NET_BIND_SERVICE",
+  "verdict": "TP",
+  "justification": "No capability drop; genuinely includes more than NET_BIND_SERVICE."
+ },
+ {
+  "sample_id": "trivy-00271",
+  "project": "k034",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/frontend:latest from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00273",
+  "project": "k035",
+  "rule": "KSV-0003",
+  "title": "Default capabilities: some containers do not drop all",
+  "verdict": "TP",
+  "justification": "No capabilities.drop; genuinely does not drop all."
+ },
+ {
+  "sample_id": "trivy-00274",
+  "project": "k035",
+  "rule": "KSV-0004",
+  "title": "Default capabilities: some containers do not drop any",
+  "verdict": "TP",
+  "justification": "No capabilities.drop; genuinely drops none."
+ },
+ {
+  "sample_id": "trivy-00276",
+  "project": "k035",
+  "rule": "KSV-0014",
+  "title": "Root file system is not read-only",
+  "verdict": "TP",
+  "justification": "No readOnlyRootFilesystem; root fs writable."
+ },
+ {
+  "sample_id": "trivy-00278",
+  "project": "k035",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "No resources block; memory requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00281",
+  "project": "k035",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsGroup set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00284",
+  "project": "k035",
+  "rule": "KSV-0104",
+  "title": "Seccomp policies disabled",
+  "verdict": "TP",
+  "justification": "No seccompProfile; seccomp genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00285",
+  "project": "k035",
+  "rule": "KSV-0106",
+  "title": "Container capabilities must only include NET_BIND_SERVICE",
+  "verdict": "TP",
+  "justification": "No capability drop; genuinely includes more than NET_BIND_SERVICE."
+ },
+ {
+  "sample_id": "trivy-00286",
+  "project": "k035",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00287",
+  "project": "k035",
+  "rule": "KSV-0118",
+  "title": "Default security context configured",
+  "verdict": "TP",
+  "justification": "No pod-level securityContext; default in effect."
+ },
+ {
+  "sample_id": "trivy-00289",
+  "project": "k035",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/ci-runner:5.0 from unknown registry with docker.sock mounted; factually correct."
+ },
+ {
+  "sample_id": "trivy-00290",
+  "project": "k036",
+  "rule": "KSV-0001",
+  "title": "Can elevate its own privileges",
+  "verdict": "TP",
+  "justification": "privileged: true; can genuinely elevate."
+ },
+ {
+  "sample_id": "trivy-00291",
+  "project": "k036",
+  "rule": "KSV-0004",
+  "title": "Default capabilities: some containers do not drop any",
+  "verdict": "TP",
+  "justification": "privileged: true; genuinely drops none."
+ },
+ {
+  "sample_id": "trivy-00295",
+  "project": "k036",
+  "rule": "KSV-0017",
+  "title": "Privileged",
+  "verdict": "TP",
+  "justification": "privileged: true; factually correct."
+ },
+ {
+  "sample_id": "trivy-00297",
+  "project": "k036",
+  "rule": "KSV-0020",
+  "title": "Runs with UID <= 10000",
+  "verdict": "TP",
+  "justification": "runAsUser: 0 set explicitly; factually correct."
+ },
+ {
+  "sample_id": "trivy-00298",
+  "project": "k036",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsGroup set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00300",
+  "project": "k036",
+  "rule": "KSV-0104",
+  "title": "Seccomp policies disabled",
+  "verdict": "TP",
+  "justification": "No seccompProfile; seccomp genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00301",
+  "project": "k036",
+  "rule": "KSV-0105",
+  "title": "Containers must not set runAsUser to 0",
+  "verdict": "TP",
+  "justification": "runAsUser: 0 set explicitly; factually correct."
+ },
+ {
+  "sample_id": "trivy-00303",
+  "project": "k036",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00305",
+  "project": "k036",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/debug-agent:1.2.0 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00307",
+  "project": "k037",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/gateway:2.7.3 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00310",
+  "project": "k038",
+  "rule": "KSV-0004",
+  "title": "Default capabilities: some containers do not drop any",
+  "verdict": "TP",
+  "justification": "No capabilities.drop; genuinely drops none."
+ },
+ {
+  "sample_id": "trivy-00311",
+  "project": "k038",
+  "rule": "KSV-0011",
+  "title": "CPU not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits; CPU genuinely not limited."
+ },
+ {
+  "sample_id": "trivy-00312",
+  "project": "k038",
+  "rule": "KSV-0014",
+  "title": "Root file system is not read-only",
+  "verdict": "TP",
+  "justification": "No readOnlyRootFilesystem; root fs writable."
+ },
+ {
+  "sample_id": "trivy-00313",
+  "project": "k038",
+  "rule": "KSV-0015",
+  "title": "CPU requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests; CPU requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00315",
+  "project": "k038",
+  "rule": "KSV-0018",
+  "title": "Memory not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits; memory genuinely not limited."
+ },
+ {
+  "sample_id": "trivy-00316",
+  "project": "k038",
+  "rule": "KSV-0020",
+  "title": "Runs with UID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsUser set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00317",
+  "project": "k038",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsGroup set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00319",
+  "project": "k038",
+  "rule": "KSV-0104",
+  "title": "Seccomp policies disabled",
+  "verdict": "TP",
+  "justification": "No seccompProfile; seccomp genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00321",
+  "project": "k038",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00322",
+  "project": "k038",
+  "rule": "KSV-0118",
+  "title": "Default security context configured",
+  "verdict": "TP",
+  "justification": "No pod-level securityContext; default in effect."
+ },
+ {
+  "sample_id": "trivy-00327",
+  "project": "k039",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "Only limits set, no requests; memory requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00328",
+  "project": "k039",
+  "rule": "KSV-0021",
+  "title": "Runs with GID <= 10000",
+  "verdict": "TP",
+  "justification": "runAsGroup not set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00330",
+  "project": "k039",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/search:3.1.0 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00331",
+  "project": "k040",
+  "rule": "KSV-0001",
+  "title": "Can elevate its own privileges",
+  "verdict": "TP",
+  "justification": "No allowPrivilegeEscalation: false with runAsUser: 0; can genuinely elevate."
+ },
+ {
+  "sample_id": "trivy-00333",
+  "project": "k040",
+  "rule": "KSV-0005",
+  "title": "SYS_ADMIN capability added",
+  "verdict": "TP",
+  "justification": "capabilities.add includes SYS_ADMIN; factually correct, real critical weakness."
+ },
+ {
+  "sample_id": "trivy-00334",
+  "project": "k040",
+  "rule": "KSV-0011",
+  "title": "CPU not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits; CPU genuinely not limited."
+ },
+ {
+  "sample_id": "trivy-00337",
+  "project": "k040",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests; memory requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00338",
+  "project": "k040",
+  "rule": "KSV-0018",
+  "title": "Memory not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits; memory genuinely not limited."
+ },
+ {
+  "sample_id": "trivy-00339",
+  "project": "k040",
+  "rule": "KSV-0020",
+  "title": "Runs with UID <= 10000",
+  "verdict": "TP",
+  "justification": "runAsUser: 0; factually correct."
+ },
+ {
+  "sample_id": "trivy-00341",
+  "project": "k040",
+  "rule": "KSV-0022",
+  "title": "Specific capabilities added",
+  "verdict": "TP",
+  "justification": "capabilities.add lists SYS_ADMIN, SYS_PTRACE, NET_ADMIN; factually correct."
+ },
+ {
+  "sample_id": "trivy-00342",
+  "project": "k040",
+  "rule": "KSV-0030",
+  "title": "Runtime/Default Seccomp profile not set",
+  "verdict": "TP",
+  "justification": "No seccompProfile; genuinely not set."
+ },
+ {
+  "sample_id": "trivy-00343",
+  "project": "k040",
+  "rule": "KSV-0104",
+  "title": "Seccomp policies disabled",
+  "verdict": "TP",
+  "justification": "No seccompProfile; seccomp genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00345",
+  "project": "k040",
+  "rule": "KSV-0106",
+  "title": "Container capabilities must only include NET_BIND_SERVICE",
+  "verdict": "TP",
+  "justification": "Adds SYS_ADMIN/SYS_PTRACE/NET_ADMIN; far beyond NET_BIND_SERVICE."
+ },
+ {
+  "sample_id": "trivy-00348",
+  "project": "k040",
+  "rule": "KSV-0121",
+  "title": "Kubernetes resource with disallowed volumes mounted",
+  "verdict": "TP",
+  "justification": "hostPath volume mounting /etc; genuinely a disallowed host volume."
+ },
+ {
+  "sample_id": "trivy-00350",
+  "project": "k051",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; image runs as root."
+ },
+ {
+  "sample_id": "trivy-00351",
+  "project": "k054",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; node:alpine image runs as root."
+ },
+ {
+  "sample_id": "trivy-00352",
+  "project": "k055",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; python image runs as root."
+ },
+ {
+  "sample_id": "trivy-00354",
+  "project": "k056",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "Only limits set, no requests; memory requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00356",
+  "project": "k056",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00357",
+  "project": "k056",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/cache:4.0.1 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00358",
+  "project": "k058",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; node image runs as root."
+ },
+ {
+  "sample_id": "trivy-00361",
+  "project": "k059",
+  "rule": "KSV-0001",
+  "title": "Can elevate its own privileges",
+  "verdict": "TP",
+  "justification": "No securityContext with hostNetwork: true; privilege escalation allowed."
+ },
+ {
+  "sample_id": "trivy-00362",
+  "project": "k059",
+  "rule": "KSV-0003",
+  "title": "Default capabilities: some containers do not drop all",
+  "verdict": "TP",
+  "justification": "No capabilities.drop; genuinely does not drop all."
+ },
+ {
+  "sample_id": "trivy-00365",
+  "project": "k059",
+  "rule": "KSV-0014",
+  "title": "Root file system is not read-only",
+  "verdict": "TP",
+  "justification": "No readOnlyRootFilesystem; root fs writable."
+ },
+ {
+  "sample_id": "trivy-00366",
+  "project": "k059",
+  "rule": "KSV-0015",
+  "title": "CPU requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests; CPU requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00367",
+  "project": "k059",
+  "rule": "KSV-0016",
+  "title": "Memory requests not specified",
+  "verdict": "TP",
+  "justification": "No resources.requests; memory requests genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00368",
+  "project": "k059",
+  "rule": "KSV-0018",
+  "title": "Memory not limited",
+  "verdict": "TP",
+  "justification": "No resources.limits; memory genuinely not limited."
+ },
+ {
+  "sample_id": "trivy-00369",
+  "project": "k059",
+  "rule": "KSV-0020",
+  "title": "Runs with UID <= 10000",
+  "verdict": "TP",
+  "justification": "No runAsUser set; factually correct."
+ },
+ {
+  "sample_id": "trivy-00373",
+  "project": "k059",
+  "rule": "KSV-0106",
+  "title": "Container capabilities must only include NET_BIND_SERVICE",
+  "verdict": "TP",
+  "justification": "No capability drop; genuinely includes more than NET_BIND_SERVICE."
+ },
+ {
+  "sample_id": "trivy-00375",
+  "project": "k059",
+  "rule": "KSV-0118",
+  "title": "Default security context configured",
+  "verdict": "TP",
+  "justification": "No pod-level securityContext; default in effect."
+ },
+ {
+  "sample_id": "trivy-00376",
+  "project": "k059",
+  "rule": "KSV-0118",
+  "title": "Default security context configured",
+  "verdict": "TP",
+  "justification": "Duplicate of the same factually correct finding: no pod-level securityContext."
+ },
+ {
+  "sample_id": "trivy-00377",
+  "project": "k059",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/legacy-app:1.0 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00378",
+  "project": "k060",
+  "rule": "DS-0026",
+  "title": "No HEALTHCHECK defined",
+  "verdict": "TP",
+  "justification": "k060/Dockerfile: zero HEALTHCHECK mentions in file; No HEALTHCHECK: GT-firm concept \"No HEALTHCHECK instruction\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "trivy-00379",
+  "project": "k061",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; docker-cli image runs as root."
+ },
+ {
+  "sample_id": "trivy-00381",
+  "project": "k062",
+  "rule": "KSV-0125",
+  "title": "Restrict container images to trusted registries",
+  "verdict": "TP",
+  "justification": "Image example/reporter:1.1.0 from unknown registry; factually correct."
+ },
+ {
+  "sample_id": "trivy-00382",
+  "project": "k063",
+  "rule": "DS-0002",
+  "title": "Image user should not be 'root'",
+  "verdict": "TP",
+  "justification": "No USER directive; image runs as root."
+ },
+ {
+  "sample_id": "trivy-00383",
+  "project": "k065",
+  "rule": "KSV-0110",
+  "title": "Workloads in the default namespace",
+  "verdict": "TP",
+  "justification": "No namespace in metadata; lands in default."
+ },
+ {
+  "sample_id": "trivy-00386",
+  "project": "t001",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "aws_s3_bucket.site has no logging configuration; real audit gap."
+ },
+ {
+  "sample_id": "trivy-00387",
+  "project": "t001",
+  "rule": "AWS-0090",
+  "title": "S3 Data should be versioned",
+  "verdict": "TP",
+  "justification": "No aws_s3_bucket_versioning resource; versioning genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00388",
+  "project": "t001",
+  "rule": "AWS-0091",
+  "title": "S3 Access Block should Ignore Public ACL",
+  "verdict": "TP",
+  "justification": "No aws_s3_bucket_public_access_block; ignore-public-acls genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00391",
+  "project": "t001",
+  "rule": "AWS-0094",
+  "title": "S3 buckets should each define an aws_s3_bucket_public_access_block",
+  "verdict": "TP",
+  "justification": "No public access block resource; factually correct."
+ },
+ {
+  "sample_id": "trivy-00392",
+  "project": "t001",
+  "rule": "AWS-0132",
+  "title": "S3 encryption should use Customer Managed Keys",
+  "verdict": "TP",
+  "justification": "No SSE configuration at all on the bucket; missing CMK encryption, factually correct."
+ },
+ {
+  "sample_id": "trivy-00393",
+  "project": "t002",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "No aws_s3_bucket_logging on the hardened backups bucket; missing access logging is a real audit gap."
+ },
+ {
+  "sample_id": "trivy-00395",
+  "project": "t003",
+  "rule": "AWS-0104",
+  "title": "A security group rule should not allow unrestricted egress to any IP address.",
+  "verdict": "TP",
+  "justification": "Egress rule is protocol -1 to 0.0.0.0/0; genuinely unrestricted egress on a bastion host."
+ },
+ {
+  "sample_id": "trivy-00396",
+  "project": "t003",
+  "rule": "AWS-0107",
+  "title": "Security groups should not allow unrestricted ingress to SSH or RDP from any IP address.",
+  "verdict": "TP",
+  "justification": "SSH (22) and RDP (3389) both open to 0.0.0.0/0 on the bastion SG; real exposure."
+ },
+ {
+  "sample_id": "trivy-00398",
+  "project": "t003",
+  "rule": "AWS-0131",
+  "title": "Instance with unencrypted block device.",
+  "verdict": "TP",
+  "justification": "root_block_device sets encrypted = false; genuinely unencrypted, real weakness."
+ },
+ {
+  "sample_id": "trivy-00399",
+  "project": "t004",
+  "rule": "AWS-0104",
+  "title": "A security group rule should not allow unrestricted egress to any IP address.",
+  "verdict": "FP",
+  "justification": "The egress rule is restricted to TCP 443 to 0.0.0.0/0 (outbound HTTPS for updates); it is not unrestricted egress, so the check claim is factually wrong."
+ },
+ {
+  "sample_id": "trivy-00400",
+  "project": "t005",
+  "rule": "AWS-0123",
+  "title": "IAM groups should have MFA enforcement activated.",
+  "verdict": "TP",
+  "justification": "The ops-team group (with AdministratorAccess attached) has no MFA enforcement condition; real missing control."
+ },
+ {
+  "sample_id": "trivy-00402",
+  "project": "t007",
+  "rule": "AWS-0080",
+  "title": "RDS encryption has not been enabled at a DB Instance level.",
+  "verdict": "TP",
+  "justification": "aws_db_instance.shop sets storage_encrypted = false; genuinely unencrypted, real weakness."
+ },
+ {
+  "sample_id": "trivy-00403",
+  "project": "t007",
+  "rule": "AWS-0099",
+  "title": "Missing description for security group.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00405",
+  "project": "t007",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00408",
+  "project": "t007",
+  "rule": "AWS-0176",
+  "title": "RDS IAM Database Authentication Disabled",
+  "verdict": "TP",
+  "justification": "No iam_database_authentication_enabled; IAM DB auth genuinely disabled on a publicly accessible MySQL."
+ },
+ {
+  "sample_id": "trivy-00410",
+  "project": "t008",
+  "rule": "AWS-0176",
+  "title": "RDS IAM Database Authentication Disabled",
+  "verdict": "TP",
+  "justification": "No iam_database_authentication_enabled on the analytics Postgres; IAM DB auth genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00411",
+  "project": "t009",
+  "rule": "AWS-0066",
+  "title": "Lambda functions should have X-Ray tracing enabled",
+  "verdict": "FP",
+  "justification": "Technically true (no tracing_config) but X-Ray tracing is observability, not a security control; no security impact."
+ },
+ {
+  "sample_id": "trivy-00413",
+  "project": "t009",
+  "rule": "AWS-0087",
+  "title": "S3 Access block should block public policy",
+  "verdict": "TP",
+  "justification": "aws_s3_bucket.uploads has no public access block; block-public-policy genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00416",
+  "project": "t009",
+  "rule": "AWS-0091",
+  "title": "S3 Access Block should Ignore Public ACL",
+  "verdict": "TP",
+  "justification": "No public access block configured; ignore-public-acls genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00418",
+  "project": "t009",
+  "rule": "AWS-0132",
+  "title": "S3 encryption should use Customer Managed Keys",
+  "verdict": "TP",
+  "justification": "No SSE configuration on the uploads bucket; missing CMK encryption, factually correct."
+ },
+ {
+  "sample_id": "trivy-00419",
+  "project": "t009",
+  "rule": "AWS-0345",
+  "title": "Disallow unrestricted S3 IAM Policies",
+  "verdict": "TP",
+  "justification": "Inline role policy allows s3:* (and dynamodb:*, logs:*) on *; genuinely unrestricted, real weakness."
+ },
+ {
+  "sample_id": "trivy-00420",
+  "project": "t010",
+  "rule": "AWS-0017",
+  "title": "CloudWatch log groups should be encrypted using CMK",
+  "verdict": "TP",
+  "justification": "aws_cloudwatch_log_group.orders sets no kms_key_id; missing CMK encryption is a real control gap."
+ },
+ {
+  "sample_id": "trivy-00422",
+  "project": "t010",
+  "rule": "AWS-0096",
+  "title": "Unencrypted SQS queue.",
+  "verdict": "TP",
+  "justification": "aws_sqs_queue.orders_dlq configures no kms_master_key_id; no explicit encryption configured, a real missing control."
+ },
+ {
+  "sample_id": "trivy-00423",
+  "project": "t011",
+  "rule": "AWS-0038",
+  "title": "EKS Clusters should have cluster control plane logging turned on",
+  "verdict": "TP",
+  "justification": "aws_eks_cluster.main sets no enabled_cluster_log_types; control-plane logging genuinely off."
+ },
+ {
+  "sample_id": "trivy-00424",
+  "project": "t011",
+  "rule": "AWS-0038",
+  "title": "EKS Clusters should have cluster control plane logging turned on",
+  "verdict": "TP",
+  "justification": "Duplicate instance: no enabled_cluster_log_types on the cluster; genuinely off."
+ },
+ {
+  "sample_id": "trivy-00426",
+  "project": "t011",
+  "rule": "AWS-0038",
+  "title": "EKS Clusters should have cluster control plane logging turned on",
+  "verdict": "TP",
+  "justification": "Duplicate instance: no enabled_cluster_log_types on the cluster; genuinely off."
+ },
+ {
+  "sample_id": "trivy-00428",
+  "project": "t011",
+  "rule": "AWS-0039",
+  "title": "EKS should have the encryption of secrets enabled",
+  "verdict": "TP",
+  "justification": "No encryption_config block on the cluster; secrets encryption genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00430",
+  "project": "t011",
+  "rule": "AWS-0041",
+  "title": "EKS cluster should not have open CIDR range for public access",
+  "verdict": "TP",
+  "justification": "vpc_config sets endpoint_public_access=true with public_access_cidrs=[0.0.0.0/0]; genuinely open, real exposure."
+ },
+ {
+  "sample_id": "trivy-00431",
+  "project": "t012",
+  "rule": "AWS-0038",
+  "title": "EKS Clusters should have cluster control plane logging turned on",
+  "verdict": "UNCERTAIN",
+  "justification": "enabled_cluster_log_types = var.cluster_log_types; cannot decide without the variable's value."
+ },
+ {
+  "sample_id": "trivy-00432",
+  "project": "t012",
+  "rule": "AWS-0038",
+  "title": "EKS Clusters should have cluster control plane logging turned on",
+  "verdict": "UNCERTAIN",
+  "justification": "enabled_cluster_log_types = var.cluster_log_types; cannot decide without the variable's value."
+ },
+ {
+  "sample_id": "trivy-00434",
+  "project": "t012",
+  "rule": "AWS-0038",
+  "title": "EKS Clusters should have cluster control plane logging turned on",
+  "verdict": "UNCERTAIN",
+  "justification": "enabled_cluster_log_types = var.cluster_log_types; cannot decide without the variable's value."
+ },
+ {
+  "sample_id": "trivy-00436",
+  "project": "t013",
+  "rule": "AWS-0104",
+  "title": "A security group rule should not allow unrestricted egress to any IP address.",
+  "verdict": "TP",
+  "justification": "Egress rule is protocol -1 to 0.0.0.0/0; genuinely unrestricted egress on the db tier SG."
+ },
+ {
+  "sample_id": "trivy-00437",
+  "project": "t013",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00439",
+  "project": "t014",
+  "rule": "AWS-0015",
+  "title": "CloudTrail should use Customer managed keys to encrypt the logs",
+  "verdict": "TP",
+  "justification": "aws_cloudtrail.main sets no kms_key_id; CMK encryption genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00440",
+  "project": "t014",
+  "rule": "AWS-0016",
+  "title": "Cloudtrail log validation should be enabled to prevent tampering of log data",
+  "verdict": "TP",
+  "justification": "enable_log_file_validation = false explicitly; log validation genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00442",
+  "project": "t014",
+  "rule": "AWS-0087",
+  "title": "S3 Access block should block public policy",
+  "verdict": "TP",
+  "justification": "Trail bucket has no public access block; block-public-policy genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00443",
+  "project": "t014",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "Trail bucket has no logging configuration; real audit gap."
+ },
+ {
+  "sample_id": "trivy-00444",
+  "project": "t014",
+  "rule": "AWS-0090",
+  "title": "S3 Data should be versioned",
+  "verdict": "TP",
+  "justification": "No versioning on the trail bucket; real recoverability gap."
+ },
+ {
+  "sample_id": "trivy-00448",
+  "project": "t014",
+  "rule": "AWS-0132",
+  "title": "S3 encryption should use Customer Managed Keys",
+  "verdict": "TP",
+  "justification": "No SSE configuration on the trail bucket; missing CMK encryption, factually correct."
+ },
+ {
+  "sample_id": "trivy-00450",
+  "project": "t014",
+  "rule": "AWS-0163",
+  "title": "You should enable bucket access logging on the CloudTrail S3 bucket.",
+  "verdict": "TP",
+  "justification": "No logging configuration on the CloudTrail bucket; real audit gap."
+ },
+ {
+  "sample_id": "trivy-00451",
+  "project": "t015",
+  "rule": "AWS-0017",
+  "title": "CloudWatch log groups should be encrypted using CMK",
+  "verdict": "TP",
+  "justification": "aws_cloudwatch_log_group.trail sets no kms_key_id; missing CMK encryption, real control gap."
+ },
+ {
+  "sample_id": "trivy-00453",
+  "project": "t015",
+  "rule": "AWS-0087",
+  "title": "S3 Access block should block public policy",
+  "verdict": "TP",
+  "justification": "Trail bucket has no public access block; block-public-policy genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00454",
+  "project": "t015",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "Trail bucket has no logging configuration; real audit gap."
+ },
+ {
+  "sample_id": "trivy-00455",
+  "project": "t015",
+  "rule": "AWS-0091",
+  "title": "S3 Access Block should Ignore Public ACL",
+  "verdict": "TP",
+  "justification": "Trail bucket has no public access block; ignore-public-acls genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00457",
+  "project": "t015",
+  "rule": "AWS-0094",
+  "title": "S3 buckets should each define an aws_s3_bucket_public_access_block",
+  "verdict": "TP",
+  "justification": "No public access block resource; factually correct."
+ },
+ {
+  "sample_id": "trivy-00460",
+  "project": "t016",
+  "rule": "AWS-0065",
+  "title": "A KMS key is not configured to auto-rotate.",
+  "verdict": "TP",
+  "justification": "aws_kms_key.data sets enable_key_rotation = false explicitly; rotation genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00461",
+  "project": "t018",
+  "rule": "AWS-0052",
+  "title": "Load balancers should drop invalid headers",
+  "verdict": "TP",
+  "justification": "aws_lb.web sets no drop_invalid_header_fields; invalid-header dropping genuinely off."
+ },
+ {
+  "sample_id": "trivy-00462",
+  "project": "t018",
+  "rule": "AWS-0053",
+  "title": "Load balancer is exposed to the internet.",
+  "verdict": "FP",
+  "justification": "internal = false is by design for a public web ALB; flagging internet exposure lacks security context."
+ },
+ {
+  "sample_id": "trivy-00463",
+  "project": "t018",
+  "rule": "AWS-0099",
+  "title": "Missing description for security group.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00468",
+  "project": "t019",
+  "rule": "AWS-0053",
+  "title": "Load balancer is exposed to the internet.",
+  "verdict": "FP",
+  "justification": "internal = false is by design for this public web ALB (WAF-attached, HTTPS redirect); no security context."
+ },
+ {
+  "sample_id": "trivy-00471",
+  "project": "t019",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "alb_logs bucket has no logging configuration; real audit gap."
+ },
+ {
+  "sample_id": "trivy-00472",
+  "project": "t019",
+  "rule": "AWS-0090",
+  "title": "S3 Data should be versioned",
+  "verdict": "TP",
+  "justification": "No versioning on the alb_logs bucket; real recoverability gap."
+ },
+ {
+  "sample_id": "trivy-00474",
+  "project": "t019",
+  "rule": "AWS-0093",
+  "title": "S3 Access block should restrict public bucket to limit access",
+  "verdict": "TP",
+  "justification": "alb_logs bucket has no public access block; restrict-public-buckets genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00475",
+  "project": "t019",
+  "rule": "AWS-0094",
+  "title": "S3 buckets should each define an aws_s3_bucket_public_access_block",
+  "verdict": "TP",
+  "justification": "No public access block resource; factually correct."
+ },
+ {
+  "sample_id": "trivy-00476",
+  "project": "t019",
+  "rule": "AWS-0132",
+  "title": "S3 encryption should use Customer Managed Keys",
+  "verdict": "TP",
+  "justification": "No SSE configuration on the alb_logs bucket; missing CMK encryption, factually correct."
+ },
+ {
+  "sample_id": "trivy-00478",
+  "project": "t020",
+  "rule": "AWS-0024",
+  "title": "Point in time recovery should be enabled to protect DynamoDB table",
+  "verdict": "TP",
+  "justification": "Neither DynamoDB table sets point_in_time_recovery; PITR genuinely disabled, real backup gap."
+ },
+ {
+  "sample_id": "trivy-00479",
+  "project": "t021",
+  "rule": "AWS-0024",
+  "title": "Point in time recovery should be enabled to protect DynamoDB table",
+  "verdict": "TP",
+  "justification": "The orders table sets no point_in_time_recovery; PITR genuinely disabled, real backup gap."
+ },
+ {
+  "sample_id": "trivy-00480",
+  "project": "t022",
+  "rule": "AWS-0096",
+  "title": "Unencrypted SQS queue.",
+  "verdict": "TP",
+  "justification": "aws_sqs_queue.alerts configures no kms_master_key_id; no explicit encryption configured, real control gap."
+ },
+ {
+  "sample_id": "trivy-00482",
+  "project": "t023",
+  "rule": "AWS-0135",
+  "title": "SQS queue should be encrypted with a CMK.",
+  "verdict": "TP",
+  "justification": "kms_master_key_id = alias/aws/sqs is the AWS-managed key, not a customer-managed key; the check claim is factually correct."
+ },
+ {
+  "sample_id": "trivy-00483",
+  "project": "t024",
+  "rule": "AWS-0104",
+  "title": "A security group rule should not allow unrestricted egress to any IP address.",
+  "verdict": "TP",
+  "justification": "Egress rule is protocol -1 to 0.0.0.0/0; genuinely unrestricted egress."
+ },
+ {
+  "sample_id": "trivy-00485",
+  "project": "t025",
+  "rule": "AWS-0099",
+  "title": "Missing description for security group.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00487",
+  "project": "t025",
+  "rule": "AWS-0124",
+  "title": "Missing description for security group rule.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00489",
+  "project": "t026",
+  "rule": "AWS-0176",
+  "title": "RDS IAM Database Authentication Disabled",
+  "verdict": "TP",
+  "justification": "aws_db_instance.billing sets no iam_database_authentication_enabled; IAM DB auth genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00491",
+  "project": "t026",
+  "rule": "AWS-0089",
+  "title": "S3 Bucket Logging",
+  "verdict": "TP",
+  "justification": "aws_s3_bucket.export has no logging configuration; real audit gap."
+ },
+ {
+  "sample_id": "trivy-00493",
+  "project": "t026",
+  "rule": "AWS-0091",
+  "title": "S3 Access Block should Ignore Public ACL",
+  "verdict": "TP",
+  "justification": "No aws_s3_bucket_public_access_block; ignore-public-acls genuinely absent on a public-read bucket."
+ },
+ {
+  "sample_id": "trivy-00494",
+  "project": "t026",
+  "rule": "AWS-0092",
+  "title": "S3 Buckets not publicly accessible through ACL.",
+  "verdict": "TP",
+  "justification": "Bucket acl = public-read with a public bucket policy; the bucket genuinely is publicly accessible through ACL, a real exposure."
+ },
+ {
+  "sample_id": "trivy-00495",
+  "project": "t026",
+  "rule": "AWS-0093",
+  "title": "S3 Access block should restrict public bucket to limit access",
+  "verdict": "TP",
+  "justification": "No public access block; restrict-public-buckets genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00496",
+  "project": "t026",
+  "rule": "AWS-0094",
+  "title": "S3 buckets should each define an aws_s3_bucket_public_access_block",
+  "verdict": "TP",
+  "justification": "No public access block resource; factually correct."
+ },
+ {
+  "sample_id": "trivy-00498",
+  "project": "t027",
+  "rule": "AWS-0099",
+  "title": "Missing description for security group.",
+  "verdict": "HYGIENE",
+  "justification": "Missing security-group/rule description maps to the reclassified hygiene type 'firewall rule descriptions'; it has no security impact."
+ },
+ {
+  "sample_id": "trivy-00499",
+  "project": "t027",
+  "rule": "AWS-0104",
+  "title": "A security group rule should not allow unrestricted egress to any IP address.",
+  "verdict": "FP",
+  "justification": "The egress rule is restricted to TCP 443 (Outbound HTTPS); it is not unrestricted egress, so the check claim is factually wrong."
+ },
+ {
+  "sample_id": "trivy-00501",
+  "project": "t028",
+  "rule": "AWS-0345",
+  "title": "Disallow unrestricted S3 IAM Policies",
+  "verdict": "TP",
+  "justification": "Inline policy allows s3:* (plus dynamodb:*, logs:*, secretsmanager:*) on *; genuinely unrestricted, real weakness."
+ },
+ {
+  "sample_id": "trivy-00503",
+  "project": "t028",
+  "rule": "AWS-0066",
+  "title": "Lambda functions should have X-Ray tracing enabled",
+  "verdict": "FP",
+  "justification": "Technically true (no tracing_config) but X-Ray tracing is observability, not a security control; no security impact."
+ },
+ {
+  "sample_id": "trivy-00504",
+  "project": "t029",
+  "rule": "AWS-0033",
+  "title": "ECR Repository should use customer managed keys to allow more control",
+  "verdict": "TP",
+  "justification": "aws_ecr_repository.api sets no encryption_configuration; CMK genuinely absent, real control gap."
+ },
+ {
+  "sample_id": "trivy-00506",
+  "project": "t029",
+  "rule": "AWS-0038",
+  "title": "EKS Clusters should have cluster control plane logging turned on",
+  "verdict": "FP",
+  "justification": "t029/main.tf: enabled_cluster_log_types = [\"api\", \"audit\"] \u2014 control-plane logging IS on; the check's claim is factually wrong. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "trivy-00509",
+  "project": "t029",
+  "rule": "AWS-0040",
+  "title": "EKS Clusters should have the public access disabled",
+  "verdict": "TP",
+  "justification": "vpc_config sets endpoint_public_access = true; public endpoint genuinely enabled on a staging cluster with 0.0.0.0/0 CIDRs."
+ },
+ {
+  "sample_id": "trivy-00510",
+  "project": "t029",
+  "rule": "AWS-0041",
+  "title": "EKS cluster should not have open CIDR range for public access",
+  "verdict": "TP",
+  "justification": "public_access_cidrs = [0.0.0.0/0]; genuinely open, real exposure."
+ },
+ {
+  "sample_id": "trivy-00512",
+  "project": "t030",
+  "rule": "AWS-0053",
+  "title": "Load balancer is exposed to the internet.",
+  "verdict": "FP",
+  "justification": "internal = false is by design for a public web ALB; flagging internet exposure lacks security context."
+ },
+ {
+  "sample_id": "trivy-00513",
+  "project": "t030",
+  "rule": "AWS-0130",
+  "title": "aws_instance should activate session tokens for Instance Metadata Service.",
+  "verdict": "TP",
+  "justification": "The launch template sets no metadata_options, so IMDSv2 session tokens are not required; real SSRF-era gap."
+ },
+ {
+  "sample_id": "trivy-00515",
+  "project": "t031",
+  "rule": "AZU-0012",
+  "title": "The default action on Storage account network rules should be set to deny",
+  "verdict": "TP",
+  "justification": "No network_rules block at all; default action is not deny, factually correct on a TLS1_0 public-access account."
+ },
+ {
+  "sample_id": "trivy-00516",
+  "project": "t031",
+  "rule": "AZU-0057",
+  "title": "Storage account should have logging enabled",
+  "verdict": "TP",
+  "justification": "No diagnostic settings; missing audit logging is a real gap."
+ },
+ {
+  "sample_id": "trivy-00519",
+  "project": "t031",
+  "rule": "AZU-0060",
+  "title": "Storage account should use customer-managed keys for encryption",
+  "verdict": "TP",
+  "justification": "No customer_managed_key block; CMK genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00520",
+  "project": "t031",
+  "rule": "AZU-0061",
+  "title": "Storage account should have infrastructure encryption enabled",
+  "verdict": "TP",
+  "justification": "infrastructure_encryption_enabled not set; double-encryption control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00522",
+  "project": "t032",
+  "rule": "AZU-0061",
+  "title": "Storage account should have infrastructure encryption enabled",
+  "verdict": "TP",
+  "justification": "infrastructure_encryption_enabled not set; double-encryption control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00523",
+  "project": "t035",
+  "rule": "AZU-0027",
+  "title": "Auditing should be enabled on Azure SQL Databases",
+  "verdict": "TP",
+  "justification": "No extended_auditing_policy on the SQL server; auditing genuinely disabled on a publicly exposed server."
+ },
+ {
+  "sample_id": "trivy-00526",
+  "project": "t036",
+  "rule": "AZU-0058",
+  "title": "Storage account should use geo-redundant replication",
+  "verdict": "FP",
+  "justification": "Technically true (LRS) but replication is availability, not security; no security impact."
+ },
+ {
+  "sample_id": "trivy-00527",
+  "project": "t036",
+  "rule": "AZU-0061",
+  "title": "Storage account should have infrastructure encryption enabled",
+  "verdict": "TP",
+  "justification": "infrastructure_encryption_enabled not set; double-encryption control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00528",
+  "project": "t037",
+  "rule": "AZU-0001",
+  "title": "Web App accepts incoming client certificate",
+  "verdict": "TP",
+  "justification": "client_cert_enabled not set on the web app; client-certificate requirement genuinely absent, real auth control gap."
+ },
+ {
+  "sample_id": "trivy-00529",
+  "project": "t037",
+  "rule": "AZU-0002",
+  "title": "Web App has registration with AD enabled",
+  "verdict": "TP",
+  "justification": "No auth_settings/AD registration configured; real missing auth control."
+ },
+ {
+  "sample_id": "trivy-00530",
+  "project": "t037",
+  "rule": "AZU-0003",
+  "title": "App Service authentication is activated",
+  "verdict": "TP",
+  "justification": "No auth_settings configured on a TLS-1.0 web app; App Service authentication genuinely absent, real gap."
+ },
+ {
+  "sample_id": "trivy-00531",
+  "project": "t037",
+  "rule": "AZU-0005",
+  "title": "Web App uses the latest HTTP version",
+  "verdict": "FP",
+  "justification": "Technically true (no http2_enabled) but HTTP version has no meaningful security impact; non-security pedantry."
+ },
+ {
+  "sample_id": "trivy-00535",
+  "project": "t038",
+  "rule": "AZU-0001",
+  "title": "Web App accepts incoming client certificate",
+  "verdict": "TP",
+  "justification": "client_cert_enabled not set; client-certificate requirement genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00536",
+  "project": "t038",
+  "rule": "AZU-0003",
+  "title": "App Service authentication is activated",
+  "verdict": "TP",
+  "justification": "No auth_settings configured; App Service authentication genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00540",
+  "project": "t039",
+  "rule": "AZU-0042",
+  "title": "Ensure RBAC is enabled on AKS clusters",
+  "verdict": "TP",
+  "justification": "role_based_access_control_enabled = false explicitly; RBAC genuinely disabled, real critical weakness."
+ },
+ {
+  "sample_id": "trivy-00541",
+  "project": "t039",
+  "rule": "AZU-0043",
+  "title": "Ensure AKS cluster has Network Policy configured",
+  "verdict": "TP",
+  "justification": "No network_profile configured; network policy genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00543",
+  "project": "t039",
+  "rule": "AZU-0066",
+  "title": "Ensure AKS cluster has Azure Policy add-on enabled",
+  "verdict": "TP",
+  "justification": "No Azure Policy add-on configured; genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00544",
+  "project": "t039",
+  "rule": "AZU-0067",
+  "title": "Ensure AKS cluster has disk encryption set ID configured",
+  "verdict": "TP",
+  "justification": "No disk_encryption_set_id configured; genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00546",
+  "project": "t040",
+  "rule": "AZU-0067",
+  "title": "Ensure AKS cluster has disk encryption set ID configured",
+  "verdict": "TP",
+  "justification": "No disk_encryption_set_id configured; genuinely absent despite otherwise hardened cluster."
+ },
+ {
+  "sample_id": "trivy-00548",
+  "project": "t045",
+  "rule": "AZU-0061",
+  "title": "Storage account should have infrastructure encryption enabled",
+  "verdict": "TP",
+  "justification": "infrastructure_encryption_enabled not set; double-encryption control genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00549",
+  "project": "t046",
+  "rule": "AZU-0001",
+  "title": "Web App accepts incoming client certificate",
+  "verdict": "TP",
+  "justification": "client_cert_enabled not set; client-certificate requirement genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00551",
+  "project": "t046",
+  "rule": "AZU-0005",
+  "title": "Web App uses the latest HTTP version",
+  "verdict": "FP",
+  "justification": "Technically true but HTTP version has no meaningful security impact; non-security pedantry."
+ },
+ {
+  "sample_id": "trivy-00555",
+  "project": "t048",
+  "rule": "AZU-0065",
+  "title": "Ensure AKS cluster has private cluster enabled",
+  "verdict": "TP",
+  "justification": "private_cluster_enabled not set; private API endpoint genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00556",
+  "project": "t048",
+  "rule": "AZU-0066",
+  "title": "Ensure AKS cluster has Azure Policy add-on enabled",
+  "verdict": "TP",
+  "justification": "No Azure Policy add-on configured; genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00557",
+  "project": "t048",
+  "rule": "AZU-0067",
+  "title": "Ensure AKS cluster has disk encryption set ID configured",
+  "verdict": "TP",
+  "justification": "No disk_encryption_set_id configured; genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00558",
+  "project": "t051",
+  "rule": "GCP-0001",
+  "title": "Ensure that Cloud Storage bucket is not anonymously or publicly accessible.",
+  "verdict": "TP",
+  "justification": "IAM binding grants roles/storage.objectViewer to allUsers; the bucket genuinely is publicly accessible, real exposure."
+ },
+ {
+  "sample_id": "trivy-00559",
+  "project": "t051",
+  "rule": "GCP-0002",
+  "title": "Ensure that Cloud Storage buckets have uniform bucket-level access enabled",
+  "verdict": "TP",
+  "justification": "uniform_bucket_level_access not set; genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00562",
+  "project": "t051",
+  "rule": "GCP-0078",
+  "title": "Cloud Storage Bucket Versioning Disabled",
+  "verdict": "TP",
+  "justification": "No versioning block; versioning genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00563",
+  "project": "t052",
+  "rule": "GCP-0077",
+  "title": "Cloud Storage Bucket Logging Not Enabled",
+  "verdict": "TP",
+  "justification": "No logging block on the finance bucket; access logging genuinely not enabled, real audit gap."
+ },
+ {
+  "sample_id": "trivy-00565",
+  "project": "t053",
+  "rule": "GCP-0030",
+  "title": "Disable project-wide SSH keys for all instances",
+  "verdict": "TP",
+  "justification": "No block-project-ssh-keys metadata on the instances; project SSH keys genuinely allowed."
+ },
+ {
+  "sample_id": "trivy-00566",
+  "project": "t053",
+  "rule": "GCP-0031",
+  "title": "Instances should not have public IP addresses",
+  "verdict": "TP",
+  "justification": "network_interface has an access_config block; the instances genuinely get public IPs."
+ },
+ {
+  "sample_id": "trivy-00568",
+  "project": "t053",
+  "rule": "GCP-0033",
+  "title": "VM disks should be encrypted with Customer Supplied Encryption Keys",
+  "verdict": "TP",
+  "justification": "No disk_encryption_key on the boot disk; CSEK genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00569",
+  "project": "t053",
+  "rule": "GCP-0033",
+  "title": "VM disks should be encrypted with Customer Supplied Encryption Keys",
+  "verdict": "TP",
+  "justification": "Second instance likewise has no disk_encryption_key; CSEK genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00572",
+  "project": "t053",
+  "rule": "GCP-0044",
+  "title": "Instances should not use the default service account",
+  "verdict": "TP",
+  "justification": "service_account block sets no email, so the default service account is used with cloud-platform scope; real weakness."
+ },
+ {
+  "sample_id": "trivy-00573",
+  "project": "t053",
+  "rule": "GCP-0044",
+  "title": "Instances should not use the default service account",
+  "verdict": "TP",
+  "justification": "Second instance likewise uses the default service account with cloud-platform scope; real weakness."
+ },
+ {
+  "sample_id": "trivy-00576",
+  "project": "t053",
+  "rule": "GCP-0067",
+  "title": "Instances should have Shielded VM secure boot enabled",
+  "verdict": "TP",
+  "justification": "No shielded_instance_config; secure boot genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00577",
+  "project": "t053",
+  "rule": "GCP-0067",
+  "title": "Instances should have Shielded VM secure boot enabled",
+  "verdict": "TP",
+  "justification": "Second instance likewise has no shielded_instance_config; secure boot genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00578",
+  "project": "t054",
+  "rule": "GCP-0030",
+  "title": "Disable project-wide SSH keys for all instances",
+  "verdict": "TP",
+  "justification": "No block-project-ssh-keys metadata; project-wide SSH keys genuinely not blocked."
+ },
+ {
+  "sample_id": "trivy-00579",
+  "project": "t054",
+  "rule": "GCP-0030",
+  "title": "Disable project-wide SSH keys for all instances",
+  "verdict": "TP",
+  "justification": "Second instance likewise lacks block-project-ssh-keys metadata; genuinely not blocked."
+ },
+ {
+  "sample_id": "trivy-00581",
+  "project": "t054",
+  "rule": "GCP-0033",
+  "title": "VM disks should be encrypted with Customer Supplied Encryption Keys",
+  "verdict": "TP",
+  "justification": "No disk_encryption_key on the boot disk; CSEK genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00584",
+  "project": "t054",
+  "rule": "GCP-0044",
+  "title": "Instances should not use the default service account",
+  "verdict": "TP",
+  "justification": "service_account block sets no email; the default service account is genuinely used."
+ },
+ {
+  "sample_id": "trivy-00586",
+  "project": "t055",
+  "rule": "GCP-0056",
+  "title": "Network Policy should be enabled on GKE clusters",
+  "verdict": "TP",
+  "justification": "google_container_cluster.main has no network_policy block; network policy genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00587",
+  "project": "t055",
+  "rule": "GCP-0059",
+  "title": "Clusters should be set to private",
+  "verdict": "TP",
+  "justification": "No private_cluster_config; the cluster genuinely is not private."
+ },
+ {
+  "sample_id": "trivy-00588",
+  "project": "t055",
+  "rule": "GCP-0061",
+  "title": "Master authorized networks should be configured on GKE clusters",
+  "verdict": "TP",
+  "justification": "No master_authorized_networks_config; authorized networks genuinely not configured."
+ },
+ {
+  "sample_id": "trivy-00589",
+  "project": "t055",
+  "rule": "GCP-0064",
+  "title": "Legacy client authentication methods utilized.",
+  "verdict": "TP",
+  "justification": "master_auth sets a static username/password and issue_client_certificate = true; legacy auth genuinely utilized, real weakness."
+ },
+ {
+  "sample_id": "trivy-00590",
+  "project": "t055",
+  "rule": "GCP-0048",
+  "title": "Legacy metadata endpoints enabled.",
+  "verdict": "TP",
+  "justification": "node_config has no metadata block disabling legacy endpoints; legacy metadata endpoints genuinely enabled."
+ },
+ {
+  "sample_id": "trivy-00594",
+  "project": "t055",
+  "rule": "GCP-0063",
+  "title": "Kubernetes should have 'Automatic repair' enabled",
+  "verdict": "TP",
+  "justification": "Node pool has no management block; automatic repair genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00595",
+  "project": "t056",
+  "rule": "GCP-0051",
+  "title": "Clusters should be configured with Labels",
+  "verdict": "FP",
+  "justification": "Technically true (no resource_labels) but labels are organizational metadata with no security impact; non-security pedantry."
+ },
+ {
+  "sample_id": "trivy-00597",
+  "project": "t056",
+  "rule": "GCP-0054",
+  "title": "Ensure Container-Optimized OS (cos) is used for Kubernetes Engine Clusters Node image",
+  "verdict": "FP",
+  "justification": "node_config sets no image_type, so GKE applies its default Container-Optimized OS image; the claim that COS is not used is factually wrong."
+ },
+ {
+  "sample_id": "trivy-00599",
+  "project": "t056",
+  "rule": "GCP-0058",
+  "title": "Kubernetes should have 'Automatic upgrade' enabled",
+  "verdict": "TP",
+  "justification": "Node pool has no management block; automatic upgrade genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00601",
+  "project": "t057",
+  "rule": "GCP-0014",
+  "title": "Temporary file logging should be enabled for all temporary files.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_temp_files; temp-file logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00605",
+  "project": "t057",
+  "rule": "GCP-0017",
+  "title": "Ensure that Cloud SQL Database Instances are not publicly exposed",
+  "verdict": "TP",
+  "justification": "ipv4_enabled = true with authorized_networks 0.0.0.0/0; the instance genuinely is publicly exposed."
+ },
+ {
+  "sample_id": "trivy-00606",
+  "project": "t057",
+  "rule": "GCP-0020",
+  "title": "Ensure that logging of lock waits is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_lock_waits; lock-wait logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00607",
+  "project": "t057",
+  "rule": "GCP-0022",
+  "title": "Ensure that logging of disconnections is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_disconnections; disconnection logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00608",
+  "project": "t057",
+  "rule": "GCP-0024",
+  "title": "Enable automated backups to recover from data-loss",
+  "verdict": "TP",
+  "justification": "backup_configuration.enabled = false explicitly; automated backups genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00610",
+  "project": "t058",
+  "rule": "GCP-0014",
+  "title": "Temporary file logging should be enabled for all temporary files.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_temp_files; temp-file logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00613",
+  "project": "t058",
+  "rule": "GCP-0022",
+  "title": "Ensure that logging of disconnections is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_disconnections; disconnection logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00614",
+  "project": "t058",
+  "rule": "GCP-0025",
+  "title": "Ensure that logging of checkpoints is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_checkpoints; checkpoint logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00616",
+  "project": "t060",
+  "rule": "GCP-0003",
+  "title": "IAM granted directly to user.",
+  "verdict": "TP",
+  "justification": "google_project_iam_member grants roles/editor directly to user:dev@example.com; direct user grant genuinely present, real weakness."
+ },
+ {
+  "sample_id": "trivy-00617",
+  "project": "t061",
+  "rule": "GCP-0027",
+  "title": "A firewall rule should not allow unrestricted ingress from any IP address.",
+  "verdict": "TP",
+  "justification": "allow-all-ingress allows protocol all from 0.0.0.0/0; genuinely unrestricted ingress."
+ },
+ {
+  "sample_id": "trivy-00618",
+  "project": "t061",
+  "rule": "GCP-0035",
+  "title": "A firewall rule should not allow unrestricted egress to any IP address.",
+  "verdict": "TP",
+  "justification": "allow-all-egress allows protocol all to 0.0.0.0/0; genuinely unrestricted egress."
+ },
+ {
+  "sample_id": "trivy-00622",
+  "project": "t061",
+  "rule": "GCP-0073",
+  "title": "Disable Default Firewall Rules",
+  "verdict": "FP",
+  "justification": "The rules are custom allow-all rules (allow-all-ingress/egress), not GCP default firewall rules; the finding is factually wrong about what they are."
+ },
+ {
+  "sample_id": "trivy-00623",
+  "project": "t061",
+  "rule": "GCP-0074",
+  "title": "Google Compute Network Using Firewall Rule that Allows Large Port Range",
+  "verdict": "TP",
+  "justification": "allow-all-ingress allows protocol all (every port) from 0.0.0.0/0; genuinely a large port range."
+ },
+ {
+  "sample_id": "trivy-00624",
+  "project": "t062",
+  "rule": "GCP-0073",
+  "title": "Disable Default Firewall Rules",
+  "verdict": "FP",
+  "justification": "Both firewalls are custom rules on a custom VPC network, not GCP default firewall rules; factually wrong."
+ },
+ {
+  "sample_id": "trivy-00626",
+  "project": "t063",
+  "rule": "GCP-0033",
+  "title": "VM disks should be encrypted with Customer Supplied Encryption Keys",
+  "verdict": "TP",
+  "justification": "No disk_encryption_key on the boot disk; CSEK genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00628",
+  "project": "t063",
+  "rule": "GCP-0066",
+  "title": "Cloud Storage buckets should be encrypted with a customer-managed key.",
+  "verdict": "TP",
+  "justification": "google_storage_bucket.data has no encryption block; CMK genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00629",
+  "project": "t064",
+  "rule": "GCP-0048",
+  "title": "Legacy metadata endpoints enabled.",
+  "verdict": "TP",
+  "justification": "node_config has no metadata block disabling legacy endpoints; legacy metadata endpoints genuinely enabled."
+ },
+ {
+  "sample_id": "trivy-00631",
+  "project": "t064",
+  "rule": "GCP-0051",
+  "title": "Clusters should be configured with Labels",
+  "verdict": "FP",
+  "justification": "Technically true (no resource_labels) but labels are organizational metadata with no security impact; non-security pedantry."
+ },
+ {
+  "sample_id": "trivy-00633",
+  "project": "t064",
+  "rule": "GCP-0057",
+  "title": "Node metadata value disables metadata concealment.",
+  "verdict": "TP",
+  "justification": "node_config sets no metadata concealment configuration; metadata concealment genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00634",
+  "project": "t064",
+  "rule": "GCP-0058",
+  "title": "Kubernetes should have 'Automatic upgrade' enabled",
+  "verdict": "TP",
+  "justification": "Node pool has no management block; automatic upgrade genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00636",
+  "project": "t064",
+  "rule": "GCP-0061",
+  "title": "Master authorized networks should be configured on GKE clusters",
+  "verdict": "TP",
+  "justification": "No master_authorized_networks_config; authorized networks genuinely not configured."
+ },
+ {
+  "sample_id": "trivy-00637",
+  "project": "t064",
+  "rule": "GCP-0063",
+  "title": "Kubernetes should have 'Automatic repair' enabled",
+  "verdict": "TP",
+  "justification": "Node pool has no management block; automatic repair genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00638",
+  "project": "t064",
+  "rule": "GCP-0014",
+  "title": "Temporary file logging should be enabled for all temporary files.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_temp_files; temp-file logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00639",
+  "project": "t064",
+  "rule": "GCP-0016",
+  "title": "Ensure that logging of connections is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_connections; connection logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00643",
+  "project": "t065",
+  "rule": "GCP-0030",
+  "title": "Disable project-wide SSH keys for all instances",
+  "verdict": "TP",
+  "justification": "No block-project-ssh-keys metadata; project-wide SSH keys genuinely not blocked."
+ },
+ {
+  "sample_id": "trivy-00645",
+  "project": "t065",
+  "rule": "GCP-0031",
+  "title": "Instances should not have public IP addresses",
+  "verdict": "TP",
+  "justification": "network_interface has an access_config block; the instance genuinely gets a public IP."
+ },
+ {
+  "sample_id": "trivy-00646",
+  "project": "t065",
+  "rule": "GCP-0031",
+  "title": "Instances should not have public IP addresses",
+  "verdict": "TP",
+  "justification": "Second instance likewise has an access_config block; genuinely gets a public IP."
+ },
+ {
+  "sample_id": "trivy-00647",
+  "project": "t065",
+  "rule": "GCP-0033",
+  "title": "VM disks should be encrypted with Customer Supplied Encryption Keys",
+  "verdict": "TP",
+  "justification": "No disk_encryption_key on the boot disk; CSEK genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00648",
+  "project": "t065",
+  "rule": "GCP-0033",
+  "title": "VM disks should be encrypted with Customer Supplied Encryption Keys",
+  "verdict": "TP",
+  "justification": "Second instance likewise has no disk_encryption_key; CSEK genuinely absent."
+ },
+ {
+  "sample_id": "trivy-00652",
+  "project": "t065",
+  "rule": "GCP-0041",
+  "title": "Instances should have Shielded VM VTPM enabled",
+  "verdict": "TP",
+  "justification": "No shielded_instance_config; vTPM genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00653",
+  "project": "t065",
+  "rule": "GCP-0044",
+  "title": "Instances should not use the default service account",
+  "verdict": "TP",
+  "justification": "service_account block sets no email, so the default service account with cloud-platform scope is used; real weakness."
+ },
+ {
+  "sample_id": "trivy-00656",
+  "project": "t065",
+  "rule": "GCP-0045",
+  "title": "Instances should have Shielded VM integrity monitoring enabled",
+  "verdict": "TP",
+  "justification": "No shielded_instance_config; integrity monitoring genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00657",
+  "project": "t065",
+  "rule": "GCP-0067",
+  "title": "Instances should have Shielded VM secure boot enabled",
+  "verdict": "TP",
+  "justification": "No shielded_instance_config; secure boot genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00660",
+  "project": "t066",
+  "rule": "GCP-0077",
+  "title": "Cloud Storage Bucket Logging Not Enabled",
+  "verdict": "TP",
+  "justification": "No logging block on the pipeline-logs bucket; access logging genuinely not enabled, real audit gap."
+ },
+ {
+  "sample_id": "trivy-00661",
+  "project": "t067",
+  "rule": "GCP-0048",
+  "title": "Legacy metadata endpoints enabled.",
+  "verdict": "TP",
+  "justification": "node_config has no metadata block disabling legacy endpoints; legacy metadata endpoints genuinely enabled."
+ },
+ {
+  "sample_id": "trivy-00662",
+  "project": "t067",
+  "rule": "GCP-0051",
+  "title": "Clusters should be configured with Labels",
+  "verdict": "FP",
+  "justification": "Technically true (no resource_labels) but labels are organizational metadata with no security impact; non-security pedantry."
+ },
+ {
+  "sample_id": "trivy-00663",
+  "project": "t067",
+  "rule": "GCP-0054",
+  "title": "Ensure Container-Optimized OS (cos) is used for Kubernetes Engine Clusters Node image",
+  "verdict": "FP",
+  "justification": "node_config sets no image_type, so GKE applies its default Container-Optimized OS image; the claim is factually wrong."
+ },
+ {
+  "sample_id": "trivy-00665",
+  "project": "t067",
+  "rule": "GCP-0057",
+  "title": "Node metadata value disables metadata concealment.",
+  "verdict": "TP",
+  "justification": "node_config sets no metadata concealment configuration; metadata concealment genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00668",
+  "project": "t067",
+  "rule": "GCP-0061",
+  "title": "Master authorized networks should be configured on GKE clusters",
+  "verdict": "TP",
+  "justification": "No master_authorized_networks_config; authorized networks genuinely not configured."
+ },
+ {
+  "sample_id": "trivy-00672",
+  "project": "t068",
+  "rule": "GCP-0074",
+  "title": "Google Compute Network Using Firewall Rule that Allows Large Port Range",
+  "verdict": "TP",
+  "justification": "allow-internal allows protocol all; genuinely a large port range."
+ },
+ {
+  "sample_id": "trivy-00673",
+  "project": "t068",
+  "rule": "GCP-0075",
+  "title": "Google Compute Subnetwork with Private Google Access Disabled",
+  "verdict": "TP",
+  "justification": "Subnetwork sets no private_ip_google_access; Private Google Access genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00674",
+  "project": "t068",
+  "rule": "GCP-0076",
+  "title": "Google Compute Subnetwork Logging Disabled",
+  "verdict": "TP",
+  "justification": "Subnetwork has no log_config; flow logging genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00678",
+  "project": "t069",
+  "rule": "GCP-0017",
+  "title": "Ensure that Cloud SQL Database Instances are not publicly exposed",
+  "verdict": "TP",
+  "justification": "ip_configuration sets ipv4_enabled = true, giving the database a public IP; real public-exposure finding."
+ },
+ {
+  "sample_id": "trivy-00679",
+  "project": "t069",
+  "rule": "GCP-0020",
+  "title": "Ensure that logging of lock waits is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_lock_waits; lock-wait logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00680",
+  "project": "t069",
+  "rule": "GCP-0022",
+  "title": "Ensure that logging of disconnections is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_disconnections; disconnection logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00681",
+  "project": "t069",
+  "rule": "GCP-0025",
+  "title": "Ensure that logging of checkpoints is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_checkpoints; checkpoint logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00682",
+  "project": "t070",
+  "rule": "GCP-0051",
+  "title": "Clusters should be configured with Labels",
+  "verdict": "FP",
+  "justification": "Technically true (no resource_labels) but labels are organizational metadata with no security impact; non-security pedantry."
+ },
+ {
+  "sample_id": "trivy-00685",
+  "project": "t070",
+  "rule": "GCP-0029",
+  "title": "VPC flow logs should be enabled for all subnetworks",
+  "verdict": "TP",
+  "justification": "Subnetwork has no log_config; VPC flow logs genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00686",
+  "project": "t070",
+  "rule": "GCP-0075",
+  "title": "Google Compute Subnetwork with Private Google Access Disabled",
+  "verdict": "TP",
+  "justification": "Subnetwork sets no private_ip_google_access; genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00687",
+  "project": "t070",
+  "rule": "GCP-0076",
+  "title": "Google Compute Subnetwork Logging Disabled",
+  "verdict": "TP",
+  "justification": "Subnetwork has no log_config; flow logging genuinely disabled."
+ },
+ {
+  "sample_id": "trivy-00688",
+  "project": "t070",
+  "rule": "GCP-0014",
+  "title": "Temporary file logging should be enabled for all temporary files.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_temp_files; temp-file logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00690",
+  "project": "t070",
+  "rule": "GCP-0016",
+  "title": "Ensure that logging of connections is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_connections; connection logging genuinely not enabled."
+ },
+ {
+  "sample_id": "trivy-00691",
+  "project": "t070",
+  "rule": "GCP-0017",
+  "title": "Ensure that Cloud SQL Database Instances are not publicly exposed",
+  "verdict": "TP",
+  "justification": "ipv4_enabled = true with authorized_networks 0.0.0.0/0; the instance genuinely is publicly exposed, real weakness."
+ },
+ {
+  "sample_id": "trivy-00694",
+  "project": "t070",
+  "rule": "GCP-0022",
+  "title": "Ensure that logging of disconnections is enabled.",
+  "verdict": "TP",
+  "justification": "No database_flags set log_disconnections; disconnection logging genuinely not enabled."
+ }
+]

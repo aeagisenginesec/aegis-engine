@@ -1,0 +1,1733 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_GCP_32",
+                "bc_check_id": "BC_GCP_NETWORKING_8",
+                "check_name": "Ensure 'Block Project-wide SSH keys' is enabled for VM instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "metadata/block-project-ssh-keys"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"dev\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"dev-vm-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"asia-southeast1-a\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        27,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "    access_config {\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        34,
+                        "    ssh-keys = \"dev:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7 demo-key dev@laptop\"\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "\n"
+                    ],
+                    [
+                        37,
+                        "  service_account {\n"
+                    ],
+                    [
+                        38,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    15,
+                    40
+                ],
+                "resource": "google_compute_instance.dev",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBlockProjectSSH",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_38",
+                "bc_check_id": "BC_GCP_GENERAL_2",
+                "check_name": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "boot_disk",
+                        "boot_disk/[0]/disk_encryption_key_raw",
+                        "boot_disk/[0]/kms_key_self_link"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"dev\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"dev-vm-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"asia-southeast1-a\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        27,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "    access_config {\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        34,
+                        "    ssh-keys = \"dev:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7 demo-key dev@laptop\"\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "\n"
+                    ],
+                    [
+                        37,
+                        "  service_account {\n"
+                    ],
+                    [
+                        38,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    15,
+                    40
+                ],
+                "resource": "google_compute_instance.dev",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBootDiskEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/encrypt-boot-disks-for-instances-with-cseks",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_30",
+                "bc_check_id": "BC_GCP_IAM_1",
+                "check_name": "Ensure that instances are not configured to use the default service account",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "service_account/[0]/email",
+                        "name"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"dev\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"dev-vm-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"asia-southeast1-a\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        27,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "    access_config {\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        34,
+                        "    ssh-keys = \"dev:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7 demo-key dev@laptop\"\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "\n"
+                    ],
+                    [
+                        37,
+                        "  service_account {\n"
+                    ],
+                    [
+                        38,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    15,
+                    40
+                ],
+                "resource": "google_compute_instance.dev",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeDefaultServiceAccount",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_31",
+                "bc_check_id": "BC_GCP_IAM_2",
+                "check_name": "Ensure that instances are not configured to use the default service account with full access to all Cloud APIs",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "service_account/[0]/scopes"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"dev\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"dev-vm-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"asia-southeast1-a\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        27,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "    access_config {\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        34,
+                        "    ssh-keys = \"dev:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7 demo-key dev@laptop\"\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "\n"
+                    ],
+                    [
+                        37,
+                        "  service_account {\n"
+                    ],
+                    [
+                        38,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    15,
+                    40
+                ],
+                "resource": "google_compute_instance.dev",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeDefaultServiceAccountFullAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_40",
+                "bc_check_id": "BC_GCP_PUBLIC_2",
+                "check_name": "Ensure that Compute instances do not have public IP addresses",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "network_interface/[0]/access_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"dev\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"dev-vm-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"asia-southeast1-a\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        27,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "    access_config {\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        34,
+                        "    ssh-keys = \"dev:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7 demo-key dev@laptop\"\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "\n"
+                    ],
+                    [
+                        37,
+                        "  service_account {\n"
+                    ],
+                    [
+                        38,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    15,
+                    40
+                ],
+                "resource": "google_compute_instance.dev",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeExternalIP",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-public-policies/bc-gcp-public-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_39",
+                "bc_check_id": "BC_GCP_GENERAL_3",
+                "check_name": "Ensure Compute instances are launched with Shielded VM enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_instance\" \"dev\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name         = \"dev-vm-01\"\n"
+                    ],
+                    [
+                        17,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        18,
+                        "  zone         = \"asia-southeast1-a\"\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        21,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        22,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        23,
+                        "    }\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        27,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "    access_config {\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        34,
+                        "    ssh-keys = \"dev:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7 demo-key dev@laptop\"\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "\n"
+                    ],
+                    [
+                        37,
+                        "  service_account {\n"
+                    ],
+                    [
+                        38,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    15,
+                    40
+                ],
+                "resource": "google_compute_instance.dev",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeShieldedVM",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-gcp-general-y",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_32",
+                "bc_check_id": "BC_GCP_NETWORKING_8",
+                "check_name": "Ensure 'Block Project-wide SSH keys' is enabled for VM instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "metadata/block-project-ssh-keys"
+                    ]
+                },
+                "code_block": [
+                    [
+                        42,
+                        "resource \"google_compute_instance\" \"qa\" {\n"
+                    ],
+                    [
+                        43,
+                        "  name         = \"qa-vm-01\"\n"
+                    ],
+                    [
+                        44,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        45,
+                        "  zone         = \"asia-southeast1-b\"\n"
+                    ],
+                    [
+                        46,
+                        "\n"
+                    ],
+                    [
+                        47,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        48,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        49,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        50,
+                        "    }\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        54,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        55,
+                        "\n"
+                    ],
+                    [
+                        56,
+                        "    access_config {\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "  }\n"
+                    ],
+                    [
+                        59,
+                        "\n"
+                    ],
+                    [
+                        60,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        61,
+                        "    ssh-keys = \"qa:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD2 demo-key qa@laptop\"\n"
+                    ],
+                    [
+                        62,
+                        "  }\n"
+                    ],
+                    [
+                        63,
+                        "\n"
+                    ],
+                    [
+                        64,
+                        "  service_account {\n"
+                    ],
+                    [
+                        65,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        66,
+                        "  }\n"
+                    ],
+                    [
+                        67,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    42,
+                    67
+                ],
+                "resource": "google_compute_instance.qa",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBlockProjectSSH",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_38",
+                "bc_check_id": "BC_GCP_GENERAL_2",
+                "check_name": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "boot_disk",
+                        "boot_disk/[0]/disk_encryption_key_raw",
+                        "boot_disk/[0]/kms_key_self_link"
+                    ]
+                },
+                "code_block": [
+                    [
+                        42,
+                        "resource \"google_compute_instance\" \"qa\" {\n"
+                    ],
+                    [
+                        43,
+                        "  name         = \"qa-vm-01\"\n"
+                    ],
+                    [
+                        44,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        45,
+                        "  zone         = \"asia-southeast1-b\"\n"
+                    ],
+                    [
+                        46,
+                        "\n"
+                    ],
+                    [
+                        47,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        48,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        49,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        50,
+                        "    }\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        54,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        55,
+                        "\n"
+                    ],
+                    [
+                        56,
+                        "    access_config {\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "  }\n"
+                    ],
+                    [
+                        59,
+                        "\n"
+                    ],
+                    [
+                        60,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        61,
+                        "    ssh-keys = \"qa:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD2 demo-key qa@laptop\"\n"
+                    ],
+                    [
+                        62,
+                        "  }\n"
+                    ],
+                    [
+                        63,
+                        "\n"
+                    ],
+                    [
+                        64,
+                        "  service_account {\n"
+                    ],
+                    [
+                        65,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        66,
+                        "  }\n"
+                    ],
+                    [
+                        67,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    42,
+                    67
+                ],
+                "resource": "google_compute_instance.qa",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBootDiskEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/encrypt-boot-disks-for-instances-with-cseks",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_30",
+                "bc_check_id": "BC_GCP_IAM_1",
+                "check_name": "Ensure that instances are not configured to use the default service account",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "service_account/[0]/email",
+                        "name"
+                    ]
+                },
+                "code_block": [
+                    [
+                        42,
+                        "resource \"google_compute_instance\" \"qa\" {\n"
+                    ],
+                    [
+                        43,
+                        "  name         = \"qa-vm-01\"\n"
+                    ],
+                    [
+                        44,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        45,
+                        "  zone         = \"asia-southeast1-b\"\n"
+                    ],
+                    [
+                        46,
+                        "\n"
+                    ],
+                    [
+                        47,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        48,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        49,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        50,
+                        "    }\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        54,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        55,
+                        "\n"
+                    ],
+                    [
+                        56,
+                        "    access_config {\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "  }\n"
+                    ],
+                    [
+                        59,
+                        "\n"
+                    ],
+                    [
+                        60,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        61,
+                        "    ssh-keys = \"qa:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD2 demo-key qa@laptop\"\n"
+                    ],
+                    [
+                        62,
+                        "  }\n"
+                    ],
+                    [
+                        63,
+                        "\n"
+                    ],
+                    [
+                        64,
+                        "  service_account {\n"
+                    ],
+                    [
+                        65,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        66,
+                        "  }\n"
+                    ],
+                    [
+                        67,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    42,
+                    67
+                ],
+                "resource": "google_compute_instance.qa",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeDefaultServiceAccount",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_31",
+                "bc_check_id": "BC_GCP_IAM_2",
+                "check_name": "Ensure that instances are not configured to use the default service account with full access to all Cloud APIs",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "service_account/[0]/scopes"
+                    ]
+                },
+                "code_block": [
+                    [
+                        42,
+                        "resource \"google_compute_instance\" \"qa\" {\n"
+                    ],
+                    [
+                        43,
+                        "  name         = \"qa-vm-01\"\n"
+                    ],
+                    [
+                        44,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        45,
+                        "  zone         = \"asia-southeast1-b\"\n"
+                    ],
+                    [
+                        46,
+                        "\n"
+                    ],
+                    [
+                        47,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        48,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        49,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        50,
+                        "    }\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        54,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        55,
+                        "\n"
+                    ],
+                    [
+                        56,
+                        "    access_config {\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "  }\n"
+                    ],
+                    [
+                        59,
+                        "\n"
+                    ],
+                    [
+                        60,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        61,
+                        "    ssh-keys = \"qa:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD2 demo-key qa@laptop\"\n"
+                    ],
+                    [
+                        62,
+                        "  }\n"
+                    ],
+                    [
+                        63,
+                        "\n"
+                    ],
+                    [
+                        64,
+                        "  service_account {\n"
+                    ],
+                    [
+                        65,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        66,
+                        "  }\n"
+                    ],
+                    [
+                        67,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    42,
+                    67
+                ],
+                "resource": "google_compute_instance.qa",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeDefaultServiceAccountFullAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_40",
+                "bc_check_id": "BC_GCP_PUBLIC_2",
+                "check_name": "Ensure that Compute instances do not have public IP addresses",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "network_interface/[0]/access_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        42,
+                        "resource \"google_compute_instance\" \"qa\" {\n"
+                    ],
+                    [
+                        43,
+                        "  name         = \"qa-vm-01\"\n"
+                    ],
+                    [
+                        44,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        45,
+                        "  zone         = \"asia-southeast1-b\"\n"
+                    ],
+                    [
+                        46,
+                        "\n"
+                    ],
+                    [
+                        47,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        48,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        49,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        50,
+                        "    }\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        54,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        55,
+                        "\n"
+                    ],
+                    [
+                        56,
+                        "    access_config {\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "  }\n"
+                    ],
+                    [
+                        59,
+                        "\n"
+                    ],
+                    [
+                        60,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        61,
+                        "    ssh-keys = \"qa:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD2 demo-key qa@laptop\"\n"
+                    ],
+                    [
+                        62,
+                        "  }\n"
+                    ],
+                    [
+                        63,
+                        "\n"
+                    ],
+                    [
+                        64,
+                        "  service_account {\n"
+                    ],
+                    [
+                        65,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        66,
+                        "  }\n"
+                    ],
+                    [
+                        67,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    42,
+                    67
+                ],
+                "resource": "google_compute_instance.qa",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeExternalIP",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-public-policies/bc-gcp-public-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_39",
+                "bc_check_id": "BC_GCP_GENERAL_3",
+                "check_name": "Ensure Compute instances are launched with Shielded VM enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        42,
+                        "resource \"google_compute_instance\" \"qa\" {\n"
+                    ],
+                    [
+                        43,
+                        "  name         = \"qa-vm-01\"\n"
+                    ],
+                    [
+                        44,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        45,
+                        "  zone         = \"asia-southeast1-b\"\n"
+                    ],
+                    [
+                        46,
+                        "\n"
+                    ],
+                    [
+                        47,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        48,
+                        "    initialize_params {\n"
+                    ],
+                    [
+                        49,
+                        "      image = \"debian-cloud/debian-11\"\n"
+                    ],
+                    [
+                        50,
+                        "    }\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  network_interface {\n"
+                    ],
+                    [
+                        54,
+                        "    network = \"default\"\n"
+                    ],
+                    [
+                        55,
+                        "\n"
+                    ],
+                    [
+                        56,
+                        "    access_config {\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "  }\n"
+                    ],
+                    [
+                        59,
+                        "\n"
+                    ],
+                    [
+                        60,
+                        "  metadata = {\n"
+                    ],
+                    [
+                        61,
+                        "    ssh-keys = \"qa:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD2 demo-key qa@laptop\"\n"
+                    ],
+                    [
+                        62,
+                        "  }\n"
+                    ],
+                    [
+                        63,
+                        "\n"
+                    ],
+                    [
+                        64,
+                        "  service_account {\n"
+                    ],
+                    [
+                        65,
+                        "    scopes = [\"cloud-platform\"]\n"
+                    ],
+                    [
+                        66,
+                        "  }\n"
+                    ],
+                    [
+                        67,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf",
+                "file_line_range": [
+                    42,
+                    67
+                ],
+                "resource": "google_compute_instance.qa",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeShieldedVM",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-gcp-general-y",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t065/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 6,
+        "failed": 12,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

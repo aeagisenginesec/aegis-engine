@@ -1,0 +1,940 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a132ab-caed-77ed-a7ee-da4613f2b44d",
+  "CreatedAt": "2026-10-13T00:31:21.837524577Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 53,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 8
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0031",
+          "Title": "ECR images tags shouldn't be mutable.",
+          "Description": "ECR images should be set to IMMUTABLE to prevent code injection through image mutation.\nThis can be done by setting \u003ccode\u003eimage_tag_mutability\u003c/code\u003e to \u003ccode\u003eIMMUTABLE\u003c/code\u003e\n",
+          "Message": "Repository tags are mutable.",
+          "Namespace": "builtin.aws.ecr.aws0031",
+          "Query": "data.builtin.aws.ecr.aws0031.deny",
+          "Resolution": "Only use immutable images in ECR",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0031",
+          "References": [
+            "https://sysdig.com/blog/toctou-tag-mutability/",
+            "https://avd.aquasec.com/misconfig/aws-0031"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_ecr_repository.api",
+            "Provider": "AWS",
+            "Service": "ecr",
+            "StartLine": 16,
+            "EndLine": 16,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 14,
+                  "Content": "resource \"aws_ecr_repository\" \"api\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_ecr_repository\"\u001b[0m \u001b[38;5;37m\"api\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 15,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "  image_tag_mutability = \"MUTABLE\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mimage_tag_mutability\u001b[0m = \u001b[38;5;37m\"MUTABLE\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 24,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "aws_ecr_repository.api",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 14,
+                  "EndLine": 25
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0033",
+          "Title": "ECR Repository should use customer managed keys to allow more control",
+          "Description": "Images in the ECR repository are encrypted by default using AWS managed encryption keys. To increase control of the encryption and control the management of factors like key rotation, use a Customer Managed Key.\n",
+          "Message": "Repository is not encrypted using KMS.",
+          "Namespace": "builtin.aws.ecr.aws0033",
+          "Query": "data.builtin.aws.ecr.aws0033.deny",
+          "Resolution": "Use customer managed keys",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0033",
+          "References": [
+            "https://docs.aws.amazon.com/AmazonECR/latest/userguide/encryption-at-rest.html",
+            "https://avd.aquasec.com/misconfig/aws-0033"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_ecr_repository.api",
+            "Provider": "AWS",
+            "Service": "ecr",
+            "StartLine": 14,
+            "EndLine": 25,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 14,
+                  "Content": "resource \"aws_ecr_repository\" \"api\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_ecr_repository\"\u001b[0m \u001b[38;5;37m\"api\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 15,
+                  "Content": "  name                 = \"payments-api\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m                 = \u001b[38;5;37m\"payments-api\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "  image_tag_mutability = \"MUTABLE\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mimage_tag_mutability\u001b[0m = \u001b[38;5;37m\"MUTABLE\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "  image_scanning_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  image_scanning_configuration {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "    scan_on_push = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mscan_on_push\u001b[0m = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "  }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "  tags = {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mtags\u001b[0m = {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 23,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0038",
+          "Title": "EKS Clusters should have cluster control plane logging turned on",
+          "Description": "By default cluster control plane logging is not turned on. Logging is available for audit, api, authenticator, controllerManager and scheduler. All logging should be turned on for cluster control plane.\n",
+          "Message": "Control plane authenticator logging is not enabled.",
+          "Namespace": "builtin.aws.eks.aws0038",
+          "Query": "data.builtin.aws.eks.aws0038.deny",
+          "Resolution": "Enable logging for the EKS control plane",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0038",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html",
+            "https://avd.aquasec.com/misconfig/aws-0038"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_eks_cluster.staging",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 47,
+            "EndLine": 64,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 47,
+                  "Content": "resource \"aws_eks_cluster\" \"staging\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_eks_cluster\"\u001b[0m \u001b[38;5;37m\"staging\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 48,
+                  "Content": "  name     = \"staging\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m     = \u001b[38;5;37m\"staging\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 49,
+                  "Content": "  role_arn = aws_iam_role.staging_cluster.arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mrole_arn\u001b[0m = aws_iam_role.staging_cluster.arn",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 50,
+                  "Content": "  version  = \"1.29\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mversion\u001b[0m  = \u001b[38;5;37m\"1.29\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 51,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 52,
+                  "Content": "  vpc_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  vpc_config {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 53,
+                  "Content": "    subnet_ids              = [\"subnet-s1\", \"subnet-s2\"]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245msubnet_ids\u001b[0m              = [\u001b[38;5;37m\"subnet-s1\"\u001b[0m, \u001b[38;5;37m\"subnet-s2\"\u001b[0m]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 54,
+                  "Content": "    endpoint_public_access  = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mendpoint_public_access\u001b[0m  = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 55,
+                  "Content": "    endpoint_private_access = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245mendpoint_private_access\u001b[0m = \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 56,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0038",
+          "Title": "EKS Clusters should have cluster control plane logging turned on",
+          "Description": "By default cluster control plane logging is not turned on. Logging is available for audit, api, authenticator, controllerManager and scheduler. All logging should be turned on for cluster control plane.\n",
+          "Message": "Control plane controller manager logging is not enabled.",
+          "Namespace": "builtin.aws.eks.aws0038",
+          "Query": "data.builtin.aws.eks.aws0038.deny",
+          "Resolution": "Enable logging for the EKS control plane",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0038",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html",
+            "https://avd.aquasec.com/misconfig/aws-0038"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_eks_cluster.staging",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 47,
+            "EndLine": 64,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 47,
+                  "Content": "resource \"aws_eks_cluster\" \"staging\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_eks_cluster\"\u001b[0m \u001b[38;5;37m\"staging\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 48,
+                  "Content": "  name     = \"staging\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m     = \u001b[38;5;37m\"staging\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 49,
+                  "Content": "  role_arn = aws_iam_role.staging_cluster.arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mrole_arn\u001b[0m = aws_iam_role.staging_cluster.arn",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 50,
+                  "Content": "  version  = \"1.29\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mversion\u001b[0m  = \u001b[38;5;37m\"1.29\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 51,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 52,
+                  "Content": "  vpc_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  vpc_config {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 53,
+                  "Content": "    subnet_ids              = [\"subnet-s1\", \"subnet-s2\"]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245msubnet_ids\u001b[0m              = [\u001b[38;5;37m\"subnet-s1\"\u001b[0m, \u001b[38;5;37m\"subnet-s2\"\u001b[0m]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 54,
+                  "Content": "    endpoint_public_access  = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mendpoint_public_access\u001b[0m  = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 55,
+                  "Content": "    endpoint_private_access = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245mendpoint_private_access\u001b[0m = \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 56,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0038",
+          "Title": "EKS Clusters should have cluster control plane logging turned on",
+          "Description": "By default cluster control plane logging is not turned on. Logging is available for audit, api, authenticator, controllerManager and scheduler. All logging should be turned on for cluster control plane.\n",
+          "Message": "Control plane scheduler logging is not enabled.",
+          "Namespace": "builtin.aws.eks.aws0038",
+          "Query": "data.builtin.aws.eks.aws0038.deny",
+          "Resolution": "Enable logging for the EKS control plane",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0038",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html",
+            "https://avd.aquasec.com/misconfig/aws-0038"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_eks_cluster.staging",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 47,
+            "EndLine": 64,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 47,
+                  "Content": "resource \"aws_eks_cluster\" \"staging\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_eks_cluster\"\u001b[0m \u001b[38;5;37m\"staging\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 48,
+                  "Content": "  name     = \"staging\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m     = \u001b[38;5;37m\"staging\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 49,
+                  "Content": "  role_arn = aws_iam_role.staging_cluster.arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mrole_arn\u001b[0m = aws_iam_role.staging_cluster.arn",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 50,
+                  "Content": "  version  = \"1.29\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mversion\u001b[0m  = \u001b[38;5;37m\"1.29\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 51,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 52,
+                  "Content": "  vpc_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  vpc_config {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 53,
+                  "Content": "    subnet_ids              = [\"subnet-s1\", \"subnet-s2\"]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245msubnet_ids\u001b[0m              = [\u001b[38;5;37m\"subnet-s1\"\u001b[0m, \u001b[38;5;37m\"subnet-s2\"\u001b[0m]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 54,
+                  "Content": "    endpoint_public_access  = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mendpoint_public_access\u001b[0m  = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 55,
+                  "Content": "    endpoint_private_access = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245mendpoint_private_access\u001b[0m = \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 56,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0039",
+          "Title": "EKS should have the encryption of secrets enabled",
+          "Description": "EKS cluster resources should have the encryption_config block set with protection of the secrets resource.\n",
+          "Message": "Cluster does not have secret encryption enabled.",
+          "Namespace": "builtin.aws.eks.aws0039",
+          "Query": "data.builtin.aws.eks.aws0039.deny",
+          "Resolution": "Enable encryption of EKS secrets",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0039",
+          "References": [
+            "https://aws.amazon.com/about-aws/whats-new/2020/03/amazon-eks-adds-envelope-encryption-for-secrets-with-aws-kms/",
+            "https://avd.aquasec.com/misconfig/aws-0039"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_eks_cluster.staging",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 47,
+            "EndLine": 64,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 47,
+                  "Content": "resource \"aws_eks_cluster\" \"staging\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_eks_cluster\"\u001b[0m \u001b[38;5;37m\"staging\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 48,
+                  "Content": "  name     = \"staging\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m     = \u001b[38;5;37m\"staging\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 49,
+                  "Content": "  role_arn = aws_iam_role.staging_cluster.arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mrole_arn\u001b[0m = aws_iam_role.staging_cluster.arn",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 50,
+                  "Content": "  version  = \"1.29\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mversion\u001b[0m  = \u001b[38;5;37m\"1.29\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 51,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 52,
+                  "Content": "  vpc_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  vpc_config {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 53,
+                  "Content": "    subnet_ids              = [\"subnet-s1\", \"subnet-s2\"]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245msubnet_ids\u001b[0m              = [\u001b[38;5;37m\"subnet-s1\"\u001b[0m, \u001b[38;5;37m\"subnet-s2\"\u001b[0m]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 54,
+                  "Content": "    endpoint_public_access  = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mendpoint_public_access\u001b[0m  = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 55,
+                  "Content": "    endpoint_private_access = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245mendpoint_private_access\u001b[0m = \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 56,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0040",
+          "Title": "EKS Clusters should have the public access disabled",
+          "Description": "EKS clusters are available publicly by default, this should be explicitly disabled in the vpc_config of the EKS cluster resource.\n",
+          "Message": "Public cluster access is enabled.",
+          "Namespace": "builtin.aws.eks.aws0040",
+          "Query": "data.builtin.aws.eks.aws0040.deny",
+          "Resolution": "Don't enable public access to EKS Clusters",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0040",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html",
+            "https://avd.aquasec.com/misconfig/aws-0040"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_eks_cluster.staging",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 54,
+            "EndLine": 54,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 47,
+                  "Content": "resource \"aws_eks_cluster\" \"staging\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_eks_cluster\"\u001b[0m \u001b[38;5;37m\"staging\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 48,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 54,
+                  "Content": "    endpoint_public_access  = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mendpoint_public_access\u001b[0m  = \u001b[38;5;166mtrue",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 63,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 64,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "vpc_config",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 52,
+                  "EndLine": 57
+                }
+              },
+              {
+                "Resource": "aws_eks_cluster.staging",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 47,
+                  "EndLine": 64
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0041",
+          "Title": "EKS cluster should not have open CIDR range for public access",
+          "Description": "EKS Clusters have public access cidrs set to 0.0.0.0/0 by default which is wide open to the internet. This should be explicitly set to a more specific private CIDR range\n",
+          "Message": "Cluster allows access from a public CIDR: 0.0.0.0/0",
+          "Namespace": "builtin.aws.eks.aws0041",
+          "Query": "data.builtin.aws.eks.aws0041.deny",
+          "Resolution": "Don't enable public access to EKS Clusters",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0041",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/create-public-private-vpc.html",
+            "https://avd.aquasec.com/misconfig/aws-0041"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_eks_cluster.staging",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 56,
+            "EndLine": 56,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 47,
+                  "Content": "resource \"aws_eks_cluster\" \"staging\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_eks_cluster\"\u001b[0m \u001b[38;5;37m\"staging\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 48,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 56,
+                  "Content": "    public_access_cidrs     = [\"0.0.0.0/0\"]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245mpublic_access_cidrs\u001b[0m     = [\u001b[38;5;37m\"0.0.0.0/0\"\u001b[0m]",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 63,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 64,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "vpc_config",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 52,
+                  "EndLine": 57
+                }
+              },
+              {
+                "Resource": "aws_eks_cluster.staging",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 47,
+                  "EndLine": 64
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

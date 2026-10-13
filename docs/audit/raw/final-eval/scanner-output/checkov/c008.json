@@ -1,0 +1,452 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security groups rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        26,
+                        "  DbSecurityGroup:\n"
+                    ],
+                    [
+                        27,
+                        "    Type: AWS::EC2::SecurityGroup\n"
+                    ],
+                    [
+                        28,
+                        "    Properties:\n"
+                    ],
+                    [
+                        29,
+                        "      GroupDescription: Orders database, app tier only\n"
+                    ],
+                    [
+                        30,
+                        "      VpcId: !Ref VpcId\n"
+                    ],
+                    [
+                        31,
+                        "      SecurityGroupIngress:\n"
+                    ],
+                    [
+                        32,
+                        "        - IpProtocol: tcp\n"
+                    ],
+                    [
+                        33,
+                        "          FromPort: 5432\n"
+                    ],
+                    [
+                        34,
+                        "          ToPort: 5432\n"
+                    ],
+                    [
+                        35,
+                        "          SourceSecurityGroupId: !Ref AppSecurityGroupId\n"
+                    ]
+                ],
+                "file_path": "/rds.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                "file_line_range": [
+                    26,
+                    35
+                ],
+                "resource": "AWS::EC2::SecurityGroup.DbSecurityGroup",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_118",
+                "bc_check_id": "BC_AWS_LOGGING_28",
+                "check_name": "Ensure that enhanced monitoring is enabled for Amazon RDS instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/MonitoringInterval"
+                    ]
+                },
+                "code_block": [
+                    [
+                        37,
+                        "  OrdersDb:\n"
+                    ],
+                    [
+                        38,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        39,
+                        "    Properties:\n"
+                    ],
+                    [
+                        40,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        41,
+                        "      EngineVersion: '15.4'\n"
+                    ],
+                    [
+                        42,
+                        "      DBInstanceClass: db.r6g.large\n"
+                    ],
+                    [
+                        43,
+                        "      AllocatedStorage: 200\n"
+                    ],
+                    [
+                        44,
+                        "      StorageType: gp3\n"
+                    ],
+                    [
+                        45,
+                        "      StorageEncrypted: true\n"
+                    ],
+                    [
+                        46,
+                        "      KmsKeyId: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        47,
+                        "      DBName: orders\n"
+                    ],
+                    [
+                        48,
+                        "      MasterUsername: orders_admin\n"
+                    ],
+                    [
+                        49,
+                        "      ManageMasterUserPassword: true\n"
+                    ],
+                    [
+                        50,
+                        "      MasterUserSecret:\n"
+                    ],
+                    [
+                        51,
+                        "        KmsKeyId: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        52,
+                        "      MultiAZ: true\n"
+                    ],
+                    [
+                        53,
+                        "      PubliclyAccessible: false\n"
+                    ],
+                    [
+                        54,
+                        "      DBSubnetGroupName: !Ref DbSubnetGroup\n"
+                    ],
+                    [
+                        55,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        56,
+                        "        - !Ref DbSecurityGroup\n"
+                    ],
+                    [
+                        57,
+                        "      BackupRetentionPeriod: 7\n"
+                    ],
+                    [
+                        58,
+                        "      DeleteAutomatedBackups: false\n"
+                    ],
+                    [
+                        59,
+                        "      DeletionProtection: true\n"
+                    ],
+                    [
+                        60,
+                        "      EnablePerformanceInsights: true\n"
+                    ],
+                    [
+                        61,
+                        "      PerformanceInsightsKMSKeyId: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        62,
+                        "      PerformanceInsightsRetentionPeriod: 731\n"
+                    ],
+                    [
+                        63,
+                        "      CopyTagsToSnapshot: true\n"
+                    ],
+                    [
+                        64,
+                        "      Tags:\n"
+                    ],
+                    [
+                        65,
+                        "        - Key: Environment\n"
+                    ],
+                    [
+                        66,
+                        "          Value: !Ref Environment\n"
+                    ]
+                ],
+                "file_path": "/rds.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                "file_line_range": [
+                    37,
+                    66
+                ],
+                "resource": "AWS::RDS::DBInstance.OrdersDb",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSEnhancedMonitorEnabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "Tags.0.Value": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "Tags.0": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_161",
+                "bc_check_id": "BC_AWS_IAM_65",
+                "check_name": "Ensure RDS database has IAM authentication enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/EnableIAMDatabaseAuthentication"
+                    ]
+                },
+                "code_block": [
+                    [
+                        37,
+                        "  OrdersDb:\n"
+                    ],
+                    [
+                        38,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        39,
+                        "    Properties:\n"
+                    ],
+                    [
+                        40,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        41,
+                        "      EngineVersion: '15.4'\n"
+                    ],
+                    [
+                        42,
+                        "      DBInstanceClass: db.r6g.large\n"
+                    ],
+                    [
+                        43,
+                        "      AllocatedStorage: 200\n"
+                    ],
+                    [
+                        44,
+                        "      StorageType: gp3\n"
+                    ],
+                    [
+                        45,
+                        "      StorageEncrypted: true\n"
+                    ],
+                    [
+                        46,
+                        "      KmsKeyId: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        47,
+                        "      DBName: orders\n"
+                    ],
+                    [
+                        48,
+                        "      MasterUsername: orders_admin\n"
+                    ],
+                    [
+                        49,
+                        "      ManageMasterUserPassword: true\n"
+                    ],
+                    [
+                        50,
+                        "      MasterUserSecret:\n"
+                    ],
+                    [
+                        51,
+                        "        KmsKeyId: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        52,
+                        "      MultiAZ: true\n"
+                    ],
+                    [
+                        53,
+                        "      PubliclyAccessible: false\n"
+                    ],
+                    [
+                        54,
+                        "      DBSubnetGroupName: !Ref DbSubnetGroup\n"
+                    ],
+                    [
+                        55,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        56,
+                        "        - !Ref DbSecurityGroup\n"
+                    ],
+                    [
+                        57,
+                        "      BackupRetentionPeriod: 7\n"
+                    ],
+                    [
+                        58,
+                        "      DeleteAutomatedBackups: false\n"
+                    ],
+                    [
+                        59,
+                        "      DeletionProtection: true\n"
+                    ],
+                    [
+                        60,
+                        "      EnablePerformanceInsights: true\n"
+                    ],
+                    [
+                        61,
+                        "      PerformanceInsightsKMSKeyId: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        62,
+                        "      PerformanceInsightsRetentionPeriod: 731\n"
+                    ],
+                    [
+                        63,
+                        "      CopyTagsToSnapshot: true\n"
+                    ],
+                    [
+                        64,
+                        "      Tags:\n"
+                    ],
+                    [
+                        65,
+                        "        - Key: Environment\n"
+                    ],
+                    [
+                        66,
+                        "          Value: !Ref Environment\n"
+                    ]
+                ],
+                "file_path": "/rds.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                "file_line_range": [
+                    37,
+                    66
+                ],
+                "resource": "AWS::RDS::DBInstance.OrdersDb",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSIAMAuthentication",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-rds-database-has-iam-authentication-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "Tags.0.Value": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "Tags.0": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c008/rds.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 7,
+        "failed": 3,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 3,
+        "checkov_version": "3.3.26"
+    }
+}

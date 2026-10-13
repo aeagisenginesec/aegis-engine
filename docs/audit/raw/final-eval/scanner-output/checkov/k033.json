@@ -1,0 +1,1086 @@
+{
+    "check_type": "kubernetes",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_K8S_21",
+                "bc_check_id": "BC_K8S_20",
+                "check_name": "The default namespace should not be used",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: billing\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: billing\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: billing\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: billing\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        18,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        19,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        20,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        21,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        22,
+                        "      containers:\n"
+                    ],
+                    [
+                        23,
+                        "        - name: billing\n"
+                    ],
+                    [
+                        24,
+                        "          image: example/billing:3.3.1\n"
+                    ],
+                    [
+                        25,
+                        "          ports:\n"
+                    ],
+                    [
+                        26,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        27,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        28,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        29,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        30,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        31,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        32,
+                        "          resources:\n"
+                    ],
+                    [
+                        33,
+                        "            limits:\n"
+                    ],
+                    [
+                        34,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        35,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    35
+                ],
+                "resource": "Deployment.default.billing",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.DefaultNamespace",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-20",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_43",
+                "bc_check_id": "BC_K8S_39",
+                "check_name": "Image should use digest",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/image"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: billing\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: billing\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: billing\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: billing\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        18,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        19,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        20,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        21,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        22,
+                        "      containers:\n"
+                    ],
+                    [
+                        23,
+                        "        - name: billing\n"
+                    ],
+                    [
+                        24,
+                        "          image: example/billing:3.3.1\n"
+                    ],
+                    [
+                        25,
+                        "          ports:\n"
+                    ],
+                    [
+                        26,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        27,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        28,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        29,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        30,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        31,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        32,
+                        "          resources:\n"
+                    ],
+                    [
+                        33,
+                        "            limits:\n"
+                    ],
+                    [
+                        34,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        35,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    35
+                ],
+                "resource": "Deployment.default.billing",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ImageDigest",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-39",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_15",
+                "bc_check_id": "BC_K8S_14",
+                "check_name": "Image Pull Policy should be Always",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/image",
+                        "spec/template/spec/containers/[0]/imagePullPolicy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: billing\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: billing\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: billing\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: billing\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        18,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        19,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        20,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        21,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        22,
+                        "      containers:\n"
+                    ],
+                    [
+                        23,
+                        "        - name: billing\n"
+                    ],
+                    [
+                        24,
+                        "          image: example/billing:3.3.1\n"
+                    ],
+                    [
+                        25,
+                        "          ports:\n"
+                    ],
+                    [
+                        26,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        27,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        28,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        29,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        30,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        31,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        32,
+                        "          resources:\n"
+                    ],
+                    [
+                        33,
+                        "            limits:\n"
+                    ],
+                    [
+                        34,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        35,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    35
+                ],
+                "resource": "Deployment.default.billing",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ImagePullPolicyAlways",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-14",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_8",
+                "bc_check_id": "BC_K8S_7",
+                "check_name": "Liveness Probe Should be Configured",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/livenessProbe"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: billing\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: billing\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: billing\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: billing\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        18,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        19,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        20,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        21,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        22,
+                        "      containers:\n"
+                    ],
+                    [
+                        23,
+                        "        - name: billing\n"
+                    ],
+                    [
+                        24,
+                        "          image: example/billing:3.3.1\n"
+                    ],
+                    [
+                        25,
+                        "          ports:\n"
+                    ],
+                    [
+                        26,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        27,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        28,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        29,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        30,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        31,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        32,
+                        "          resources:\n"
+                    ],
+                    [
+                        33,
+                        "            limits:\n"
+                    ],
+                    [
+                        34,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        35,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    35
+                ],
+                "resource": "Deployment.default.billing",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.LivenessProbe",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-7",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_9",
+                "bc_check_id": "BC_K8S_8",
+                "check_name": "Readiness Probe Should be Configured",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/readinessProbe"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: billing\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: billing\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: billing\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: billing\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        18,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        19,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        20,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        21,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        22,
+                        "      containers:\n"
+                    ],
+                    [
+                        23,
+                        "        - name: billing\n"
+                    ],
+                    [
+                        24,
+                        "          image: example/billing:3.3.1\n"
+                    ],
+                    [
+                        25,
+                        "          ports:\n"
+                    ],
+                    [
+                        26,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        27,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        28,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        29,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        30,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        31,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        32,
+                        "          resources:\n"
+                    ],
+                    [
+                        33,
+                        "            limits:\n"
+                    ],
+                    [
+                        34,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        35,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    35
+                ],
+                "resource": "Deployment.default.billing",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ReadinessProbe",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_38",
+                "bc_check_id": "BC_K8S_35",
+                "check_name": "Ensure that Service Account Tokens are only mounted where necessary",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: billing\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: billing\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: billing\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: billing\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        18,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        19,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        20,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        21,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        22,
+                        "      containers:\n"
+                    ],
+                    [
+                        23,
+                        "        - name: billing\n"
+                    ],
+                    [
+                        24,
+                        "          image: example/billing:3.3.1\n"
+                    ],
+                    [
+                        25,
+                        "          ports:\n"
+                    ],
+                    [
+                        26,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        27,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        28,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        29,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        30,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        31,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        32,
+                        "          resources:\n"
+                    ],
+                    [
+                        33,
+                        "            limits:\n"
+                    ],
+                    [
+                        34,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        35,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k033/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    35
+                ],
+                "resource": "Deployment.default.billing",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ServiceAccountTokens",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-35",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 81,
+        "failed": 6,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 3,
+        "checkov_version": "3.3.26"
+    }
+}

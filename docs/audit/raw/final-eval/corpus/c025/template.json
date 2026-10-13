@@ -1,0 +1,120 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Partner API: Lambda behind API Gateway. API key is enforced, but access logging and WAF were skipped.",
+  "Parameters": {
+    "StageName": { "Type": "String", "Default": "v1" }
+  },
+  "Resources": {
+    "PartnerRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": "lambda.amazonaws.com" },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "dynamodb-scoped",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": ["dynamodb:GetItem", "dynamodb:PutItem"],
+                  "Resource": { "Fn::Sub": "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/partner-orders" }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+                  "Resource": { "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/partner-api*" }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "PartnerFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "partner-api",
+        "Runtime": "nodejs20.x",
+        "Handler": "index.handler",
+        "Role": { "Fn::GetAtt": ["PartnerRole", "Arn"] },
+        "Code": {
+          "ZipFile": "exports.handler = async () => ({ statusCode: 200, body: 'ok' });"
+        },
+        "TracingConfig": { "Mode": "Active" },
+        "Timeout": 30,
+        "MemorySize": 512
+      }
+    },
+    "PartnerApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "partner-api",
+        "EndpointConfiguration": { "Types": ["REGIONAL"] }
+      }
+    },
+    "OrdersResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "RestApiId": { "Ref": "PartnerApi" },
+        "ParentId": { "Fn::GetAtt": ["PartnerApi", "RootResourceId"] },
+        "PathPart": "orders"
+      }
+    },
+    "OrdersMethod": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "RestApiId": { "Ref": "PartnerApi" },
+        "ResourceId": { "Ref": "OrdersResource" },
+        "HttpMethod": "POST",
+        "AuthorizationType": "NONE",
+        "ApiKeyRequired": true,
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PartnerFunction.Arn}/invocations"
+          }
+        }
+      }
+    },
+    "ApiDeployment": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "DependsOn": "OrdersMethod",
+      "Properties": {
+        "RestApiId": { "Ref": "PartnerApi" }
+      }
+    },
+    "ApiStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "RestApiId": { "Ref": "PartnerApi" },
+        "DeploymentId": { "Ref": "ApiDeployment" },
+        "StageName": { "Ref": "StageName" },
+        "MethodSettings": [
+          {
+            "ResourcePath": "/*",
+            "HttpMethod": "*",
+            "LoggingLevel": "OFF",
+            "DataTraceEnabled": false,
+            "MetricsEnabled": false
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "ApiUrl": {
+      "Value": { "Fn::Sub": "https://${PartnerApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}" }
+    }
+  }
+}

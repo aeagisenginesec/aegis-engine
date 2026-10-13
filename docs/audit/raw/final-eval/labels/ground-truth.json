@@ -1,0 +1,2914 @@
+[
+ {
+  "project": "c001",
+  "resource": "SiteBucket (AWS::S3::Bucket)",
+  "condition": "S3 static website hosting serves the site over plain HTTP only; no TLS is possible on the S3 website endpoint.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c003",
+  "resource": "DeployRole (AWS::IAM::Role)",
+  "condition": "Role carries the AdministratorAccess managed policy plus an inline policy allowing all actions on all resources, and its trust policy lets any principal in the account root assume it.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c003",
+  "resource": "DeployRole (AWS::IAM::Role)",
+  "condition": "The assume-role trust policy names the whole account (arn:aws:iam::<account>:root) as the trusted principal, so any IAM principal in the account can assume this admin-level role.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c005",
+  "resource": "JumpSecurityGroup (AWS::EC2::SecurityGroup)",
+  "condition": "Security group allows SSH (port 22) and RDP (port 3389) inbound from 0.0.0.0/0.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c005",
+  "resource": "JumpBox (AWS::EC2::Instance)",
+  "condition": "EC2 instance has no EBS encryption configured on its block devices; the root volume is unencrypted.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c005",
+  "resource": "JumpBox (AWS::EC2::Instance)",
+  "condition": "No MetadataOptions are set, so IMDSv2 is not enforced and the instance metadata service can be reached with IMDSv1, which is vulnerable to SSRF-based credential theft.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c006",
+  "resource": "BastionHost (AWS::EC2::Instance)",
+  "condition": "MetadataOptions has HttpTokens set to optional, so IMDSv1 is allowed and instance credentials can be stolen via SSRF.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c007",
+  "resource": "ReportingDb (AWS::RDS::DBInstance)",
+  "condition": "Database instance is publicly accessible from the internet.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c007",
+  "resource": "ReportingDbSecurityGroup (AWS::EC2::SecurityGroup)",
+  "condition": "Security group allows MySQL (port 3306) inbound from 0.0.0.0/0.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c007",
+  "resource": "ReportingDb (AWS::RDS::DBInstance)",
+  "condition": "StorageEncrypted is false, so database data at rest is not encrypted.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c007",
+  "resource": "ReportingDb (AWS::RDS::DBInstance)",
+  "condition": "BackupRetentionPeriod is 0, so automated backups are disabled and there is no recovery path.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c009",
+  "resource": "WebhookFunction (AWS::Lambda::Function)",
+  "condition": "Hardcoded secrets in plaintext environment variables (DB_PASSWORD and STRIPE_API_KEY); values are redacted in the corpus but the keys show live credentials were embedded in the template.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c009",
+  "resource": "WebhookRole (AWS::IAM::Role)",
+  "condition": "Inline policy allows all actions (*) on all resources (*), giving the Lambda full administrative access.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c011",
+  "resource": "DocsDistribution (AWS::CloudFront::Distribution)",
+  "condition": "ViewerProtocolPolicy is allow-all, so the docs portal answers plain HTTP with no TLS enforcement.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c011",
+  "resource": "DocsDistribution (AWS::CloudFront::Distribution)",
+  "condition": "No WAF is attached to the public CloudFront distribution.",
+  "severity": "low",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c012",
+  "resource": "PublicNaclAllowAll (AWS::EC2::NetworkAclEntry)",
+  "condition": "NACL rule allows all protocols and ports inbound from 0.0.0.0/0; the public NACL was left wide open after debugging.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c013",
+  "resource": "AccessLogsBucket (AWS::S3::Bucket)",
+  "condition": "Central bucket collecting S3 access logs has no default server-side encryption configured.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c013",
+  "resource": "AccessLogsBucket (AWS::S3::Bucket)",
+  "condition": "Bucket has no PublicAccessBlockConfiguration, so public access blocks are not enforced at the bucket level.",
+  "severity": "low",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c014",
+  "resource": "OnCallAccessKey (AWS::IAM::AccessKey)",
+  "condition": "Active long-term access key is created for the admin-privileged user, a persistent credential with full permissions.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c014",
+  "resource": "OnCallUser (AWS::IAM::User)",
+  "condition": "Standing IAM user has the AdministratorAccess managed policy attached, granting permanent full administrative privileges.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c016",
+  "resource": "HttpListener (AWS::ElasticLoadBalancingV2::Listener)",
+  "condition": "Internet-facing ALB listener is plain HTTP on port 80; TLS termination was deferred so all client traffic is unencrypted.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c017",
+  "resource": "AnalyticsDbSg (AWS::EC2::SecurityGroup)",
+  "condition": "Security group allows MySQL (port 3306) inbound from 0.0.0.0/0.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c017",
+  "resource": "AnalyticsInstance (AWS::RDS::DBInstance)",
+  "condition": "Aurora instance is publicly accessible from the internet.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c017",
+  "resource": "AnalyticsCluster (AWS::RDS::DBCluster)",
+  "condition": "StorageEncrypted is false, so cluster data at rest is not encrypted.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c017",
+  "resource": "AnalyticsCluster (AWS::RDS::DBCluster)",
+  "condition": "BackupRetentionPeriod is only 1 day, giving almost no recovery window.",
+  "severity": "low",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c018",
+  "resource": "ResizerUrl (AWS::Lambda::Url)",
+  "condition": "Function URL has AuthType NONE, so the Lambda is publicly invokable by anyone on the internet with no authentication.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c018",
+  "resource": "ResizerUrl (AWS::Lambda::Url)",
+  "condition": "CORS configuration allows all origins ('*') on the public function URL.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c019",
+  "resource": "PostgresSecurityGroup (AWS::EC2::SecurityGroup)",
+  "condition": "Security group allows Postgres (port 5432) inbound from 0.0.0.0/0.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c019",
+  "resource": "SharedPostgres (AWS::RDS::DBInstance)",
+  "condition": "Database instance is publicly accessible from the internet.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c019",
+  "resource": "SharedPostgres (AWS::RDS::DBInstance)",
+  "condition": "StorageEncrypted is false, so database data at rest is not encrypted.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c019",
+  "resource": "SharedPostgres (AWS::RDS::DBInstance)",
+  "condition": "BackupRetentionPeriod is 0, so automated backups are disabled.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c020",
+  "resource": "FlowLogBucket (AWS::S3::Bucket)",
+  "condition": "VPC flow log destination bucket has no default server-side encryption; captured network metadata is stored unencrypted.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c021",
+  "resource": "AssetsBucket (AWS::S3::Bucket)",
+  "condition": "S3 static website hosting serves the assets over plain HTTP only; no TLS is possible on the S3 website endpoint.",
+  "severity": "medium",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c022",
+  "resource": "SupportAdminPolicy (AWS::IAM::ManagedPolicy)",
+  "condition": "Managed policy allows all actions (*) on all resources (*) and is attached to the support team group, giving every member full admin rights.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c022",
+  "resource": "SupportUserKey (AWS::IAM::AccessKey)",
+  "condition": "Active long-term access key created for the admin-privileged support user.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c024",
+  "resource": "CustomerDb (AWS::RDS::DBInstance)",
+  "condition": "Customer database instance is publicly accessible from the internet.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c024",
+  "resource": "CustomerDbSg (AWS::EC2::SecurityGroup)",
+  "condition": "Security group allows Postgres (port 5432) inbound from 0.0.0.0/0.",
+  "severity": "high",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c025",
+  "resource": "ApiStage (AWS::ApiGateway::Stage)",
+  "condition": "MethodSettings has LoggingLevel OFF and MetricsEnabled false, so access logging for the partner API is disabled.",
+  "severity": "low",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c025",
+  "resource": "PartnerApi (AWS::ApiGateway::RestApi)",
+  "condition": "No WAF is configured in front of the partner-facing API.",
+  "severity": "low",
+  "format": "cloudformation"
+ },
+ {
+  "project": "c026",
+  "resource": "Microsoft.Storage/storageAccounts (acmegallerymedia)",
+  "condition": "supportsHttpsTrafficOnly is false, so the storage account accepts unencrypted HTTP traffic.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c026",
+  "resource": "Microsoft.Storage/storageAccounts (acmegallerymedia)",
+  "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c026",
+  "resource": "gallery-images container (Microsoft.Storage/storageAccounts/blobServices/containers)",
+  "condition": "Account-level allowBlobPublicAccess is true and the gallery-images container has publicAccess Blob, allowing anonymous public read of blobs.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c028",
+  "resource": "Microsoft.KeyVault/vaults (devshared)",
+  "condition": "Access policy grants 'all' permissions on keys, secrets and certificates to a single deployer principal.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c028",
+  "resource": "Microsoft.KeyVault/vaults (devshared)",
+  "condition": "enableSoftDelete is false, so deleted secrets cannot be recovered.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c028",
+  "resource": "Microsoft.KeyVault/vaults (devshared)",
+  "condition": "networkAcls defaultAction is Allow, so the vault is reachable from the public internet.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c028",
+  "resource": "Microsoft.KeyVault/vaults (devshared)",
+  "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged by anyone with access.",
+  "severity": "low",
+  "format": "arm"
+ },
+ {
+  "project": "c030",
+  "resource": "Microsoft.Sql/servers (erpsql)",
+  "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+  "severity": "high",
+  "format": "arm"
+ },
+ {
+  "project": "c030",
+  "resource": "Microsoft.Sql/servers/firewallRules (AllowAll)",
+  "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), effectively opening the SQL server to the whole internet.",
+  "severity": "high",
+  "format": "arm"
+ },
+ {
+  "project": "c030",
+  "resource": "Microsoft.Sql/servers (erpsql)",
+  "condition": "minimalTlsVersion is 1.0, allowing weak TLS 1.0 connections to the SQL server.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c032",
+  "resource": "Microsoft.Network/networkSecurityGroups (dev-nsg) rule Allow-RDP-Any",
+  "condition": "NSG rule allows RDP (port 3389) inbound from any source (*).",
+  "severity": "high",
+  "format": "arm"
+ },
+ {
+  "project": "c032",
+  "resource": "Microsoft.Network/networkSecurityGroups (dev-nsg) rule Allow-SSH-Any",
+  "condition": "NSG rule allows SSH (port 22) inbound from the Internet service tag.",
+  "severity": "high",
+  "format": "arm"
+ },
+ {
+  "project": "c034",
+  "resource": "Microsoft.KeyVault/vaults (reportsecrets)",
+  "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged.",
+  "severity": "low",
+  "format": "arm"
+ },
+ {
+  "project": "c035",
+  "resource": "Microsoft.Sql/servers (analyticsql)",
+  "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+  "severity": "high",
+  "format": "arm"
+ },
+ {
+  "project": "c035",
+  "resource": "Microsoft.Sql/servers/firewallRules (DataScienceVPN)",
+  "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), opening the SQL server to the whole internet.",
+  "severity": "high",
+  "format": "arm"
+ },
+ {
+  "project": "c036",
+  "resource": "Microsoft.KeyVault/vaults (teamvault)",
+  "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged.",
+  "severity": "low",
+  "format": "arm"
+ },
+ {
+  "project": "c037",
+  "resource": "Microsoft.Network/networkSecurityGroups (loadtest-nsg) rule Allow-All-Inbound",
+  "condition": "NSG rule allows all protocols and ports inbound from any source (*); the temporary rule allows everything.",
+  "severity": "high",
+  "format": "arm"
+ },
+ {
+  "project": "c038",
+  "resource": "Microsoft.Storage/storageAccounts (statuspage)",
+  "condition": "supportsHttpsTrafficOnly is false, so the static-website storage account accepts unencrypted HTTP traffic.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c038",
+  "resource": "Microsoft.Storage/storageAccounts (statuspage)",
+  "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c038",
+  "resource": "Microsoft.Storage/storageAccounts (statuspage)",
+  "condition": "allowBlobPublicAccess is true, enabling anonymous public access to blobs.",
+  "severity": "low",
+  "format": "arm"
+ },
+ {
+  "project": "c039",
+  "resource": "Microsoft.Network/networkSecurityGroups (legacy-app-nsg) rule Allow-All-TCP",
+  "condition": "NSG rule allows all TCP ports inbound from any source (*), on a VM that has a public IP address.",
+  "severity": "high",
+  "format": "arm"
+ },
+ {
+  "project": "c039",
+  "resource": "Microsoft.Compute/virtualMachines (legacy-app-01)",
+  "condition": "OS disk has no encryption settings; the VM disk is unencrypted at rest.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c039",
+  "resource": "Microsoft.Compute/virtualMachines (legacy-app-01)",
+  "condition": "linuxConfiguration has disablePasswordAuthentication false, so SSH password login is permitted.",
+  "severity": "medium",
+  "format": "arm"
+ },
+ {
+  "project": "c041",
+  "resource": "container (Microsoft.Storage/storageAccounts/blobServices/containers)",
+  "condition": "gallery-images container has publicAccess Blob, allowing anonymous public read of blobs.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c041",
+  "resource": "gallery (Microsoft.Storage/storageAccounts)",
+  "condition": "supportsHttpsTrafficOnly is false, so the storage account accepts unencrypted HTTP traffic.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c041",
+  "resource": "gallery (Microsoft.Storage/storageAccounts)",
+  "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c043",
+  "resource": "nsg (Microsoft.Network/networkSecurityGroups) rule Allow-Contractor-RDP",
+  "condition": "NSG rule allows RDP (port 3389) inbound from any source (*); left internet-wide after the migration weekend.",
+  "severity": "high",
+  "format": "bicep"
+ },
+ {
+  "project": "c044",
+  "resource": "allowAll (Microsoft.Sql/servers/firewallRules)",
+  "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), effectively opening the SQL server to the whole internet.",
+  "severity": "high",
+  "format": "bicep"
+ },
+ {
+  "project": "c044",
+  "resource": "server (Microsoft.Sql/servers)",
+  "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+  "severity": "high",
+  "format": "bicep"
+ },
+ {
+  "project": "c044",
+  "resource": "server (Microsoft.Sql/servers)",
+  "condition": "minimalTlsVersion is 1.0, allowing weak TLS 1.0 connections to the SQL server.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c045",
+  "resource": "data (Microsoft.Storage/storageAccounts)",
+  "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections; the draft value was never raised.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c046",
+  "resource": "container (Microsoft.Storage/storageAccounts/blobServices/containers, via module)",
+  "condition": "Caller overrides the hardened module and sets containerPublicAccess to Blob, so the uploads container is anonymously readable from the internet.",
+  "severity": "high",
+  "format": "bicep"
+ },
+ {
+  "project": "c047",
+  "resource": "diagnostics (Microsoft.Insights/diagnosticSettings)",
+  "condition": "Diagnostic log and metric retention is only 7 days, below the 90-day retention the compliance team requires.",
+  "severity": "low",
+  "format": "bicep"
+ },
+ {
+  "project": "c048",
+  "resource": "vault (Microsoft.KeyVault/vaults)",
+  "condition": "Access policy grants 'all' permissions on keys, secrets and certificates to a single deployer principal.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c048",
+  "resource": "vault (Microsoft.KeyVault/vaults)",
+  "condition": "enableSoftDelete is false, so deleted secrets cannot be recovered.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c048",
+  "resource": "vault (Microsoft.KeyVault/vaults)",
+  "condition": "networkAcls defaultAction is Allow, so the vault is reachable from the public internet.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c048",
+  "resource": "vault (Microsoft.KeyVault/vaults)",
+  "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged by anyone with access.",
+  "severity": "low",
+  "format": "bicep"
+ },
+ {
+  "project": "c050",
+  "resource": "workspace (Microsoft.OperationalInsights/workspaces)",
+  "condition": "publicNetworkAccessForIngestion and publicNetworkAccessForQuery are both Enabled, so log data flows over the public internet instead of a private link.",
+  "severity": "low",
+  "format": "bicep"
+ },
+ {
+  "project": "c051",
+  "resource": "server (Microsoft.Sql/servers)",
+  "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+  "severity": "high",
+  "format": "bicep"
+ },
+ {
+  "project": "c051",
+  "resource": "vpnRule (Microsoft.Sql/servers/firewallRules)",
+  "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), opening the SQL server to the whole internet.",
+  "severity": "high",
+  "format": "bicep"
+ },
+ {
+  "project": "c053",
+  "resource": "nsg (Microsoft.Network/networkSecurityGroups) rule Allow-Hub-All",
+  "condition": "NSG rule allows all protocols and ports inbound from the entire 10.0.0.0/8 range, far wider than the actual peered spoke.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c054",
+  "resource": "vault (Microsoft.KeyVault/vaults)",
+  "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged.",
+  "severity": "medium",
+  "format": "bicep"
+ },
+ {
+  "project": "c056",
+  "resource": "assetsBucket (aws:s3:Bucket)",
+  "condition": "S3 website hosting serves the assets over plain HTTP only; no TLS is possible on the S3 website endpoint.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c057",
+  "resource": "jumpSg (aws:ec2:SecurityGroup)",
+  "condition": "SSH (port 22) is allowed from 0.0.0.0/0 because the officeCidr config defaults to 0.0.0.0/0.",
+  "severity": "high",
+  "format": "pulumi"
+ },
+ {
+  "project": "c057",
+  "resource": "jumpSg (aws:ec2:SecurityGroup)",
+  "condition": "RDP (port 3389) is allowed inbound from 0.0.0.0/0.",
+  "severity": "high",
+  "format": "pulumi"
+ },
+ {
+  "project": "c057",
+  "resource": "jumpBox (aws:ec2:Instance)",
+  "condition": "No encrypted block device is configured, so the instance root volume is not encrypted at rest.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c057",
+  "resource": "jumpBox (aws:ec2:Instance)",
+  "condition": "No metadata options are set, so IMDSv2 is not enforced and the metadata service can be reached with IMDSv1, which is vulnerable to SSRF-based credential theft.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c059",
+  "resource": "customerDb (aws:rds:Instance)",
+  "condition": "Customer database instance is publicly accessible from the internet.",
+  "severity": "high",
+  "format": "pulumi"
+ },
+ {
+  "project": "c059",
+  "resource": "dbSg (aws:ec2:SecurityGroup)",
+  "condition": "Security group allows Postgres (port 5432) inbound from 0.0.0.0/0.",
+  "severity": "high",
+  "format": "pulumi"
+ },
+ {
+  "project": "c060",
+  "resource": "vault (azure-native:keyvault:Vault)",
+  "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged.",
+  "severity": "low",
+  "format": "pulumi"
+ },
+ {
+  "project": "c061",
+  "resource": "processorPolicy (aws:iam:RolePolicy)",
+  "condition": "Policy allows dynamodb:* and sqs:* on all resources (*), far broader than the order-events function needs.",
+  "severity": "high",
+  "format": "pulumi"
+ },
+ {
+  "project": "c062",
+  "resource": "nsg (azure-native:network:NetworkSecurityGroup) rule Allow-RDP-Any",
+  "condition": "NSG rule allows RDP (port 3389) inbound from any source (*).",
+  "severity": "high",
+  "format": "pulumi"
+ },
+ {
+  "project": "c064",
+  "resource": "firewallRule (azure-native:sql:FirewallRule)",
+  "condition": "Firewall rule allows the entire IPv4 range (0.0.0.0 to 255.255.255.255), opening the SQL server to the whole internet.",
+  "severity": "high",
+  "format": "pulumi"
+ },
+ {
+  "project": "c064",
+  "resource": "sqlServer (azure-native:sql:Server)",
+  "condition": "publicNetworkAccess is Enabled, exposing the SQL server to the internet.",
+  "severity": "high",
+  "format": "pulumi"
+ },
+ {
+  "project": "c065",
+  "resource": "publicNaclAllowAll (aws:ec2:NetworkAclRule)",
+  "condition": "NACL rule allows all protocols and ports inbound from 0.0.0.0/0; the public NACL was left wide open after debugging.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c066",
+  "resource": "container (azure-native:storage:BlobContainer)",
+  "condition": "gallery-images container has publicAccess Blob, allowing anonymous public read of blobs.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c066",
+  "resource": "storageAccount (azure-native:storage:StorageAccount)",
+  "condition": "supportsHttpsTrafficOnly is false, so the storage account accepts unencrypted HTTP traffic.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c066",
+  "resource": "storageAccount (azure-native:storage:StorageAccount)",
+  "condition": "minimumTlsVersion is TLS1_0, allowing weak TLS 1.0 connections.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c068",
+  "resource": "vault (azure-native:keyvault:Vault)",
+  "condition": "Access policy grants 'all' permissions on keys, secrets and certificates to a single deployer principal.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c068",
+  "resource": "vault (azure-native:keyvault:Vault)",
+  "condition": "enableSoftDelete is false, so deleted secrets cannot be recovered.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c068",
+  "resource": "vault (azure-native:keyvault:Vault)",
+  "condition": "networkAcls defaultAction is Allow, so the vault is reachable from the public internet.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "c068",
+  "resource": "vault (azure-native:keyvault:Vault)",
+  "condition": "enablePurgeProtection is false, so soft-deleted secrets can be permanently purged by anyone with access.",
+  "severity": "low",
+  "format": "pulumi"
+ },
+ {
+  "project": "c070",
+  "resource": "azureStorage (azure-native:storage:StorageAccount)",
+  "condition": "allowBlobPublicAccess is true, enabling anonymous public access to blob containers while the AWS side is locked down.",
+  "severity": "medium",
+  "format": "pulumi"
+ },
+ {
+  "project": "k001",
+  "resource": "docker_stage.stage0",
+  "condition": "Container runs as root: no USER directive anywhere in the Dockerfile",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k001",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tag: FROM ubuntu:latest",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k001",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k002",
+  "resource": "docker_stage.stage0",
+  "condition": "Hardcoded secrets baked into image ENV: DATABASE_URL, STRIPE_API_KEY, AWS_SECRET_ACCESS_KEY",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k002",
+  "resource": "docker_stage.stage0",
+  "condition": "Container runs as root: no USER directive",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k002",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k004",
+  "resource": "docker_stage.stage1",
+  "condition": "Unnecessary build and debugging tools (gcc, git, strace, curl) installed in the final runtime image, widening the attack surface",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k004",
+  "resource": "docker_stage.stage1",
+  "condition": "Container runs as root: no USER directive",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k004",
+  "resource": "docker_stage.stage1",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k006",
+  "resource": "docker_stage.stage0",
+  "condition": "Container runs as root: no USER directive",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k006",
+  "resource": "docker_stage.stage0",
+  "condition": "ADD fetches a remote tarball over the network (https://example.com/releases/tool-v2.4.1.tar.gz) with no checksum or signature verification",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k006",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k007",
+  "resource": "docker_stage.stage0",
+  "condition": "Build ARG NPM_TOKEN is copied into ENV, so the npm token is persisted in the image config and visible to anyone who can pull the image",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k008",
+  "resource": "docker_stage.stage0",
+  "condition": "Hardcoded GITHUB_TOKEN in ENV",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k008",
+  "resource": "docker_stage.stage0",
+  "condition": "appuser granted passwordless sudo over everything (appuser ALL=(ALL) NOPASSWD:ALL in /etc/sudoers), defeating the non-root user",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k008",
+  "resource": "docker_stage.stage0",
+  "condition": "setuid bit set on /usr/bin/find (chmod u+s), a classic local privilege-escalation vector",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k008",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k010",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tag: FROM node:latest",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k010",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k011",
+  "resource": "docker_stage.stage0",
+  "condition": "Remote install script piped directly to shell (curl -fsSL ... | bash) with no checksum or signature verification",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k011",
+  "resource": "docker_stage.stage0",
+  "condition": "Container runs as root: no USER directive",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k011",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k012",
+  "resource": "docker_stage.stage0",
+  "condition": "Container runs as root: no USER directive",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k012",
+  "resource": "nginx.conf",
+  "condition": "nginx configured with 'user root;': worker processes run as root instead of an unprivileged user",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k013",
+  "resource": "docker_stage.stage1",
+  "condition": "Explicit USER root in the final image so on-call can exec in and debug production; container is deliberately run as root",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k013",
+  "resource": "docker_stage.stage1",
+  "condition": "Debug and packet-analysis tools (strace, tcpdump, busybox-extras) installed in the final runtime image",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k013",
+  "resource": "docker_stage.stage1",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k014",
+  "resource": "docker_stage.stage0",
+  "condition": "Container runs as root: no USER directive",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k014",
+  "resource": "docker_stage.stage0",
+  "condition": "Flask development server bound to 0.0.0.0 (flask run --host=0.0.0.0); dev server exposed on all interfaces",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k014",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k015",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tag: FROM ubuntu:latest",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k015",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k016",
+  "resource": "redis.conf",
+  "condition": "Redis bound to 0.0.0.0 with protected-mode no and no requirepass: unauthenticated Redis reachable on all interfaces",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k016",
+  "resource": "docker_stage.stage0",
+  "condition": "HEALTHCHECK uses 'CMD true', which always succeeds and therefore never detects a failure",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k017",
+  "resource": "docker_stage.stage0",
+  "condition": "Git credential passed via build ARG embedded in the clone URL (https://oauth2:${GIT_TOKEN}@...); the token is persisted in the builder image history",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k017",
+  "resource": "docker_stage.stage1",
+  "condition": "Hardcoded deploy key in ENV (DEPLOY_KEY)",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k017",
+  "resource": "docker_stage.stage1",
+  "condition": "Builder .git directory copied into the served web root (/usr/share/nginx/html/.git), exposing full source history to web clients",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k017",
+  "resource": "docker_stage.stage1",
+  "condition": "Container runs as root: no USER directive",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k017",
+  "resource": "docker_stage.stage1",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k018",
+  "resource": "docker_stage.stage0",
+  "condition": "no HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k019",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tag: FROM ubuntu:latest",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k019",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k020",
+  "resource": "docker_stage.stage0",
+  "condition": "Hardcoded root password: echo 'root:changeme123' | chpasswd",
+  "severity": "high",
+  "format": "docker"
+ },
+ {
+  "project": "k020",
+  "resource": "docker_stage.stage0",
+  "condition": "Container runs as root (SSH daemon as root)",
+  "severity": "medium",
+  "format": "docker"
+ },
+ {
+  "project": "k020",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k021",
+  "resource": "deployment/webapp",
+  "condition": "No securityContext at all: container runs as root by default",
+  "severity": "medium",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k021",
+  "resource": "deployment/webapp",
+  "condition": "Unpinned image tag: myregistry/webapp:latest",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k021",
+  "resource": "deployment/webapp",
+  "condition": "No resource requests or limits",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k021",
+  "resource": "deployment/webapp",
+  "condition": "No liveness or readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k021",
+  "resource": "deployment/webapp",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k022",
+  "resource": "pod/node-agent",
+  "condition": "hostNetwork: true: pod shares the host network namespace",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k022",
+  "resource": "pod/node-agent",
+  "condition": "privileged: true in the container securityContext",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k022",
+  "resource": "pod/node-agent",
+  "condition": "hostPath volume mounting the host root filesystem (/) at /host",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k022",
+  "resource": "pod/node-agent",
+  "condition": "no pod-level securityContext: container runs as root",
+  "severity": "medium",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k022",
+  "resource": "pod/node-agent",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k023",
+  "resource": "deployment/api",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k023",
+  "resource": "deployment/api",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k024",
+  "resource": "deployment/monitor",
+  "condition": "hostNetwork: true",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k024",
+  "resource": "deployment/monitor",
+  "condition": "hostPID: true: pod shares the host PID namespace",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k024",
+  "resource": "deployment/monitor",
+  "condition": "No securityContext at all: container runs as root by default",
+  "severity": "medium",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k024",
+  "resource": "deployment/monitor",
+  "condition": "No resource requests or limits",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k024",
+  "resource": "deployment/monitor",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k024",
+  "resource": "deployment/monitor",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k025",
+  "resource": "deployment/checkout",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k026",
+  "resource": "deployment/worker",
+  "condition": "Unpinned image tag: example/worker:latest",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k026",
+  "resource": "deployment/worker",
+  "condition": "No liveness or readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k026",
+  "resource": "deployment/worker",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k027",
+  "resource": "clusterrolebinding/default-admin",
+  "condition": "ClusterRoleBinding default-admin binds the default service account in namespace default to cluster-admin",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k029",
+  "resource": "deployment/profiler",
+  "condition": "privileged: true in the container securityContext",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k029",
+  "resource": "deployment/profiler",
+  "condition": "No liveness or readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k029",
+  "resource": "deployment/profiler",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k030",
+  "resource": "deployment/payments",
+  "condition": "Plaintext secrets in container env: DB_PASSWORD and STRIPE_SECRET",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k030",
+  "resource": "deployment/payments",
+  "condition": "No securityContext at all: container runs as root by default",
+  "severity": "medium",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k030",
+  "resource": "deployment/payments",
+  "condition": "No resource requests or limits",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k030",
+  "resource": "deployment/payments",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k030",
+  "resource": "deployment/payments",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k031",
+  "resource": "deployment/orders",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k031",
+  "resource": "deployment/orders",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k032",
+  "resource": "daemonset/logshipper",
+  "condition": "runAsUser: 0: container explicitly runs as root",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k032",
+  "resource": "daemonset/logshipper",
+  "condition": "hostPath volume mounting the host root filesystem (/) at /host",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k032",
+  "resource": "daemonset/logshipper",
+  "condition": "No resource requests or limits",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k032",
+  "resource": "daemonset/logshipper",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k032",
+  "resource": "daemonset/logshipper",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k033",
+  "resource": "deployment/billing",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k033",
+  "resource": "networkpolicy/allow-all",
+  "condition": "NetworkPolicy allow-all sets empty ingress ({}) and egress ({}) rules, permitting all traffic: no effective network segmentation",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k034",
+  "resource": "deployment/frontend",
+  "condition": "Unpinned image tag: example/frontend:latest",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k034",
+  "resource": "deployment/frontend",
+  "condition": "No resource requests or limits",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k034",
+  "resource": "deployment/frontend",
+  "condition": "No liveness or readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k034",
+  "resource": "deployment/frontend",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k035",
+  "resource": "deployment/ci-runner",
+  "condition": "Docker socket mounted into the container via hostPath (/var/run/docker.sock): classic container-breakout path",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k035",
+  "resource": "deployment/ci-runner",
+  "condition": "No securityContext at all: container runs as root by default",
+  "severity": "medium",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k035",
+  "resource": "deployment/ci-runner",
+  "condition": "No resource requests or limits",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k035",
+  "resource": "deployment/ci-runner",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k035",
+  "resource": "deployment/ci-runner",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k036",
+  "resource": "pod/debug-agent",
+  "condition": "privileged: true in the container securityContext | runAsUser: 0: container explicitly runs as root",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k036",
+  "resource": "pod/debug-agent",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k038",
+  "resource": "deployment/batch",
+  "condition": "No securityContext at all: container runs as root by default",
+  "severity": "medium",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k038",
+  "resource": "deployment/batch",
+  "condition": "Unpinned image tag: example/batch:latest",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k038",
+  "resource": "deployment/batch",
+  "condition": "No resource requests or limits",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k038",
+  "resource": "deployment/batch",
+  "condition": "No liveness or readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k038",
+  "resource": "deployment/batch",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k039",
+  "resource": "deployment/search",
+  "condition": "No liveness or readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k039",
+  "resource": "deployment/search",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k040",
+  "resource": "daemonset/sysconf-agent",
+  "condition": "Added dangerous capabilities SYS_ADMIN, SYS_PTRACE and NET_ADMIN",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k040",
+  "resource": "daemonset/sysconf-agent",
+  "condition": "hostPath volume mounting host /etc at /host/etc",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k040",
+  "resource": "daemonset/sysconf-agent",
+  "condition": "hostPID: true: pod shares the host PID namespace",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k040",
+  "resource": "daemonset/sysconf-agent",
+  "condition": "runAsUser: 0: container explicitly runs as root",
+  "severity": "high",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k040",
+  "resource": "daemonset/sysconf-agent",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k040",
+  "resource": "daemonset/sysconf-agent",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k041",
+  "resource": "compose/app",
+  "condition": "privileged: true on the app service",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k041",
+  "resource": "compose/db",
+  "condition": "Hardcoded POSTGRES_PASSWORD in the service environment",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k041",
+  "resource": "service/app",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k041",
+  "resource": "service/db",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k041",
+  "resource": "compose/app",
+  "condition": "Unpinned image tags: example/app:latest and postgres:latest",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k041",
+  "resource": "service/app",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k041",
+  "resource": "service/db",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k042",
+  "resource": "compose/api",
+  "condition": "Plaintext secrets in the service environment: DATABASE_URL, JWT_SECRET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k042",
+  "resource": "compose/db",
+  "condition": "Hardcoded POSTGRES_PASSWORD in the service environment",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k042",
+  "resource": "service/api",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k042",
+  "resource": "service/db",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k042",
+  "resource": "service/api",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k042",
+  "resource": "service/db",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k044",
+  "resource": "compose/db",
+  "condition": "Hardcoded POSTGRES_PASSWORD in the service environment",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k044",
+  "resource": "service/db",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k044",
+  "resource": "service/app",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k044",
+  "resource": "service/db",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k045",
+  "resource": "compose/agent",
+  "condition": "Docker socket mounted into the container (/var/run/docker.sock): classic container-breakout path",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k045",
+  "resource": "compose/agent",
+  "condition": "Host root filesystem mounted at /host (read-only)",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k045",
+  "resource": "compose/agent",
+  "condition": "Port 9001 published on 0.0.0.0, exposed on all host interfaces",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k045",
+  "resource": "service/agent",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k045",
+  "resource": "service/agent",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k046",
+  "resource": "service/proxy",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k046",
+  "resource": "compose/db",
+  "condition": "Unpinned image tag: postgres:latest",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k046",
+  "resource": "service/api",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k046",
+  "resource": "service/db",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k046",
+  "resource": "service/proxy",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k047",
+  "resource": "compose/inspector",
+  "condition": "privileged: true",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k047",
+  "resource": "compose/inspector",
+  "condition": "pid: host: container shares the host PID namespace",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k047",
+  "resource": "compose/inspector",
+  "condition": "Host /proc mounted into the container",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k047",
+  "resource": "service/inspector",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k047",
+  "resource": "service/inspector",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k048",
+  "resource": "compose/collector",
+  "condition": "network_mode: host: container shares the host network namespace",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k048",
+  "resource": "compose/collector",
+  "condition": "API token and database password in a plaintext env file (collector.env)",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k048",
+  "resource": "service/collector",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k048",
+  "resource": "service/collector",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k050",
+  "resource": "compose/admin",
+  "condition": "Hardcoded ADMIN_PASSWORD in the service environment",
+  "severity": "high",
+  "format": "compose"
+ },
+ {
+  "project": "k050",
+  "resource": "service/admin",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k050",
+  "resource": "compose/admin",
+  "condition": "Unpinned image tag: example/admin:latest",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k050",
+  "resource": "service/admin",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k051",
+  "resource": "terraform/docker_container.app",
+  "condition": "privileged = true on the Docker container resource",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k051",
+  "resource": "terraform/docker_container.app",
+  "condition": "Docker socket mounted into the container (/var/run/docker.sock)",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k051",
+  "resource": "terraform/docker_container.app",
+  "condition": "Plaintext secrets in env: DB_PASSWORD and API_KEY",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k051",
+  "resource": "docker_stage.stage0",
+  "condition": "Container image runs as root: no USER directive",
+  "severity": "medium",
+  "format": "mixed"
+ },
+ {
+  "project": "k051",
+  "resource": "docker_container/app (terraform)",
+  "condition": "unpinned image tag: example/app:latest",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k051",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tag: FROM ubuntu:latest",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k051",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k052",
+  "resource": "service/db",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k052",
+  "resource": "service/db",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k053",
+  "resource": "terraform/kubernetes_cluster_role_binding.agent_admin",
+  "condition": "ClusterRoleBinding host-agent-admin binds the default service account in namespace default to cluster-admin",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k053",
+  "resource": "terraform/kubernetes_deployment.agent",
+  "condition": "host_network = true",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k053",
+  "resource": "terraform/kubernetes_deployment.agent",
+  "condition": "privileged = true in the container security_context",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k053",
+  "resource": "terraform/kubernetes_deployment.agent",
+  "condition": "host_path volume mounting the host root filesystem (/)",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k053",
+  "resource": "kubernetes_deployment/host-agent (terraform)",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k053",
+  "resource": "kubernetes_deployment/host-agent (terraform)",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k054",
+  "resource": "docker_stage.stage0",
+  "condition": "Container image runs as root: no USER directive",
+  "severity": "medium",
+  "format": "mixed"
+ },
+ {
+  "project": "k054",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k055",
+  "resource": "docker_stage.stage0",
+  "condition": "Container image runs as root: no USER directive",
+  "severity": "medium",
+  "format": "mixed"
+ },
+ {
+  "project": "k055",
+  "resource": "service/app",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k055",
+  "resource": "compose/app",
+  "condition": "Unpinned image tag: example/app:latest",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k055",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tag: FROM python:latest",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k055",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k055",
+  "resource": "service/app",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k056",
+  "resource": "terraform/kubernetes_deployment.cache",
+  "condition": "privileged = true in the Terraform copy, contradicting the hardened deployment.yaml for the same workload",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k056",
+  "resource": "deployment/cache",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k056",
+  "resource": "deployment/cache",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k057",
+  "resource": "docker_stage.stage0",
+  "condition": "API token passed via build ARG (terraform build_args) and copied into ENV, baking the secret into the image",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k057",
+  "resource": "docker_stage.stage1",
+  "condition": "no HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k058",
+  "resource": "docker_stage.stage0",
+  "condition": "Container image runs as root: no USER directive",
+  "severity": "medium",
+  "format": "mixed"
+ },
+ {
+  "project": "k058",
+  "resource": "service/db",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k058",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tag: FROM node:latest",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k058",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k058",
+  "resource": "service/db",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k059",
+  "resource": "pod/legacy-app",
+  "condition": "hostNetwork: true",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k059",
+  "resource": "docker_stage.stage0",
+  "condition": "Container image runs as root: no USER directive",
+  "severity": "medium",
+  "format": "mixed"
+ },
+ {
+  "project": "k059",
+  "resource": "pod/legacy-app",
+  "condition": "No securityContext at all: container runs as root by default",
+  "severity": "medium",
+  "format": "mixed"
+ },
+ {
+  "project": "k059",
+  "resource": "docker_stage.stage0",
+  "condition": "Unpinned base image tag: FROM ubuntu:latest",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k059",
+  "resource": "docker_stage.stage0",
+  "condition": "no HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "k059",
+  "resource": "pod/legacy-app",
+  "condition": "No resource requests or limits",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k059",
+  "resource": "pod/legacy-app",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k061",
+  "resource": "compose/deployer",
+  "condition": "Docker socket mounted into the container (/var/run/docker.sock)",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k061",
+  "resource": "docker_stage.stage0",
+  "condition": "Docker CLI image runs as root: no USER directive, combined with the docker.sock mount this is effectively root on the host",
+  "severity": "medium",
+  "format": "mixed"
+ },
+ {
+  "project": "k061",
+  "resource": "service/deployer",
+  "condition": "no user specified: service runs as root",
+  "severity": "medium",
+  "format": "compose"
+ },
+ {
+  "project": "k061",
+  "resource": "service/deployer",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k062",
+  "resource": "deployment/reporter",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k062",
+  "resource": "deployment/reporter",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k063",
+  "resource": "docker_stage.stage0",
+  "condition": "Container image runs as root: no USER directive",
+  "severity": "medium",
+  "format": "mixed"
+ },
+ {
+  "project": "k063",
+  "resource": "docker_stage.stage0",
+  "condition": "No HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "mixed"
+ },
+ {
+  "project": "k064",
+  "resource": "compose/api",
+  "condition": "Hardcoded DB_PASSWORD in the service environment",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k064",
+  "resource": "compose/db",
+  "condition": "Hardcoded POSTGRES_PASSWORD in the service environment",
+  "severity": "high",
+  "format": "mixed"
+ },
+ {
+  "project": "k064",
+  "resource": "service/api",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k064",
+  "resource": "service/db",
+  "condition": "no healthcheck defined",
+  "severity": "low",
+  "format": "compose"
+ },
+ {
+  "project": "k065",
+  "resource": "deployment/hello",
+  "condition": "no liveness/readiness probes",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k065",
+  "resource": "deployment/hello",
+  "condition": "no NetworkPolicy in the project",
+  "severity": "low",
+  "format": "kubernetes"
+ },
+ {
+  "project": "k065",
+  "resource": "docker_stage.stage0",
+  "condition": "no HEALTHCHECK instruction",
+  "severity": "low",
+  "format": "docker"
+ },
+ {
+  "project": "t001",
+  "resource": "aws_s3_bucket.site",
+  "condition": "S3 bucket uses public-read ACL and a bucket policy granting s3:GetObject to Principal \"*\", making bucket objects readable by anyone",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t002",
+  "resource": "aws_s3_bucket_versioning.backups",
+  "condition": "Backup bucket versioning enabled without MFA delete, leaving versioned backups vulnerable to permanent deletion",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t003",
+  "resource": "aws_security_group.bastion",
+  "condition": "Security group allows SSH (port 22) and RDP (port 3389) ingress from 0.0.0.0/0",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t003",
+  "resource": "aws_instance.bastion",
+  "condition": "EC2 root block device explicitly sets encrypted = false, leaving the OS volume unencrypted at rest",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t003",
+  "resource": "aws_instance.bastion",
+  "condition": "No metadata_options configured, so IMDSv1 remains enabled on an internet-facing bastion host",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t005",
+  "resource": "aws_iam_group.ops",
+  "condition": "IAM group granted managed AdministratorAccess policy",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t005",
+  "resource": "aws_iam_user.deploy",
+  "condition": "IAM user granted managed AdministratorAccess policy and issued a long-lived access key",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t005",
+  "resource": "aws_iam_user_policy.deploy_wildcard",
+  "condition": "Inline IAM policy grants Action \"*\" on Resource \"*\"",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t007",
+  "resource": "aws_db_instance.shop",
+  "condition": "Hardcoded plaintext database password \"password123\" in the RDS configuration",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t007",
+  "resource": "aws_db_instance.shop",
+  "condition": "RDS instance sets storage_encrypted = false, leaving database storage unencrypted at rest",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t007",
+  "resource": "aws_db_instance.shop",
+  "condition": "RDS instance sets publicly_accessible = true, exposing the database endpoint to the internet",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t007",
+  "resource": "aws_security_group.db_open",
+  "condition": "Security group allows MySQL (port 3306) ingress from 0.0.0.0/0",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t007",
+  "resource": "aws_db_instance.shop",
+  "condition": "RDS backup_retention_period = 0 disables automated backups | RDS deletion_protection = false combined with skip_final_snapshot = true allows unrecoverable deletion",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t009",
+  "resource": "aws_iam_role_policy.resizer_wildcard",
+  "condition": "IAM role policy grants s3:*, dynamodb:* and logs:* on Resource \"*\"",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t009",
+  "resource": "aws_lambda_function.resizer",
+  "condition": "Hardcoded plaintext API key in Lambda environment variables",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t009",
+  "resource": "aws_s3_bucket.uploads",
+  "condition": "S3 bucket has no server-side encryption configuration",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t009",
+  "resource": "aws_s3_bucket.uploads",
+  "condition": "S3 bucket has no public access block configured",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t010",
+  "resource": "aws_dynamodb_table.orders",
+  "condition": "DynamoDB table has no customer-managed KMS encryption configured",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t010",
+  "resource": "aws_sqs_queue.orders_dlq",
+  "condition": "SQS dead-letter queue has no server-side encryption configured",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t011",
+  "resource": "aws_eks_cluster.main",
+  "condition": "EKS cluster API endpoint is publicly accessible from 0.0.0.0/0 with private access disabled",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t011",
+  "resource": "aws_eks_cluster.main",
+  "condition": "EKS cluster has no encryption_config, so Kubernetes secrets are stored unencrypted in etcd",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t011",
+  "resource": "aws_eks_cluster.main",
+  "condition": "EKS cluster has no enabled_cluster_log_types, so control plane audit logging is absent",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t013",
+  "resource": "aws_security_group.db",
+  "condition": "Security group allows Postgres (port 5432) ingress from 0.0.0.0/0",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t013",
+  "resource": "aws_vpc.main",
+  "condition": "VPC has no flow logs configured for network traffic visibility",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t014",
+  "resource": "aws_cloudtrail.main",
+  "condition": "CloudTrail is not multi-region, leaving out-of-region API activity unlogged",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t014",
+  "resource": "aws_cloudtrail.main",
+  "condition": "CloudTrail log file validation is disabled, so log integrity cannot be verified",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t014",
+  "resource": "aws_cloudtrail.main",
+  "condition": "CloudTrail excludes global service events such as IAM and STS",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t014",
+  "resource": "aws_s3_bucket.trail",
+  "condition": "CloudTrail log S3 bucket has no server-side encryption configuration",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t016",
+  "resource": "aws_kms_key.data",
+  "condition": "KMS key policy allows kms:Decrypt and kms:DescribeKey to Principal AWS \"*\"",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t016",
+  "resource": "aws_kms_key.data",
+  "condition": "KMS key has enable_key_rotation = false",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t016",
+  "resource": "aws_kms_key.data",
+  "condition": "KMS key deletion window set to 7-day minimum",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t018",
+  "resource": "aws_lb_listener.http",
+  "condition": "ALB serves traffic over HTTP only with no HTTPS listener or TLS redirection, so traffic is unencrypted in transit",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t018",
+  "resource": "aws_lb.web",
+  "condition": "ALB access logging not enabled",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t020",
+  "resource": "aws_dynamodb_table.audit_events",
+  "condition": "DynamoDB table has no customer-managed KMS encryption configured",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t020",
+  "resource": "aws_dynamodb_table.sessions",
+  "condition": "DynamoDB table has no customer-managed KMS encryption configured",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t022",
+  "resource": "aws_sqs_queue.alerts",
+  "condition": "SQS queue has no server-side encryption configured",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t023",
+  "resource": "aws_sns_topic_policy.open",
+  "condition": "SNS topic policy allows sns:Publish to Principal \"*\", so anyone can publish to the topic",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t023",
+  "resource": "aws_sns_topic.orders",
+  "condition": "SNS topic has no server-side encryption configured",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t024",
+  "resource": "aws_security_group.data",
+  "condition": "Security group allows Postgres (5432), Redis (6379) and MongoDB (27017) ingress from 0.0.0.0/0",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t024",
+  "resource": "aws_vpc_security_group_ingress_rule.mysql_world",
+  "condition": "Ingress rule allows MySQL (port 3306) from 0.0.0.0/0",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t025",
+  "resource": "aws_iam_policy.admin_wildcard",
+  "condition": "EC2 instance role has a managed-style policy granting Action \"*\" on Resource \"*\" attached",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t026",
+  "resource": "aws_s3_bucket.export",
+  "condition": "S3 bucket holding RDS snapshot exports uses public-read ACL and a policy granting s3:ListBucket and s3:GetObject to Principal \"*\", exposing exported database data publicly",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t026",
+  "resource": "aws_s3_bucket.export",
+  "condition": "RDS snapshot export bucket has no server-side encryption configuration",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t028",
+  "resource": "aws_iam_role_policy.api_wildcard",
+  "condition": "Lambda IAM role policy grants dynamodb:*, logs:*, secretsmanager:* and s3:* on Resource \"*\"",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t028",
+  "resource": "aws_lambda_function.api",
+  "condition": "Hardcoded plaintext database password in Lambda environment variables",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t028",
+  "resource": "aws_dynamodb_table.api",
+  "condition": "DynamoDB table has no customer-managed KMS encryption configured",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t029",
+  "resource": "aws_eks_cluster.staging",
+  "condition": "EKS cluster API endpoint is publicly accessible from 0.0.0.0/0 with private access disabled",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t029",
+  "resource": "aws_ecr_repository.api",
+  "condition": "ECR repository for the payments API uses mutable image tags, allowing deployed tags to be overwritten",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t029",
+  "resource": "aws_eks_cluster.staging",
+  "condition": "EKS cluster has no encryption_config, so Kubernetes secrets are stored unencrypted in etcd",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t030",
+  "resource": "aws_launch_template.web",
+  "condition": "Launch template has no metadata_options, so IMDSv1 remains enabled on publicly reachable instances",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t030",
+  "resource": "aws_lb_listener.http",
+  "condition": "ALB serves traffic over HTTP only with no HTTPS listener or TLS redirection, so traffic is unencrypted in transit",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t030",
+  "resource": "aws_lb.web",
+  "condition": "ALB access logging not enabled",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t031",
+  "resource": "azurerm_storage_container.assets",
+  "condition": "Storage account allows blob public access and container uses blob (anonymous read) access type, making blobs publicly readable",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t031",
+  "resource": "azurerm_storage_account.media",
+  "condition": "Storage account sets minimum TLS version to TLS1_0",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t031",
+  "resource": "azurerm_storage_account.media",
+  "condition": "Storage account shared key authorization enabled (shared_access_key_enabled = true)",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t033",
+  "resource": "azurerm_key_vault_secret.db_password",
+  "condition": "Hardcoded plaintext secret value stored in the Key Vault secret resource",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t033",
+  "resource": "azurerm_key_vault.app",
+  "condition": "Key Vault has no network ACLs, leaving it reachable over public networks",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t033",
+  "resource": "azurerm_key_vault_access_policy.deployer",
+  "condition": "Key Vault access policy grants broad permissions including Delete and Purge on keys and secrets to the deployer",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t033",
+  "resource": "azurerm_key_vault.app",
+  "condition": "Key Vault has purge_protection_enabled = false, allowing permanent irrecoverable deletion of secrets",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t035",
+  "resource": "azurerm_mssql_firewall_rule.open",
+  "condition": "SQL server has public network access enabled with a firewall rule allowing 0.0.0.0 to 255.255.255.255, exposing the database endpoint to the internet",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t035",
+  "resource": "azurerm_mssql_server.shop",
+  "condition": "Hardcoded plaintext administrator password for the SQL server",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t035",
+  "resource": "azurerm_mssql_database.shop",
+  "condition": "SQL database has transparent_data_encryption_enabled = false, leaving data unencrypted at rest",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t035",
+  "resource": "azurerm_mssql_server.shop",
+  "condition": "SQL server sets minimum TLS version to 1.0",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t037",
+  "resource": "azurerm_windows_web_app.shop",
+  "condition": "App settings contain a hardcoded SQL database connection string with an embedded plaintext password (server acme-shop-sql01.database.windows.net, user sa).",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t037",
+  "resource": "azurerm_windows_web_app.shop",
+  "condition": "https_only is false, so the web app serves traffic over unencrypted HTTP.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t037",
+  "resource": "azurerm_windows_web_app.shop",
+  "condition": "site_config minimum_tls_version is 1.0, allowing deprecated weak TLS versions.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t037",
+  "resource": "azurerm_windows_web_app.shop",
+  "condition": "site_config ftps_state is AllAllowed, permitting plaintext FTP deployment access.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t039",
+  "resource": "azurerm_kubernetes_cluster.main",
+  "condition": "role_based_access_control_enabled is false, so every credential with cluster access has unrestricted admin privileges.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t039",
+  "resource": "azurerm_kubernetes_cluster.main",
+  "condition": "private_cluster_enabled is not set, so the Kubernetes API server is publicly reachable from the internet",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t041",
+  "resource": "azurerm_network_security_rule.rdp_world",
+  "condition": "Inbound allow rule opens RDP port 3389 to the Internet on the workload subnet.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t043",
+  "resource": "azurerm_cosmosdb_account.shop",
+  "condition": "public_network_access_enabled is true with no IP filtering or private endpoint, exposing the Cosmos DB account to the public Internet.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t044",
+  "resource": "azurerm_cosmosdb_account.orders",
+  "condition": "public_network_access_enabled is true, leaving the Cosmos DB account reachable over the public network behind only an IP filter.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t045",
+  "resource": "azurerm_key_vault.app",
+  "condition": "purge_protection_enabled is false, so deleted vault objects can be permanently purged with no recovery path.",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t046",
+  "resource": "azurerm_mssql_firewall_rule.open",
+  "condition": "Firewall rule named allow-all permits the full 0.0.0.0 to 255.255.255.255 range, effectively removing all IP restrictions on the SQL server.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t046",
+  "resource": "azurerm_mssql_server.db",
+  "condition": "public_network_access_enabled is true, exposing the SQL server to the public Internet.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t046",
+  "resource": "azurerm_mssql_server.db",
+  "condition": "No SQL server auditing or extended auditing policy is configured, so there is no audit trail of database access.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t046",
+  "resource": "azurerm_linux_web_app.portal",
+  "condition": "The SQL administrator password is stored as a plaintext app setting (DB_PASSWORD), retrievable by anyone with app read access.",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t047",
+  "resource": "azurerm_network_security_rule.sql_world",
+  "condition": "Inbound allow rule opens SQL Server port 1433 to the Internet on the data subnet.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t048",
+  "resource": "azurerm_container_registry.main",
+  "condition": "admin_enabled is true, enabling the ACR admin account with long-lived static credentials instead of Azure AD authentication.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t050",
+  "resource": "azurerm_network_security_rule.legacy_high_ports",
+  "condition": "Inbound allow rule opens the entire TCP port range 1024-65535 to the Internet on the mgmt subnet, effectively exposing the subnet publicly.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t051",
+  "resource": "google_storage_bucket_iam_binding.public",
+  "condition": "IAM binding grants roles/storage.objectViewer to allUsers, making the bucket's objects publicly readable.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t053",
+  "resource": "google_compute_instance.legacy_app",
+  "condition": "Service account scopes include the full cloud-platform scope, giving the instance API access far beyond what it needs.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t053",
+  "resource": "google_compute_instance.legacy_batch",
+  "condition": "Service account scopes include the full cloud-platform scope, giving the instance API access far beyond what it needs.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t053",
+  "resource": "google_compute_instance.legacy_app",
+  "condition": "can_ip_forward is true, allowing the instance to route packets and potentially act as a MITM relay.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t053",
+  "resource": "google_compute_instance.legacy_batch",
+  "condition": "can_ip_forward is true, allowing the instance to route packets and potentially act as a MITM relay.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t055",
+  "resource": "google_container_cluster.main",
+  "condition": "master_auth enables legacy basic authentication with a hardcoded admin username and password in the code, granting cluster admin access to anyone with those credentials.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t055",
+  "resource": "google_container_cluster.main",
+  "condition": "client_certificate_config issue_client_certificate is true, issuing long-lived legacy client certificates for cluster access.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t055",
+  "resource": "google_container_node_pool.main",
+  "condition": "Node pool uses the default service account with the full cloud-platform OAuth scope, giving every node broad API access.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t057",
+  "resource": "google_sql_database_instance.shop",
+  "condition": "ip_configuration authorizes 0.0.0.0/0 with ipv4_enabled true, exposing the Cloud SQL database to the public Internet.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t057",
+  "resource": "google_sql_user.app",
+  "condition": "The database user password is hardcoded in plaintext in the Terraform code.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t057",
+  "resource": "google_sql_database_instance.shop",
+  "condition": "backup_configuration enabled is false, so there is no automated backup and no recovery path on data loss or corruption.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t057",
+  "resource": "google_sql_database_instance.shop",
+  "condition": "deletion_protection is false, allowing accidental or malicious deletion of the production database.",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t059",
+  "resource": "google_project_iam_binding.ci_owner",
+  "condition": "Project-level binding grants the CI runner service account roles/owner, giving a CI identity full administrative control over the project.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t059",
+  "resource": "google_project_iam_member.devs_editor",
+  "condition": "Project-level member grants the developers group roles/editor, giving all group members broad read/write access across the project.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t059",
+  "resource": "google_service_account_key.ci",
+  "condition": "A long-lived service account key is created and its private key material is stored in the Terraform state, creating a durable credential that can leak.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t060",
+  "resource": "google_project_iam_member.dev_editor",
+  "condition": "Project-level member grants a user roles/editor, giving broad read/write access far beyond the minimal custom log-viewer role defined in the same config.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t061",
+  "resource": "google_compute_firewall.allow_all_ingress",
+  "condition": "Firewall rule allows all protocols from 0.0.0.0/0, exposing every instance on the default network to the entire Internet.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t062",
+  "resource": "google_compute_firewall.legacy_alt_http",
+  "condition": "Ingress rule opens TCP port 8080 to 0.0.0.0/0 for instances tagged legacy-agent, publicly exposing a legacy service port.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t063",
+  "resource": "google_compute_instance.etl",
+  "condition": "Service account scopes include the full cloud-platform scope, giving the ETL instance API access far beyond what it needs.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t064",
+  "resource": "google_container_node_pool.app",
+  "condition": "Node pool config uses the full cloud-platform OAuth scope, giving every node broad API access.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t065",
+  "resource": "google_compute_instance.dev",
+  "condition": "Service account scopes include the full cloud-platform scope on an Internet-facing instance, giving it broad API access.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t065",
+  "resource": "google_compute_instance.qa",
+  "condition": "Service account scopes include the full cloud-platform scope on an Internet-facing instance, giving it broad API access.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t067",
+  "resource": "google_project_iam_member.devs_admin",
+  "condition": "Project-level member grants the developers group roles/container.admin, giving all group members cluster admin rights over GKE.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t068",
+  "resource": "google_compute_firewall.allow_internal",
+  "condition": "Allow rule uses source range 10.128.0.0/9, which is far broader than the defined 10.128.0.0/20 subnet and opens the rule to a much wider address space.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t068",
+  "resource": "google_compute_subnetwork.no_logs",
+  "condition": "No VPC flow logs (log_config) are configured on the subnet, so there is no network audit trail for traffic analysis or incident response.",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t069",
+  "resource": "google_sql_database_instance.crm",
+  "condition": "deletion_protection is false, allowing accidental or malicious deletion of the CRM database.",
+  "severity": "low",
+  "format": "terraform"
+ },
+ {
+  "project": "t070",
+  "resource": "google_sql_database_instance.app",
+  "condition": "ip_configuration authorizes 0.0.0.0/0 with ipv4_enabled true, exposing the Cloud SQL database to the public Internet.",
+  "severity": "high",
+  "format": "terraform"
+ },
+ {
+  "project": "t070",
+  "resource": "google_container_node_pool.pools",
+  "condition": "Node pool config uses the full cloud-platform OAuth scope, giving every node broad API access.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t070",
+  "resource": "google_sql_database_instance.app",
+  "condition": "require_ssl is not set in ip_configuration, so TLS encryption in transit to the database is not enforced.",
+  "severity": "medium",
+  "format": "terraform"
+ },
+ {
+  "project": "t070",
+  "resource": "google_sql_database_instance.app",
+  "condition": "deletion_protection is not enabled, allowing accidental or malicious deletion of the database.",
+  "severity": "low",
+  "format": "terraform"
+ }
+]

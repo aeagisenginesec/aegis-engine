@@ -1,0 +1,55 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Support team access policy. Mirrors the old on-prem admin group.",
+  "Parameters": {
+    "TeamName": {
+      "Type": "String",
+      "Default": "support"
+    }
+  },
+  "Resources": {
+    "SupportGroup": {
+      "Type": "AWS::IAM::Group",
+      "Properties": {
+        "GroupName": { "Fn::Sub": "${TeamName}-admins" }
+      }
+    },
+    "SupportAdminPolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "ManagedPolicyName": { "Fn::Sub": "${TeamName}-full-access" },
+        "Description": "Full access for the support team",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"
+            }
+          ]
+        },
+        "Groups": [{ "Ref": "SupportGroup" }]
+      }
+    },
+    "SupportUser": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "support-lead",
+        "Groups": [{ "Ref": "SupportGroup" }]
+      }
+    },
+    "SupportUserKey": {
+      "Type": "AWS::IAM::AccessKey",
+      "Properties": {
+        "UserName": { "Ref": "SupportUser" },
+        "Status": "Active"
+      }
+    }
+  },
+  "Outputs": {
+    "GroupArn": {
+      "Value": { "Fn::GetAtt": ["SupportGroup", "Arn"] }
+    }
+  }
+}

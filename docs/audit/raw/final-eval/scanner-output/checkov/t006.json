@@ -1,0 +1,269 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_61",
+                "bc_check_id": "BC_AWS_IAM_45",
+                "check_name": "Ensure AWS IAM policy does not allow assume role permission across all services",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "assume_role_policy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        25,
+                        "resource \"aws_iam_role\" \"readonly_dev\" {\n"
+                    ],
+                    [
+                        26,
+                        "  name = \"readonly-developer\"\n"
+                    ],
+                    [
+                        27,
+                        "\n"
+                    ],
+                    [
+                        28,
+                        "  assume_role_policy = jsonencode({\n"
+                    ],
+                    [
+                        29,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        30,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        31,
+                        "      {\n"
+                    ],
+                    [
+                        32,
+                        "        Effect    = \"Allow\"\n"
+                    ],
+                    [
+                        33,
+                        "        Principal = { AWS = \"arn:aws:iam::123456789012:root\" }\n"
+                    ],
+                    [
+                        34,
+                        "        Action    = \"sts:AssumeRole\"\n"
+                    ],
+                    [
+                        35,
+                        "        Condition = {\n"
+                    ],
+                    [
+                        36,
+                        "          Bool = { \"aws:MultiFactorAuthPresent\" = \"true\" }\n"
+                    ],
+                    [
+                        37,
+                        "        }\n"
+                    ],
+                    [
+                        38,
+                        "      }\n"
+                    ],
+                    [
+                        39,
+                        "    ]\n"
+                    ],
+                    [
+                        40,
+                        "  })\n"
+                    ],
+                    [
+                        41,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t006/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t006/main.tf",
+                "file_line_range": [
+                    25,
+                    41
+                ],
+                "resource": "aws_iam_role.readonly_dev",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMRoleAllowAssumeFromAccount",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-iam-45",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t006/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_355",
+                "bc_check_id": "BC_AWS_IAM_88",
+                "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's resource for restrictable actions",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[1]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        43,
+                        "resource \"aws_iam_policy\" \"readonly_scoped\" {\n"
+                    ],
+                    [
+                        44,
+                        "  name        = \"readonly-scoped\"\n"
+                    ],
+                    [
+                        45,
+                        "  description = \"Read-only access to shared docs and metrics\"\n"
+                    ],
+                    [
+                        46,
+                        "\n"
+                    ],
+                    [
+                        47,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        48,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        49,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        50,
+                        "      {\n"
+                    ],
+                    [
+                        51,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        52,
+                        "        Action   = [\"s3:GetObject\", \"s3:ListBucket\"]\n"
+                    ],
+                    [
+                        53,
+                        "        Resource = [\n"
+                    ],
+                    [
+                        54,
+                        "          \"arn:aws:s3:::acme-shared-docs\",\n"
+                    ],
+                    [
+                        55,
+                        "          \"arn:aws:s3:::acme-shared-docs/*\"\n"
+                    ],
+                    [
+                        56,
+                        "        ]\n"
+                    ],
+                    [
+                        57,
+                        "      },\n"
+                    ],
+                    [
+                        58,
+                        "      {\n"
+                    ],
+                    [
+                        59,
+                        "        Effect = \"Allow\"\n"
+                    ],
+                    [
+                        60,
+                        "        Action = [\n"
+                    ],
+                    [
+                        61,
+                        "          \"cloudwatch:GetMetricStatistics\",\n"
+                    ],
+                    [
+                        62,
+                        "          \"logs:DescribeLogGroups\",\n"
+                    ],
+                    [
+                        63,
+                        "          \"logs:GetLogEvents\"\n"
+                    ],
+                    [
+                        64,
+                        "        ]\n"
+                    ],
+                    [
+                        65,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        66,
+                        "      }\n"
+                    ],
+                    [
+                        67,
+                        "    ]\n"
+                    ],
+                    [
+                        68,
+                        "  })\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t006/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t006/main.tf",
+                "file_line_range": [
+                    43,
+                    69
+                ],
+                "resource": "aws_iam_policy.readonly_scoped",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMStarResourcePolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-355",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t006/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 23,
+        "failed": 2,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 6,
+        "checkov_version": "3.3.26"
+    }
+}

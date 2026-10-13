@@ -1,0 +1,40 @@
+name: media-storage
+runtime: yaml
+description: Media storage for the public gallery app.
+template:
+  configuration:
+    location:
+      type: String
+      default: westeurope
+  variables:
+    rgName: rg-media
+    storageName: acmegallerymedia
+  resources:
+    resourceGroup:
+      type: azure-native:resources:ResourceGroup
+      properties:
+        resourceGroupName: ${rgName}
+        location: ${location}
+    storageAccount:
+      type: azure-native:storage:StorageAccount
+      properties:
+        accountName: ${storageName}
+        resourceGroupName: ${resourceGroup.name}
+        location: ${location}
+        sku:
+          name: Standard_LRS
+        kind: StorageV2
+        supportsHttpsTrafficOnly: false
+        minimumTlsVersion: TLS1_0
+        allowBlobPublicAccess: true
+        publicNetworkAccess: Enabled
+        accessTier: Hot
+    container:
+      type: azure-native:storage:BlobContainer
+      properties:
+        containerName: gallery-images
+        accountName: ${storageAccount.name}
+        resourceGroupName: ${resourceGroup.name}
+        publicAccess: Blob
+  outputs:
+    storageAccountId: ${storageAccount.id}

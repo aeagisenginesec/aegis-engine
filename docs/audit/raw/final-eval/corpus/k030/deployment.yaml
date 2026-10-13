@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments
+  labels:
+    app: payments
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payments
+  template:
+    metadata:
+      labels:
+        app: payments
+    spec:
+      containers:
+        - name: payments
+          image: example/payments:2.3.1
+          env:
+            - name: DB_PASSWORD
+              value: "Sup3rS3cretDb!"
+            - name: STRIPE_SECRET
+              value: "sk_live_abc123XYZ"
+          ports:
+            - containerPort: 8443
