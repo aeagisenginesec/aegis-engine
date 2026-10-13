@@ -320,6 +320,27 @@ func TestGCP017_UnknownQuiet(t *testing.T) {
 	}
 }
 
+// TestGCP017_ForwardingApplianceQuiet: a NAT/router appliance
+// (can_ip_forward = true) needs its public IP to forward traffic;
+// flagging it is a by-design false positive surfaced by the round-3
+// rescore (the parser fix exposed network_interface attributes on NAT
+// fixtures). The forwarding itself stays flagged by the IP-forwarding
+// rule.
+func TestGCP017_ForwardingApplianceQuiet(t *testing.T) {
+	r := res("google_compute_instance", "nat", map[string]ir.Value{
+		"can_ip_forward":    kv(true, 2),
+		"network_interface": nicWithAccess(true),
+	})
+	if len(runRule(instancePublicIP{}, r)) != 0 {
+		t.Fatal("expected 0 findings on forwarding appliance")
+	}
+	r2 := res("google_compute_instance", "i", map[string]ir.Value{
+		"can_ip_forward":    kv(false, 2),
+		"network_interface": nicWithAccess(true),
+	})
+	mustFinding(t, runRule(instancePublicIP{}, r2), "AEGIS-GCP-017")
+}
+
 func TestGCP018_BroadScopeFires(t *testing.T) {
 	r := res("google_compute_instance", "i", map[string]ir.Value{
 		"service_account": blks(3, blk("scopes", strList(4, "https://www.googleapis.com/auth/cloud-platform"))),

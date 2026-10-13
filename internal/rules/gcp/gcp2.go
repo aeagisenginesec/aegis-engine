@@ -580,7 +580,10 @@ func (instancePublicIP) Title() string {
 func (instancePublicIP) Description() string {
 	return "google_compute_instance with an access_config block on a " +
 		"network_interface gets an ephemeral public IP. Remove access_config " +
-		"for internal-only instances."
+		"for internal-only instances. Instances with can_ip_forward = true " +
+		"are explicit forwarding appliances (NAT/router): their public IP " +
+		"is required for that function and is not flagged here (the " +
+		"forwarding itself is covered by the IP-forwarding rule)."
 }
 func (instancePublicIP) Severity() ir.Severity { return ir.SeverityHigh }
 
@@ -589,6 +592,14 @@ func (instancePublicIP) AppliesTo(resType string) bool {
 }
 
 func (s instancePublicIP) Check(r ir.Resource) []ir.Finding {
+	// A NAT/router appliance (can_ip_forward = true) needs its public
+	// IP to forward traffic: flagging it is a by-design false positive
+	// (round-3 rescore: the parser fix surfaced it on NAT fixtures).
+	// The forwarding configuration itself remains flagged by the
+	// IP-forwarding rule.
+	if fwd, _, present, known := getBool(r, "can_ip_forward"); present && known && fwd {
+		return nil
+	}
 	nics, _, present, known := getBlocks(r, "network_interface")
 	if !present || !known {
 		return nil
