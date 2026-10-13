@@ -164,6 +164,34 @@ Resources:
 	}
 }
 
+// TestLambdaUrlPublic: CFN AWS::Lambda::Url with AuthType NONE must map
+// to aws_lambda_function_url with authorization_type NONE so 407 fires;
+// AWS_IAM stays quiet.
+func TestLambdaUrlPublic(t *testing.T) {
+	public := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: arn:aws:lambda:us-east-1:123456789012:function:hook
+      AuthType: NONE
+`
+	if ids := ruleIDs(scanTemplate(t, "template.yaml", public)); !ids["AEGIS-AWS-407"] {
+		t.Fatal("expected AEGIS-AWS-407 on CFN Lambda Url with AuthType NONE")
+	}
+	iam := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: arn:aws:lambda:us-east-1:123456789012:function:hook
+      AuthType: AWS_IAM
+`
+	if ids := ruleIDs(scanTemplate(t, "template.yaml", iam)); ids["AEGIS-AWS-407"] {
+		t.Fatal("407 must stay quiet on CFN Lambda Url with AuthType AWS_IAM")
+	}
+}
+
 func TestIAMRoleWildcard(t *testing.T) {
 	src := `AWSTemplateFormatVersion: '2010-09-09'
 Resources:

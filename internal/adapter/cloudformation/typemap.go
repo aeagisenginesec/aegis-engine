@@ -56,6 +56,7 @@ var cfnToTF = map[string]string{
 	// Lambda / serverless
 	"AWS::Lambda::Function":     "aws_lambda_function",
 	"AWS::Lambda::LayerVersion": "aws_lambda_layer_version",
+	"AWS::Lambda::Url":          "aws_lambda_function_url",
 	"AWS::Serverless::Function": "aws_lambda_function",
 	"AWS::Serverless::Api":      "aws_api_gateway_rest_api",
 

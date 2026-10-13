@@ -235,3 +235,26 @@ func itoa2(n int) string {
 	}
 	return string(b[p:])
 }
+
+func Test036_BuildToolsInFinal(t *testing.T) {
+	// Round-3 gap shape: final image reinstalls build/debug tools.
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM debian:bookworm-slim\nRUN apt-get update && apt-get install -y gcc git curl strace vim\n"), 1)
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM python:3.11.9-slim-bookworm\nRUN apt-get update && apt-get install -y curl git strace\n"), 1)
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM alpine:3.19\nRUN apk add --no-cache gdb make\n"), 1)
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM centos:8\nRUN yum install -y tcpdump\n"), 1)
+	// curl/wget alone are not build tools (curl-pipe is rule 012).
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y curl\n"), 0)
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y python3\n"), 0)
+	// Removal verbs are not installs.
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get purge -y gcc && apt-get autoremove -y\n"), 0)
+}
+
+func Test036_BuildStageQuiet(t *testing.T) {
+	// Tools in a build stage are legitimate; only the final stage fires.
+	rs := multiStage(t, "FROM golang:1.22-bookworm AS build\nRUN apt-get update && apt-get install -y gcc git\nFROM gcr.io/distroless/static-debian12:nonroot\nCOPY --from=build /app/server /app/server\n")
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 stages, got %d", len(rs))
+	}
+	expectFinding(t, buildToolsInFinal{}, rs[0], 0)
+	expectFinding(t, buildToolsInFinal{}, rs[1], 0)
+}

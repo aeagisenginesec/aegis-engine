@@ -14,7 +14,7 @@ import (
 	"aegis/internal/ir"
 )
 
-// extraRules returns rules AEGIS-DOCKER-011 through AEGIS-DOCKER-035.
+// extraRules returns rules AEGIS-DOCKER-011 through AEGIS-DOCKER-036.
 func extraRules() []ir.Rule {
 	return []ir.Rule{
 		argSecrets{},           // AEGIS-DOCKER-011
@@ -42,6 +42,7 @@ func extraRules() []ir.Rule {
 		aptUpgrade{},           // AEGIS-DOCKER-033
 		runSecrets{},           // AEGIS-DOCKER-034
 		addRemoteURL{},         // AEGIS-DOCKER-035
+		buildToolsInFinal{},    // AEGIS-DOCKER-036
 	}
 }
 
@@ -1217,4 +1218,178 @@ func (addRemoteURL) Check(r ir.Resource) []ir.Finding {
 		r, "ADD", span, "ADD fetches remote URL",
 		"curl/wget + checksum verification, then COPY",
 	)}
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-DOCKER-036: build tools installed in final image (high)
+// ---------------------------------------------------------------------------
+
+type buildToolsInFinal struct{}
+
+func (buildToolsInFinal) ID() string { return "AEGIS-DOCKER-036" }
+func (buildToolsInFinal) Title() string {
+	return "Build tools installed in final image"
+}
+func (buildToolsInFinal) Description() string {
+	return "Compilers, debuggers, and version-control clients installed " +
+		"in the final (shipped) image let an attacker who gains code " +
+		"execution compile exploits, inspect memory, or exfiltrate " +
+		"through tooling the application never needs. Install build " +
+		"tools in a build stage only and COPY the artifact into a " +
+		"minimal runtime image. Only the final stage is judged: build " +
+		"stages legitimately install toolchains."
+}
+func (buildToolsInFinal) Severity() ir.Severity         { return ir.SeverityHigh }
+func (buildToolsInFinal) AppliesTo(resType string) bool { return appliesToDocker(resType) }
+
+// buildToolPackages are package names that indicate a compiler,
+// debugger, VCS client, or interactive diagnostic tool. curl/wget
+// are deliberately NOT in this set: fetching tools alone are the
+// curl-pipe-shell concern (012), and flagging every image that
+// installs curl would re-create the build-tools false-positive
+// class on images like the curl-pipe fixture.
+var buildToolPackages = map[string]bool{
+	"gcc": true, "g++": true, "cc": true, "clang": true, "tcc": true,
+	"make": true, "cmake": true, "autoconf": true, "automake": true,
+	"libtool": true, "pkg-config": true, "build-essential": true,
+	"git": true, "git-lfs": true, "subversion": true, "svn": true,
+	"mercurial": true, "hg": true, "cvs": true, "bazaar": true,
+	"strace": true, "ltrace": true, "gdb": true, "lldb": true,
+	"valgrind": true, "vim": true, "nano": true, "emacs": true,
+	"netcat": true, "nc": true, "ncat": true, "nmap": true,
+	"tcpdump": true, "wireshark": true, "tshark": true, "socat": true,
+	"binutils": true, "bison": true, "flex": true,
+	"python3-dev": true, "python-dev": true, "perl": true,
+}
+
+func (buildToolsInFinal) Check(r ir.Resource) []ir.Finding {
+	rule := buildToolsInFinal{}
+	// Only the final stage ships; build stages legitimately install
+	// toolchains. (Absent is_final_stage: pre-existing hand-built
+	// resources default to judged, as before.)
+	if fin, _, present, known := getBool(r, "is_final_stage"); present && known && !fin {
+		return nil
+	}
+	found := map[string]bool{}
+	var span ir.Span
+	for _, c := range runCommands(r) {
+		cmd, ok := c.AsString()
+		if !ok {
+			continue
+		}
+		for _, tool := range installedBuildTools(cmd) {
+			if !found[tool] {
+				found[tool] = true
+				span = c.Span
+			}
+		}
+	}
+	if len(found) == 0 {
+		return nil
+	}
+	tools := make([]string, 0, len(found))
+	for t := range found {
+		tools = append(tools, t)
+	}
+	sortStrings(tools)
+	return []ir.Finding{finding(
+		rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+		r, "RUN", span,
+		"build/debugging tools installed: "+strings.Join(tools, ", "),
+		"install build tools in a build stage only; ship a minimal runtime image",
+	)}
+}
+
+// installedBuildTools extracts build-tool package names installed by one
+// RUN command across the common package managers (apt, apk, yum/dnf,
+// zypper). Only install/add verbs are considered; removals, updates,
+// and other verbs are ignored.
+func installedBuildTools(cmd string) []string {
+	var out []string
+	seen := map[string]bool{}
+	add := func(tok string) {
+		// Strip version pins (gcc=4:12.2) and arch qualifiers (gcc:amd64).
+		if i := strings.IndexAny(tok, "=:"); i >= 0 {
+			tok = tok[:i]
+		}
+		tok = strings.ToLower(strings.TrimSpace(tok))
+		if tok == "" || seen[tok] {
+			return
+		}
+		if buildToolPackages[tok] || versionedCompiler(tok) {
+			seen[tok] = true
+			out = append(out, tok)
+		}
+	}
+	for _, seg := range strings.FieldsFunc(cmd, func(r rune) bool {
+		return r == ';' || r == '&' || r == '|' || r == '\n'
+	}) {
+		toks := strings.Fields(seg)
+		for i := 0; i < len(toks); i++ {
+			var verbIdx int
+			switch toks[i] {
+			case "apt-get", "apt":
+				verbIdx = i + 1
+			case "apk":
+				verbIdx = i + 1
+			case "yum", "dnf", "microdnf", "zypper":
+				verbIdx = i + 1
+			default:
+				continue
+			}
+			if verbIdx >= len(toks) {
+				continue
+			}
+			verb := toks[verbIdx]
+			isInstall := verb == "install" || verb == "add" || verb == "in"
+			if toks[i] == "apk" && verb != "add" {
+				isInstall = false
+			}
+			if toks[i] == "zypper" && verb != "install" && verb != "in" {
+				isInstall = false
+			}
+			if !isInstall {
+				continue
+			}
+			for j := verbIdx + 1; j < len(toks); j++ {
+				t := toks[j]
+				if strings.HasPrefix(t, "-") {
+					continue // flags (and their =values) are not packages
+				}
+				add(t)
+			}
+		}
+	}
+	return out
+}
+
+// versionedCompiler matches versioned compiler packages such as gcc-12,
+// g++-11, or clang-17.
+func versionedCompiler(tok string) bool {
+	for _, prefix := range []string{"gcc-", "g++-", "clang-"} {
+		if !strings.HasPrefix(tok, prefix) {
+			continue
+		}
+		rest := strings.TrimPrefix(tok, prefix)
+		if rest == "" {
+			return false
+		}
+		for _, r := range rest {
+			if (r < '0' || r > '9') && r != '.' {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
+// sortStrings sorts in place (small helper to avoid importing sort for
+// one call site).
+func sortStrings(s []string) {
+	for i := 1; i < len(s); i++ {
+		for j := i; j > 0 && s[j] < s[j-1]; j-- {
+			s[j], s[j-1] = s[j-1], s[j]
+		}
+	}
 }

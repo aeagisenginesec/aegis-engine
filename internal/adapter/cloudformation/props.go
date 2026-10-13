@@ -65,6 +65,9 @@ var propertyRenames = map[string]map[string]string{
 		"PolicyDocument": "policy",
 		"PolicyName":     "name",
 	},
+	"AWS::Lambda::Url": {
+		"AuthType": "authorization_type",
+	},
 	"AWS::EC2::SecurityGroup": {
 		"GroupName":        "name",
 		"GroupDescription": "description",

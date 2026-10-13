@@ -106,6 +106,10 @@ spec:
 	}
 }
 
+// TestNoSecurityContextQuiet: a pod with no securityContext anywhere
+// fires ONLY AEGIS-K8S-027 (the documented exception to the
+// missing-configuration silence), not any of the explicit-misconfig
+// rules.
 func TestNoSecurityContextQuiet(t *testing.T) {
 	src := `apiVersion: v1
 kind: Pod
@@ -122,7 +126,12 @@ spec:
 `
 	fired := runAll(parseK8s(t, src))
 	for id, fs := range fired {
-		t.Errorf("rule %s fired with no securityContext: %v", id, fs)
+		if id != "AEGIS-K8S-027" {
+			t.Errorf("rule %s fired with no securityContext: %v", id, fs)
+		}
+	}
+	if len(fired["AEGIS-K8S-027"]) != 1 {
+		t.Errorf("027 should fire on a pod with no securityContext, got %v", fired)
 	}
 }
 
@@ -239,8 +248,8 @@ func TestAppliesTo(t *testing.T) {
 
 func TestRuleIDs(t *testing.T) {
 	rules := Rules()
-	if len(rules) != 25 {
-		t.Fatalf("got %d rules, want 25", len(rules))
+	if len(rules) != 27 {
+		t.Fatalf("got %d rules, want 27", len(rules))
 	}
 	for i, rule := range rules {
 		want := "AEGIS-K8S-" + zeroPad3(i+1)

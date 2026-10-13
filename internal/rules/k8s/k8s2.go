@@ -1,4 +1,4 @@
-// Package k8s — pod security and RBAC hardening rules (AEGIS-K8S-004..025).
+// Package k8s — pod security and RBAC hardening rules (AEGIS-K8S-004..027).
 //
 // Extends the starter pack with pod security contexts, host namespaces,
 // resource limits, image hygiene, probes, capabilities, seccomp, service
@@ -8,7 +8,8 @@
 // Unknown-value contract (same as k8s.go): a present-but-unresolved value
 // yields NO finding. Explicit misconfigurations are reported; absent
 // securityContext sub-fields stay silent except where the rule documents
-// otherwise (resource limits, probes, ingress TLS, automount).
+// otherwise (resource limits, probes, ingress TLS, automount, and the
+// no-securityContext rule 027).
 package k8s
 
 import (
@@ -18,7 +19,7 @@ import (
 	"aegis/internal/ir"
 )
 
-// K8s2Rules returns Kubernetes hardening rules 004..025 in ID order.
+// K8s2Rules returns Kubernetes hardening rules 004..027 in ID order.
 func K8s2Rules() []ir.Rule {
 	return []ir.Rule{
 		podRunAsNonRootFalse{},  // AEGIS-K8S-004
@@ -43,6 +44,8 @@ func K8s2Rules() []ir.Rule {
 		bindingClusterAdmin{},   // AEGIS-K8S-023
 		stdinTTY{},              // AEGIS-K8S-024
 		configMapSensitive{},    // AEGIS-K8S-025
+		secretInEnv{},           // AEGIS-K8S-026
+		noSecurityContext{},     // AEGIS-K8S-027
 	}
 }
 
@@ -1053,4 +1056,167 @@ func (s configMapSensitive) Check(r ir.Resource) []ir.Finding {
 		}}
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-K8S-026: secret in container env variable (high)
+// ---------------------------------------------------------------------------
+
+type secretInEnv struct{}
+
+func (secretInEnv) ID() string { return "AEGIS-K8S-026" }
+func (secretInEnv) Title() string {
+	return "Secret in env variable"
+}
+func (secretInEnv) Description() string {
+	return "A container env var with a secret-like name carries a literal " +
+		"plaintext value. Env values are visible to anyone with pod " +
+		"read access, appear in logs and debugging output, and are " +
+		"harder to rotate than Secrets. Mount the value via valueFrom / " +
+		"secretKeyRef instead. Secret values are never shown in findings."
+}
+func (secretInEnv) Severity() ir.Severity         { return ir.SeverityHigh }
+func (secretInEnv) AppliesTo(resType string) bool { return appliesTo(resType) }
+
+// secretEnvNameParts match secret-like env names by substring. A bare
+// "key" substring is intentionally NOT used: it would match KEYBOARD
+// and MONKEY. A token equal to "key" (split on _ and -) is checked
+// separately in secretEnvName.
+var secretEnvNameParts = []string{
+	"password", "passwd", "secret", "token", "credential",
+	"private_key", "privatekey", "api_key", "apikey",
+}
+
+// placeholderEnvValues are non-secret placeholders that must not fire.
+var placeholderEnvValues = map[string]bool{
+	"": true, "changeme": true, "placeholder": true, "todo": true,
+	"xxx": true, "redacted": true, "***": true, "null": true,
+	"none": true, "true": true, "false": true,
+}
+
+func secretEnvName(name string) bool {
+	lower := strings.ToLower(name)
+	for _, part := range secretEnvNameParts {
+		if strings.Contains(lower, part) {
+			return true
+		}
+	}
+	// Token "key": ENCRYPTION_KEY is secret, KEYBOARD is not.
+	for _, tok := range strings.FieldsFunc(lower, func(r rune) bool {
+		return r == '_' || r == '-'
+	}) {
+		if tok == "key" || tok == "keys" {
+			return true
+		}
+	}
+	return false
+}
+
+func (s secretInEnv) Check(r ir.Resource) []ir.Finding {
+	var out []ir.Finding
+	for _, ps := range podSpecs(r) {
+		// Walk containers with env: containersOf does not carry env.
+		for _, key := range []string{"containers", "initContainers"} {
+			lv, ok := ps[key].AsList()
+			if !ok {
+				continue
+			}
+			for _, cv := range lv {
+				cm, ok := cv.AsMap()
+				if !ok {
+					continue
+				}
+				name, _ := cm["name"].AsString()
+				env, ok := cm["env"].AsList()
+				if !ok {
+					continue
+				}
+				var leaked []string
+				var span ir.Span
+				for _, ev := range env {
+					em, ok := ev.AsMap()
+					if !ok {
+						continue
+					}
+					ename, _ := em["name"].AsString()
+					if !secretEnvName(ename) {
+						continue
+					}
+					if _, hasValueFrom := em["valueFrom"]; hasValueFrom {
+						continue // secret-sourced: the correct pattern
+					}
+					v, hasValue := em["value"]
+					if !hasValue || !v.Known {
+						continue // absent or unresolved: cannot decide
+					}
+					val, ok := v.AsString()
+					if !ok {
+						continue
+					}
+					if placeholderEnvValues[strings.ToLower(strings.TrimSpace(val))] {
+						continue
+					}
+					if strings.Contains(val, "$(") {
+						continue // runtime expansion, not a literal secret
+					}
+					leaked = append(leaked, ename+"=[REDACTED]")
+					span = v.Span
+				}
+				if len(leaked) == 0 {
+					continue
+				}
+				out = append(out, finding(s, r, container{name: name, span: cv.Span},
+					ir.Value{Span: span}, "containers[].env", strings.Join(leaked, ", "),
+					"valueFrom secretKeyRef"))
+			}
+		}
+	}
+	return out
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-K8S-027: workload defines no securityContext (high)
+// ---------------------------------------------------------------------------
+
+type noSecurityContext struct{}
+
+func (noSecurityContext) ID() string { return "AEGIS-K8S-027" }
+func (noSecurityContext) Title() string {
+	return "Workload defines no security context"
+}
+func (noSecurityContext) Description() string {
+	return "The pod and every container define no securityContext at " +
+		"all, so the pod runs with the runtime's defaults (root, " +
+		"writable root filesystem, unrestricted capabilities). A " +
+		"pod-level securityContext with runAsNonRoot: true, " +
+		"runAsUser, and seccompProfile, or per-container contexts, " +
+		"is the baseline. This is a documented exception to the " +
+		"missing-configuration silence: a wholly absent " +
+		"securityContext is itself the finding."
+}
+func (noSecurityContext) Severity() ir.Severity         { return ir.SeverityHigh }
+func (noSecurityContext) AppliesTo(resType string) bool { return appliesTo(resType) }
+
+func (s noSecurityContext) Check(r ir.Resource) []ir.Finding {
+	var out []ir.Finding
+	for _, ps := range podSpecs(r) {
+		if len(podSecurityContext(ps)) > 0 {
+			continue // pod-level context present
+		}
+		anyContainerSC := false
+		for _, c := range containersOf(ps) {
+			if len(c.sc) > 0 {
+				anyContainerSC = true
+				break
+			}
+		}
+		if anyContainerSC {
+			continue
+		}
+		out = append(out, finding(s, r, container{span: r.Span},
+			ir.Value{Span: r.Span}, "securityContext",
+			"no securityContext at pod or container level",
+			"securityContext with runAsNonRoot: true, runAsUser, seccompProfile"))
+	}
+	return out
 }

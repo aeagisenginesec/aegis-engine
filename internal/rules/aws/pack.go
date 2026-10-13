@@ -76,5 +76,6 @@ func Rules() []ir.Rule {
 	base = append(base, KMSSecretsDeepRules()...)        // 780-799
 	base = append(base, ServicesDeepRules()...)          // 800-824
 	base = append(base, EdgeDeepRules()...)              // 825-849
+	base = append(base, WeakPasswordRules()...)          // AEGIS-AWS-850
 	return base
 }

@@ -519,10 +519,10 @@ var trustedRegistryHosts = map[string]bool{
 // customer projects, so only Google's own namespaces are trusted
 // there, never a bare gcr.io/<project>/ image.
 var firstPartyPrefixes = map[string][]string{
-	"gcr.io":               {"distroless/", "google-containers/"},
-	"registry.k8s.io":     {""},
-	"k8s.gcr.io":          {""},
-	"mcr.microsoft.com":   {""},
+	"gcr.io":            {"distroless/", "google-containers/"},
+	"registry.k8s.io":   {""},
+	"k8s.gcr.io":        {""},
+	"mcr.microsoft.com": {""},
 }
 
 // firstPartyTrusted reports whether host/path is a first-party image:

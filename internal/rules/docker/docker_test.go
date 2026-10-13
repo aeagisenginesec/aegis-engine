@@ -155,8 +155,8 @@ func Test010_FirstPartyRegistries(t *testing.T) {
 
 func TestRules_IDOrder(t *testing.T) {
 	rules := Rules()
-	if len(rules) != 35 {
-		t.Fatalf("want 35 rules, got %d", len(rules))
+	if len(rules) != 36 {
+		t.Fatalf("want 36 rules, got %d", len(rules))
 	}
 	for i, r := range rules {
 		want := "AEGIS-DOCKER-" + pad3(i+1)
