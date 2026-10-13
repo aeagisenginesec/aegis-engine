@@ -28,6 +28,8 @@
 //   - cmd_shell_form / entrypoint_shell_form: bool
 //   - add_remote: bool (ADD fetched a remote http(s) URL)
 //   - total_stages: number of build stages in the file
+//   - is_final_stage: bool (this stage is the last FROM stage, i.e. the
+//     image `docker build` produces by default)
 //
 // Safety: pure line-based parsing, no external deps. Malformed input yields
 // best-effort resources plus a diagnostic, never a panic or an error.
@@ -367,6 +369,15 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 	for i := range out {
 		out[i].Attributes["total_stages"] = ir.Value{
 			Raw:   stageCount,
+			Known: true,
+			Span:  out[i].Span,
+		}
+		// Only the last stage ships: `docker build` produces the final
+		// stage by default. Rules about the runtime image (root user,
+		// installed tools) must scope to it; intermediate build stages
+		// legitimately run as root and install toolchains.
+		out[i].Attributes["is_final_stage"] = ir.Value{
+			Raw:   i == len(out)-1,
 			Known: true,
 			Span:  out[i].Span,
 		}

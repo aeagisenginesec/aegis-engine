@@ -150,6 +150,12 @@ func (noNonRootUser) AppliesTo(resType string) bool { return appliesToDocker(res
 
 func (noNonRootUser) Check(r ir.Resource) []ir.Finding {
 	rule := noNonRootUser{}
+	// Build stages legitimately run as root (installing packages,
+	// compiling); only the final stage ships, so only it is judged.
+	// A single-stage Dockerfile's only stage IS the final stage.
+	if fin, _, present, known := getBool(r, "is_final_stage"); present && known && !fin {
+		return nil
+	}
 	user, uspan, present, known := getString(r, "user")
 	if present && !known {
 		return nil
@@ -488,7 +494,13 @@ func (untrustedRegistry) Description() string {
 	return "Only official Docker Hub library images are trusted by " +
 		"default. Images from other registries or namespaces have " +
 		"unknown provenance and may carry backdoors. Prefer official " +
-		"images or pin digests from registries you control."
+		"images or pin digests from registries you control. " +
+		"First-party registries are trusted: Docker Hub library " +
+		"images, Google's own namespaces on GCR (distroless, " +
+		"google-containers — not arbitrary customer projects on " +
+		"gcr.io), the Kubernetes registries (registry.k8s.io, " +
+		"k8s.gcr.io), and Microsoft Container Registry " +
+		"(mcr.microsoft.com, which hosts only Microsoft images)."
 }
 func (untrustedRegistry) Severity() ir.Severity         { return ir.SeverityMedium }
 func (untrustedRegistry) AppliesTo(resType string) bool { return appliesToDocker(resType) }
@@ -498,6 +510,40 @@ var trustedRegistryHosts = map[string]bool{
 	"docker.io":            true,
 	"index.docker.io":      true,
 	"registry-1.docker.io": true,
+}
+
+// firstPartyPrefixes maps a registry host to the image-path prefixes
+// published by the registry's owner. An empty prefix ("") trusts the
+// whole registry (it hosts only its owner's images). A non-empty
+// prefix trusts only that namespace: gcr.io also hosts arbitrary
+// customer projects, so only Google's own namespaces are trusted
+// there, never a bare gcr.io/<project>/ image.
+var firstPartyPrefixes = map[string][]string{
+	"gcr.io":               {"distroless/", "google-containers/"},
+	"registry.k8s.io":     {""},
+	"k8s.gcr.io":          {""},
+	"mcr.microsoft.com":   {""},
+}
+
+// firstPartyTrusted reports whether host/path is a first-party image:
+// the registry owner publishing under its own namespace.
+func firstPartyTrusted(host, path string) bool {
+	prefixes, ok := firstPartyPrefixes[host]
+	if !ok {
+		// Regional GCR mirrors (us.gcr.io, eu.gcr.io, asia.gcr.io)
+		// publish the same Google namespaces as gcr.io.
+		if strings.HasSuffix(host, ".gcr.io") && host != "marketplace.gcr.io" {
+			prefixes = firstPartyPrefixes["gcr.io"]
+		} else {
+			return false
+		}
+	}
+	for _, p := range prefixes {
+		if p == "" || strings.HasPrefix(path, p) {
+			return true
+		}
+	}
+	return false
 }
 
 func (untrustedRegistry) Check(r ir.Resource) []ir.Finding {
@@ -526,6 +572,9 @@ func (untrustedRegistry) Check(r ir.Resource) []ir.Finding {
 		)}
 	}
 	if trustedRegistryHosts[strings.ToLower(host)] && strings.HasPrefix(path, "library/") {
+		return nil
+	}
+	if firstPartyTrusted(strings.ToLower(host), path) {
 		return nil
 	}
 	return []ir.Finding{finding(

@@ -59,6 +59,35 @@ func Test002_RootUser(t *testing.T) {
 	expectFinding(t, noNonRootUser{}, stage(t, "FROM ubuntu:22.04\nUSER 1001\n"), 0)
 }
 
+// Test002_BuildStageRootQuiet: a multi-stage build's build stage runs
+// as root legitimately; only the final stage is judged. (Round-3 FP:
+// DOCKER-002 fired on build stages that never run.)
+func Test002_BuildStageRootQuiet(t *testing.T) {
+	src := "FROM golang:1.22-bookworm AS build\nWORKDIR /src\nCOPY . .\nRUN go build -o /app/server .\nFROM debian:bookworm-slim\nCOPY --from=build /app/server /app/server\nRUN useradd -m app\nUSER app\nCMD [\"/app/server\"]\n"
+	rs, _, err := dockerfile.New().Parse("Dockerfile", []byte(src))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 stages, got %d", len(rs))
+	}
+	if got := runRule(noNonRootUser{}, rs[0]); len(got) != 0 {
+		t.Fatalf("build stage must stay quiet for 002, got %+v", got)
+	}
+	if got := runRule(noNonRootUser{}, rs[1]); len(got) != 0 {
+		t.Fatalf("final stage with USER app must stay quiet, got %+v", got)
+	}
+	// A final stage running as root still fires.
+	src2 := "FROM golang:1.22-bookworm AS build\nRUN go build -o /app/server .\nFROM debian:bookworm-slim\nCOPY --from=build /app/server /app/server\nCMD [\"/app/server\"]\n"
+	rs2, _, err := dockerfile.New().Parse("Dockerfile", []byte(src2))
+	if err != nil {
+		t.Fatalf("parse error: %v", err)
+	}
+	if got := runRule(noNonRootUser{}, rs2[1]); len(got) != 1 {
+		t.Fatalf("final stage without USER must fire 002, got %+v", got)
+	}
+}
+
 func Test003_EnvSecrets(t *testing.T) {
 	expectFinding(t, envSecrets{}, stage(t, "FROM ubuntu:22.04\nENV DB_PASSWORD=s3cr3t\n"), 1)
 	expectFinding(t, envSecrets{}, stage(t, "FROM ubuntu:22.04\nENV API_KEY=\"abc123\" TOKEN=$VAULT_TOKEN\n"), 1) // only API_KEY (TOKEN is expansion)
@@ -107,6 +136,21 @@ func Test010_UntrustedRegistry(t *testing.T) {
 	expectFinding(t, untrustedRegistry{}, stage(t, "FROM gcr.io/proj/app:1.0\n"), 1)
 	expectFinding(t, untrustedRegistry{}, stage(t, "FROM registry.example.com/app:1.0\n"), 1)
 	expectFinding(t, untrustedRegistry{}, stage(t, "FROM gcr.io/proj/app@sha256:abc123\n"), 0) // digest-pinned
+}
+
+// Test010_FirstPartyRegistries: Google's own GCR namespaces, the
+// Kubernetes registries, and MCR are first-party and trusted; arbitrary
+// customer projects on gcr.io stay untrusted. (Round-3 FP: gcr.io
+// distroless images misclassified as untrusted.)
+func Test010_FirstPartyRegistries(t *testing.T) {
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM gcr.io/distroless/static-debian12:nonroot\n"), 0)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM gcr.io/google-containers/pause:3.9\n"), 0)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM eu.gcr.io/distroless/static-debian12:nonroot\n"), 0)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM registry.k8s.io/pause:3.9\n"), 0)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM k8s.gcr.io/pause:3.9\n"), 0)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM mcr.microsoft.com/dotnet/aspnet:8.0\n"), 0)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM gcr.io/evil-corp/app:1.0\n"), 1)
+	expectFinding(t, untrustedRegistry{}, stage(t, "FROM marketplace.gcr.io/google/distroless:1.0\n"), 1)
 }
 
 func TestRules_IDOrder(t *testing.T) {
@@ -167,7 +211,9 @@ ENV DB_PASSWORD=s3cr3t
 			t.Errorf("expected %s to fire on runtime stage", want)
 		}
 	}
-	// Builder stage: only 002 (no USER) and 005 (no healthcheck) should fire.
+	// Builder stage: only 005 (no healthcheck) should fire. 002 (runs
+	// as root) does NOT fire on build stages: they legitimately run as
+	// root and never ship (round-3 FP fix).
 	builder := rs[0]
 	bfired := map[string]bool{}
 	for _, rule := range Rules() {
@@ -175,8 +221,11 @@ ENV DB_PASSWORD=s3cr3t
 			bfired[f.RuleID] = true
 		}
 	}
-	if !bfired["AEGIS-DOCKER-002"] || !bfired["AEGIS-DOCKER-005"] {
-		t.Error("builder stage should fire 002 and 005")
+	if bfired["AEGIS-DOCKER-002"] {
+		t.Error("builder stage must not fire 002 (build stages run as root by design)")
+	}
+	if !bfired["AEGIS-DOCKER-005"] {
+		t.Error("builder stage should fire 005")
 	}
 	if bfired["AEGIS-DOCKER-001"] {
 		t.Error("builder uses pinned golang:1.21, 001 should not fire")
