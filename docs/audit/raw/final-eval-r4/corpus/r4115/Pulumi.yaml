@@ -1,0 +1,29 @@
+name: r4115-stack
+runtime: yaml
+description: Pulumi stack (toplevel layout)
+resources:
+    webServer:
+      type: aws:ec2:Instance
+      properties:
+        ami: ami-0c55b159cbfafe1f0
+        instanceType: t3.micro
+        tags:
+          Name: web-e68be9
+
+    webNsg:
+      type: azure-native:network:NetworkSecurityGroup
+      properties:
+        networkSecurityGroupName: web-e68be9
+        resourceGroupName: rg-web
+        location: westeurope
+        securityRules:
+          - name: allow-ssh
+            properties:
+              priority: 100
+              direction: Inbound
+              access: Allow
+              protocol: Tcp
+              sourcePortRange: "*"
+              destinationPortRange: "22"
+              sourceAddressPrefix: "*"
+              destinationAddressPrefix: "*"

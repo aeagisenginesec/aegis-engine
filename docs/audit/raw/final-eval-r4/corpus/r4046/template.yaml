@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: SG via intrinsics
+Resources:
+  BastionSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: bastion access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Sub "0.0.0.0/0"
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: !Ref WorldCidr
+Parameters:
+  WorldCidr:
+    Type: String
+    Default: 0.0.0.0/0
+
+  ProdDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: "15.4"
+      DBInstanceClass: db.t3.medium
+      DBInstanceIdentifier: prod-58180b
+      AllocatedStorage: "100"
+      StorageEncrypted: true
+      PubliclyAccessible: false
+      MasterUsername: appadmin
+      MasterUserPassword: Str0ng-58180b-Db!
+      BackupRetentionPeriod: 14
+      DeletionProtection: true
+      MultiAZ: true

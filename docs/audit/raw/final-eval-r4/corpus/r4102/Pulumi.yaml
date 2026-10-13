@@ -1,0 +1,36 @@
+name: r4102-stack
+runtime: yaml
+description: Pulumi stack (template layout)
+template:
+  resources:
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: kv-f641fc
+        resourceGroupName: rg-kv
+        location: westeurope
+        properties:
+          sku:
+            family: A
+            name: standard
+          tenantId: 00000000-0000-0000-0000-000000000000
+          enablePurgeProtection: true
+          enableSoftDelete: true
+
+    webNsg:
+      type: azure-native:network:NetworkSecurityGroup
+      properties:
+        networkSecurityGroupName: web-f641fc
+        resourceGroupName: rg-web
+        location: westeurope
+        securityRules:
+          - name: allow-ssh
+            properties:
+              priority: 100
+              direction: Inbound
+              access: Allow
+              protocol: Tcp
+              sourcePortRange: "*"
+              destinationPortRange: "22"
+              sourceAddressPrefix: "*"
+              destinationAddressPrefix: "*"

@@ -1,0 +1,265 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a13588-c189-776f-aeee-1f6f22a934ee",
+  "CreatedAt": "2026-10-13T13:51:57.321490296Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4075",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "azuredeploy.json",
+      "Class": "config",
+      "Type": "azure-arm",
+      "MisconfSummary": {
+        "Successes": 12,
+        "Failures": 2
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Azure ARM Security Check",
+          "ID": "AZU-0013",
+          "Title": "Key vault should have the network acl block specified",
+          "Description": "Network ACLs allow you to reduce your exposure to risk by limiting what can access your key vault.\n\nThe default action of the Network ACL should be set to deny for when IPs are not matched. Azure services can be allowed to bypass.\n",
+          "Message": "Vault network ACL does not block access by default.",
+          "Namespace": "builtin.azure.keyvault.azure0013",
+          "Query": "data.builtin.azure.keyvault.azure0013.deny",
+          "Resolution": "Set a network ACL for the key vault",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0013",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/key-vault/general/network-security",
+            "https://avd.aquasec.com/misconfig/azu-0013"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Azure",
+            "Service": "keyvault",
+            "StartLine": 28,
+            "EndLine": 43,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "{",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "{",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "    {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "      \"type\": \"Microsoft.KeyVault/vaults\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"type\"\u001b[0m: \u001b[38;5;37m\"Microsoft.KeyVault/vaults\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "      \"apiVersion\": \"2023-07-01\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"apiVersion\"\u001b[0m: \u001b[38;5;37m\"2023-07-01\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "      \"name\": \"kv-6e2ff0\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"name\"\u001b[0m: \u001b[38;5;37m\"kv-6e2ff0\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "      \"location\": \"westeurope\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"location\"\u001b[0m: \u001b[38;5;37m\"westeurope\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "      \"properties\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"properties\"\u001b[0m: {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "        \"sku\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"sku\"\u001b[0m: {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 35,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 45
+                }
+              },
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {}
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Azure ARM Security Check",
+          "ID": "AZU-0016",
+          "Title": "Key vault should have purge protection enabled",
+          "Description": "Purge protection is an optional Key Vault behavior and is not enabled by default.\n\nPurge protection can only be enabled once soft-delete is enabled. It can be turned on via CLI or PowerShell.\n",
+          "Message": "Vault does not have purge protection enabled.",
+          "Namespace": "builtin.azure.keyvault.azure0016",
+          "Query": "data.builtin.azure.keyvault.azure0016.deny",
+          "Resolution": "Enable purge protection for key vaults",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0016",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/key-vault/general/soft-delete-overview#purge-protection",
+            "https://avd.aquasec.com/misconfig/azu-0016"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Azure",
+            "Service": "keyvault",
+            "StartLine": 39,
+            "EndLine": 39,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "{",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "{",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 39,
+                  "Content": "        \"enablePurgeProtection\": false,",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"enablePurgeProtection\"\u001b[0m: \u001b[38;5;166mfalse\u001b[0m,",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 44,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 45,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "resources[1].properties",
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 33,
+                  "EndLine": 42
+                }
+              },
+              {
+                "Resource": "resources[1]",
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 28,
+                  "EndLine": 43
+                }
+              },
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 45
+                }
+              },
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

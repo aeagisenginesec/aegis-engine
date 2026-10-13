@@ -1,0 +1,25 @@
+name: r4117-stack
+runtime: yaml
+description: Pulumi stack (toplevel layout)
+resources:
+    jobsQueue:
+      type: aws:sqs:Queue
+      properties:
+        name: jobs-1c4cbd
+        sqsManagedSseEnabled: false
+
+    bastionSg:
+      type: aws:ec2:SecurityGroup
+      properties:
+        name: bastion-1c4cbd
+        description: bastion access
+        ingress:
+          - protocol: tcp
+            fromPort: 22
+            toPort: 22
+            cidrBlocks: ["0.0.0.0/0"]
+        egress:
+          - protocol: "-1"
+            fromPort: 0
+            toPort: 0
+            cidrBlocks: ["0.0.0.0/0"]

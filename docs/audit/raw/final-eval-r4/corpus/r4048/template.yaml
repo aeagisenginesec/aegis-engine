@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: EKS cluster
+Resources:
+  MainCluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: main-303c39
+      RoleArn: arn:aws:iam::123456789012:role/eks-cluster
+      ResourcesVpcConfig:
+        SubnetIds: [subnet-aaa, subnet-bbb]
+        EndpointPublicAccess: true
+
+  Deployer:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: deployer-303c39
+  DeployerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: deployer-policy
+      Users: [!Ref Deployer]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Resource: "*"

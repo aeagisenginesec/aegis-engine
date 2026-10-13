@@ -1,0 +1,33 @@
+name: r4107-stack
+runtime: yaml
+description: Pulumi stack (template layout)
+template:
+  resources:
+    dataAccount:
+      type: azure-native:storage:StorageAccount
+      properties:
+        accountName: data2f1dc0
+        resourceGroupName: rg-data
+        location: westeurope
+        kind: StorageV2
+        sku:
+          name: Standard_LRS
+        allowBlobPublicAccess: false
+        minimumTlsVersion: TLS1_2
+        supportsHttpsTrafficOnly: true
+
+    bastionSg:
+      type: aws:ec2:SecurityGroup
+      properties:
+        name: bastion-2f1dc0
+        description: bastion access
+        ingress:
+          - protocol: tcp
+            fromPort: 22
+            toPort: 22
+            cidrBlocks: ["0.0.0.0/0"]
+        egress:
+          - protocol: "-1"
+            fromPort: 0
+            toPort: 0
+            cidrBlocks: ["0.0.0.0/0"]

@@ -1,0 +1,23 @@
+name: r4112-stack
+runtime: yaml
+description: Pulumi stack (toplevel layout)
+resources:
+    siteBucket:
+      type: aws:s3:Bucket
+      properties:
+        bucket: site-214024
+        acl: private
+
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: kv-214024
+        resourceGroupName: rg-kv
+        location: westeurope
+        properties:
+          sku:
+            family: A
+            name: standard
+          tenantId: 00000000-0000-0000-0000-000000000000
+          enablePurgeProtection: true
+          enableSoftDelete: true

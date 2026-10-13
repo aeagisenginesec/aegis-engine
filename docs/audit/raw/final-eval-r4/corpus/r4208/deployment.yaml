@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-77b4d2
+  labels:
+    app: api-77b4d2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-77b4d2
+  template:
+    metadata:
+      labels:
+        app: api-77b4d2
+    spec:
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          securityContext:
+            privileged: true
+            capabilities:
+              add: [SYS_ADMIN, NET_ADMIN]

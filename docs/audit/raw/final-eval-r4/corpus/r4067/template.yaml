@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: VPC without flow log
+Resources:
+  MainVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+    Description: Database password
+Resources:
+  AppDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: app-42776f
+      AllocatedStorage: "20"
+      StorageEncrypted: true
+      MasterUsername: appadmin
+      MasterUserPassword: !Ref DbPassword

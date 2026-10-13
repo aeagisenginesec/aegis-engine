@@ -1,0 +1,88 @@
+{
+    "check_type": "dockerfile",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_DOCKER_2",
+                "bc_check_id": "BC_DKR_2",
+                "check_name": "Ensure that HEALTHCHECK instructions have been added to container images",
+                "check_result": {
+                    "result": "FAILED",
+                    "results_configuration": null
+                },
+                "code_block": [
+                    [
+                        1,
+                        "# R4 project r4125\n"
+                    ],
+                    [
+                        2,
+                        "FROM golang:1.22-bookworm AS build\n"
+                    ],
+                    [
+                        3,
+                        "WORKDIR /src\n"
+                    ],
+                    [
+                        4,
+                        "COPY . .\n"
+                    ],
+                    [
+                        5,
+                        "RUN CGO_ENABLED=0 go build -o /app/server .\n"
+                    ],
+                    [
+                        6,
+                        "FROM gcr.io/distroless/static-debian12:nonroot\n"
+                    ],
+                    [
+                        7,
+                        "COPY --from=build /app/server /app/server\n"
+                    ],
+                    [
+                        8,
+                        "USER nonroot\n"
+                    ],
+                    [
+                        9,
+                        "CMD [\"/app/server\"]"
+                    ]
+                ],
+                "file_path": "/Dockerfile",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4125/Dockerfile",
+                "repo_file_path": "/corpus/r4125/Dockerfile",
+                "file_line_range": [
+                    1,
+                    9
+                ],
+                "resource": "/Dockerfile.",
+                "evaluations": null,
+                "check_class": "checkov.dockerfile.checks.HealthcheckExists",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-that-healthcheck-instructions-have-been-added-to-container-images",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 24,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 1,
+        "checkov_version": "3.3.26"
+    }
+}

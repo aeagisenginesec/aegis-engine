@@ -12,6 +12,8 @@
 //  5. report     - report.WriteJSON to io.Discard
 //
 // Usage: stagebreak <target> [iterations]
+//go:build ignore
+
 package main
 
 import (

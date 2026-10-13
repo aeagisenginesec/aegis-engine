@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Production database
+Resources:
+  ProdDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: "15.4"
+      DBInstanceClass: db.t3.medium
+      DBInstanceIdentifier: prod-bef4f7
+      AllocatedStorage: "100"
+      StorageEncrypted: true
+      PubliclyAccessible: false
+      MasterUsername: appadmin
+      MasterUserPassword: Str0ng-bef4f7-Db!
+      BackupRetentionPeriod: 14
+      DeletionProtection: true
+      MultiAZ: true
+
+  WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t3.micro
+      MetadataOptions:
+        HttpTokens: required
+        HttpEndpoint: enabled
+      Tags: [{Key: Name, Value: web-bef4f7}]

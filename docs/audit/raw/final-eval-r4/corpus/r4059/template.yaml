@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: App stack
+Resources:
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+    Description: Database password
+Resources:
+  AppDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: app-a7e13c
+      AllocatedStorage: "20"
+      StorageEncrypted: true
+      MasterUsername: appadmin
+      MasterUserPassword: !Ref DbPassword
+
+  DataKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: data-key-a7e13c
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: "*"

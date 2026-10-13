@@ -1,0 +1,1201 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_273",
+                "bc_check_id": "BC_AWS_IAM_77",
+                "check_name": "Ensure access is controlled through SSO and not AWS IAM defined users",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_iam_user\" \"deployer\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"deployer-852c2d\"\n"
+                    ],
+                    [
+                        3,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    1,
+                    3
+                ],
+                "resource": "aws_iam_user.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMUserNotUsedForAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-273",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_62",
+                "bc_check_id": "BC_AWS_IAM_47",
+                "check_name": "Ensure IAM policies that allow full \"*-*\" administrative privileges are not created",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy",
+                        "inline_policy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMAdminPolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-iam-45",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_287",
+                "bc_check_id": "BC_AWS_IAM_82",
+                "check_name": "Ensure IAM policies does not allow credentials exposure",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMCredentialsExposure",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-287",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_288",
+                "bc_check_id": "BC_AWS_IAM_83",
+                "check_name": "Ensure IAM policies does not allow data exfiltration",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMDataExfiltration",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-288",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_289",
+                "bc_check_id": "BC_AWS_IAM_84",
+                "check_name": "Ensure IAM policies does not allow permissions management / resource exposure without constraints",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMPermissionsManagement",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-289",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_40",
+                "bc_check_id": "BC_AWS_IAM_16",
+                "check_name": "Ensure IAM policies are attached only to groups or roles (Reducing access management complexity may in-turn reduce opportunity for a principal to inadvertently receive or retain excessive privileges.)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "user"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMPolicyAttachedToGroupOrRoles",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/iam-16-iam-policy-privileges-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_286",
+                "bc_check_id": "BC_AWS_IAM_81",
+                "check_name": "Ensure IAM policies does not allow privilege escalation",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMPrivilegeEscalation",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-286",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_63",
+                "bc_check_id": "BC_AWS_IAM_48",
+                "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's actions",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy",
+                        "inline_policy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMStarActionPolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/iam-48",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_355",
+                "bc_check_id": "BC_AWS_IAM_88",
+                "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's resource for restrictable actions",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMStarResourcePolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-355",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_290",
+                "bc_check_id": "BC_AWS_IAM_85",
+                "check_name": "Ensure IAM policies does not allow write access without constraints",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMWriteAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-290",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_273",
+                "bc_check_id": "BC_AWS_IAM_77",
+                "check_name": "Ensure access is controlled through SSO and not AWS IAM defined users",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        17,
+                        "resource \"aws_iam_user\" \"ops\" {\n"
+                    ],
+                    [
+                        18,
+                        "  name = \"ops-852c2d\"\n"
+                    ],
+                    [
+                        19,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    17,
+                    19
+                ],
+                "resource": "aws_iam_user.ops",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMUserNotUsedForAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-273",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_274",
+                "bc_check_id": "BC_AWS_IAM_78",
+                "check_name": "Disallow IAM roles, users, and groups from using the AWS AdministratorAccess policy",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy_arn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        21,
+                        "resource \"aws_iam_user_policy_attachment\" \"ops\" {\n"
+                    ],
+                    [
+                        22,
+                        "  user = aws_iam_user.ops.name\n"
+                    ],
+                    [
+                        23,
+                        "  policy_arn = \"arn:aws:iam::aws:policy/AdministratorAccess\"\n"
+                    ],
+                    [
+                        24,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    21,
+                    24
+                ],
+                "resource": "aws_iam_user_policy_attachment.ops",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMManagedAdminPolicy",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-274",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.ops",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_40",
+                "bc_check_id": "BC_AWS_IAM_16",
+                "check_name": "Ensure IAM policies are attached only to groups or roles (Reducing access management complexity may in-turn reduce opportunity for a principal to inadvertently receive or retain excessive privileges.)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "user"
+                    ]
+                },
+                "code_block": [
+                    [
+                        21,
+                        "resource \"aws_iam_user_policy_attachment\" \"ops\" {\n"
+                    ],
+                    [
+                        22,
+                        "  user = aws_iam_user.ops.name\n"
+                    ],
+                    [
+                        23,
+                        "  policy_arn = \"arn:aws:iam::aws:policy/AdministratorAccess\"\n"
+                    ],
+                    [
+                        24,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    21,
+                    24
+                ],
+                "resource": "aws_iam_user_policy_attachment.ops",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMPolicyAttachedToGroupOrRoles",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/iam-16-iam-policy-privileges-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.ops",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AWS_40",
+                "bc_check_id": "BC_AWS_IAM_73",
+                "check_name": "Ensure AWS IAM policy does not allow full IAM privileges",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_iam_user_policy": {
+                            "deployer": {
+                                "__end_line__": 15,
+                                "__start_line__": 5,
+                                "policy": [
+                                    {
+                                        "Version": "2012-10-17",
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Action": "*",
+                                                "Resource": "*"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "user": [
+                                    "deployer-852c2d"
+                                ],
+                                "__address__": "aws_iam_user_policy.deployer"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "statement[?(@/effect == Allow)]/actions[*]",
+                        "policy/Statement[?(@/Effect == Allow)]/Action[*]",
+                        "inline_policy/Statement[?(@/Effect == Allow)]/Action[*]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_iam_user_policy\" \"deployer\" {\n"
+                    ],
+                    [
+                        6,
+                        "  user = aws_iam_user.deployer.name\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Action = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Resource = \"*\"\n"
+                    ],
+                    [
+                        13,
+                        "    }]\n"
+                    ],
+                    [
+                        14,
+                        "  })\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "repo_file_path": "/corpus/r4038/main.tf",
+                "file_line_range": [
+                    5,
+                    15
+                ],
+                "resource": "aws_iam_user_policy.deployer",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-2-40",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.deployer",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4038/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 3,
+        "failed": 14,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 4,
+        "checkov_version": "3.3.26"
+    }
+}

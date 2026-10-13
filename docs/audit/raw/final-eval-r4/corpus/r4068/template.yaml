@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Ops user
+Resources:
+  OpsUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: ops-bcc168
+  OpsAdmin:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: ops-admin
+      Users: [!Ref OpsUser]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Resource: "*"
+
+  WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t3.micro
+      Tags: [{Key: Name, Value: web-bcc168}]

@@ -1,0 +1,124 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_10",
+                "bc_check_id": "BC_AZR_NETWORKING_3",
+                "check_name": "Ensure that SSH access is restricted from the internet",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "security_rule/[0]/access",
+                        "security_rule/[0]/direction",
+                        "security_rule/[0]/protocol",
+                        "security_rule/[0]/destination_port_range",
+                        "security_rule/[0]/destination_port_ranges",
+                        "security_rule/[0]/source_address_prefix",
+                        "security_rule/[0]/source_address_prefixes"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"azurerm_network_security_group\" \"web\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"web-33148d\"\n"
+                    ],
+                    [
+                        3,
+                        "  location = \"westeurope\"\n"
+                    ],
+                    [
+                        4,
+                        "  resource_group_name = \"rg-web\"\n"
+                    ],
+                    [
+                        5,
+                        "  security_rule {\n"
+                    ],
+                    [
+                        6,
+                        "    name = \"ssh\"\n"
+                    ],
+                    [
+                        7,
+                        "    priority = 100\n"
+                    ],
+                    [
+                        8,
+                        "    direction = \"Inbound\"\n"
+                    ],
+                    [
+                        9,
+                        "    access = \"Allow\"\n"
+                    ],
+                    [
+                        10,
+                        "    protocol = \"Tcp\"\n"
+                    ],
+                    [
+                        11,
+                        "    source_port_range = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "    destination_port_range = \"22\"\n"
+                    ],
+                    [
+                        13,
+                        "    source_address_prefix = \"*\"\n"
+                    ],
+                    [
+                        14,
+                        "    destination_address_prefix = \"*\"\n"
+                    ],
+                    [
+                        15,
+                        "  }\n"
+                    ],
+                    [
+                        16,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4012/main.tf",
+                "repo_file_path": "/corpus/r4012/main.tf",
+                "file_line_range": [
+                    1,
+                    16
+                ],
+                "resource": "azurerm_network_security_group.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.NSGRuleSSHAccessRestricted",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-3",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4012/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 1,
+        "checkov_version": "3.3.26"
+    }
+}

@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Webhook function
+Resources:
+  HookFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: hook-e7418b
+      Role: arn:aws:iam::123456789012:role/lambda-exec
+      Runtime: python3.11
+      Handler: index.handler
+      Code:
+        ZipFile: "def handler(e, c): return {}"
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt HookFn.Arn
+      AuthType: NONE
+
+  ProdDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: "15.4"
+      DBInstanceClass: db.t3.medium
+      DBInstanceIdentifier: prod-e7418b
+      AllocatedStorage: "100"
+      StorageEncrypted: true
+      PubliclyAccessible: false
+      MasterUsername: appadmin
+      MasterUserPassword: Str0ng-e7418b-Db!
+      BackupRetentionPeriod: 14
+      DeletionProtection: true
+      MultiAZ: true
