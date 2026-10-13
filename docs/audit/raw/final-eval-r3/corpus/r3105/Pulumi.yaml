@@ -1,0 +1,26 @@
+name: r3105-stack
+runtime: yaml
+description: Pulumi stack (template layout)
+template:
+  resources:
+    bastionSg:
+      type: aws:ec2:SecurityGroup
+      properties:
+        name: bastion-f5f9f8
+        description: bastion access
+        ingress:
+          - protocol: tcp
+            fromPort: 22
+            toPort: 22
+            cidrBlocks: ["203.0.113.20/32"]
+        egress:
+          - protocol: "-1"
+            fromPort: 0
+            toPort: 0
+            cidrBlocks: ["0.0.0.0/0"]
+
+    siteBucket:
+      type: aws:s3:Bucket
+      properties:
+        bucket: site-f5f9f8
+        acl: private

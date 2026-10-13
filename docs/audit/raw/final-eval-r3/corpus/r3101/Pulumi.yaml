@@ -1,0 +1,22 @@
+name: r3101-stack
+runtime: yaml
+description: Pulumi stack (template layout)
+template:
+  resources:
+    webNsg:
+      type: azure-native:network:NetworkSecurityGroup
+      properties:
+        networkSecurityGroupName: web-70244a
+        resourceGroupName: rg-web
+        location: westeurope
+        securityRules:
+          - name: allow-ssh
+            properties:
+              priority: 100
+              direction: Inbound
+              access: Allow
+              protocol: Tcp
+              sourcePortRange: "*"
+              destinationPortRange: "22"
+              sourceAddressPrefix: "*"
+              destinationAddressPrefix: "*"

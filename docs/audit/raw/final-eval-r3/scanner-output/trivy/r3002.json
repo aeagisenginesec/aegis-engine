@@ -1,0 +1,219 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a13314-5bc8-7b77-b356-7b39f20daf9f",
+  "CreatedAt": "2026-10-13T02:25:34.664755908Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3002",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 58,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 2
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0047",
+          "Title": "A security group rule should not allow unrestricted ingress from any IP address.",
+          "Description": "Opening up ports to allow connections from the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.\n",
+          "Message": "Security group rule allows unrestricted ingress from any IP address.",
+          "Namespace": "builtin.azure.network.azure0047",
+          "Query": "data.builtin.azure.network.azure0047.deny",
+          "Resolution": "Set a more restrictive cidr range",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0047",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices",
+            "https://avd.aquasec.com/misconfig/azu-0047"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_network_security_group.web",
+            "Provider": "Azure",
+            "Service": "network",
+            "StartLine": 13,
+            "EndLine": 13,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"azurerm_network_security_group\" \"web\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_network_security_group\"\u001b[0m \u001b[38;5;37m\"web\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "    source_address_prefix = \"*\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245msource_address_prefix\u001b[0m = \u001b[38;5;37m\"*\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 15,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "security_rule",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 5,
+                  "EndLine": 15
+                }
+              },
+              {
+                "Resource": "azurerm_network_security_group.web",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 16
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0050",
+          "Title": "Security group should not allow unrestricted ingress to SSH port from any IP address.",
+          "Description": "SSH access can be configured on either the network security group or in the network security group rule.\nSSH access should not be permitted from the internet (*, 0.0.0.0, /0, internet, any)\n",
+          "Message": "Security group rule allows unrestricted ingress to SSH port from any IP address.",
+          "Namespace": "builtin.azure.network.azure0050",
+          "Query": "data.builtin.azure.network.azure0050.deny",
+          "Resolution": "Block port 22 access from the internet",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0050",
+          "References": [
+            "https://avd.aquasec.com/misconfig/azu-0050"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_network_security_group.web",
+            "Provider": "Azure",
+            "Service": "network",
+            "StartLine": 13,
+            "EndLine": 13,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"azurerm_network_security_group\" \"web\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_network_security_group\"\u001b[0m \u001b[38;5;37m\"web\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "    source_address_prefix = \"*\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245msource_address_prefix\u001b[0m = \u001b[38;5;37m\"*\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 15,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "security_rule",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 5,
+                  "EndLine": 15
+                }
+              },
+              {
+                "Resource": "azurerm_network_security_group.web",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 16
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

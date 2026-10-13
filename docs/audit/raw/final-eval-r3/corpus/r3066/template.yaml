@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: EKS cluster
+Resources:
+  MainCluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: main-8e53c2
+      RoleArn: arn:aws:iam::123456789012:role/eks-cluster
+      ResourcesVpcConfig:
+        SubnetIds: [subnet-aaa, subnet-bbb]
+        EndpointPublicAccess: true
+
+  LogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: logs-8e53c2
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true

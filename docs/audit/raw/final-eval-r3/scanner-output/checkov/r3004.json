@@ -1,0 +1,467 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security group and rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]",
+                        "ingress/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_security_group\" \"bastion\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"bastion-3b03e8\"\n"
+                    ],
+                    [
+                        3,
+                        "  ingress {\n"
+                    ],
+                    [
+                        4,
+                        "    from_port = 22\n"
+                    ],
+                    [
+                        5,
+                        "    to_port = 22\n"
+                    ],
+                    [
+                        6,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        7,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  egress {\n"
+                    ],
+                    [
+                        10,
+                        "    from_port = 0\n"
+                    ],
+                    [
+                        11,
+                        "    to_port = 0\n"
+                    ],
+                    [
+                        12,
+                        "    protocol = \"-1\"\n"
+                    ],
+                    [
+                        13,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        14,
+                        "  }\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3004/main.tf",
+                "repo_file_path": "/corpus/r3004/main.tf",
+                "file_line_range": [
+                    1,
+                    15
+                ],
+                "resource": "aws_security_group.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3004/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_382",
+                "bc_check_id": "BC_AWS_IAM_93",
+                "check_name": "Ensure no security groups allow egress from 0.0.0.0:0 to port -1",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]/from_port",
+                        "egress/[0]/to_port",
+                        "egress/[0]/cidr_blocks",
+                        "egress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_security_group\" \"bastion\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"bastion-3b03e8\"\n"
+                    ],
+                    [
+                        3,
+                        "  ingress {\n"
+                    ],
+                    [
+                        4,
+                        "    from_port = 22\n"
+                    ],
+                    [
+                        5,
+                        "    to_port = 22\n"
+                    ],
+                    [
+                        6,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        7,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  egress {\n"
+                    ],
+                    [
+                        10,
+                        "    from_port = 0\n"
+                    ],
+                    [
+                        11,
+                        "    to_port = 0\n"
+                    ],
+                    [
+                        12,
+                        "    protocol = \"-1\"\n"
+                    ],
+                    [
+                        13,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        14,
+                        "  }\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3004/main.tf",
+                "repo_file_path": "/corpus/r3004/main.tf",
+                "file_line_range": [
+                    1,
+                    15
+                ],
+                "resource": "aws_security_group.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedEgressAny",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3004/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_24",
+                "bc_check_id": "BC_AWS_NETWORKING_1",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ingress/[0]/from_port",
+                        "ingress/[0]/to_port",
+                        "ingress/[0]/cidr_blocks",
+                        "ingress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_security_group\" \"bastion\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"bastion-3b03e8\"\n"
+                    ],
+                    [
+                        3,
+                        "  ingress {\n"
+                    ],
+                    [
+                        4,
+                        "    from_port = 22\n"
+                    ],
+                    [
+                        5,
+                        "    to_port = 22\n"
+                    ],
+                    [
+                        6,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        7,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  egress {\n"
+                    ],
+                    [
+                        10,
+                        "    from_port = 0\n"
+                    ],
+                    [
+                        11,
+                        "    to_port = 0\n"
+                    ],
+                    [
+                        12,
+                        "    protocol = \"-1\"\n"
+                    ],
+                    [
+                        13,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        14,
+                        "  }\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3004/main.tf",
+                "repo_file_path": "/corpus/r3004/main.tf",
+                "file_line_range": [
+                    1,
+                    15
+                ],
+                "resource": "aws_security_group.bastion",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedIngress22",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3004/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_5",
+                "bc_check_id": "BC_AWS_NETWORKING_51",
+                "check_name": "Ensure that Security Groups are attached to another resource",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_security_group": {
+                            "bastion": {
+                                "__end_line__": 15,
+                                "__start_line__": 1,
+                                "egress": [
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "0.0.0.0/0"
+                                            ]
+                                        ],
+                                        "from_port": [
+                                            0
+                                        ],
+                                        "protocol": [
+                                            "-1"
+                                        ],
+                                        "to_port": [
+                                            0
+                                        ]
+                                    }
+                                ],
+                                "ingress": [
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "0.0.0.0/0"
+                                            ]
+                                        ],
+                                        "from_port": [
+                                            22
+                                        ],
+                                        "protocol": [
+                                            "tcp"
+                                        ],
+                                        "to_port": [
+                                            22
+                                        ]
+                                    }
+                                ],
+                                "name": [
+                                    "bastion-3b03e8"
+                                ],
+                                "__address__": "aws_security_group.bastion"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "networking",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_security_group\" \"bastion\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"bastion-3b03e8\"\n"
+                    ],
+                    [
+                        3,
+                        "  ingress {\n"
+                    ],
+                    [
+                        4,
+                        "    from_port = 22\n"
+                    ],
+                    [
+                        5,
+                        "    to_port = 22\n"
+                    ],
+                    [
+                        6,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        7,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  egress {\n"
+                    ],
+                    [
+                        10,
+                        "    from_port = 0\n"
+                    ],
+                    [
+                        11,
+                        "    to_port = 0\n"
+                    ],
+                    [
+                        12,
+                        "    protocol = \"-1\"\n"
+                    ],
+                    [
+                        13,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        14,
+                        "  }\n"
+                    ],
+                    [
+                        15,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3004/main.tf",
+                "repo_file_path": "/corpus/r3004/main.tf",
+                "file_line_range": [
+                    1,
+                    15
+                ],
+                "resource": "aws_security_group.bastion",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3004/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 3,
+        "failed": 4,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 1,
+        "checkov_version": "3.3.26"
+    }
+}

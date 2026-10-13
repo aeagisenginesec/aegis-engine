@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Batch server
+Resources:
+  BatchServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: m5.large
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 50
+            Encrypted: false
+
+  MainCluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: main-31070e
+      RoleArn: arn:aws:iam::123456789012:role/eks-cluster
+      ResourcesVpcConfig:
+        SubnetIds: [subnet-aaa, subnet-bbb]
+        EndpointPublicAccess: true

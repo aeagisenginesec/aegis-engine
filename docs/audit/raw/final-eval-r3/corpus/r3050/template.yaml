@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: App stack
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+    Description: Database password
+Resources:
+  AppDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: app-fb67ed
+      AllocatedStorage: "20"
+      StorageEncrypted: true
+      MasterUsername: appadmin
+      MasterUserPassword: !Ref DbPassword
+
+  HookFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: hook-fb67ed
+      Role: arn:aws:iam::123456789012:role/lambda-exec
+      Runtime: python3.11
+      Handler: index.handler
+      Code:
+        ZipFile: "def handler(e, c): return {}"
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt HookFn.Arn
+      AuthType: NONE

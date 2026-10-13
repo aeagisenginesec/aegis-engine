@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-69e825
+  labels:
+    app: web-69e825
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-69e825
+  template:
+    metadata:
+      labels:
+        app: web-69e825
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: web
+          image: registry.example.com/web:2.1.0
+          resources:
+            limits: {cpu: "250m", memory: 128Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-69e825
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-69e825
+  ports: [{port: 80, targetPort: 8080}]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-69e825
+  labels:
+    app: api-69e825
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-69e825
+  template:
+    metadata:
+      labels:
+        app: api-69e825
+    spec:
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          resources:
+            limits: {cpu: "500m", memory: 256Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}

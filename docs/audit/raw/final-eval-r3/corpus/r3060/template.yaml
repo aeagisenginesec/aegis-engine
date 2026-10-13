@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Data key
+Resources:
+  DataKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: data-key-dd0286
+      EnableKeyRotation: false
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: "*"
+
+  HookFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: hook-dd0286
+      Role: arn:aws:iam::123456789012:role/lambda-exec
+      Runtime: python3.11
+      Handler: index.handler
+      Code:
+        ZipFile: "def handler(e, c): return {}"
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt HookFn.Arn
+      AuthType: NONE

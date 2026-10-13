@@ -1,0 +1,27 @@
+name: r3118-stack
+runtime: yaml
+description: Pulumi stack (toplevel layout)
+resources:
+    webServer:
+      type: aws:ec2:Instance
+      properties:
+        ami: ami-0c55b159cbfafe1f0
+        instanceType: t3.micro
+        tags:
+          Name: web-8bef52
+
+    bastionSg:
+      type: aws:ec2:SecurityGroup
+      properties:
+        name: bastion-8bef52
+        description: bastion access
+        ingress:
+          - protocol: tcp
+            fromPort: 22
+            toPort: 22
+            cidrBlocks: ["0.0.0.0/0"]
+        egress:
+          - protocol: "-1"
+            fromPort: 0
+            toPort: 0
+            cidrBlocks: ["0.0.0.0/0"]

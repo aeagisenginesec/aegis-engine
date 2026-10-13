@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-a12ef9
+  labels:
+    app: web-a12ef9
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-a12ef9
+  template:
+    metadata:
+      labels:
+        app: web-a12ef9
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: web
+          image: registry.example.com/web:2.1.0
+          ports: [{containerPort: 8080}]
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+            initialDelaySeconds: 10

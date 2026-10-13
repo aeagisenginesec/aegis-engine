@@ -1,0 +1,915 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a13317-6217-7172-b81a-a615a2f2b8a6",
+  "CreatedAt": "2026-10-13T02:28:52.887098617Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3045",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "template.yaml",
+      "Class": "config",
+      "Type": "cloudformation",
+      "MisconfSummary": {
+        "Successes": 43,
+        "Failures": 9
+      },
+      "Misconfigurations": [
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0028",
+          "Title": "aws_instance should activate session tokens for Instance Metadata Service.",
+          "Description": "IMDS v2 (Instance Metadata Service) introduced session authentication tokens which improve security when talking to IMDS.\n\nBy default \u003ccode\u003eaws_instance\u003c/code\u003e resource sets IMDS session auth tokens to be optional.\n\nTo fully protect IMDS you need to enable session tokens by using \u003ccode\u003emetadata_options\u003c/code\u003e block and its \u003ccode\u003ehttp_tokens\u003c/code\u003e variable set to \u003ccode\u003erequired\u003c/code\u003e.\n",
+          "Message": "Instance does not require IMDS access to require a token.",
+          "Namespace": "builtin.aws.ec2.aws0028",
+          "Query": "data.builtin.aws.ec2.aws0028.deny",
+          "Resolution": "Enable HTTP token requirement for IMDS",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0028",
+          "References": [
+            "https://aws.amazon.com/blogs/security/defense-in-depth-open-firewalls-reverse-proxies-ssrf-vulnerabilities-ec2-instance-metadata-service",
+            "https://avd.aquasec.com/misconfig/aws-0028"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.yaml:4-13",
+            "Provider": "AWS",
+            "Service": "ec2",
+            "StartLine": 4,
+            "EndLine": 13,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 4,
+                  "Content": "  BatchServer:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mBatchServer\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "    Type: AWS::EC2::Instance",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::EC2::Instance",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "      ImageId: ami-0c55b159cbfafe1f0",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mImageId\u001b[0m: ami-0c55b159cbfafe1f0",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 8,
+                  "Content": "      InstanceType: m5.large",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mInstanceType\u001b[0m: m5.large",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 9,
+                  "Content": "      BlockDeviceMappings:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mBlockDeviceMappings\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 10,
+                  "Content": "        - DeviceName: /dev/sda1",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - \u001b[38;5;33mDeviceName\u001b[0m: /dev/sda1",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 11,
+                  "Content": "          Ebs:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          \u001b[38;5;33mEbs\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 12,
+                  "Content": "            VolumeSize: 50",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            \u001b[38;5;33mVolumeSize\u001b[0m: \u001b[38;5;37m50",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "            Encrypted: false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m            \u001b[38;5;33mEncrypted\u001b[0m: \u001b[38;5;166mfalse\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0038",
+          "Title": "EKS Clusters should have cluster control plane logging turned on",
+          "Description": "By default cluster control plane logging is not turned on. Logging is available for audit, api, authenticator, controllerManager and scheduler. All logging should be turned on for cluster control plane.\n",
+          "Message": "Control plane API logging is not enabled.",
+          "Namespace": "builtin.aws.eks.aws0038",
+          "Query": "data.builtin.aws.eks.aws0038.deny",
+          "Resolution": "Enable logging for the EKS control plane",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0038",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html",
+            "https://avd.aquasec.com/misconfig/aws-0038"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.yaml:15-22",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 15,
+            "EndLine": 22,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "  MainCluster:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mMainCluster\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "    Type: AWS::EKS::Cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::EKS::Cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "      Name: main-31070e",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mName\u001b[0m: main-31070e",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "      RoleArn: arn:aws:iam::123456789012:role/eks-cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRoleArn\u001b[0m: arn:aws:iam::123456789012:role/eks-cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "      ResourcesVpcConfig:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mResourcesVpcConfig\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "        SubnetIds: [subnet-aaa, subnet-bbb]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mSubnetIds\u001b[0m: [subnet-aaa, subnet-bbb]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "        EndpointPublicAccess: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mEndpointPublicAccess\u001b[0m: \u001b[38;5;166mtrue\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0038",
+          "Title": "EKS Clusters should have cluster control plane logging turned on",
+          "Description": "By default cluster control plane logging is not turned on. Logging is available for audit, api, authenticator, controllerManager and scheduler. All logging should be turned on for cluster control plane.\n",
+          "Message": "Control plane audit logging is not enabled.",
+          "Namespace": "builtin.aws.eks.aws0038",
+          "Query": "data.builtin.aws.eks.aws0038.deny",
+          "Resolution": "Enable logging for the EKS control plane",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0038",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html",
+            "https://avd.aquasec.com/misconfig/aws-0038"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.yaml:15-22",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 15,
+            "EndLine": 22,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "  MainCluster:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mMainCluster\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "    Type: AWS::EKS::Cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::EKS::Cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "      Name: main-31070e",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mName\u001b[0m: main-31070e",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "      RoleArn: arn:aws:iam::123456789012:role/eks-cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRoleArn\u001b[0m: arn:aws:iam::123456789012:role/eks-cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "      ResourcesVpcConfig:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mResourcesVpcConfig\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "        SubnetIds: [subnet-aaa, subnet-bbb]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mSubnetIds\u001b[0m: [subnet-aaa, subnet-bbb]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "        EndpointPublicAccess: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mEndpointPublicAccess\u001b[0m: \u001b[38;5;166mtrue\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0038",
+          "Title": "EKS Clusters should have cluster control plane logging turned on",
+          "Description": "By default cluster control plane logging is not turned on. Logging is available for audit, api, authenticator, controllerManager and scheduler. All logging should be turned on for cluster control plane.\n",
+          "Message": "Control plane authenticator logging is not enabled.",
+          "Namespace": "builtin.aws.eks.aws0038",
+          "Query": "data.builtin.aws.eks.aws0038.deny",
+          "Resolution": "Enable logging for the EKS control plane",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0038",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html",
+            "https://avd.aquasec.com/misconfig/aws-0038"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.yaml:15-22",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 15,
+            "EndLine": 22,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "  MainCluster:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mMainCluster\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "    Type: AWS::EKS::Cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::EKS::Cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "      Name: main-31070e",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mName\u001b[0m: main-31070e",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "      RoleArn: arn:aws:iam::123456789012:role/eks-cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRoleArn\u001b[0m: arn:aws:iam::123456789012:role/eks-cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "      ResourcesVpcConfig:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mResourcesVpcConfig\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "        SubnetIds: [subnet-aaa, subnet-bbb]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mSubnetIds\u001b[0m: [subnet-aaa, subnet-bbb]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "        EndpointPublicAccess: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mEndpointPublicAccess\u001b[0m: \u001b[38;5;166mtrue\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0038",
+          "Title": "EKS Clusters should have cluster control plane logging turned on",
+          "Description": "By default cluster control plane logging is not turned on. Logging is available for audit, api, authenticator, controllerManager and scheduler. All logging should be turned on for cluster control plane.\n",
+          "Message": "Control plane controller manager logging is not enabled.",
+          "Namespace": "builtin.aws.eks.aws0038",
+          "Query": "data.builtin.aws.eks.aws0038.deny",
+          "Resolution": "Enable logging for the EKS control plane",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0038",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html",
+            "https://avd.aquasec.com/misconfig/aws-0038"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.yaml:15-22",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 15,
+            "EndLine": 22,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "  MainCluster:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mMainCluster\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "    Type: AWS::EKS::Cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::EKS::Cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "      Name: main-31070e",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mName\u001b[0m: main-31070e",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "      RoleArn: arn:aws:iam::123456789012:role/eks-cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRoleArn\u001b[0m: arn:aws:iam::123456789012:role/eks-cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "      ResourcesVpcConfig:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mResourcesVpcConfig\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "        SubnetIds: [subnet-aaa, subnet-bbb]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mSubnetIds\u001b[0m: [subnet-aaa, subnet-bbb]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "        EndpointPublicAccess: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mEndpointPublicAccess\u001b[0m: \u001b[38;5;166mtrue\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0038",
+          "Title": "EKS Clusters should have cluster control plane logging turned on",
+          "Description": "By default cluster control plane logging is not turned on. Logging is available for audit, api, authenticator, controllerManager and scheduler. All logging should be turned on for cluster control plane.\n",
+          "Message": "Control plane scheduler logging is not enabled.",
+          "Namespace": "builtin.aws.eks.aws0038",
+          "Query": "data.builtin.aws.eks.aws0038.deny",
+          "Resolution": "Enable logging for the EKS control plane",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0038",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html",
+            "https://avd.aquasec.com/misconfig/aws-0038"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.yaml:15-22",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 15,
+            "EndLine": 22,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "  MainCluster:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mMainCluster\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "    Type: AWS::EKS::Cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::EKS::Cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "      Name: main-31070e",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mName\u001b[0m: main-31070e",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "      RoleArn: arn:aws:iam::123456789012:role/eks-cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRoleArn\u001b[0m: arn:aws:iam::123456789012:role/eks-cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "      ResourcesVpcConfig:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mResourcesVpcConfig\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "        SubnetIds: [subnet-aaa, subnet-bbb]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mSubnetIds\u001b[0m: [subnet-aaa, subnet-bbb]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "        EndpointPublicAccess: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mEndpointPublicAccess\u001b[0m: \u001b[38;5;166mtrue\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0039",
+          "Title": "EKS should have the encryption of secrets enabled",
+          "Description": "EKS cluster resources should have the encryption_config block set with protection of the secrets resource.\n",
+          "Message": "Cluster does not have secret encryption enabled.",
+          "Namespace": "builtin.aws.eks.aws0039",
+          "Query": "data.builtin.aws.eks.aws0039.deny",
+          "Resolution": "Enable encryption of EKS secrets",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0039",
+          "References": [
+            "https://aws.amazon.com/about-aws/whats-new/2020/03/amazon-eks-adds-envelope-encryption-for-secrets-with-aws-kms/",
+            "https://avd.aquasec.com/misconfig/aws-0039"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.yaml:15-22",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 15,
+            "EndLine": 22,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 15,
+                  "Content": "  MainCluster:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mMainCluster\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "    Type: AWS::EKS::Cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::EKS::Cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "      Name: main-31070e",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mName\u001b[0m: main-31070e",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "      RoleArn: arn:aws:iam::123456789012:role/eks-cluster",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRoleArn\u001b[0m: arn:aws:iam::123456789012:role/eks-cluster",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 20,
+                  "Content": "      ResourcesVpcConfig:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mResourcesVpcConfig\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "        SubnetIds: [subnet-aaa, subnet-bbb]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mSubnetIds\u001b[0m: [subnet-aaa, subnet-bbb]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "        EndpointPublicAccess: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mEndpointPublicAccess\u001b[0m: \u001b[38;5;166mtrue\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0040",
+          "Title": "EKS Clusters should have the public access disabled",
+          "Description": "EKS clusters are available publicly by default, this should be explicitly disabled in the vpc_config of the EKS cluster resource.\n",
+          "Message": "Public cluster access is enabled.",
+          "Namespace": "builtin.aws.eks.aws0040",
+          "Query": "data.builtin.aws.eks.aws0040.deny",
+          "Resolution": "Don't enable public access to EKS Clusters",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0040",
+          "References": [
+            "https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html",
+            "https://avd.aquasec.com/misconfig/aws-0040"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "MainCluster",
+            "Provider": "AWS",
+            "Service": "eks",
+            "StartLine": 22,
+            "EndLine": 22,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 21,
+                  "Content": "        SubnetIds: [subnet-aaa, subnet-bbb]",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mSubnetIds\u001b[0m: [subnet-aaa, subnet-bbb]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "        EndpointPublicAccess: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mEndpointPublicAccess\u001b[0m: \u001b[38;5;166mtrue\u001b[0m",
+                  "FirstCause": true,
+                  "LastCause": true
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "MainCluster",
+                "Filename": "template.yaml",
+                "Location": {
+                  "StartLine": 21,
+                  "EndLine": 22
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0131",
+          "Title": "Instance with unencrypted block device.",
+          "Description": "Block devices should be encrypted to ensure sensitive data is held securely at rest.\n",
+          "Message": "Root block device is not encrypted.",
+          "Namespace": "builtin.aws.ec2.aws0131",
+          "Query": "data.builtin.aws.ec2.aws0131.deny",
+          "Resolution": "Turn on encryption for all block devices",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0131",
+          "References": [
+            "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/RootDeviceStorage.html",
+            "https://avd.aquasec.com/misconfig/aws-0131"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "BatchServer",
+            "Provider": "AWS",
+            "Service": "ec2",
+            "StartLine": 13,
+            "EndLine": 13,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 12,
+                  "Content": "            VolumeSize: 50",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            \u001b[38;5;33mVolumeSize\u001b[0m: \u001b[38;5;37m50",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "            Encrypted: false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m            \u001b[38;5;33mEncrypted\u001b[0m: \u001b[38;5;166mfalse\u001b[0m",
+                  "FirstCause": true,
+                  "LastCause": true
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "BatchServer",
+                "Filename": "template.yaml",
+                "Location": {
+                  "StartLine": 12,
+                  "EndLine": 13
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

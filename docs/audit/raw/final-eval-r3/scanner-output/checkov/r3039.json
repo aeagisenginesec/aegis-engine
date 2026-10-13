@@ -1,0 +1,1034 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_GCP_32",
+                "bc_check_id": "BC_GCP_NETWORKING_8",
+                "check_name": "Ensure 'Block Project-wide SSH keys' is enabled for VM instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "metadata/block-project-ssh-keys"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-26195a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBlockProjectSSH",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_38",
+                "bc_check_id": "BC_GCP_GENERAL_2",
+                "check_name": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "boot_disk",
+                        "boot_disk/[0]/disk_encryption_key_raw",
+                        "boot_disk/[0]/kms_key_self_link"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-26195a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBootDiskEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/encrypt-boot-disks-for-instances-with-cseks",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_40",
+                "bc_check_id": "BC_GCP_PUBLIC_2",
+                "check_name": "Ensure that Compute instances do not have public IP addresses",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "network_interface/[0]/access_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-26195a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeExternalIP",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-public-policies/bc-gcp-public-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_36",
+                "bc_check_id": "BC_GCP_NETWORKING_12",
+                "check_name": "Ensure that IP forwarding is not enabled on Instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "can_ip_forward"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-26195a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeIPForward",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-12",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_39",
+                "bc_check_id": "BC_GCP_GENERAL_3",
+                "check_name": "Ensure Compute instances are launched with Shielded VM enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-26195a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeShieldedVM",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-gcp-general-y",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_273",
+                "bc_check_id": "BC_AWS_IAM_77",
+                "check_name": "Ensure access is controlled through SSO and not AWS IAM defined users",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_iam_user\" \"reader\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name = \"reader-26195a\"\n"
+                    ],
+                    [
+                        16,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    14,
+                    16
+                ],
+                "resource": "aws_iam_user.reader",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMUserNotUsedForAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-273",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_40",
+                "bc_check_id": "BC_AWS_IAM_16",
+                "check_name": "Ensure IAM policies are attached only to groups or roles (Reducing access management complexity may in-turn reduce opportunity for a principal to inadvertently receive or retain excessive privileges.)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "user"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_iam_user_policy\" \"reader\" {\n"
+                    ],
+                    [
+                        19,
+                        "  user = aws_iam_user.reader.name\n"
+                    ],
+                    [
+                        20,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        21,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        22,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        23,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        24,
+                        "      Action = [\"s3:GetObject\", \"s3:ListBucket\"]\n"
+                    ],
+                    [
+                        25,
+                        "      Resource = [\"arn:aws:s3:::reports-26195a\",\n"
+                    ],
+                    [
+                        26,
+                        "       \"arn:aws:s3:::reports-26195a/*\"]\n"
+                    ],
+                    [
+                        27,
+                        "    }]\n"
+                    ],
+                    [
+                        28,
+                        "  })\n"
+                    ],
+                    [
+                        29,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    18,
+                    29
+                ],
+                "resource": "aws_iam_user_policy.reader",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMPolicyAttachedToGroupOrRoles",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/iam-16-iam-policy-privileges-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "breadcrumbs": {
+                    "user": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_user.reader",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security group and rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]",
+                        "ingress/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        31,
+                        "resource \"aws_security_group\" \"app\" {\n"
+                    ],
+                    [
+                        32,
+                        "  name = \"app-26195a\"\n"
+                    ],
+                    [
+                        33,
+                        "  ingress {\n"
+                    ],
+                    [
+                        34,
+                        "    from_port = 22\n"
+                    ],
+                    [
+                        35,
+                        "    to_port = 22\n"
+                    ],
+                    [
+                        36,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        37,
+                        "    cidr_blocks = [\"203.0.113.4/32\"]\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "  ingress {\n"
+                    ],
+                    [
+                        40,
+                        "    from_port = 443\n"
+                    ],
+                    [
+                        41,
+                        "    to_port = 443\n"
+                    ],
+                    [
+                        42,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        43,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "  egress {\n"
+                    ],
+                    [
+                        46,
+                        "    from_port = 0\n"
+                    ],
+                    [
+                        47,
+                        "    to_port = 0\n"
+                    ],
+                    [
+                        48,
+                        "    protocol = \"-1\"\n"
+                    ],
+                    [
+                        49,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        50,
+                        "  }\n"
+                    ],
+                    [
+                        51,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    31,
+                    51
+                ],
+                "resource": "aws_security_group.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_382",
+                "bc_check_id": "BC_AWS_IAM_93",
+                "check_name": "Ensure no security groups allow egress from 0.0.0.0:0 to port -1",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]/from_port",
+                        "egress/[0]/to_port",
+                        "egress/[0]/cidr_blocks",
+                        "egress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        31,
+                        "resource \"aws_security_group\" \"app\" {\n"
+                    ],
+                    [
+                        32,
+                        "  name = \"app-26195a\"\n"
+                    ],
+                    [
+                        33,
+                        "  ingress {\n"
+                    ],
+                    [
+                        34,
+                        "    from_port = 22\n"
+                    ],
+                    [
+                        35,
+                        "    to_port = 22\n"
+                    ],
+                    [
+                        36,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        37,
+                        "    cidr_blocks = [\"203.0.113.4/32\"]\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "  ingress {\n"
+                    ],
+                    [
+                        40,
+                        "    from_port = 443\n"
+                    ],
+                    [
+                        41,
+                        "    to_port = 443\n"
+                    ],
+                    [
+                        42,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        43,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "  egress {\n"
+                    ],
+                    [
+                        46,
+                        "    from_port = 0\n"
+                    ],
+                    [
+                        47,
+                        "    to_port = 0\n"
+                    ],
+                    [
+                        48,
+                        "    protocol = \"-1\"\n"
+                    ],
+                    [
+                        49,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        50,
+                        "  }\n"
+                    ],
+                    [
+                        51,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    31,
+                    51
+                ],
+                "resource": "aws_security_group.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedEgressAny",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_5",
+                "bc_check_id": "BC_AWS_NETWORKING_51",
+                "check_name": "Ensure that Security Groups are attached to another resource",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_security_group": {
+                            "app": {
+                                "__end_line__": 51,
+                                "__start_line__": 31,
+                                "egress": [
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "0.0.0.0/0"
+                                            ]
+                                        ],
+                                        "from_port": [
+                                            0
+                                        ],
+                                        "protocol": [
+                                            "-1"
+                                        ],
+                                        "to_port": [
+                                            0
+                                        ]
+                                    }
+                                ],
+                                "ingress": [
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "203.0.113.4/32"
+                                            ]
+                                        ],
+                                        "from_port": [
+                                            22
+                                        ],
+                                        "protocol": [
+                                            "tcp"
+                                        ],
+                                        "to_port": [
+                                            22
+                                        ]
+                                    },
+                                    {
+                                        "cidr_blocks": [
+                                            [
+                                                "0.0.0.0/0"
+                                            ]
+                                        ],
+                                        "from_port": [
+                                            443
+                                        ],
+                                        "protocol": [
+                                            "tcp"
+                                        ],
+                                        "to_port": [
+                                            443
+                                        ]
+                                    }
+                                ],
+                                "name": [
+                                    "app-26195a"
+                                ],
+                                "__address__": "aws_security_group.app"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "networking",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        31,
+                        "resource \"aws_security_group\" \"app\" {\n"
+                    ],
+                    [
+                        32,
+                        "  name = \"app-26195a\"\n"
+                    ],
+                    [
+                        33,
+                        "  ingress {\n"
+                    ],
+                    [
+                        34,
+                        "    from_port = 22\n"
+                    ],
+                    [
+                        35,
+                        "    to_port = 22\n"
+                    ],
+                    [
+                        36,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        37,
+                        "    cidr_blocks = [\"203.0.113.4/32\"]\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "  ingress {\n"
+                    ],
+                    [
+                        40,
+                        "    from_port = 443\n"
+                    ],
+                    [
+                        41,
+                        "    to_port = 443\n"
+                    ],
+                    [
+                        42,
+                        "    protocol = \"tcp\"\n"
+                    ],
+                    [
+                        43,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "  egress {\n"
+                    ],
+                    [
+                        46,
+                        "    from_port = 0\n"
+                    ],
+                    [
+                        47,
+                        "    to_port = 0\n"
+                    ],
+                    [
+                        48,
+                        "    protocol = \"-1\"\n"
+                    ],
+                    [
+                        49,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        50,
+                        "  }\n"
+                    ],
+                    [
+                        51,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf",
+                "repo_file_path": "/corpus/r3039/main.tf",
+                "file_line_range": [
+                    31,
+                    51
+                ],
+                "resource": "aws_security_group.app",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-security-groups-are-attached-to-ec2-instances-or-elastic-network-interfaces-enis",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3039/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 17,
+        "failed": 10,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 4,
+        "checkov_version": "3.3.26"
+    }
+}

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-d452ba
+  labels:
+    app: web-d452ba
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-d452ba
+  template:
+    metadata:
+      labels:
+        app: web-d452ba
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: web
+          image: registry.example.com/web:2.1.0
+          resources:
+            limits: {cpu: "250m", memory: 128Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-d452ba
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-d452ba
+  ports: [{port: 80, targetPort: 8080}]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-d452ba
+  labels:
+    app: api-d452ba
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-d452ba
+  template:
+    metadata:
+      labels:
+        app: api-d452ba
+    spec:
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          resources:
+            limits: {cpu: "500m", memory: 256Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}

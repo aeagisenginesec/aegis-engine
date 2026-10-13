@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: App database
+Resources:
+  AppDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: "15.4"
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: app-42bd19
+      AllocatedStorage: "20"
+      StorageEncrypted: true
+      PubliclyAccessible: true
+      MasterUsername: appadmin
+      MasterUserPassword: Str0ng-42bd19-Db!
+      BackupRetentionPeriod: 7
+
+  BatchServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: m5.large
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 50
+            Encrypted: false

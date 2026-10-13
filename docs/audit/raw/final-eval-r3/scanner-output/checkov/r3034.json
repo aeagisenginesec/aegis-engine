@@ -1,0 +1,450 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_GCP_32",
+                "bc_check_id": "BC_GCP_NETWORKING_8",
+                "check_name": "Ensure 'Block Project-wide SSH keys' is enabled for VM instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "metadata/block-project-ssh-keys"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-8e725a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf",
+                "repo_file_path": "/corpus/r3034/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBlockProjectSSH",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_38",
+                "bc_check_id": "BC_GCP_GENERAL_2",
+                "check_name": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "boot_disk",
+                        "boot_disk/[0]/disk_encryption_key_raw",
+                        "boot_disk/[0]/kms_key_self_link"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-8e725a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf",
+                "repo_file_path": "/corpus/r3034/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeBootDiskEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/encrypt-boot-disks-for-instances-with-cseks",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_40",
+                "bc_check_id": "BC_GCP_PUBLIC_2",
+                "check_name": "Ensure that Compute instances do not have public IP addresses",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "network_interface/[0]/access_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-8e725a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf",
+                "repo_file_path": "/corpus/r3034/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeExternalIP",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-public-policies/bc-gcp-public-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_36",
+                "bc_check_id": "BC_GCP_NETWORKING_12",
+                "check_name": "Ensure that IP forwarding is not enabled on Instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "can_ip_forward"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-8e725a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf",
+                "repo_file_path": "/corpus/r3034/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeIPForward",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-12",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_39",
+                "bc_check_id": "BC_GCP_GENERAL_3",
+                "check_name": "Ensure Compute instances are launched with Shielded VM enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_compute_instance\" \"nat\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"nat-8e725a\"\n"
+                    ],
+                    [
+                        3,
+                        "  machine_type = \"e2-medium\"\n"
+                    ],
+                    [
+                        4,
+                        "  zone = \"europe-west1-b\"\n"
+                    ],
+                    [
+                        5,
+                        "  can_ip_forward = true\n"
+                    ],
+                    [
+                        6,
+                        "  boot_disk {\n"
+                    ],
+                    [
+                        7,
+                        "    initialize_params { image = \"debian-cloud/debian-12\" }\n"
+                    ],
+                    [
+                        8,
+                        "  }\n"
+                    ],
+                    [
+                        9,
+                        "  network_interface { network = \"default\"\n"
+                    ],
+                    [
+                        10,
+                        "    access_config {}\n"
+                    ],
+                    [
+                        11,
+                        "  }\n"
+                    ],
+                    [
+                        12,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf",
+                "repo_file_path": "/corpus/r3034/main.tf",
+                "file_line_range": [
+                    1,
+                    12
+                ],
+                "resource": "google_compute_instance.nat",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleComputeShieldedVM",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-gcp-general-y",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3034/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 3,
+        "failed": 5,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 1,
+        "checkov_version": "3.3.26"
+    }
+}

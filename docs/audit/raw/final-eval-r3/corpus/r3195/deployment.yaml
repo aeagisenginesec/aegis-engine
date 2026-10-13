@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-7c1fdc
+  labels:
+    app: api-7c1fdc
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-7c1fdc
+  template:
+    metadata:
+      labels:
+        app: api-7c1fdc
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            limits: {cpu: "500m", memory: 256Mi}
+            requests: {cpu: "250m", memory: 128Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: {path: /ready, port: 8080}

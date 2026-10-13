@@ -1,0 +1,24 @@
+name: r3103-stack
+runtime: yaml
+description: Pulumi stack (template layout)
+template:
+  resources:
+    siteBucket:
+      type: aws:s3:Bucket
+      properties:
+        bucket: site-e2aba4
+        acl: private
+
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: kv-e2aba4
+        resourceGroupName: rg-kv
+        location: westeurope
+        properties:
+          sku:
+            family: A
+            name: standard
+          tenantId: 00000000-0000-0000-0000-000000000000
+          enablePurgeProtection: true
+          enableSoftDelete: true

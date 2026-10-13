@@ -1,0 +1,31 @@
+name: r3109-stack
+runtime: yaml
+description: Pulumi stack (template layout)
+template:
+  resources:
+    dataAccount:
+      type: azure-native:storage:StorageAccount
+      properties:
+        accountName: data0c56e4
+        resourceGroupName: rg-data
+        location: westeurope
+        kind: StorageV2
+        sku:
+          name: Standard_LRS
+        allowBlobPublicAccess: false
+        minimumTlsVersion: TLS1_2
+        supportsHttpsTrafficOnly: true
+
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: kv-0c56e4
+        resourceGroupName: rg-kv
+        location: westeurope
+        properties:
+          sku:
+            family: A
+            name: standard
+          tenantId: 00000000-0000-0000-0000-000000000000
+          enablePurgeProtection: true
+          enableSoftDelete: true

@@ -1,0 +1,662 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_10",
+                "bc_check_id": "BC_AZR_NETWORKING_3",
+                "check_name": "Ensure that SSH access is restricted from the internet",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "security_rule/[0]/access",
+                        "security_rule/[0]/direction",
+                        "security_rule/[0]/protocol",
+                        "security_rule/[0]/destination_port_range",
+                        "security_rule/[0]/destination_port_ranges",
+                        "security_rule/[0]/source_address_prefix",
+                        "security_rule/[0]/source_address_prefixes"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"azurerm_network_security_group\" \"web\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"web-201532\"\n"
+                    ],
+                    [
+                        3,
+                        "  location = \"westeurope\"\n"
+                    ],
+                    [
+                        4,
+                        "  resource_group_name = \"rg-web\"\n"
+                    ],
+                    [
+                        5,
+                        "  security_rule {\n"
+                    ],
+                    [
+                        6,
+                        "    name = \"ssh\"\n"
+                    ],
+                    [
+                        7,
+                        "    priority = 100\n"
+                    ],
+                    [
+                        8,
+                        "    direction = \"Inbound\"\n"
+                    ],
+                    [
+                        9,
+                        "    access = \"Allow\"\n"
+                    ],
+                    [
+                        10,
+                        "    protocol = \"Tcp\"\n"
+                    ],
+                    [
+                        11,
+                        "    source_port_range = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "    destination_port_range = \"22\"\n"
+                    ],
+                    [
+                        13,
+                        "    source_address_prefix = \"*\"\n"
+                    ],
+                    [
+                        14,
+                        "    destination_address_prefix = \"*\"\n"
+                    ],
+                    [
+                        15,
+                        "  }\n"
+                    ],
+                    [
+                        16,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf",
+                "repo_file_path": "/corpus/r3007/main.tf",
+                "file_line_range": [
+                    1,
+                    16
+                ],
+                "resource": "azurerm_network_security_group.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.NSGRuleSSHAccessRestricted",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-3",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_70",
+                "bc_check_id": "BC_AWS_S3_23",
+                "check_name": "Ensure S3 bucket does not allow an action with any Principal",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"aws_s3_bucket_policy\" \"data\" {\n"
+                    ],
+                    [
+                        23,
+                        "  bucket = aws_s3_bucket.data.id\n"
+                    ],
+                    [
+                        24,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        25,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        26,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        27,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        28,
+                        "      Principal = \"*\"\n"
+                    ],
+                    [
+                        29,
+                        "      Action = \"s3:GetObject\"\n"
+                    ],
+                    [
+                        30,
+                        "      Resource = \"arn:aws:s3:::data-lake-201532/*\"\n"
+                    ],
+                    [
+                        31,
+                        "    }]\n"
+                    ],
+                    [
+                        32,
+                        "  })\n"
+                    ],
+                    [
+                        33,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf",
+                "repo_file_path": "/corpus/r3007/main.tf",
+                "file_line_range": [
+                    22,
+                    33
+                ],
+                "resource": "aws_s3_bucket_policy.data",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.S3AllowsAnyPrincipal",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/bc-aws-s3-23",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_62",
+                "bc_check_id": "BC_AWS_LOGGING_36",
+                "check_name": "Ensure S3 buckets should have event notifications enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 20,
+                                "__start_line__": 18,
+                                "bucket": [
+                                    "data-lake-201532"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        19,
+                        "  bucket = \"data-lake-201532\"\n"
+                    ],
+                    [
+                        20,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf",
+                "repo_file_path": "/corpus/r3007/main.tf",
+                "file_line_range": [
+                    18,
+                    20
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-62",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_6",
+                "bc_check_id": "BC_AWS_NETWORKING_52",
+                "check_name": "Ensure that S3 bucket has a Public Access block",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 20,
+                                "__start_line__": 18,
+                                "bucket": [
+                                    "data-lake-201532"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "block_public_policy",
+                        "block_public_acls",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        19,
+                        "  bucket = \"data-lake-201532\"\n"
+                    ],
+                    [
+                        20,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf",
+                "repo_file_path": "/corpus/r3007/main.tf",
+                "file_line_range": [
+                    18,
+                    20
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/s3-bucket-should-have-public-access-blocks-defaults-to-false-if-the-public-access-block-is-not-attached",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_61",
+                "bc_check_id": "BC_AWS_LOGGING_35",
+                "check_name": "Ensure that an S3 bucket has a lifecycle configuration",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 20,
+                                "__start_line__": 18,
+                                "bucket": [
+                                    "data-lake-201532"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "lifecycle_rule",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        19,
+                        "  bucket = \"data-lake-201532\"\n"
+                    ],
+                    [
+                        20,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf",
+                "repo_file_path": "/corpus/r3007/main.tf",
+                "file_line_range": [
+                    18,
+                    20
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-61",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_21",
+                "bc_check_id": "BC_AWS_S3_16",
+                "check_name": "Ensure all data stored in the S3 bucket have versioning enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 20,
+                                "__start_line__": 18,
+                                "bucket": [
+                                    "data-lake-201532"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "versioning_configuration/status",
+                        "resource_type",
+                        "versioning/enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        19,
+                        "  bucket = \"data-lake-201532\"\n"
+                    ],
+                    [
+                        20,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf",
+                "repo_file_path": "/corpus/r3007/main.tf",
+                "file_line_range": [
+                    18,
+                    20
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-16-enable-versioning",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_145",
+                "bc_check_id": "BC_AWS_GENERAL_56",
+                "check_name": "Ensure that S3 buckets are encrypted with KMS by default",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 20,
+                                "__start_line__": 18,
+                                "bucket": [
+                                    "data-lake-201532"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "server_side_encryption_configuration/rule/apply_server_side_encryption_by_default/sse_algorithm",
+                        "resource_type",
+                        "rule/apply_server_side_encryption_by_default/sse_algorithm"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        19,
+                        "  bucket = \"data-lake-201532\"\n"
+                    ],
+                    [
+                        20,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf",
+                "repo_file_path": "/corpus/r3007/main.tf",
+                "file_line_range": [
+                    18,
+                    20
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-buckets-are-encrypted-with-kms-by-default",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_18",
+                "bc_check_id": "BC_AWS_S3_13",
+                "check_name": "Ensure the S3 bucket has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 20,
+                                "__start_line__": 18,
+                                "bucket": [
+                                    "data-lake-201532"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "logging"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        19,
+                        "  bucket = \"data-lake-201532\"\n"
+                    ],
+                    [
+                        20,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf",
+                "repo_file_path": "/corpus/r3007/main.tf",
+                "file_line_range": [
+                    18,
+                    20
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_144",
+                "bc_check_id": "BC_AWS_GENERAL_72",
+                "check_name": "Ensure that S3 bucket has cross-region replication enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 20,
+                                "__start_line__": 18,
+                                "bucket": [
+                                    "data-lake-201532"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "rule/*/status",
+                        "replication_configuration/rules/*/status",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        19,
+                        "  bucket = \"data-lake-201532\"\n"
+                    ],
+                    [
+                        20,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf",
+                "repo_file_path": "/corpus/r3007/main.tf",
+                "file_line_range": [
+                    18,
+                    20
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-bucket-has-cross-region-replication-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3007/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 8,
+        "failed": 9,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 3,
+        "checkov_version": "3.3.26"
+    }
+}
