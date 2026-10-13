@@ -119,6 +119,63 @@ func TestSGEgress_StandaloneEgressRuleFires(t *testing.T) {
 	}
 }
 
+// CheckAll-level tests: inline-group egress findings require attachment
+// evidence; standalone groups carry no traffic and stay quiet.
+
+func TestSGEgress_CheckAllStandaloneQuiet(t *testing.T) {
+	sg := res("aws_security_group", "web", map[string]ir.Value{
+		"egress": blks(3, blk("cidr_blocks", strList(4, "0.0.0.0/0"))),
+	})
+	if f := (sgOpenEgress{}).CheckAll([]ir.Resource{sg}); len(f) != 0 {
+		t.Fatalf("standalone SG must stay quiet for 005, got %+v", f)
+	}
+}
+
+func TestSGEgress_CheckAllAttachedFires(t *testing.T) {
+	sg := res("aws_security_group", "web", map[string]ir.Value{
+		"egress": blks(3, blk("cidr_blocks", strList(4, "0.0.0.0/0"))),
+	})
+	inst := res("aws_instance", "web", map[string]ir.Value{
+		"vpc_security_group_ids": {Raw: []ir.Value{
+			{Known: false, Ref: "aws_security_group.web.id", Span: spanAt(5)},
+		}, Known: false, Span: spanAt(5)},
+	})
+	f := (sgOpenEgress{}).CheckAll([]ir.Resource{sg, inst})
+	if len(f) != 1 || f[0].RuleID != "AEGIS-AWS-005" {
+		t.Fatalf("attached SG must fire 005, got %+v", f)
+	}
+}
+
+func TestSGEgress_CheckAllSGToSGRefNotAttachment(t *testing.T) {
+	sg := res("aws_security_group", "db", map[string]ir.Value{
+		"egress": blks(3, blk("cidr_blocks", strList(4, "0.0.0.0/0"))),
+	})
+	other := res("aws_security_group", "app", map[string]ir.Value{
+		"ingress": blks(3, blk("cidr_blocks", strList(4, "10.0.0.0/8"))),
+	})
+	// An SG-to-SG reference lives in a rule resource, not a workload.
+	rule := res("aws_security_group_rule", "app2db", map[string]ir.Value{
+		"type":                   ks("ingress", 2),
+		"security_group_id":      {Known: false, Ref: "aws_security_group.app.id", Span: spanAt(2)},
+		"source_security_group_id": {Known: false, Ref: "aws_security_group.db.id", Span: spanAt(2)},
+		"cidr_blocks":            strList(3, "10.0.0.0/8"),
+	})
+	_ = other
+	if f := (sgOpenEgress{}).CheckAll([]ir.Resource{sg, other, rule}); len(f) != 0 {
+		t.Fatalf("SG-to-SG reference must not count as attachment, got %+v", f)
+	}
+}
+
+func TestSGEgress_CheckAllStandaloneRuleFires(t *testing.T) {
+	r := res("aws_security_group_rule", "out", map[string]ir.Value{
+		"type":        ks("egress", 2),
+		"cidr_blocks": strList(3, "0.0.0.0/0"),
+	})
+	if f := (sgOpenEgress{}).CheckAll([]ir.Resource{r}); len(f) != 1 {
+		t.Fatalf("standalone egress-rule resource must fire 005, got %+v", f)
+	}
+}
+
 func TestSGEgress_UnknownNoFinding(t *testing.T) {
 	sg := res("aws_security_group", "web", map[string]ir.Value{
 		"egress": blks(3, blk("cidr_blocks", ku(4))),

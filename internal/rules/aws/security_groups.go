@@ -55,7 +55,14 @@ func (sgOpenEgress) ID() string    { return "AEGIS-AWS-005" }
 func (sgOpenEgress) Title() string { return "Security group egress open to the world" }
 func (sgOpenEgress) Description() string {
 	return "Egress rules allowing 0.0.0.0/0 permit unrestricted outbound " +
-		"traffic, aiding data exfiltration. Restrict destinations to required ranges."
+		"traffic, aiding data exfiltration. Restrict destinations to required ranges. " +
+		"Unrestricted egress is the AWS default and by itself is not a " +
+		"misconfiguration, so this rule fires only on evidence the group " +
+		"carries live traffic: the group is attached to a workload " +
+		"resource in the same module, or the finding comes from a " +
+		"standalone egress-rule resource that explicitly targets the " +
+		"group. A standalone security group with no attachments carries " +
+		"no traffic and is not flagged."
 }
 func (sgOpenEgress) Severity() ir.Severity { return ir.SeverityMedium }
 
@@ -64,6 +71,29 @@ func (sgOpenEgress) AppliesTo(resType string) bool {
 		resType == "aws_security_group_rule" ||
 		resType == "aws_vpc_security_group_egress_rule"
 }
+
+// CheckAll gates inline-group findings on attachment evidence (see
+// Description): a standalone group with no workload attached carries no
+// traffic. Standalone egress-rule resources fire ungated — the rule
+// resource itself is the attachment evidence.
+func (sgOpenEgress) CheckAll(resources []ir.Resource) []ir.Finding {
+	attached := attachedSecurityGroups(resources)
+	var out []ir.Finding
+	for _, r := range resources {
+		switch r.Type {
+		case "aws_security_group":
+			if !attached[scopeKey(r)] {
+				continue
+			}
+			out = append(out, sgOpenEgress{}.Check(r)...)
+		case "aws_security_group_rule", "aws_vpc_security_group_egress_rule":
+			out = append(out, sgOpenEgress{}.Check(r)...)
+		}
+	}
+	return out
+}
+
+var _ ir.CrossResourceRule = sgOpenEgress{}
 
 func (sgOpenEgress) Check(r ir.Resource) []ir.Finding {
 	switch r.Type {
@@ -84,8 +114,74 @@ func (sgOpenEgress) Check(r ir.Resource) []ir.Finding {
 	return nil
 }
 
-// checkSGBlocks scans ingress/egress blocks of an aws_security_group for
-// 0.0.0.0/0 in cidr_blocks. Unresolved blocks or CIDR lists yield no finding.
+// attachedSecurityGroups returns the scopeKeys of aws_security_group
+// resources referenced by a workload resource in the same scope (same
+// directory). References are Refs to the group (e.g. an instance's
+// vpc_security_group_ids = [aws_security_group.web.id]) or, for
+// EC2-Classic style attachments, a security_groups list naming the
+// group. Resources that merely define rules on a group
+// (aws_security_group, aws_security_group_rule,
+// aws_vpc_security_group_*_rule) are not workloads: an SG-to-SG
+// reference is not an attachment.
+func attachedSecurityGroups(resources []ir.Resource) map[string]bool {
+	byAddr := map[string][]ir.Resource{}
+	for _, r := range resources {
+		if r.Type == "aws_security_group" {
+			byAddr[r.Address()] = append(byAddr[r.Address()], r)
+		}
+	}
+	attached := map[string]bool{}
+	var walk func(name string, v ir.Value, owner ir.Resource)
+	walk = func(name string, v ir.Value, owner ir.Resource) {
+		if v.IsRef() {
+			if addr, ok := refAddrOf(v.Ref); ok {
+				for _, sg := range byAddr[addr] {
+					if sameScope(owner, sg) {
+						attached[scopeKey(sg)] = true
+					}
+				}
+			}
+		}
+		// EC2-Classic: security_groups = ["group-name"].
+		if name == "security_groups" {
+			if list, ok := v.AsList(); ok {
+				for _, item := range list {
+					if s, ok := item.AsString(); ok {
+						for _, r := range resources {
+							if r.Type != "aws_security_group" || !sameScope(owner, r) {
+								continue
+							}
+							if n, _, _, known := getString(r, "name"); known && n == s {
+								attached[scopeKey(r)] = true
+							}
+						}
+					}
+				}
+			}
+		}
+		switch raw := v.Raw.(type) {
+		case map[string]ir.Value:
+			for k, c := range raw {
+				walk(k, c, owner)
+			}
+		case []ir.Value:
+			for _, c := range raw {
+				walk(name, c, owner)
+			}
+		}
+	}
+	for _, r := range resources {
+		switch r.Type {
+		case "aws_security_group", "aws_security_group_rule",
+			"aws_vpc_security_group_ingress_rule", "aws_vpc_security_group_egress_rule":
+			continue
+		}
+		for name, attr := range r.Attributes {
+			walk(name, attr, r)
+		}
+	}
+	return attached
+}
 func checkSGBlocks(r ir.Resource, blockName string, rule ir.Rule) []ir.Finding {
 	blks, _, present, known := getBlocks(r, blockName)
 	if !present || !known {
