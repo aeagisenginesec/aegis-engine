@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -698,8 +699,193 @@ func TestLenientMissingCommaRecovery(t *testing.T) {
 	}
 }
 
-// TestLenientUnrecoverableUnchanged: files with errors other than missing
-// separators are returned as-is (partial result, diagnostics preserved).
+// TestLenientSameLineRecovery: multiple attributes on one line inside a
+// block body (single-line blocks and multi-attribute lines in multi-line
+// blocks) are recovered by inserting newlines at the parser-reported
+// positions. Without recovery the parser keeps only the first attribute
+// per line, so rules would see e.g. an S3 bucket with no acl or an RDS
+// instance with no storage_encrypted.
+func TestLenientSameLineRecovery(t *testing.T) {
+	cases := []struct {
+		name  string
+		src   string
+		check func(t *testing.T, mod Module)
+	}{
+		{
+			name: "single-line resource block",
+			src: `resource "aws_s3_bucket" "pub" { bucket = "c1" acl = "public-read" }
+`,
+			check: func(t *testing.T, mod Module) {
+				if len(mod.Resources) != 1 {
+					t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+				}
+				acl, ok := mod.Resources[0].Attributes["acl"].AsString()
+				if !ok || acl != "public-read" {
+					t.Errorf("acl = %q, want public-read", acl)
+				}
+			},
+		},
+		{
+			name: "single-line block with three attributes",
+			src: `resource "aws_ebs_volume" "enc" { availability_zone = "us-east-1a" size = 10 encrypted = true }
+`,
+			check: func(t *testing.T, mod Module) {
+				enc, ok := mod.Resources[0].Attributes["encrypted"].AsBool()
+				if !ok || !enc {
+					t.Errorf("encrypted = %v (known=%v), want true", enc, ok)
+				}
+				size, ok := mod.Resources[0].Attributes["size"].AsString()
+				_ = size
+				if v, ok2 := mod.Resources[0].Attributes["size"]; !ok2 || !v.Known {
+					t.Errorf("size missing or unknown")
+				}
+			},
+		},
+		{
+			name: "multi-attribute lines in a multi-line block",
+			src: `resource "aws_db_instance" "privdb" {
+  engine = "postgres" instance_class = "db.t3.micro"
+  publicly_accessible = false storage_encrypted = true deletion_protection = true
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				for attr, want := range map[string]bool{
+					"storage_encrypted": true, "deletion_protection": true,
+				} {
+					got, ok := mod.Resources[0].Attributes[attr].AsBool()
+					if !ok || got != want {
+						t.Errorf("%s = %v (known=%v), want %v", attr, got, ok, want)
+					}
+				}
+				pub, ok := mod.Resources[0].Attributes["publicly_accessible"].AsBool()
+				if !ok || pub {
+					t.Errorf("publicly_accessible = %v, want false", pub)
+				}
+			},
+		},
+		{
+			name: "single-line nested block",
+			src: `resource "google_compute_firewall" "openfw" {
+  name = "fw1" network = "default"
+  allow { protocol = "tcp" ports = ["22"] }
+  source_ranges = ["0.0.0.0/0"]
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				allow, ok := mod.Resources[0].Attributes["allow"].AsList()
+				if !ok || len(allow) != 1 {
+					t.Fatalf("allow block missing: %v", mod.Resources[0].Attributes["allow"])
+				}
+				m, _ := allow[0].AsMap()
+				ports, ok := m["ports"].AsList()
+				if !ok || len(ports) != 1 {
+					t.Errorf("ports missing from nested single-line block: %+v", m)
+				}
+				network, ok := mod.Resources[0].Attributes["network"].AsString()
+				if !ok || network != "default" {
+					t.Errorf("network = %q, want default", network)
+				}
+			},
+		},
+		{
+			name: "same-line body plus comma-less jsonencode object",
+			src: `resource "aws_iam_policy" "admin" {
+  policy = jsonencode({ Statement = [{ Effect = "Allow" Action = "*" Resource = "*" }] })
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				pol, ok := mod.Resources[0].Attributes["policy"].AsString()
+				if !ok {
+					t.Fatalf("policy not a known string")
+				}
+				for _, want := range []string{`"Action":"*"`, `"Resource":"*"`} {
+					if !strings.Contains(pol, want) {
+						t.Errorf("policy missing %s: %s", want, pol)
+					}
+				}
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(tc.src))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(diags) != 0 {
+				t.Fatalf("recovered parse must be clean, got %+v", diags)
+			}
+			tc.check(t, mod)
+		})
+	}
+}
+
+// TestLenientSingleVsMultiLineEquivalence: the same resource written
+// single-line and multi-line must yield identical attribute sets.
+func TestLenientSingleVsMultiLineEquivalence(t *testing.T) {
+	single := `resource "azurerm_storage_account" "s" { name = "st" resource_group_name = "rg" location = "westeurope" account_tier = "Standard" account_replication_type = "GRS" allow_blob_public_access = false min_tls_version = "TLS1_2" }
+`
+	multi := `resource "azurerm_storage_account" "s" {
+  name = "st"
+  resource_group_name = "rg"
+  location = "westeurope"
+  account_tier = "Standard"
+  account_replication_type = "GRS"
+  allow_blob_public_access = false
+  min_tls_version = "TLS1_2"
+}
+`
+	a, _, err := Adapter{}.ParseModule("a.tf", []byte(single))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _, err := Adapter{}.ParseModule("b.tf", []byte(multi))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(a.Resources) != 1 || len(b.Resources) != 1 {
+		t.Fatalf("expected 1 resource each, got %d / %d", len(a.Resources), len(b.Resources))
+	}
+	if len(a.Resources[0].Attributes) != len(b.Resources[0].Attributes) {
+		t.Fatalf("attribute count differs: single-line %d vs multi-line %d",
+			len(a.Resources[0].Attributes), len(b.Resources[0].Attributes))
+	}
+	for k, va := range a.Resources[0].Attributes {
+		vb, ok := b.Resources[0].Attributes[k]
+		if !ok {
+			t.Errorf("multi-line form missing attribute %q", k)
+			continue
+		}
+		if va.Known != vb.Known || fmt.Sprint(va.Raw) != fmt.Sprint(vb.Raw) {
+			t.Errorf("attribute %q differs: single-line %#v vs multi-line %#v", k, va.Raw, vb.Raw)
+		}
+	}
+}
+
+// TestLenientSameLineBraceInString: a '{' inside a string literal on the
+// block's line must not be mistaken for the block's opening brace.
+func TestLenientSameLineBraceInString(t *testing.T) {
+	src := `resource "a" "b" { x = "{" y = 2 }
+`
+	mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) != 0 {
+		t.Fatalf("recovered parse must be clean, got %+v", diags)
+	}
+	if len(mod.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+	}
+	x, ok := mod.Resources[0].Attributes["x"].AsString()
+	if !ok || x != "{" {
+		t.Errorf("x = %q, want \"{\"", x)
+	}
+	if y, ok := mod.Resources[0].Attributes["y"]; !ok || !y.Known {
+		t.Errorf("y missing after recovery")
+	}
+}
+
 func TestLenientUnrecoverableUnchanged(t *testing.T) {
 	src := `resource "aws_instance" "web" {
   ami = "ami-123"

@@ -191,36 +191,49 @@ type ModuleCall struct {
 // Structural pre-validation (PreValidate) runs first: hopeless input
 // (binary garbage, UTF-16, oversize, truncated, absurdly nested) fails
 // fast with a clear hard error instead of a confusing parser diagnostic.
-// lenientParseConfig parses src as native HCL, with a targeted recovery
-// for single-line object constructors written without comma separators
-// (e.g. { Effect = "Allow" Action = "s3:GetObject" }). Some generators and
-// hand-written files omit the commas; the strict parser then reports
-// "Missing attribute separator" and silently drops the remaining items,
-// which mangles jsonencode() policy documents into empty statements.
+// lenientParseConfig parses src as native HCL, with targeted recovery
+// for two classes of separator omission that make the strict parser drop
+// attributes:
 //
-// Recovery only triggers on files the strict parser already rejects:
-// commas are inserted at the exact diagnostic positions and the source is
-// re-parsed, iterating because the parser reports only the first missing
-// separator per pass. If the repaired source parses cleanly it is used;
-// otherwise the original partial result is returned unchanged. This is
-// purely additive: files that parsed cleanly before are untouched.
+//   - Object constructors written without comma separators
+//     (e.g. { Effect = "Allow" Action = "s3:GetObject" }): the parser
+//     reports "Missing attribute separator"; a comma is inserted.
+//   - Multiple attributes on one line inside a block body
+//     (e.g. `resource "aws_s3_bucket" "pub" { bucket = "c1" acl = "public-read" }`
+//     or `engine = "postgres" instance_class = "db.t3.micro"`): the parser
+//     reports "Missing newline after argument" (multi-line block) or
+//     "Invalid single-argument block definition" (single-line block);
+//     a newline is inserted at the start of the offending attribute.
+//
+// Without recovery the parser silently drops every attribute after the
+// first on a line, so rules see e.g. an S3 bucket with no acl, an RDS
+// instance with no storage_encrypted, or a jsonencode() policy whose
+// statements lost Action/Resource. Recovery only triggers on files the
+// strict parser already rejects: separators are inserted at the exact
+// diagnostic positions and the source is re-parsed, iterating because
+// the parser reports only the first omission per pass. If the repaired
+// source parses cleanly it is used; otherwise the original partial result
+// is returned unchanged. This is purely additive: files that parsed
+// cleanly before are untouched, and genuinely broken files keep their
+// original diagnostics.
 func lenientParseConfig(src []byte, path string) (*hcl.File, hcl.Diagnostics) {
 	f, diags := hclsyntax.ParseConfig(src, path, hcl.Pos{Line: 1, Column: 1})
 	fixed := append([]byte(nil), src...)
 	// The parser reports only the first missing separator per pass, so
 	// iterate. Bound the loop: each pass must fix at least one position.
-	for i := 0; i < 32; i++ {
-		offsets := missingSeparatorOffsets(diags)
-		if len(offsets) == 0 {
+	for i := 0; i < 256; i++ {
+		repairs := separatorRepairs(fixed, diags)
+		if len(repairs) == 0 {
 			break
 		}
-		// Insert commas back-to-front so earlier offsets stay valid.
-		for j := len(offsets) - 1; j >= 0; j-- {
-			off := offsets[j]
+		// Insert repairs back-to-front so earlier offsets stay valid.
+		for j := len(repairs) - 1; j >= 0; j-- {
+			off := repairs[j].offset
 			if off < 0 || off > len(fixed) {
 				continue
 			}
-			fixed = append(fixed[:off:off], append([]byte{','}, fixed[off:]...)...)
+			ins := []byte{repairs[j].insert}
+			fixed = append(fixed[:off:off], append(ins, fixed[off:]...)...)
 		}
 		var diags2 hcl.Diagnostics
 		f, diags2 = hclsyntax.ParseConfig(fixed, path, hcl.Pos{Line: 1, Column: 1})
@@ -237,26 +250,112 @@ func lenientParseConfig(src []byte, path string) (*hcl.File, hcl.Diagnostics) {
 	return f, diags
 }
 
-// missingSeparatorOffsets returns the deduplicated, sorted byte offsets at
-// which the parser reported a missing attribute separator.
-func missingSeparatorOffsets(diags hcl.Diagnostics) []int {
+// separatorRepair is one separator insertion at a parser-reported offset.
+type separatorRepair struct {
+	offset int
+	insert byte // ',' for object constructors, '\n' for block bodies
+}
+
+// separatorRepairs returns the deduplicated, sorted separator insertions
+// implied by the parser diagnostics. Diagnostics of any other kind yield
+// no repairs, which makes the caller fall back to the strict parse.
+//
+//   - "Missing attribute separator" (object constructor): insert ',' at
+//     the start of the offending attribute.
+//   - "Missing newline after argument" (block body): insert '\n' at the
+//     start of the offending attribute.
+//   - "Invalid single-argument block definition": an argument sharing a
+//     line with its block's '{' makes the block single-line, so a newline
+//     before the second attribute is NOT enough — the block must be
+//     opened onto its own line. Insert '\n' immediately after the '{'
+//     that opens the offending block (the first '{' on the diagnostic's
+//     line outside strings/comments). A later pass then splits the
+//     remaining same-line attributes with "Missing newline" repairs.
+func separatorRepairs(src []byte, diags hcl.Diagnostics) []separatorRepair {
 	seen := map[int]bool{}
-	var out []int
-	for _, d := range diags {
-		if d.Summary != "Missing attribute separator" {
-			continue
+	var out []separatorRepair
+	add := func(off int, ins byte) {
+		if off < 0 || off > len(src) || seen[off] {
+			return
 		}
+		seen[off] = true
+		out = append(out, separatorRepair{offset: off, insert: ins})
+	}
+	for _, d := range diags {
 		if d.Subject == nil {
 			continue
 		}
-		off := d.Subject.Start.Byte
-		if !seen[off] {
-			seen[off] = true
-			out = append(out, off)
+		switch d.Summary {
+		case "Missing attribute separator":
+			add(d.Subject.Start.Byte, ',')
+		case "Missing newline after argument":
+			add(d.Subject.Start.Byte, '\n')
+		case "Invalid single-argument block definition":
+			if off, ok := blockOpenBraceOffset(src, d.Subject.Start); ok {
+				add(off, '\n')
+			} else {
+				add(d.Subject.Start.Byte, '\n')
+			}
+		default:
+			continue
 		}
 	}
-	sort.Ints(out)
+	sort.Slice(out, func(i, j int) bool { return out[i].offset < out[j].offset })
 	return out
+}
+
+// blockOpenBraceOffset finds the '{' that opens the block whose
+// single-line definition the diagnostic at pos complains about: the
+// first '{' on pos's line that lies outside string literals and comments.
+// The newline is inserted right after it (offset = brace+1). ok=false
+// when no such brace exists on the line.
+func blockOpenBraceOffset(src []byte, pos hcl.Pos) (int, bool) {
+	// Find the start of pos's line.
+	lineStart := 0
+	line := 1
+	for i := 0; i < len(src) && line < pos.Line; i++ {
+		if src[i] == '\n' {
+			line++
+			lineStart = i + 1
+		}
+	}
+	// Scan the line forward, skipping strings and comments.
+	i := lineStart
+	for i < len(src) && src[i] != '\n' {
+		c := src[i]
+		switch {
+		case c == '#':
+			return -1, false // rest of line is a comment
+		case c == '/' && i+1 < len(src) && src[i+1] == '/':
+			return -1, false
+		case c == '/' && i+1 < len(src) && src[i+1] == '*':
+			// Skip to the closing */ (or end of line).
+			j := i + 2
+			for j+1 < len(src) && src[j] != '\n' && !(src[j] == '*' && src[j+1] == '/') {
+				j++
+			}
+			i = j + 2
+		case c == '"' || c == '\'':
+			quote := c
+			i++
+			for i < len(src) && src[i] != '\n' {
+				if src[i] == '\\' {
+					i += 2
+					continue
+				}
+				if src[i] == quote {
+					i++
+					break
+				}
+				i++
+			}
+		case c == '{':
+			return i + 1, true
+		default:
+			i++
+		}
+	}
+	return -1, false
 }
 
 func (Adapter) ParseModule(path string, src []byte) (Module, []ir.Diagnostic, error) {
