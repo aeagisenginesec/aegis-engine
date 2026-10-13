@@ -886,6 +886,78 @@ func TestLenientSameLineBraceInString(t *testing.T) {
 	}
 }
 
+// TestPureFunctionEvaluation: jsonencode/merge/concat over static
+// arguments evaluate to known values; calls over references or
+// non-whitelisted functions stay Unknown (never guessed).
+func TestPureFunctionEvaluation(t *testing.T) {
+	src := `resource "aws_iam_policy" "admin" {
+  policy = jsonencode(merge(
+    { Version = "2012-10-17" },
+    { Statement = [{ Effect = "Allow" Action = concat(["*"], []) Resource = "*" }] }
+  ))
+}
+resource "aws_iam_policy" "readonly" {
+  policy = jsonencode({
+    Statement = [{ Effect = "Allow" Action = concat(["s3:GetObject"], ["s3:ListBucket"]) Resource = "arn:aws:s3:::c2/*" }]
+  })
+}
+resource "aws_s3_bucket" "merged" {
+  tags = merge({ Env = "prod" }, { Owner = "team" })
+}
+resource "aws_s3_bucket" "concatlist" {
+  tags = concat(["a"], ["b"])
+}
+resource "aws_s3_bucket" "dynamic" {
+  tags = merge({ Env = "prod" }, var.extra)
+}
+resource "aws_s3_bucket" "impure" {
+  tags = uuid()
+}
+`
+	mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) != 0 {
+		t.Fatalf("parse must be clean, got %+v", diags)
+	}
+	res := map[string]ir.Resource{}
+	for _, r := range mod.Resources {
+		res[r.Address()] = r
+	}
+	admin, ok := res["aws_iam_policy.admin"].Attributes["policy"].AsString()
+	if !ok {
+		t.Fatalf("admin policy not a known string")
+	}
+	if !strings.Contains(admin, `"Action":["*"]`) || !strings.Contains(admin, `"Resource":"*"`) {
+		t.Errorf("jsonencode(merge(...)) policy lost admin statement: %s", admin)
+	}
+	if !strings.Contains(admin, `"Version":"2012-10-17"`) {
+		t.Errorf("jsonencode(merge(...)) policy lost Version: %s", admin)
+	}
+	ro, ok := res["aws_iam_policy.readonly"].Attributes["policy"].AsString()
+	if !ok {
+		t.Fatalf("readonly policy not a known string")
+	}
+	if !strings.Contains(ro, "s3:GetObject") || !strings.Contains(ro, "s3:ListBucket") {
+		t.Errorf("concat() inside jsonencode lost actions: %s", ro)
+	}
+	merged, ok := res["aws_s3_bucket.merged"].Attributes["tags"].AsMap()
+	if !ok || len(merged) != 2 {
+		t.Errorf("merge() tags = %+v, want 2 entries", merged)
+	}
+	conc, ok := res["aws_s3_bucket.concatlist"].Attributes["tags"].AsList()
+	if !ok || len(conc) != 2 {
+		t.Errorf("concat() tags = %+v, want 2 elements", conc)
+	}
+	if v := res["aws_s3_bucket.dynamic"].Attributes["tags"]; v.Known {
+		t.Errorf("merge() over a reference must stay Unknown, got %#v", v.Raw)
+	}
+	if v := res["aws_s3_bucket.impure"].Attributes["tags"]; v.Known {
+		t.Errorf("non-whitelisted call must stay Unknown, got %#v", v.Raw)
+	}
+}
+
 func TestLenientUnrecoverableUnchanged(t *testing.T) {
 	src := `resource "aws_instance" "web" {
   ami = "ami-123"

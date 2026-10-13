@@ -770,6 +770,14 @@ func valueFromExpr(path string, expr hcl.Expression) (v ir.Value) {
 			v = ir.UnknownValue(span)
 		}
 	}()
+	// Pure expressions: static literals plus whitelisted pure function
+	// calls (jsonencode, merge, concat) over static arguments. These are
+	// fully determined by the source, so evaluating them is not guessing:
+	// jsonencode(merge({...}, {...})) policy documents and concat() action
+	// lists become analyzable instead of Unknown.
+	if val, ok := evalPureExpr(expr); ok {
+		return ctyToValue(val, span)
+	}
 	if !staticExpr(expr) {
 		// Milestone 3: evaluate jsonencode() over static arguments so IAM
 		// policy documents written as jsonencode({...}) become analyzable.
@@ -1002,8 +1010,148 @@ func jsonEncodeStatic(expr hcl.Expression) (string, bool) {
 	return string(b), true
 }
 
-// ctyToGo converts a known, non-null cty value to Go natives for JSON
-// encoding. Unknown, null, or exotic types report ok=false.
+// evalPureExpr evaluates an expression built only from static literals
+// and whitelisted pure function calls, returning ok=false for anything
+// else (references, conditionals, operators other than unary minus,
+// non-whitelisted calls). The whitelist is deliberately tiny and
+// side-effect-free:
+//
+//   - jsonencode(x): x evaluated, then JSON-encoded (mirrors Terraform).
+//   - merge(m1, m2, ...): object union, later maps win on key conflicts.
+//   - concat(l1, l2, ...): list concatenation.
+//
+// Calls nest: jsonencode(merge({...}, {...})) and objects/lists
+// containing pure calls evaluate recursively. Anything containing a
+// reference stays unevaluated (ok=false) so the caller can preserve the
+// reference for the semantics layer instead of guessing.
+func evalPureExpr(expr hcl.Expression) (cty.Value, bool) {
+	switch ex := expr.(type) {
+	case *hclsyntax.LiteralValueExpr:
+		val, diags := expr.Value(emptyCtx)
+		if diags.HasErrors() {
+			return cty.NilVal, false
+		}
+		return val, true
+	case *hclsyntax.TemplateExpr:
+		if len(ex.Parts) != 1 {
+			return cty.NilVal, false
+		}
+		return evalPureExpr(ex.Parts[0])
+	case *hclsyntax.TemplateWrapExpr:
+		return evalPureExpr(ex.Wrapped)
+	case *hclsyntax.TupleConsExpr:
+		if len(ex.Exprs) == 0 {
+			return cty.EmptyTupleVal, true
+		}
+		elems := make([]cty.Value, 0, len(ex.Exprs))
+		for _, e := range ex.Exprs {
+			v, ok := evalPureExpr(e)
+			if !ok {
+				return cty.NilVal, false
+			}
+			elems = append(elems, v)
+		}
+		return cty.TupleVal(elems), true
+	case *hclsyntax.ObjectConsExpr:
+		if len(ex.Items) == 0 {
+			return cty.EmptyObjectVal, true
+		}
+		attrs := make(map[string]cty.Value, len(ex.Items))
+		for _, item := range ex.Items {
+			key, ok := staticKeyString(item.KeyExpr)
+			if !ok {
+				return cty.NilVal, false
+			}
+			v, ok := evalPureExpr(item.ValueExpr)
+			if !ok {
+				return cty.NilVal, false
+			}
+			attrs[key] = v
+		}
+		return cty.ObjectVal(attrs), true
+	case *hclsyntax.UnaryOpExpr:
+		if ex.Op != hclsyntax.OpNegate {
+			return cty.NilVal, false
+		}
+		// Evaluate exactly (no float64 round-trip): the operand must
+		// itself be pure, then the whole expression evaluates literally.
+		if _, ok := evalPureExpr(ex.Val); !ok {
+			return cty.NilVal, false
+		}
+		val, diags := expr.Value(emptyCtx)
+		if diags.HasErrors() {
+			return cty.NilVal, false
+		}
+		return val, true
+	case *hclsyntax.FunctionCallExpr:
+		return evalPureCall(ex)
+	default:
+		return cty.NilVal, false
+	}
+}
+
+// evalPureCall evaluates one whitelisted pure function call.
+func evalPureCall(call *hclsyntax.FunctionCallExpr) (cty.Value, bool) {
+	switch call.Name {
+	case "jsonencode":
+		if len(call.Args) != 1 {
+			return cty.NilVal, false
+		}
+		v, ok := evalPureExpr(call.Args[0])
+		if !ok {
+			return cty.NilVal, false
+		}
+		goVal, ok := ctyToGo(v)
+		if !ok {
+			return cty.NilVal, false
+		}
+		b, err := json.Marshal(goVal)
+		if err != nil {
+			return cty.NilVal, false
+		}
+		return cty.StringVal(string(b)), true
+	case "merge":
+		merged := map[string]cty.Value{}
+		for _, arg := range call.Args {
+			v, ok := evalPureExpr(arg)
+			if !ok {
+				return cty.NilVal, false
+			}
+			if !v.Type().IsObjectType() && !v.Type().IsMapType() {
+				return cty.NilVal, false
+			}
+			for it := v.ElementIterator(); it.Next(); {
+				kv, ev := it.Element()
+				merged[kv.AsString()] = ev
+			}
+		}
+		if len(merged) == 0 {
+			return cty.EmptyObjectVal, true
+		}
+		return cty.ObjectVal(merged), true
+	case "concat":
+		var elems []cty.Value
+		for _, arg := range call.Args {
+			v, ok := evalPureExpr(arg)
+			if !ok {
+				return cty.NilVal, false
+			}
+			if !v.Type().IsTupleType() && !v.Type().IsListType() && !v.Type().IsSetType() {
+				return cty.NilVal, false
+			}
+			for it := v.ElementIterator(); it.Next(); {
+				_, ev := it.Element()
+				elems = append(elems, ev)
+			}
+		}
+		if len(elems) == 0 {
+			return cty.EmptyTupleVal, true
+		}
+		return cty.TupleVal(elems), true
+	default:
+		return cty.NilVal, false
+	}
+}
 func ctyToGo(val cty.Value) (any, bool) {
 	val, _ = val.UnmarkDeep()
 	if !val.IsKnown() || val.IsNull() {
