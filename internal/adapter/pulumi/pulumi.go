@@ -30,6 +30,7 @@ package pulumi
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -98,6 +99,23 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			Span:    ir.Span{File: path},
 		})
 	}
+	// Honest reporting for Pulumi programs the adapter cannot analyze: a
+	// TypeScript/JavaScript (Node.js) program has no resources: section,
+	// so without this check it scans as "0 findings" with nothing
+	// explaining that the program's language is not analyzed. Detect it
+	// and say so explicitly instead of staying silent.
+	if lang, files := detectUnanalyzedProgram(root, prog, path); lang != "" {
+		msg := fmt.Sprintf("pulumi: %s is a Pulumi %s program; program files are not analyzed — scan results do not cover this program's resources", path, lang)
+		if len(files) > 0 {
+			msg += fmt.Sprintf(" (unparsed: %s)", strings.Join(files, ", "))
+		}
+		p.diags = append(p.diags, ir.Diagnostic{
+			Level:   "warning",
+			Message: msg,
+			Span:    ir.Span{File: path},
+		})
+		return nil, p.diags, nil
+	}
 	p.collectVars(prog)
 	resNode := nodeField(prog, "resources")
 	if resNode == nil || resNode.Kind != yaml.MappingNode {
@@ -123,6 +141,89 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 		out = append(out, p.resource(name, rn))
 	}
 	return out, p.diags, nil
+}
+
+// tsExtensions are Pulumi Node.js program entrypoints.
+var tsExtensions = map[string]bool{
+	".ts": true, ".tsx": true, ".js": true, ".jsx": true,
+	".mjs": true, ".cjs": true, ".mts": true, ".cts": true,
+}
+
+// detectUnanalyzedProgram reports whether the Pulumi program in path is
+// written in a language the adapter cannot analyze. It returns the human
+// language name and the detected program files, or "" when the program
+// is analyzable (declarative YAML) or outside this check's scope.
+//
+// Detection signals, in order:
+//  1. The program's `runtime:` field — authoritative (e.g. nodejs).
+//  2. When the runtime is missing or unrecognized and there is no
+//     resources: section, the Node.js program markers in the same
+//     directory: package.json plus .ts/.js entrypoints.
+//
+// Other language runtimes (python, dotnet, go, java) are equally
+// unanalyzed, but warning for them is follow-up work, not this check.
+func detectUnanalyzedProgram(root, prog *yaml.Node, path string) (string, []string) {
+	rt := ""
+	if n := nodeField(root, "runtime"); n != nil && n.Kind == yaml.ScalarNode {
+		rt = strings.ToLower(strings.TrimSpace(n.Value))
+	}
+	switch rt {
+	case "nodejs", "node":
+		return "TypeScript/JavaScript", programFiles(filepath.Dir(path))
+	case "yaml":
+		return "", nil
+	case "python", "dotnet", "go", "java", "jvm":
+		// Equally unanalyzed, but out of this check's scope.
+		return "", nil
+	}
+	// Missing or unrecognized runtime: the adapter still analyzes a
+	// resources: section when present; otherwise the Node.js program
+	// markers (package.json + .ts/.js entrypoints) are the signal.
+	if nodeField(prog, "resources") != nil {
+		return "", nil
+	}
+	dir := filepath.Dir(path)
+	files := programFiles(dir)
+	if len(files) > 0 && hasFileCI(dir, "package.json") {
+		return "TypeScript/JavaScript", files
+	}
+	return "", nil
+}
+
+// programFiles lists Pulumi Node.js program entrypoints (.ts/.js/…) in
+// dir (non-recursive, sorted). A read error yields no files, never an
+// error: detection is best-effort, and absence of evidence is not
+// evidence. Nothing is executed; only names are read.
+func programFiles(dir string) []string {
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, e := range ents {
+		if e.IsDir() {
+			continue
+		}
+		if tsExtensions[strings.ToLower(filepath.Ext(e.Name()))] {
+			out = append(out, e.Name())
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// hasFileCI reports whether dir contains name, matched case-insensitively.
+func hasFileCI(dir, name string) bool {
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+	for _, e := range ents {
+		if !e.IsDir() && strings.EqualFold(e.Name(), name) {
+			return true
+		}
+	}
+	return false
 }
 
 // parser carries per-parse state.

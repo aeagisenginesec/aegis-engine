@@ -268,3 +268,50 @@ func TestScanPulumiOnly(t *testing.T) {
 		}
 	}
 }
+
+// TestScanPulumiTSProgramWarns: end-to-end honest reporting — a Pulumi
+// TypeScript program must surface a "not analyzed" diagnostic instead of
+// a silent 0-findings scan.
+func TestScanPulumiTSProgramWarns(t *testing.T) {
+	dir := t.TempDir()
+	files := map[string]string{
+		"Pulumi.yaml":  "name: ts-prog\nruntime: nodejs\ndescription: TS program\n",
+		"package.json": "{\"name\":\"ts-prog\"}\n",
+		"index.ts":     "import * as aws from \"@pulumi/aws\";\nconst b = new aws.s3.Bucket(\"b\", {acl: \"public-read\"});\n",
+	}
+	for name, body := range files {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	env, _, _ := scanJSON(t, dir, "--format=json")
+	if findings := env["findings"].([]any); len(findings) != 0 {
+		t.Fatalf("TS program must yield 0 findings, got %d", len(findings))
+	}
+	found := false
+	for _, d := range env["diagnostics"].([]any) {
+		msg := d.(map[string]any)["message"].(string)
+		if strings.Contains(msg, "not analyzed") && strings.Contains(msg, "TypeScript/JavaScript") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected honest 'not analyzed' diagnostic, got %v", env["diagnostics"])
+	}
+}
+
+// TestScanNonPulumiDirNoWarning: a directory with .ts files but no
+// Pulumi.yaml is not a Pulumi program — no warning must fire.
+func TestScanNonPulumiDirNoWarning(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "index.ts"), []byte("const x = 1;\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	env, _, _ := scanJSON(t, dir, "--format=json")
+	for _, d := range env["diagnostics"].([]any) {
+		msg := d.(map[string]any)["message"].(string)
+		if strings.Contains(msg, "not analyzed") {
+			t.Errorf("non-Pulumi dir must not warn, got %q", msg)
+		}
+	}
+}
