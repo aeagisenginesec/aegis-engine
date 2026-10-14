@@ -126,8 +126,12 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	// + 6 outperform-mission rules (AEGIS-AWS-851..855, AEGIS-DOCKER-037).
 	// − 3 removed as factually wrong / duplicates (684, 692, 702).
 	// + 5 K8s hardening gap-closure (AEGIS-K8S-028..032).
-	if len(all) != 1159 {
-		t.Fatalf("default registry should wire 1159 rules, got %d", len(all))
+	// − 9 duplicate / FP-prone rules removed by the multi-cloud quality
+	//   audit (AZR-004, AZURE-008/009/025/045/047/048/225, GCP-063).
+	// + 2 multi-cloud quality audit rules (AEGIS-GCP-293, AEGIS-GCP-294).
+	// + 1 AWS-856 EC2 EOL image (concurrent addition, kept after audit review).
+	if len(all) != 1153 {
+		t.Fatalf("default registry should wire 1153 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {
