@@ -3,7 +3,7 @@
 //
 // Endpoints:
 //
-//	GET  /v1/health -> {"status":"ok","version":"1.0.0"}
+//	GET  /v1/health -> {"status":"ok","version":"2.0.0"}
 //	POST /v1/scan   -> {"files":[{"path":"main.tf","content":"..."}],"rules":"aws"}
 //	                   runs the full in-memory pipeline (no disk writes) and
 //	                   returns {"resources":n,"findings":[...],"diagnostics":[...]}

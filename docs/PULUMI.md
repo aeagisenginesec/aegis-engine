@@ -50,13 +50,14 @@ cannot resolve them without executing code, which Aegis never does. Pulumi
 YAML covers the declarative use case. If you need imperative Pulumi
 languages, convert with `pulumi convert` or scan the deployed state.
 
-**TypeScript/JavaScript programs warn instead of scanning silently.**
-When the scanner detects a Pulumi TypeScript/JavaScript program
-(`Pulumi.yaml` with `runtime: nodejs`, or `Pulumi.yaml` alongside
-`package.json` and `.ts`/`.js` entrypoints), it emits a warning
-diagnostic naming the unparsed program files — so "0 findings" can never
-be misread as "clean". Programs in Python, Go, or .NET currently scan
-silently; extending the warning to those runtimes is planned follow-up.
+**Imperative Pulumi programs warn instead of scanning silently.**
+When the scanner detects a Pulumi program in TypeScript/JavaScript,
+Python, Go, .NET, or Java (`Pulumi.yaml` with `runtime: nodejs`,
+`python`, `go`, `dotnet`, or `java`/`jvm` — or, when the runtime field is
+absent, the language's marker files alongside program entrypoints), it
+emits a warning diagnostic naming the unparsed program files — so
+"0 findings" can never be misread as "clean". Pulumi YAML is analyzed
+declaratively and never warns.
 
 ## Project config file (aegis.yaml)
 

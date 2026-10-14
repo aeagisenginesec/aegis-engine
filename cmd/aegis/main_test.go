@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"aegis/internal/version"
 )
 
 const vulnTF = `resource "aws_s3_bucket" "data" {
@@ -59,7 +61,7 @@ func TestScanExitCodeFindings(t *testing.T) {
 	if !seen["AEGIS-AWS-002"] {
 		t.Errorf("expected rule AEGIS-AWS-002 among findings, got %v", seen)
 	}
-	if env["aegis_version"] != "1.0.0" {
+	if env["aegis_version"] != version.Version {
 		t.Errorf("missing aegis_version in envelope")
 	}
 }

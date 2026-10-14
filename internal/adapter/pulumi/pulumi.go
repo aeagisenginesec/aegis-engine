@@ -99,11 +99,12 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			Span:    ir.Span{File: path},
 		})
 	}
-	// Honest reporting for Pulumi programs the adapter cannot analyze: a
-	// TypeScript/JavaScript (Node.js) program has no resources: section,
-	// so without this check it scans as "0 findings" with nothing
-	// explaining that the program's language is not analyzed. Detect it
-	// and say so explicitly instead of staying silent.
+	// Honest reporting for Pulumi programs the adapter cannot analyze: an
+	// imperative program (TypeScript/JavaScript, Python, Go, .NET, Java)
+	// has no resources: section, so without this check it scans as
+	// "0 findings" with nothing explaining that the program's language is
+	// not analyzed. Detect it and say so explicitly instead of staying
+	// silent.
 	if lang, files := detectUnanalyzedProgram(root, prog, path); lang != "" {
 		msg := fmt.Sprintf("pulumi: %s is a Pulumi %s program; program files are not analyzed — scan results do not cover this program's resources", path, lang)
 		if len(files) > 0 {
@@ -149,52 +150,96 @@ var tsExtensions = map[string]bool{
 	".mjs": true, ".cjs": true, ".mts": true, ".cts": true,
 }
 
+// pyExtensions are Pulumi Python program entrypoints.
+var pyExtensions = map[string]bool{
+	".py": true, ".pyi": true,
+}
+
+// goExtensions are Pulumi Go program entrypoints.
+var goExtensions = map[string]bool{
+	".go": true,
+}
+
+// dotnetExtensions are Pulumi .NET program entrypoints (C#/F#/VB).
+var dotnetExtensions = map[string]bool{
+	".cs": true, ".fs": true, ".vb": true,
+}
+
+// javaExtensions are Pulumi Java program entrypoints.
+var javaExtensions = map[string]bool{
+	".java": true, ".kt": true, ".kts": true,
+}
+
 // detectUnanalyzedProgram reports whether the Pulumi program in path is
 // written in a language the adapter cannot analyze. It returns the human
 // language name and the detected program files, or "" when the program
-// is analyzable (declarative YAML) or outside this check's scope.
+// is analyzable (declarative YAML) or carries no language signal.
 //
 // Detection signals, in order:
-//  1. The program's `runtime:` field — authoritative (e.g. nodejs).
+//  1. The program's `runtime:` field — authoritative (e.g. nodejs, python).
 //  2. When the runtime is missing or unrecognized and there is no
-//     resources: section, the Node.js program markers in the same
-//     directory: package.json plus .ts/.js entrypoints.
-//
-// Other language runtimes (python, dotnet, go, java) are equally
-// unanalyzed, but warning for them is follow-up work, not this check.
+//     resources: section, the language markers in the same directory:
+//     a marker file (package.json, requirements.txt, go.mod, …) plus
+//     program entrypoint files.
 func detectUnanalyzedProgram(root, prog *yaml.Node, path string) (string, []string) {
 	rt := ""
 	if n := nodeField(root, "runtime"); n != nil && n.Kind == yaml.ScalarNode {
 		rt = strings.ToLower(strings.TrimSpace(n.Value))
 	}
-	switch rt {
-	case "nodejs", "node":
-		return "TypeScript/JavaScript", programFiles(filepath.Dir(path))
-	case "yaml":
-		return "", nil
-	case "python", "dotnet", "go", "java", "jvm":
-		// Equally unanalyzed, but out of this check's scope.
+	dir := filepath.Dir(path)
+	// 1. The runtime: field is authoritative.
+	if rt == "yaml" {
 		return "", nil
 	}
-	// Missing or unrecognized runtime: the adapter still analyzes a
-	// resources: section when present; otherwise the Node.js program
-	// markers (package.json + .ts/.js entrypoints) are the signal.
+	for _, l := range unanalyzedLangs {
+		for _, r := range l.runtimes {
+			if rt != "" && rt == r {
+				return l.name, programFilesExt(dir, l.exts)
+			}
+		}
+	}
+	// 2. Missing or unrecognized runtime: the adapter still analyzes a
+	// resources: section when present; otherwise the language markers in
+	// the same directory are the signal (marker file + entrypoint files).
 	if nodeField(prog, "resources") != nil {
 		return "", nil
 	}
-	dir := filepath.Dir(path)
-	files := programFiles(dir)
-	if len(files) > 0 && hasFileCI(dir, "package.json") {
-		return "TypeScript/JavaScript", files
+	for _, l := range unanalyzedLangs {
+		if hasAnyMarker(dir, l.markers) {
+			if files := programFilesExt(dir, l.exts); len(files) > 0 {
+				return l.name, files
+			}
+		}
 	}
 	return "", nil
 }
 
-// programFiles lists Pulumi Node.js program entrypoints (.ts/.js/…) in
-// dir (non-recursive, sorted). A read error yields no files, never an
-// error: detection is best-effort, and absence of evidence is not
+// unanalyzedLang describes a Pulumi program language the adapter cannot
+// analyze: its runtime: values, human name, program entrypoint extensions,
+// and marker files used for fallback detection when runtime: is absent.
+// A static scanner cannot evaluate imperative programs without executing
+// code, which Aegis never does — so every such language must warn rather
+// than scan silently.
+type unanalyzedLang struct {
+	name     string            // human language name for the warning
+	runtimes []string          // runtime: values (lowercased)
+	exts     map[string]bool   // program entrypoint extensions
+	markers  []string          // marker files; a leading "." means extension match
+}
+
+var unanalyzedLangs = []unanalyzedLang{
+	{name: "TypeScript/JavaScript", runtimes: []string{"nodejs", "node"}, exts: tsExtensions, markers: []string{"package.json"}},
+	{name: "Python", runtimes: []string{"python"}, exts: pyExtensions, markers: []string{"requirements.txt", "pyproject.toml", "setup.py"}},
+	{name: "Go", runtimes: []string{"go"}, exts: goExtensions, markers: []string{"go.mod"}},
+	{name: ".NET (C#/F#/VB)", runtimes: []string{"dotnet"}, exts: dotnetExtensions, markers: []string{".csproj", ".fsproj", ".vbproj"}},
+	{name: "Java", runtimes: []string{"java", "jvm"}, exts: javaExtensions, markers: []string{"pom.xml", "build.gradle", "build.gradle.kts"}},
+}
+
+// programFilesExt lists program entrypoint files in dir (non-recursive,
+// sorted) whose extension is in exts. A read error yields no files, never
+// an error: detection is best-effort, and absence of evidence is not
 // evidence. Nothing is executed; only names are read.
-func programFiles(dir string) []string {
+func programFilesExt(dir string, exts map[string]bool) []string {
 	ents, err := os.ReadDir(dir)
 	if err != nil {
 		return nil
@@ -204,12 +249,50 @@ func programFiles(dir string) []string {
 		if e.IsDir() {
 			continue
 		}
-		if tsExtensions[strings.ToLower(filepath.Ext(e.Name()))] {
+		if exts[strings.ToLower(filepath.Ext(e.Name()))] {
 			out = append(out, e.Name())
 		}
 	}
 	sort.Strings(out)
 	return out
+}
+
+// programFiles lists Pulumi Node.js program entrypoints (.ts/.js/…) in dir.
+func programFiles(dir string) []string {
+	return programFilesExt(dir, tsExtensions)
+}
+
+// hasAnyMarker reports whether dir contains any of the marker files.
+// A marker starting with "." matches by file extension (e.g. ".csproj");
+// otherwise it matches by exact file name, case-insensitively.
+func hasAnyMarker(dir string, markers []string) bool {
+	for _, m := range markers {
+		if strings.HasPrefix(m, ".") {
+			if hasExtCI(dir, m) {
+				return true
+			}
+			continue
+		}
+		if hasFileCI(dir, m) {
+			return true
+		}
+	}
+	return false
+}
+
+// hasExtCI reports whether dir contains a file with the given extension,
+// matched case-insensitively.
+func hasExtCI(dir, ext string) bool {
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+	for _, e := range ents {
+		if !e.IsDir() && strings.EqualFold(filepath.Ext(e.Name()), ext) {
+			return true
+		}
+	}
+	return false
 }
 
 // hasFileCI reports whether dir contains name, matched case-insensitively.

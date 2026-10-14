@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"aegis/internal/ir"
+	"aegis/internal/version"
 )
 
 const serveVulnTF = `
@@ -46,8 +47,8 @@ func TestHealth(t *testing.T) {
 	if err := json.Unmarshal(rr.Body.Bytes(), &got); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if got["status"] != "ok" || got["version"] != "1.0.0" {
-		t.Errorf("health = %v, want status ok version 0.1.0", got)
+	if got["status"] != "ok" || got["version"] != version.Version {
+		t.Errorf("health = %v, want status ok version %s", got, version.Version)
 	}
 }
 
