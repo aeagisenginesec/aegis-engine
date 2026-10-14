@@ -121,3 +121,58 @@ func TestRemediationFor_FallbackCloudMatch(t *testing.T) {
 		}
 	}
 }
+
+// TestRemediationFor_AuditCorrections pins the remediation fixes from the
+// multi-cloud quality audit follow-up: each rule must now receive fix steps
+// that actually resolve the finding (not a keyword-mismatched template).
+func TestRemediationFor_AuditCorrections(t *testing.T) {
+	cases := map[string]string{
+		"AEGIS-AWS-310":   "monitoring = true",
+		"AEGIS-AWS-311":   "iam_database_authentication_enabled = true",
+		"AEGIS-AWS-540":   "iam_database_authentication_enabled = true",
+		"AEGIS-AWS-546":   "copy_tags_to_snapshot = true",
+		"AEGIS-AWS-605":   "monitoring_interval",
+		"AEGIS-AWS-667":   "permissions_boundary",
+		"AEGIS-AWS-673":   "description",
+		"AEGIS-AZURE-046": "security_alert_policy",
+		"AEGIS-AZURE-125": "sas_policy",
+		"AEGIS-AZURE-186": "soft_delete_retention_days = 90",
+		"AEGIS-GCP-060":   "enable-oslogin",
+	}
+	for id, want := range cases {
+		fix, _ := RemediationFor(id)
+		if !strings.Contains(fix, want) {
+			t.Errorf("%s: remediation should prescribe %q, got: %.120q", id, want, fix)
+		}
+	}
+}
+
+// TestRemediationFor_GCP060NotAuditLogging: the "login" in "OS Login" must
+// not route to the audit-logging template (substring collision).
+func TestRemediationFor_GCP060NotAuditLogging(t *testing.T) {
+	fix, _ := RemediationFor("AEGIS-GCP-060")
+	if strings.Contains(strings.ToLower(fix), "cloud audit logs") {
+		t.Errorf("AEGIS-GCP-060 must not receive audit-logging guidance, got: %.120q", fix)
+	}
+}
+
+// TestRemediationFor_GCP030BucketValid: the deletion-protection fallback
+// must not prescribe `deletion_protection` for GCS buckets (invalid arg).
+func TestRemediationFor_GCP030BucketValid(t *testing.T) {
+	fix, _ := RemediationFor("AEGIS-GCP-030")
+	if strings.Contains(fix, "on databases, instances, and buckets") {
+		t.Errorf("AEGIS-GCP-030 must not claim deletion_protection works on buckets, got: %.200q", fix)
+	}
+	if !strings.Contains(fix, "force_destroy") {
+		t.Errorf("AEGIS-GCP-030 should mention force_destroy, got: %.200q", fix)
+	}
+}
+
+// TestRemediationFor_Azure032NoAWSAttr: the Azure encrypt fallback must not
+// cite the AWS RDS attribute `storage_encrypted`.
+func TestRemediationFor_Azure032NoAWSAttr(t *testing.T) {
+	fix, _ := RemediationFor("AEGIS-AZURE-032")
+	if strings.Contains(fix, "storage_encrypted") {
+		t.Errorf("AEGIS-AZURE-032 must not cite AWS attribute storage_encrypted, got: %.200q", fix)
+	}
+}

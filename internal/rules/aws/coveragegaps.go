@@ -684,7 +684,7 @@ func (noSecurityHub) Description() string {
 	return "AWS Security Hub should be enabled for centralized security " +
 		"findings aggregation and CIS benchmark checks. Add an " +
 		"aws_securityhub_account resource. Only evaluated on modules with " +
-		"5+ resources to avoid noise on trivial configurations."
+		"15+ resources to avoid noise on trivial configurations."
 }
 func (noSecurityHub) Severity() ir.Severity { return ir.SeverityLow }
 func (noSecurityHub) AppliesTo(resType string) bool {
@@ -773,7 +773,7 @@ func (noDetective) Description() string {
 	return "Amazon Detective should be enabled for ML-driven security " +
 		"investigation across CloudTrail, VPC flow logs, and GuardDuty " +
 		"findings. Add an aws_detective_graph resource. Only evaluated on " +
-		"modules with 5+ resources to avoid noise on trivial configurations."
+		"modules with 15+ resources to avoid noise on trivial configurations."
 }
 func (noDetective) Severity() ir.Severity { return ir.SeverityLow }
 func (noDetective) AppliesTo(resType string) bool {

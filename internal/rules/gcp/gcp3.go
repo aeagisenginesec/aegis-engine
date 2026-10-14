@@ -782,6 +782,9 @@ func (sqlNoLogDisconnections) AppliesTo(t string) bool {
 	return t == "google_sql_database_instance"
 }
 func (s sqlNoLogDisconnections) Check(r ir.Resource) []ir.Finding {
+	if !sqlIsPostgres(r) {
+		return nil
+	}
 	settings, _, present, known := getBlocks(r, "settings")
 	if !present || !known {
 		return nil

@@ -175,7 +175,8 @@ func (s storageMinTLS) Check(r ir.Resource) []ir.Finding {
 	if !present || !known {
 		return nil // absent or unresolved: cannot decide
 	}
-	if strings.EqualFold(strings.TrimSpace(ver), "TLS1_2") {
+	v := strings.ToUpper(strings.ReplaceAll(ver, " ", ""))
+	if v == "TLS1_2" || v == "TLS1_3" {
 		return nil
 	}
 	return []ir.Finding{mkFinding(s, r, "min_tls_version", span,

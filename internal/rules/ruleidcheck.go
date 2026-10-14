@@ -78,6 +78,7 @@ var deprecatedRuleIDs = map[string]string{
 	"AEGIS-GCP-118":   "AEGIS-GCP-057",
 	"AEGIS-GCP-119":   "AEGIS-GCP-058",
 	"AEGIS-GCP-121":   "AEGIS-GCP-005",
+	"AEGIS-GCP-122":   "AEGIS-GCP-032",
 }
 
 // RuleIDKind classifies a rule ID found in user configuration.

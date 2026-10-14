@@ -31,6 +31,19 @@ was also updated transitively (206 → 025 → now 105).
 | AEGIS-AZURE-225 | AEGIS-AZURE-107 | Exact duplicate of 047 ("Entra ID" is the Azure AD rename); FP-prone on standalone form |
 | AEGIS-GCP-063 | AEGIS-GCP-018 | Exact duplicate: 018's exact/suffix scope match subsumes 063's Contains match |
 
+## Follow-up to the multi-cloud quality audit (2026-10-14) — 1 removed
+
+Found by the per-finding re-trace of all 122 remaining findings (report 15
+addendum): AEGIS-GCP-122 fires on the identical condition as AEGIS-GCP-032
+(any `public_access_prevention` ≠ `"enforced"` on `google_storage_bucket`)
+but at High severity versus 032's Medium — a double-reported finding with an
+inconsistent severity. 032 (Medium) is kept as canonical; the hardening
+control is defense-in-depth, not an active exposure.
+
+| Removed ID | Canonical ID | Reason |
+|------------|--------------|--------|
+| AEGIS-GCP-122 | AEGIS-GCP-032 | Exact duplicate of 032 with inconsistent severity (High vs Medium); 032 kept |
+
 ## Post-audit deduplication (2026-10-12) — 39 removed
 
 **Date:** 2026-10-12  

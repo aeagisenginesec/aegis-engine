@@ -336,3 +336,12 @@ func TestKeyVaultPurgeProtection_UnknownNoFinding(t *testing.T) {
 		t.Fatalf("unknown value must not fire, got %d", len(f))
 	}
 }
+
+func TestStorageMinTLS_TLS13OK(t *testing.T) {
+	r := res("azurerm_storage_account", "data", map[string]ir.Value{
+		"min_tls_version": ks("TLS1_3", 3),
+	})
+	if f := runRule(storageMinTLS{}, r); len(f) != 0 {
+		t.Fatalf("TLS1_3 must not fire as 'below TLS 1.2', got %d", len(f))
+	}
+}

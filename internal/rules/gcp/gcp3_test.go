@@ -883,3 +883,22 @@ func scanID(id string, out *int) (bool, error) {
 	*out = n
 	return true, nil
 }
+
+// --- 046: engine gating — log_disconnections is PostgreSQL-only ---
+func TestGCP046_MySQLQuiet(t *testing.T) {
+	r := res("google_sql_database_instance", "db", map[string]ir.Value{
+		"database_version": ks("MYSQL_5_7", 2),
+		"settings":         blks(3, blk()),
+	})
+	if len(runRule(sqlNoLogDisconnections{}, r)) != 0 {
+		t.Fatal("GCP-046 must not fire on MySQL")
+	}
+}
+
+func TestGCP046_PostgresFires(t *testing.T) {
+	r := res("google_sql_database_instance", "db", map[string]ir.Value{
+		"database_version": ks("POSTGRES_15", 2),
+		"settings":         blks(3, blk()),
+	})
+	mustFinding(t, runRule(sqlNoLogDisconnections{}, r), "AEGIS-GCP-046")
+}

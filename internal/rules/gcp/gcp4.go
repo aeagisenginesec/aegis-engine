@@ -29,8 +29,8 @@ func GCP4Rules() []ir.Rule {
 		nodePoolNoAutoRepair{}, nodePoolNoAutoUpgrade{},
 		// Compute 120 (118-119 removed as duplicates of 057/058)
 		subnetworkNoFlowLogs{},
-		// Storage 122 (121 removed as duplicate of 005)
-		bucketPAPNotEnforced{},
+		// Storage 122 removed as exact duplicate of 032 (same PAP condition,
+		// inconsistent High vs Medium severity; 032 kept as canonical)
 	}
 }
 
@@ -56,9 +56,25 @@ func sqlFlagValue(st map[string]ir.Value, name string) (val string, span ir.Span
 	return "", ir.Span{}, false, false
 }
 
+// sqlIsPostgres reports whether the Cloud SQL instance is PostgreSQL.
+// PostgreSQL-only flags (log_checkpoints, pgaudit, …) must not fire on
+// MySQL/SQL Server instances. When database_version is absent or
+// unresolved the engine is unknown and the check proceeds as before;
+// only an explicit non-PostgreSQL engine suppresses the finding.
+func sqlIsPostgres(r ir.Resource) bool {
+	v, _, present, known := getString(r, "database_version")
+	if !present || !known {
+		return true
+	}
+	return strings.HasPrefix(strings.ToUpper(strings.TrimSpace(v)), "POSTGRES")
+}
+
 // sqlFlagOn returns a finding when the named PostgreSQL flag is absent from
 // settings.database_flags, or present with a value other than on/1.
 func sqlFlagOn(rule ir.Rule, r ir.Resource, flag, remediation string) []ir.Finding {
+	if !sqlIsPostgres(r) {
+		return nil
+	}
 	settings, _, present, known := getBlocks(r, "settings")
 	if !present || !known {
 		return nil
@@ -204,6 +220,9 @@ func (sqlNoPgAudit) AppliesTo(t string) bool {
 	return t == "google_sql_database_instance"
 }
 func (s sqlNoPgAudit) Check(r ir.Resource) []ir.Finding {
+	if !sqlIsPostgres(r) {
+		return nil
+	}
 	settings, _, present, known := getBlocks(r, "settings")
 	if !present || !known {
 		return nil
@@ -252,6 +271,9 @@ func (sqlLogMinMessages) AppliesTo(t string) bool {
 	return t == "google_sql_database_instance"
 }
 func (s sqlLogMinMessages) Check(r ir.Resource) []ir.Finding {
+	if !sqlIsPostgres(r) {
+		return nil
+	}
 	settings, _, present, known := getBlocks(r, "settings")
 	if !present || !known {
 		return nil
@@ -642,36 +664,3 @@ func (s subnetworkNoFlowLogs) Check(r ir.Resource) []ir.Finding {
 	return nil
 }
 
-// ---------------------------------------------------------------------------
-// Storage: AEGIS-GCP-121..122
-
-// AEGIS-GCP-122: GCS bucket without enforced public access prevention
-type bucketPAPNotEnforced struct{}
-
-func (bucketPAPNotEnforced) ID() string { return "AEGIS-GCP-122" }
-func (bucketPAPNotEnforced) Title() string {
-	return "GCS bucket without enforced public access prevention"
-}
-func (bucketPAPNotEnforced) Description() string {
-	return "google_storage_bucket without public_access_prevention = " +
-		"\"enforced\" can be exposed publicly via ACLs or IAM grants."
-}
-func (bucketPAPNotEnforced) Severity() ir.Severity { return ir.SeverityHigh }
-func (bucketPAPNotEnforced) AppliesTo(t string) bool {
-	return t == "google_storage_bucket"
-}
-func (s bucketPAPNotEnforced) Check(r ir.Resource) []ir.Finding {
-	v, span, present, known := getString(r, "public_access_prevention")
-	if !present {
-		return []ir.Finding{mkFinding(s, r, "public_access_prevention", r.Span,
-			"absent", "public_access_prevention = \"enforced\"")}
-	}
-	if !known {
-		return nil
-	}
-	if !strings.EqualFold(strings.TrimSpace(v), "enforced") {
-		return []ir.Finding{mkFinding(s, r, "public_access_prevention", span,
-			v, "public_access_prevention = \"enforced\"")}
-	}
-	return nil
-}

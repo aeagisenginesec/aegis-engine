@@ -165,9 +165,9 @@ func fallbackAWS(t string) (string, []string) {
 func fallbackAzure(t string) (string, []string) {
 	switch {
 	case containsAny(t, []string{"encrypt", "kms", "sse"}):
-		return "Enable encryption at rest. Add the service's encryption block " +
-				"(e.g. `storage_encrypted`, customer-managed key via " +
-				"`azurerm_key_vault_key`). For regulated data use a customer-managed " +
+		return "Enable encryption at rest. For storage accounts set " +
+				"`infrastructure_encryption_enabled = true` and use a customer-managed key " +
+				"via `azurerm_key_vault_key`. For regulated data use a customer-managed " +
 				"key in Key Vault with purge protection and key rotation.",
 			[]string{"https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-atrest"}
 	case containsAny(t, []string{"public", "open to the world", "0.0.0.0", "internet-facing", "exposure"}):
@@ -233,6 +233,17 @@ func fallbackAzure(t string) (string, []string) {
 // fallbackGCP is the category-aware guidance for GCP rules.
 func fallbackGCP(t string) (string, []string) {
 	switch {
+	case containsAny(t, []string{"os login", "oslogin", "os-login"}):
+		// Must precede the log/audit branch: "login" contains "log".
+		return "Enable OS Login so SSH access is managed through IAM instead of " +
+			"project metadata keys. Set it on the instance (or project-wide):\n" +
+			"resource \"google_compute_instance\" \"this\" {\n" +
+			"  # ...\n" +
+			"  metadata = {\n" +
+			"    enable-oslogin = \"TRUE\"\n" +
+			"  }\n" +
+			"}",
+		[]string{"https://cloud.google.com/compute/docs/oslogin"}
 	case containsAny(t, []string{"encrypt", "kms", "sse"}):
 		return "Enable encryption at rest. Google-managed keys apply by default; for " +
 				"regulated data use customer-managed keys (CMEK) via Cloud KMS with " +
@@ -270,9 +281,11 @@ func fallbackGCP(t string) (string, []string) {
 				"Test restores regularly — untested backups are not backups.",
 			[]string{"https://cloud.google.com/backup-disaster-recovery/docs"}
 	case containsAny(t, []string{"deletion protection", "termination protection", "force_destroy"}):
-		return "Enable deletion protection to prevent accidental destruction: set " +
-				"`deletion_protection = true` on databases, instances, and buckets, and " +
-				"use retention policies / liens for critical resources.",
+		return "Enable deletion protection to prevent accidental destruction. For Cloud SQL " +
+				"and Compute instances set `deletion_protection = true`. For GCS buckets there " +
+				"is no deletion_protection argument — instead remove `force_destroy = true` " +
+				"(or omit it; the default is false) and consider a `retention_policy` or a " +
+				"resource-manager lien for critical data.",
 			[]string{"https://cloud.google.com/resource-manager/docs/creating-managing-liens"}
 	case containsAny(t, []string{"waf"}):
 		return "Attach Google Cloud Armor with managed protection / WAF rules to the " +
@@ -1148,6 +1161,127 @@ var remediationDB = map[string]remediationEntry{
 			"}",
 		refs: []string{
 			"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint",
+		},
+	},
+	// ------------------------------------------------------------------
+	// Targeted corrections (multi-cloud quality audit): rules whose
+	// keyword-matched fallback guidance prescribed the wrong fix.
+	// ------------------------------------------------------------------
+	"AEGIS-AWS-310": {
+		fix: "Enable detailed monitoring on the EC2 instance (1-minute CloudWatch metrics):\n" +
+			"resource \"aws_instance\" \"this\" {\n" +
+			"  # ...\n" +
+			"  monitoring = true\n" +
+			"}",
+		refs: []string{
+			"https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-cloudwatch-new.html",
+		},
+	},
+	"AEGIS-AWS-311": {
+		fix: "Enable IAM database authentication on the RDS instance so access is granted\n" +
+			"via IAM instead of static passwords:\n" +
+			"resource \"aws_db_instance\" \"this\" {\n" +
+			"  # ...\n" +
+			"  iam_database_authentication_enabled = true\n" +
+			"}",
+		refs: []string{
+			"https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html",
+		},
+	},
+	"AEGIS-AWS-540": {
+		fix: "Enable IAM database authentication on the RDS instance so access is granted\n" +
+			"via IAM instead of static passwords:\n" +
+			"resource \"aws_db_instance\" \"this\" {\n" +
+			"  # ...\n" +
+			"  iam_database_authentication_enabled = true\n" +
+			"}",
+		refs: []string{
+			"https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html",
+		},
+	},
+	"AEGIS-AWS-546": {
+		fix: "Copy resource tags to automated snapshots so they inherit ownership and\n" +
+			"cost-allocation metadata:\n" +
+			"resource \"aws_db_instance\" \"this\" {\n" +
+			"  # ...\n" +
+			"  copy_tags_to_snapshot = true\n" +
+			"}",
+		refs: []string{
+			"https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#copy_tags_to_snapshot",
+		},
+	},
+	"AEGIS-AWS-605": {
+		fix: "Enable Enhanced Monitoring on the RDS instance (1-second OS metrics):\n" +
+			"resource \"aws_db_instance\" \"this\" {\n" +
+			"  # ...\n" +
+			"  monitoring_interval = 60\n" +
+			"  monitoring_role_arn = aws_iam_role.rds_enhanced_monitoring.arn\n" +
+			"}\n" +
+			"monitoring_interval accepts 0, 1, 5, 10, 15, 30, or 60 (seconds); any\n" +
+			"non-zero value requires a monitoring_role_arn with the\n" +
+			"rds-monitoring-role trust policy.",
+		refs: []string{
+			"https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html",
+		},
+	},
+	"AEGIS-AWS-667": {
+		fix: "Attach a permissions boundary to the IAM role so its effective permissions\n" +
+			"can never exceed the boundary policy, even if broader policies are attached later:\n" +
+			"resource \"aws_iam_role\" \"this\" {\n" +
+			"  # ...\n" +
+			"  permissions_boundary = \"arn:aws:iam::aws:policy/YourBoundaryPolicy\"\n" +
+			"}",
+		refs: []string{
+			"https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html",
+		},
+	},
+	"AEGIS-AWS-673": {
+		fix: "Add a description to the IAM role documenting its purpose and owner:\n" +
+			"resource \"aws_iam_role\" \"this\" {\n" +
+			"  # ...\n" +
+			"  description = \"Application role for <workload>; owner: <team>\"\n" +
+			"}",
+		refs: []string{
+			"https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role#description",
+		},
+	},
+	"AEGIS-AZURE-046": {
+		fix: "Enable the security alert policy and clear disabled_alerts so all\n" +
+			"threat types are detected:\n" +
+			"resource \"azurerm_mssql_server_security_alert_policy\" \"pol\" {\n" +
+			"  resource_group_name  = azurerm_resource_group.rg.name\n" +
+			"  server_name          = azurerm_mssql_server.db.name\n" +
+			"  state                = \"Enabled\"\n" +
+			"  disabled_alerts      = []\n" +
+			"  email_account_admins = true\n" +
+			"}",
+		refs: []string{
+			"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_security_alert_policy",
+		},
+	},
+	"AEGIS-AZURE-125": {
+		fix: "Set a SAS expiry policy on the storage account so shared access signatures\n" +
+			"cannot be minted without an expiration:\n" +
+			"resource \"azurerm_storage_account\" \"this\" {\n" +
+			"  # ...\n" +
+			"  sas_policy {\n" +
+			"    expiration_period = \"00.01:00:00\"\n" +
+			"    expiration_action = \"Log\"\n" +
+			"  }\n" +
+			"}",
+		refs: []string{
+			"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account#sas_policy",
+		},
+	},
+	"AEGIS-AZURE-186": {
+		fix: "Raise the Key Vault soft-delete retention to 90 days so deleted vaults\n" +
+			"and their secrets remain recoverable:\n" +
+			"resource \"azurerm_key_vault\" \"this\" {\n" +
+			"  # ...\n" +
+			"  soft_delete_retention_days = 90\n" +
+			"}",
+		refs: []string{
+			"https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault#soft_delete_retention_days",
 		},
 	},
 }

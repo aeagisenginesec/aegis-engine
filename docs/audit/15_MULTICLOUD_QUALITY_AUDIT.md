@@ -516,3 +516,307 @@ misses in).
 10. **Parser repair is bounded** (2048 iterations / 16 MiB budget):
     pathologically sloppy files still fall back to the strict partial
     parse with original diagnostics. Unchanged behavior, still true.
+---
+## 16. Follow-up: remaining items closed (2026-10-14)
+
+This addendum closes the three items left open in §15 (limitations 1, 2,
+and 5). Work was done on branch `mission/top-tier-validation` at
+`c4581fb`; **nothing is committed**. The fixture
+(`~/workspace/multicloud-test/aegis_multicloud_vulnerable/`) and all
+historical benchmark outputs remain immutable.
+
+### 16.1 NSG cluster — FINAL verdict (was provisional in §3, cluster 2)
+
+All four rule implementations were fully re-read
+(`internal/rules/azure/azure4.go` for 053/054/055, `azure17.go` for 244)
+against the fixture's single inline rule `AllowAllInbound`
+(protocol `*`, ports `*`, source `*`, Inbound/Allow):
+
+| Rule | Implementation | Final verdict |
+|---|---|---|
+| AZURE-053 (RDP open) | `checkNSGPortOpen(r, "3389", …)`: fires when destination port is 3389 **or `*`** with an open source | **Overlapping, legitimate** — answers "is RDP reachable from the internet?" Distinct from 054/055 (different port question). On a 3389-only rule, only 053 fires. |
+| AZURE-054 (SSH open) | `checkNSGPortOpen(r, "22", …)`: same, port 22 or `*` | **Overlapping, legitimate** — answers "is SSH reachable?" Distinct question from 053. |
+| AZURE-055 (all ports open) | `checkNSGPortOpen(r, "*", …)`: fires only when the port is literally `*` | **Overlapping, legitimate** — answers "is every port exposed?" Fires only on wildcard rules; distinct from 053/054. |
+| AZURE-244 (inline rule open) | `nsgInlineOpenRule.Check`: fires on **any** inbound-Allow inline rule with an open source, regardless of ports | **Overlapping, legitimate** — the generic catch-all. Covers ports no specific rule names (e.g. 8080); on an 8080-only rule, only 244 fires. |
+
+Each rule fires at most once per NSG (`checkNSGPortOpen` returns after the
+first matching block; 244 returns after the first matching block). The
+053/054 firings on the wildcard rule are true positives, not FPs: with
+`destination_port_range = "*"`, RDP and SSH genuinely are reachable from
+the internet. **No change made.** The provisional verdict is confirmed.
+
+### 16.2 Per-finding re-trace of all 122 remaining findings
+
+**Method:** three independent trace passes (AWS 36, Azure 40, GCP+TF 42)
+plus the NSG 4 above. For each finding: the rule's `Check()`
+implementation was read, the finding's evidence (attribute/actual/span)
+was verified against the cited fixture lines, severity was judged
+against the actual risk (only clear disagreements flagged), and the
+*current* remediation (post the audit's cloud-aware fallback) was checked
+for wrong-cloud/wrong-service/wrong-fix text. Raw verified counts only —
+no precision/recall (no ground-truth labels exist).
+
+**Counts:** **115 true positives, 7 false positives, 1 severity
+disagreement, 15 remediation mismatches** (all 15 fixed; see §16.4).
+
+| rule_id | resource | sev | verdict | severity | remediation | notes |
+|---|---|---|---|---|---|---|
+| AEGIS-AWS-001 | aws_s3_bucket.customer_exports | high | TP | ok | ok |  |
+| AEGIS-AWS-004 | aws_security_group.web_open | high | TP | ok | ok |  |
+| AEGIS-AWS-004 | aws_security_group.web_open | high | TP | ok | ok |  |
+| AEGIS-AWS-007 | aws_db_instance.public_database | high | TP | ok | ok |  |
+| AEGIS-AWS-008 | aws_db_instance.public_database | medium | TP | ok | ok |  |
+| AEGIS-AWS-011 | aws_db_instance.public_database | high | TP | ok | ok |  |
+| AEGIS-AWS-012 | aws_s3_bucket.customer_exports | medium | TP | ok | ok |  |
+| AEGIS-AWS-103 | aws_db_instance.public_database | high | TP | ok | ok |  |
+| AEGIS-AWS-204 | aws_instance.legacy_web | high | TP | ok | ok |  |
+| AEGIS-AWS-206 | aws_s3_bucket.customer_exports | high | TP | ok | ok |  |
+| AEGIS-AWS-207 | aws_db_instance.public_database | medium | TP | ok | ok |  |
+| AEGIS-AWS-310 | aws_instance.legacy_web | medium | TP | ok | was audit-logging template; now monitoring=true (DB entry) |  |
+| AEGIS-AWS-311 | aws_db_instance.public_database | medium | TP | ok | was least-privilege template; now iam_database_authentication_enabled (DB entry) |  |
+| AEGIS-AWS-339 | aws_db_instance.public_database | high | TP | ok | ok |  |
+| AEGIS-AWS-444 | aws_instance.legacy_web | high | TP | ok | ok |  |
+| AEGIS-AWS-445 | aws_s3_bucket.customer_exports | medium | TP | ok | ok |  |
+| AEGIS-AWS-446 | aws_db_instance.public_database | medium | TP | ok | ok |  |
+| AEGIS-AWS-540 | aws_db_instance.public_database | high | TP | ok | was least-privilege template; now iam_database_authentication_enabled (DB entry) |  |
+| AEGIS-AWS-543 | aws_db_instance.public_database | low | TP | ok | ok |  |
+| AEGIS-AWS-546 | aws_db_instance.public_database | low | TP | ok | was backup template; now copy_tags_to_snapshot (DB entry) |  |
+| AEGIS-AWS-567 | module | low | TP | ok | ok |  |
+| AEGIS-AWS-569 | module | low | TP | ok | ok |  |
+| AEGIS-AWS-601 | aws_s3_bucket.customer_exports | low | TP | ok | ok |  |
+| AEGIS-AWS-604 | aws_security_group.web_open | low | TP | ok | ok |  |
+| AEGIS-AWS-604 | aws_security_group.web_open | low | TP | ok | ok |  |
+| AEGIS-AWS-604 | aws_security_group.web_open | low | TP | ok | ok |  |
+| AEGIS-AWS-605 | aws_db_instance.public_database | low | TP | ok | was audit-logging template; now monitoring_interval+role (DB entry) |  |
+| AEGIS-AWS-608 | aws_db_instance.public_database | low | TP | ok | ok |  |
+| AEGIS-AWS-629 | aws_db_instance.public_database | high | TP | ok | ok |  |
+| AEGIS-AWS-666 | aws_iam_role_policy_attachment.admin_access | high | TP | ok | ok |  |
+| AEGIS-AWS-667 | aws_iam_role.overprivileged_app | low | TP | ok | was least-privilege template; now permissions_boundary (DB entry) |  |
+| AEGIS-AWS-673 | aws_iam_role.overprivileged_app | low | TP | ok | was least-privilege template; now description (DB entry) |  |
+| AEGIS-AWS-683 | aws_instance.legacy_web | low | TP | ok | ok |  |
+| AEGIS-AWS-696 | aws_instance.legacy_web | high | TP | ok | ok |  |
+| AEGIS-AWS-699 | aws_instance.legacy_web | low | TP | ok | ok |  |
+| AEGIS-AWS-706 | aws_db_instance.public_database | low | TP | ok | ok |  |
+| AEGIS-AZR-002 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZR-005 | azurerm_key_vault.weak_vault | high | TP | ok | ok |  |
+| AEGIS-AZURE-007 | azurerm_key_vault.weak_vault | high | TP | ok | ok |  |
+| AEGIS-AZURE-026 | azurerm_storage_account.public_data | high | TP | ok | ok |  |
+| AEGIS-AZURE-027 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-028 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-029 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-031 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-032 | azurerm_storage_account.public_data | medium | TP | ok | was AWS storage_encrypted ref; now Azure infra-encryption text |  |
+| AEGIS-AZURE-033 | azurerm_storage_account.public_data | low | TP | ok | ok |  |
+| AEGIS-AZURE-034 | azurerm_storage_account.public_data | low | TP | ok | ok |  |
+| AEGIS-AZURE-043 | azurerm_key_vault.weak_vault | low | TP | ok | ok |  |
+| AEGIS-AZURE-046 | azurerm_mssql_server.public_sql | medium | TP | ok | was RBAC template; now security_alert_policy (DB entry) |  |
+| AEGIS-AZURE-053 | azurerm_network_security_group.open | high | TP | ok | ok | overlapping-legitimate: answers "is RDP open?" (port 3389 or *) |
+| AEGIS-AZURE-054 | azurerm_network_security_group.open | high | TP | ok | ok | overlapping-legitimate: answers "is SSH open?" (port 22 or *) |
+| AEGIS-AZURE-055 | azurerm_network_security_group.open | high | TP | ok | ok | overlapping-legitimate: answers "are all ports open?" (port *) |
+| AEGIS-AZURE-057 | azurerm_virtual_network.lab | low | TP | ok | ok |  |
+| AEGIS-AZURE-058 | azurerm_virtual_network.lab | low | TP | ok | ok |  |
+| AEGIS-AZURE-101 | azurerm_mssql_server.public_sql | medium | TP | ok | ok |  |
+| AEGIS-AZURE-102 | azurerm_mssql_server.public_sql | low | TP | ok | ok |  |
+| AEGIS-AZURE-105 | azurerm_mssql_server.public_sql | medium | TP | ok | ok |  |
+| AEGIS-AZURE-106 | azurerm_mssql_server.public_sql | high | TP | ok | ok |  |
+| AEGIS-AZURE-107 | azurerm_mssql_server.public_sql | medium | TP | ok | ok |  |
+| AEGIS-AZURE-108 | azurerm_mssql_server.public_sql | medium | TP | ok | ok |  |
+| AEGIS-AZURE-119 | azurerm_storage_account.public_data | high | TP | ok | ok |  |
+| AEGIS-AZURE-121 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-122 | azurerm_storage_account.public_data | high | TP | ok | ok |  |
+| AEGIS-AZURE-124 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-125 | azurerm_storage_account.public_data | low | TP | ok | was RBAC template; now sas_policy (DB entry) |  |
+| AEGIS-AZURE-145 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-147 | azurerm_storage_account.public_data | low | TP | ok | ok |  |
+| AEGIS-AZURE-148 | azurerm_storage_account.public_data | high | TP | ok | ok |  |
+| AEGIS-AZURE-149 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-171 | azurerm_role_assignment.subscription_owner | high | TP | ok | ok |  |
+| AEGIS-AZURE-180 | azurerm_mssql_server.public_sql | medium | TP | ok | ok |  |
+| AEGIS-AZURE-181 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-186 | azurerm_key_vault.weak_vault | low | TP | ok | was >=7d retention template; now soft_delete_retention_days=90 (DB entry) |  |
+| AEGIS-AZURE-187 | azurerm_key_vault.weak_vault | high | TP | ok | ok |  |
+| AEGIS-AZURE-191 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-192 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-195 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-197 | azurerm_storage_container.public_blobs | high | TP | ok | ok |  |
+| AEGIS-AZURE-207 | azurerm_mssql_firewall_rule.open | high | TP | ok | ok |  |
+| AEGIS-AZURE-244 | azurerm_network_security_group.open | high | TP | ok | ok | overlapping-legitimate: generic catch-all (any open inbound inline rule) |
+| AEGIS-GCP-001 | google_storage_bucket_iam_member.public_reader | critical | TP | ok | ok |  |
+| AEGIS-GCP-002 | google_compute_firewall.allow_all | high | TP | ok | ok |  |
+| AEGIS-GCP-003 | google_sql_database_instance.public_sql | medium | TP | ok | ok |  |
+| AEGIS-GCP-007 | google_sql_database_instance.public_sql | high | TP | ok | ok |  |
+| AEGIS-GCP-016 | google_storage_bucket.public_bucket | high | TP | ok | ok |  |
+| AEGIS-GCP-017 | google_compute_instance.public_vm | high | TP | ok | ok |  |
+| AEGIS-GCP-018 | google_compute_instance.public_vm | high | TP | ok | ok |  |
+| AEGIS-GCP-019 | google_sql_database_instance.public_sql | medium | TP | ok | ok |  |
+| AEGIS-GCP-025 | google_storage_bucket.public_bucket | high | TP | ok | ok |  |
+| AEGIS-GCP-027 | google_storage_bucket.public_bucket | medium | TP | ok | ok |  |
+| AEGIS-GCP-030 | google_storage_bucket.public_bucket | low | TP | ok | was invalid deletion_protection-on-buckets; now bucket-correct text |  |
+| AEGIS-GCP-031 | google_storage_bucket.public_bucket | low | TP | ok | ok |  |
+| AEGIS-GCP-032 | google_storage_bucket.public_bucket | medium | TP | ok | ok |  |
+| AEGIS-GCP-042 | google_sql_database_instance.public_sql | low | TP | ok | ok |  |
+| AEGIS-GCP-043 | google_sql_database_instance.public_sql | medium | TP | ok | ok |  |
+| AEGIS-GCP-044 | google_sql_database_instance.public_sql | medium | TP | ok | ok |  |
+| AEGIS-GCP-046 | google_sql_database_instance.public_sql | low | TP | ok | engine-gated to PostgreSQL (was firing on MySQL with unusable fix) |  |
+| AEGIS-GCP-059 | google_compute_instance.public_vm | medium | TP | ok | ok |  |
+| AEGIS-GCP-060 | google_compute_instance.public_vm | medium | TP | ok | was audit-logging template via login/log collision; now OS Login guidance |  |
+| AEGIS-GCP-061 | google_compute_instance.public_vm | high | TP | ok | ok |  |
+| AEGIS-GCP-062 | google_compute_instance.public_vm | medium | TP | ok | ok |  |
+| AEGIS-GCP-069 | google_compute_firewall.allow_all | medium | TP | ok | ok |  |
+| AEGIS-GCP-072 | google_project_iam_member.owner_binding | critical | TP | ok | ok |  |
+| AEGIS-GCP-101 | google_sql_database_instance.public_sql | low | FP | ok | ok |  |
+| AEGIS-GCP-102 | google_sql_database_instance.public_sql | low | FP | ok | ok |  |
+| AEGIS-GCP-103 | google_sql_database_instance.public_sql | low | FP | ok | ok |  |
+| AEGIS-GCP-104 | google_sql_database_instance.public_sql | low | FP | ok | ok |  |
+| AEGIS-GCP-105 | google_sql_database_instance.public_sql | low | FP | ok | ok |  |
+| AEGIS-GCP-106 | google_sql_database_instance.public_sql | medium | FP | ok | ok |  |
+| AEGIS-GCP-107 | google_sql_database_instance.public_sql | low | FP | ok | ok |  |
+| AEGIS-GCP-122 | google_storage_bucket.public_bucket | high | TP | High vs 032 Medium on identical condition; 122 deprecated, 032 kept | ok |  |
+| AEGIS-GCP-153 | google_sql_database_instance.public_sql | low | TP | ok | ok |  |
+| AEGIS-GCP-154 | google_sql_database_instance.public_sql | medium | TP | ok | ok |  |
+| AEGIS-GCP-157 | google_sql_database_instance.public_sql | low | TP | ok | was IAM template via policy keyword; now password_validation_policy (DB entry) |  |
+| AEGIS-GCP-160 | google_sql_database_instance.public_sql | medium | TP | ok | ok |  |
+| AEGIS-GCP-173 | google_compute_instance.public_vm | low | TP | ok | ok |  |
+| AEGIS-GCP-183 | google_storage_bucket.public_bucket | low | TP | ok | ok |  |
+| AEGIS-GCP-215 | google_compute_firewall.allow_all | low | TP | ok | ok |  |
+| AEGIS-GCP-221 | google_compute_network.lab | medium | TP | ok | ok |  |
+| AEGIS-TF-003 | terraform_config.terraform | medium | TP | ok | ok |  |
+| AEGIS-TF-003 | terraform_config.terraform | medium | TP | ok | ok |  |
+| AEGIS-TF-003 | terraform_config.terraform | medium | TP | ok | ok |  |
+
+**Reading the table:** `verdict` is TP/FP against the fixture evidence.
+`severity`/`remediation` are `ok` unless a clear defect was found (the
+defect and its fix are named). The 7 FPs are all AEGIS-GCP-101..107
+(PostgreSQL-scoped flag rules firing on the `MYSQL_5_7` fixture —
+`log_checkpoints`, `log_connections`, `log_disconnections`,
+`log_lock_waits`, `log_duration`, `pgaudit`, `log_min_messages` are
+PostgreSQL-only Cloud SQL flags). The severity disagreement was
+AEGIS-GCP-122 (High) vs AEGIS-GCP-032 (Medium) on the identical
+public-access-prevention condition — resolved by deprecating 122 (§16.4).
+
+### 16.3 Pulumi TypeScript/JavaScript — honest warning implemented
+
+**Behavior change** (`internal/adapter/pulumi/pulumi.go`): when the
+scanner detects a Pulumi TypeScript/JavaScript program, it now emits a
+warning diagnostic instead of a silent 0-findings scan:
+
+```
+[warning] Pulumi.yaml:0 — pulumi: …/Pulumi.yaml is a Pulumi
+TypeScript/JavaScript program; program files are not analyzed — scan
+results do not cover this program's resources (unparsed: index.ts)
+```
+
+**Detection** (`detectUnanalyzedProgram`): (1) the program's `runtime:`
+field — authoritative (`nodejs`/`node` → warn; `yaml` → never warn);
+(2) when the runtime is missing and there is no `resources:` section,
+the Node.js markers in the same directory (`package.json` + `.ts`/`.js`
+entrypoints). Other language runtimes (`python`, `dotnet`, `go`,
+`java`) are equally unanalyzed but out of this check's scope per the
+mission — documented as follow-up in `docs/PULUMI.md`. A `runtime: yaml`
+program in a directory that happens to contain `.ts` files does **not**
+warn (runtime is authoritative). Non-Pulumi directories never warn (the
+adapter is only invoked for `Pulumi.yaml`).
+
+**Tests (7, all passing):** 5 adapter-level
+(`internal/adapter/pulumi/pulumi_ts_test.go`: declared-nodejs warns and
+lists entrypoints; no-runtime fallback warns; YAML program quiet; Python
+program quiet per scope; mixed dir with `runtime: yaml` quiet) + 2
+scan-level (`cmd/aegis/scan_pulumi_test.go`: end-to-end TS scan yields 0
+findings **with** the honest diagnostic; non-Pulumi dir yields no such
+diagnostic).
+
+**Follow-up options (not attempted):** heuristic extraction of
+`new aws.<Type>(name, {args})` constructions, 3–5 days — covers the
+highest-value resources (S3, SG, IAM, RDS) but misses dynamic
+constructs (loops, conditionals, components, `apply`); full TypeScript
+parser (Go-native or tree-sitter + Pulumi program-model evaluation),
+2–4 weeks plus ongoing maintenance. **Recommendation:** do the heuristic
+next only if Pulumi-TS estates are actually being scanned; otherwise the
+honest warning is the right cost/benefit point — it converts a silent
+wrong answer into a loud non-answer, which is the safety-critical fix.
+
+### 16.4 Every change made in this follow-up
+
+1. **GCP-101..107 + GCP-046 engine gating** (`internal/rules/gcp/gcp4.go`,
+   `gcp3.go`): new `sqlIsPostgres()` helper — PostgreSQL-only flag rules
+   stay quiet when `database_version` is explicitly non-PostgreSQL
+   (absent/unresolved version keeps prior behavior). Removes the 7 FPs.
+   +8 regression tests (`gcp4_test.go`, `gcp3_test.go`: MySQL/SQL Server
+   quiet, Postgres fires).
+2. **GCP-122 deprecated** (exact duplicate of GCP-032, inconsistent
+   High-vs-Medium severity): rule type deleted from `gcp4.go`,
+   `"AEGIS-GCP-122" → "AEGIS-GCP-032"` added to `deprecatedRuleIDs`
+   (`ruleidcheck.go`), documented in `DEPRECATED_RULE_IDS.md`, count
+   tests updated (registry 1153→1152, GCP pack 281→280, `TestGCP4_AllRegistered`
+   17→16, `TestGCP5RegisteredInIDOrder` anchor 122→120), 8 parity
+   `expect.json` files surgically updated (GCP-122 entries removed).
+3. **AZR-002 TLS 1.3 false positive** (`internal/rules/azure/azure.go`):
+   `storageMinTLS.Check` treated `TLS1_3` as "below TLS 1.2"; now accepts
+   `TLS1_2`/`TLS1_3` with the same normalization as siblings 027/121.
+   +1 regression test.
+4. **Remediation corrections** (`internal/rules/remediation.go`):
+   - 10 new dedicated `remediationDB` entries: AWS-310
+     (`monitoring = true`), AWS-311/540
+     (`iam_database_authentication_enabled = true`), AWS-546
+     (`copy_tags_to_snapshot = true`), AWS-605 (`monitoring_interval` +
+     `monitoring_role_arn`), AWS-667 (`permissions_boundary`), AWS-673
+     (`description`), AZURE-046 (`security_alert_policy`, mirroring 103),
+     AZURE-125 (`sas_policy`), AZURE-186
+     (`soft_delete_retention_days = 90`).
+   - `fallbackGCP`: new OS-Login case **before** the log branch
+     (`"login"` contains `"log"` — GCP-060 was getting audit-logging
+     guidance); deletion-protection branch rewritten — GCS buckets have
+     no `deletion_protection` argument (GCP-030).
+   - `fallbackAzure` encrypt branch: removed the AWS `storage_encrypted`
+     reference (AZURE-032); now cites `infrastructure_encryption_enabled`
+     / `azurerm_key_vault_key`.
+   - GCP-157 now resolves via its dedicated DB entry (was IAM-template
+     via the `"policy"` keyword).
+   - +4 regression tests in `remediation_test.go` asserting the corrected
+     remediation text per rule.
+5. **coveragegaps.go doc fix**: AWS-567/569 `Description()` said "5+
+   resources"; the code gates at 15 — description corrected to "15+"
+   (no behavior change).
+6. **Pulumi honest warning** (see §16.3): `pulumi.go` +
+   `pulumi_ts_test.go` (5 tests) + 2 scan-level tests + `docs/PULUMI.md`.
+
+### 16.5 Before/after
+
+| Measure | Before (c4581fb, 131) | After (this follow-up) | Delta |
+|---|---|---|---|
+| Findings on multi-cloud fixture | 131 | **122** | −9: 7 FPs (101..107) + 1 engine-gated (046) + 1 deprecated (122) |
+| Severity split | 5 crit / 40 high / 47 med / 39 low | **5 / 39 / 46 / 32** | −1 high (122), −1 med (046), −7 low (101..107) |
+| Determinism | byte-identical ×5 | **byte-identical ×5** | unchanged |
+| `go test ./...` | green (32 pkgs) | **green (32 pkgs)** | — |
+| `go test -race` (touched pkgs) | — | **clean** | — |
+| Quality gate | 5/5 (358/358) | **5/5 (357/357)** | −1 rule (122 deprecated) |
+| Pulumi TS program | 0 findings, silent | **0 findings + honest warning** | behavior fix |
+
+The −9 delta is the arithmetic of the confirmed-defect fixes above, not
+a target. Post-fix outputs: `~/workspace/multicloud-test/results-followup/aegis-run*.json`.
+
+### 16.6 Updated remaining limitations
+
+1. ~~122 pre-fix findings not individually re-traced~~ — **done** (§16.2):
+   115 TP / 7 FP / 1 severity disagreement / 15 remediation mismatches;
+   all confirmed defects fixed.
+2. ~~NSG cluster verdict provisional~~ — **done** (§16.1): all four are
+   overlapping-legitimate layering, confirmed by full re-read.
+3. ~~Pulumi TS/JS silent zero~~ — **honest warning shipped** (§16.3);
+   heuristic extraction (3–5d) and full parser (2–4wks) remain optional
+   follow-ups; Python/Go/.NET programs still scan silently (warning
+   extension is follow-up).
+4. Metadata-map interpolations not scanned by GCP-293 (unchanged).
+5. EOL tables are curated snapshots (unchanged; AWS-856's tables are not
+   this mission's).
+6. AWS-103's subnet assumption unstated (unchanged).
+7. TF-003 severity/wording flagged, not changed (unchanged).
+8. Span remap edge cases (unchanged).
+9. Parser repair is bounded (unchanged).
+10. `package.json` in Pulumi TS dirs still draws a manifests-adapter
+    "unrecognized document; skipped" warning — noisy but honest; out of
+    this mission's scope.
+11. Engine gating is conservative: `database_version` absent/unresolved →
+    PostgreSQL-only rules fire as before (only an explicit non-PostgreSQL
+    engine suppresses). A MySQL instance with no `database_version` set
+    would still draw the PG-flag findings.

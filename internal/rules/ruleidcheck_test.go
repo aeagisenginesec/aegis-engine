@@ -183,11 +183,11 @@ func TestDeprecatedIDsNeverSilentlyMigrate(t *testing.T) {
 }
 
 // TestDeprecatedMapCoversDocCount guards against the map drifting out of
-// sync with docs/audit/DEPRECATED_RULE_IDS.md (51 entries: 39 post-audit
-// + 3 outperform-mission + 9 multi-cloud quality audit).
+// sync with docs/audit/DEPRECATED_RULE_IDS.md (52 entries: 39 post-audit
+// + 3 outperform-mission + 9 multi-cloud quality audit + 1 follow-up).
 func TestDeprecatedMapCoversDocCount(t *testing.T) {
-	if len(deprecatedRuleIDs) != 51 {
-		t.Fatalf("deprecated map has %d entries, doc lists 51", len(deprecatedRuleIDs))
+	if len(deprecatedRuleIDs) != 52 {
+		t.Fatalf("deprecated map has %d entries, doc lists 52", len(deprecatedRuleIDs))
 	}
 }
 
@@ -213,5 +213,14 @@ func TestDeprecatedMap_MultiCloudAudit(t *testing.T) {
 	// Transitive pointer: 206's canonical (025) is itself deprecated now.
 	if got := CanonicalReplacement("AEGIS-AZURE-206"); got != "AEGIS-AZURE-105" {
 		t.Fatalf("206: canonical = %q, want AEGIS-AZURE-105", got)
+	}
+}
+
+// TestDeprecatedMap_GCP122 pins the GCP-122 deprecation (follow-up to the
+// multi-cloud quality audit: exact duplicate of GCP-032 with inconsistent
+// High vs Medium severity; 032 kept as canonical).
+func TestDeprecatedMap_GCP122(t *testing.T) {
+	if got := CanonicalReplacement("AEGIS-GCP-122"); got != "AEGIS-GCP-032" {
+		t.Fatalf("GCP-122: canonical = %q, want AEGIS-GCP-032", got)
 	}
 }

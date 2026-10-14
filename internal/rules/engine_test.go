@@ -130,8 +130,8 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	//   audit (AZR-004, AZURE-008/009/025/045/047/048/225, GCP-063).
 	// + 2 multi-cloud quality audit rules (AEGIS-GCP-293, AEGIS-GCP-294).
 	// + 1 AWS-856 EC2 EOL image (concurrent addition, kept after audit review).
-	if len(all) != 1153 {
-		t.Fatalf("default registry should wire 1153 rules, got %d", len(all))
+	if len(all) != 1152 {
+		t.Fatalf("default registry should wire 1152 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {
