@@ -125,8 +125,9 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	//   AEGIS-DOCKER-036, AEGIS-K8S-026, AEGIS-K8S-027).
 	// + 6 outperform-mission rules (AEGIS-AWS-851..855, AEGIS-DOCKER-037).
 	// − 3 removed as factually wrong / duplicates (684, 692, 702).
-	if len(all) != 1154 {
-		t.Fatalf("default registry should wire 1156 rules, got %d", len(all))
+	// + 5 K8s hardening gap-closure (AEGIS-K8S-028..032).
+	if len(all) != 1159 {
+		t.Fatalf("default registry should wire 1159 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {

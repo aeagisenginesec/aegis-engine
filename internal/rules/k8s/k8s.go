@@ -9,9 +9,11 @@
 //
 // Exception (documented per rule): the hygiene rules added in k8s2.go
 // (resource limits 006, probes 014/015, ingress TLS 021, and service
-// account automount 010) intentionally fire on absent configuration, since
-// the secure posture is an explicit setting. Those are the only
-// absent-fires rules in this pack.
+// account automount 010) and in k8s3.go (read-only rootfs 028,
+// seccomp 029, drop-ALL 030, NetworkPolicy 031, image digest 032)
+// intentionally fire on absent configuration, since the secure
+// posture is an explicit setting. Those are the only absent-fires
+// rules in this pack.
 package k8s
 
 import (
@@ -28,7 +30,8 @@ func Rules() []ir.Rule {
 		runAsRootContainer{},  // AEGIS-K8S-002
 		privilegeEscalation{}, // AEGIS-K8S-003
 	}
-	return append(rules, K8s2Rules()...) // AEGIS-K8S-004..025
+	rules = append(rules, K8s2Rules()...) // AEGIS-K8S-004..027
+	return append(rules, K8s3Rules()...)  // AEGIS-K8S-028..032
 }
 
 // appliesTo reports whether a resource type belongs to this pack.

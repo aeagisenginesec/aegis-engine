@@ -88,7 +88,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: app
-        image: nginx:1.25.3
+        image: nginx:1.25.3@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
         resources:
           limits: {cpu: "500m", memory: "256Mi"}
         livenessProbe: {httpGet: {path: /, port: 80}}
@@ -99,6 +99,7 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           seccompProfile: {type: RuntimeDefault}
+          capabilities: {drop: [ALL]}
 `
 	fired := runAll(parseK8s(t, src))
 	for id, fs := range fired {
@@ -107,9 +108,13 @@ spec:
 }
 
 // TestNoSecurityContextQuiet: a pod with no securityContext anywhere
-// fires ONLY AEGIS-K8S-027 (the documented exception to the
-// missing-configuration silence), not any of the explicit-misconfig
-// rules.
+// fires the no-securityContext rule (027) plus the absent-fires
+// hardening rules (028 read-only rootfs, 029 seccomp, 030 drop-ALL,
+// 032 image digest), and nothing else. The absent-fires rules are
+// the documented exception to the missing-configuration silence:
+// a wholly absent securityContext genuinely means no read-only
+// rootfs, no seccomp profile, and no dropped capabilities, and the
+// image genuinely has no digest pin.
 func TestNoSecurityContextQuiet(t *testing.T) {
 	src := `apiVersion: v1
 kind: Pod
@@ -125,13 +130,25 @@ spec:
     readinessProbe: {httpGet: {path: /, port: 80}}
 `
 	fired := runAll(parseK8s(t, src))
+	want := map[string]int{
+		"AEGIS-K8S-027": 1,
+		"AEGIS-K8S-028": 1,
+		"AEGIS-K8S-029": 1,
+		"AEGIS-K8S-030": 1,
+		"AEGIS-K8S-032": 1,
+	}
 	for id, fs := range fired {
-		if id != "AEGIS-K8S-027" {
+		if want[id] == 0 {
 			t.Errorf("rule %s fired with no securityContext: %v", id, fs)
 		}
+		if len(fs) != want[id] {
+			t.Errorf("rule %s fired %d times, want %d", id, len(fs), want[id])
+		}
 	}
-	if len(fired["AEGIS-K8S-027"]) != 1 {
-		t.Errorf("027 should fire on a pod with no securityContext, got %v", fired)
+	for id, n := range want {
+		if len(fired[id]) != n {
+			t.Errorf("rule %s fired %d times, want %d", id, len(fired[id]), n)
+		}
 	}
 }
 
@@ -248,8 +265,8 @@ func TestAppliesTo(t *testing.T) {
 
 func TestRuleIDs(t *testing.T) {
 	rules := Rules()
-	if len(rules) != 27 {
-		t.Fatalf("got %d rules, want 27", len(rules))
+	if len(rules) != 32 {
+		t.Fatalf("got %d rules, want 32", len(rules))
 	}
 	for i, rule := range rules {
 		want := "AEGIS-K8S-" + zeroPad3(i+1)
