@@ -54,6 +54,16 @@ type Value struct {
 	// non-static arguments. The semantics layer resolves the inner structure
 	// then JSON-encodes it to a string.
 	EncodeJSON bool `json:"-"`
+	// Template holds the raw source template text (literal parts plus
+	// ${ref} placeholders) for a string value whose expression contains
+	// interpolations and therefore cannot be statically resolved
+	// (Known=false). It is NOT a resolved value: never use it for
+	// equality, ordering, or any decision that requires the true value.
+	// Pattern-scanning rules (e.g. secret detection in user_data) may
+	// scan it for literal secret patterns in the static parts and for
+	// references to secret-like variables. Empty when the value has no
+	// template form.
+	Template string `json:"-"`
 }
 
 // IsRef reports whether this value is an unresolved reference.

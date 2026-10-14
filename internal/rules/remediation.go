@@ -42,13 +42,49 @@ func EnrichRemediation(findings []ir.Finding) []ir.Finding {
 }
 
 // fallbackRemediation generates category-aware guidance from the rule ID
-// prefix and title keywords. Never returns empty.
+// prefix and title keywords. Never returns empty. The guidance is
+// cloud-aware: the category templates are selected by the rule-ID prefix
+// so an Azure/GCP/Kubernetes finding never ships AWS-specific fix steps
+// (Secrets Manager, CloudTrail, `aws ec2 describe-security-groups`).
 func fallbackRemediation(ruleID string) (string, []string) {
-	lower := strings.ToLower(ruleID)
-	_ = lower
-	title := ruleTitle(ruleID)
-	t := strings.ToLower(title)
+	t := strings.ToLower(ruleTitle(ruleID))
+	switch fallbackCloud(ruleID) {
+	case "azure":
+		return fallbackAzure(t)
+	case "gcp":
+		return fallbackGCP(t)
+	case "k8s":
+		return fallbackK8s(t)
+	case "container":
+		return fallbackContainer(t)
+	case "neutral":
+		return fallbackNeutral(t)
+	default:
+		return fallbackAWS(t)
+	}
+}
 
+// fallbackCloud maps a rule ID to the cloud its fallback guidance must
+// target. Unknown prefixes fall back to neutral, never AWS-specific.
+func fallbackCloud(ruleID string) string {
+	switch {
+	case strings.HasPrefix(ruleID, "AEGIS-AZURE-") || strings.HasPrefix(ruleID, "AEGIS-AZR-"):
+		return "azure"
+	case strings.HasPrefix(ruleID, "AEGIS-GCP-"):
+		return "gcp"
+	case strings.HasPrefix(ruleID, "AEGIS-K8S-"):
+		return "k8s"
+	case strings.HasPrefix(ruleID, "AEGIS-DOCKER-") || strings.HasPrefix(ruleID, "AEGIS-COMPOSE-"):
+		return "container"
+	case strings.HasPrefix(ruleID, "AEGIS-AWS-"):
+		return "aws"
+	default:
+		return "neutral"
+	}
+}
+
+// fallbackAWS is the original category-aware AWS guidance (unchanged).
+func fallbackAWS(t string) (string, []string) {
 	switch {
 	case containsAny(t, []string{"encrypt", "kms", "sse"}):
 		return "Enable encryption at rest. For AWS-managed keys add the service's " +
@@ -122,6 +158,317 @@ func fallbackRemediation(ruleID string) (string, []string) {
 				"restrictive defaults, encryption, and audit logging. Validate with `aegis scan` " +
 				"after the change.",
 			[]string{"https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"}
+	}
+}
+
+// fallbackAzure is the category-aware guidance for Azure rules.
+func fallbackAzure(t string) (string, []string) {
+	switch {
+	case containsAny(t, []string{"encrypt", "kms", "sse"}):
+		return "Enable encryption at rest. Add the service's encryption block " +
+				"(e.g. `storage_encrypted`, customer-managed key via " +
+				"`azurerm_key_vault_key`). For regulated data use a customer-managed " +
+				"key in Key Vault with purge protection and key rotation.",
+			[]string{"https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-atrest"}
+	case containsAny(t, []string{"public", "open to the world", "0.0.0.0", "internet-facing", "exposure"}):
+		return "Remove public exposure. Restrict ingress to known CIDR ranges, disable " +
+				"public network access (`public_network_access_enabled = false`), and use " +
+				"private endpoints / Private Link if external access is required. Verify " +
+				"with `az network nsg rule list`.",
+			[]string{"https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"}
+	case containsAny(t, []string{"iam", "policy", "privilege", "assume", "role"}):
+		return "Apply least privilege. Replace wildcard permissions with the minimum " +
+				"scoped Azure RBAC roles the workload needs. Use Entra ID groups, " +
+				"managed identities, and Privileged Identity Management for privileged roles.",
+			[]string{"https://learn.microsoft.com/en-us/azure/role-based-access-control/best-practices"}
+	case containsAny(t, []string{"log", "trail", "audit", "monitor", "alarm", "metric"}):
+		return "Enable audit logging. Turn on Azure Monitor diagnostic settings, the " +
+				"Activity Log, and Defender for Cloud. Ship logs to a Log Analytics " +
+				"workspace in a security subscription.",
+			[]string{"https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings"}
+	case containsAny(t, []string{"secret", "password", "credential", "token", "hardcoded"}):
+		return "Remove the hardcoded secret immediately and rotate it. Store secrets in " +
+				"Azure Key Vault and reference them via Key Vault references or managed " +
+				"identities. Never commit secrets to version control — scan history with " +
+				"gitleaks if the value was ever committed.",
+			[]string{"https://learn.microsoft.com/en-us/azure/key-vault/general/overview"}
+	case containsAny(t, []string{"tls", "ssl", "https", "http", "plaintext"}):
+		return "Enforce TLS 1.2+. Set `min_tls_version = \"TLS1_2\"` / " +
+				"`minimum_tls_version = \"1.2\"`, replace HTTP listeners with HTTPS, and " +
+				"redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions.",
+			[]string{"https://learn.microsoft.com/en-us/azure/security/fundamentals/tls-best-practices"}
+	case containsAny(t, []string{"versioning", "backup", "retention", "pitr", "snapshot"}):
+		return "Enable data protection. Turn on versioning / point-in-time restore / " +
+				"automated backups with a retention period ≥ 7 days (30+ for production). " +
+				"Test restores regularly — untested backups are not backups.",
+			[]string{"https://learn.microsoft.com/en-us/azure/backup/backup-overview"}
+	case containsAny(t, []string{"deletion protection", "termination protection", "force_destroy"}):
+		return "Enable deletion protection to prevent accidental destruction: set " +
+				"`deletion_protection_enabled = true` where supported and enable soft " +
+				"delete + purge protection on Key Vault and storage accounts.",
+			[]string{"https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources"}
+	case containsAny(t, []string{"waf"}):
+		return "Attach Azure WAF (Application Gateway WAF / Front Door WAF) with managed " +
+				"rule sets. Set the default action to block and monitor via Azure Monitor.",
+			[]string{"https://learn.microsoft.com/en-us/azure/web-application-firewall/overview"}
+	case containsAny(t, []string{"rotation"}):
+		return "Enable automatic rotation. For Key Vault: configure key/secret " +
+				"auto-rotation. For credentials: rotate every 90 days and prefer " +
+				"short-lived credentials / managed identities.",
+			[]string{"https://learn.microsoft.com/en-us/azure/key-vault/secrets/tutorial-rotation"}
+	case containsAny(t, []string{"mfa", "root"}):
+		return "Enable MFA on the account and restrict privileged usage. Use Entra ID " +
+				"Conditional Access + Privileged Identity Management; create individual " +
+				"accounts and never use a global admin for daily operations.",
+			[]string{"https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mfa-howitworks"}
+	default:
+		return "Review the flagged configuration against Azure security best practices " +
+				"and the CIS Microsoft Azure Foundations Benchmark. Apply the control the " +
+				"rule describes, preferring restrictive defaults, encryption, and audit " +
+				"logging. Validate with `aegis scan` after the change.",
+			[]string{"https://learn.microsoft.com/en-us/security/benchmark/azure/"}
+	}
+}
+
+// fallbackGCP is the category-aware guidance for GCP rules.
+func fallbackGCP(t string) (string, []string) {
+	switch {
+	case containsAny(t, []string{"encrypt", "kms", "sse"}):
+		return "Enable encryption at rest. Google-managed keys apply by default; for " +
+				"regulated data use customer-managed keys (CMEK) via Cloud KMS with " +
+				"key rotation.",
+			[]string{"https://cloud.google.com/security/encryption/default-encryption"}
+	case containsAny(t, []string{"public", "open to the world", "0.0.0.0", "internet-facing", "exposure"}):
+		return "Remove public exposure. Restrict ingress to known CIDR ranges, disable " +
+				"public IPs / public access, and use Private Service Connect / VPC " +
+				"Service Controls if external access is required. Verify with " +
+				"`gcloud compute firewall-rules list`.",
+			[]string{"https://cloud.google.com/vpc/docs/firewalls"}
+	case containsAny(t, []string{"iam", "policy", "privilege", "assume", "role"}):
+		return "Apply least privilege. Replace broad roles with the minimum predefined " +
+				"or custom IAM roles the workload needs. Use Workload Identity Federation " +
+				"and service accounts with minimal scopes.",
+			[]string{"https://cloud.google.com/iam/docs/using-iam-securely"}
+	case containsAny(t, []string{"log", "trail", "audit", "monitor", "alarm", "metric"}):
+		return "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data " +
+				"Access), VPC flow logs, and Security Command Center. Ship logs to a " +
+				"dedicated project with locked retention.",
+			[]string{"https://cloud.google.com/logging/docs/audit"}
+	case containsAny(t, []string{"secret", "password", "credential", "token", "hardcoded"}):
+		return "Remove the hardcoded secret immediately and rotate it. Store secrets in " +
+				"Secret Manager and reference them via Secret Manager versions. Never " +
+				"commit secrets to version control — scan history with gitleaks if the " +
+				"value was ever committed.",
+			[]string{"https://cloud.google.com/secret-manager/docs/overview"}
+	case containsAny(t, []string{"tls", "ssl", "https", "http", "plaintext"}):
+		return "Enforce TLS 1.2+. Set `min_tls_version = \"TLS_1_2\"` / " +
+				"`minimum_tls_version`, replace HTTP with HTTPS, and redirect HTTP→HTTPS.",
+			[]string{"https://cloud.google.com/load-balancing/docs/ssl-policies-concepts"}
+	case containsAny(t, []string{"versioning", "backup", "retention", "pitr", "snapshot"}):
+		return "Enable data protection. Turn on versioning / point-in-time recovery / " +
+				"automated backups with a retention period ≥ 7 days (30+ for production). " +
+				"Test restores regularly — untested backups are not backups.",
+			[]string{"https://cloud.google.com/backup-disaster-recovery/docs"}
+	case containsAny(t, []string{"deletion protection", "termination protection", "force_destroy"}):
+		return "Enable deletion protection to prevent accidental destruction: set " +
+				"`deletion_protection = true` on databases, instances, and buckets, and " +
+				"use retention policies / liens for critical resources.",
+			[]string{"https://cloud.google.com/resource-manager/docs/creating-managing-liens"}
+	case containsAny(t, []string{"waf"}):
+		return "Attach Google Cloud Armor with managed protection / WAF rules to the " +
+				"load balancer. Set the default action to deny and monitor via Cloud Logging.",
+			[]string{"https://cloud.google.com/armor/docs"}
+	case containsAny(t, []string{"rotation"}):
+		return "Enable automatic rotation. For KMS: set `rotation_period`. For secrets: " +
+				"configure Secret Manager rotation. Rotate credentials every 90 days and " +
+				"prefer short-lived credentials.",
+			[]string{"https://cloud.google.com/secret-manager/docs/rotation"}
+	case containsAny(t, []string{"mfa", "root"}):
+		return "Enable MFA (2SV) on the account and restrict privileged usage. Use IAM " +
+				"and organization policies; never use the organization owner account for " +
+				"daily operations.",
+			[]string{"https://cloud.google.com/identity/docs/how-to-enable-2sv"}
+	default:
+		return "Review the flagged configuration against Google Cloud security best " +
+				"practices and the CIS Google Cloud Foundations Benchmark. Apply the " +
+				"control the rule describes, preferring restrictive defaults, encryption, " +
+				"and audit logging. Validate with `aegis scan` after the change.",
+			[]string{"https://cloud.google.com/security/best-practices"}
+	}
+}
+
+// fallbackK8s is the category-aware guidance for Kubernetes rules.
+func fallbackK8s(t string) (string, []string) {
+	switch {
+	case containsAny(t, []string{"encrypt", "kms", "sse"}):
+		return "Enable encryption at rest. Encrypt Kubernetes Secrets at rest " +
+				"(EncryptionConfiguration with a KMS provider) and use an external " +
+				"secret manager (External Secrets Operator / Secrets Store CSI).",
+			[]string{"https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/"}
+	case containsAny(t, []string{"public", "open to the world", "0.0.0.0", "internet-facing", "exposure"}):
+		return "Remove public exposure. Restrict Service/Ingress to known CIDRs, avoid " +
+				"NodePort/LoadBalancer for internal workloads, and use NetworkPolicy to " +
+				"deny by default.",
+			[]string{"https://kubernetes.io/docs/concepts/services-networking/network-policies/"}
+	case containsAny(t, []string{"iam", "policy", "privilege", "assume", "role"}):
+		return "Apply least privilege. Bind minimal RBAC roles (no cluster-admin), scope " +
+				"ServiceAccounts per workload, and enable audit logging.",
+			[]string{"https://kubernetes.io/docs/reference/access-authn-authz/rbac/"}
+	case containsAny(t, []string{"log", "trail", "audit", "monitor", "alarm", "metric"}):
+		return "Enable audit logging. Turn on Kubernetes audit logs (audit policy) and " +
+				"ship them to a SIEM; monitor with Falco / cloud audit logs.",
+			[]string{"https://kubernetes.io/docs/tasks/debug/debug-cluster/audit/"}
+	case containsAny(t, []string{"secret", "password", "credential", "token", "hardcoded"}):
+		return "Remove the hardcoded secret immediately and rotate it. Store secrets in " +
+				"an external secrets manager (not plaintext in etcd); mount via Secrets " +
+				"Store CSI / External Secrets Operator. Never commit secrets to version control.",
+			[]string{"https://kubernetes.io/docs/concepts/configuration/secret/"}
+	case containsAny(t, []string{"tls", "ssl", "https", "http", "plaintext"}):
+		return "Enforce TLS 1.2+. Serve HTTPS via Ingress with cert-manager, set a TLS " +
+				"1.2 minimum, and redirect HTTP→HTTPS.",
+			[]string{"https://kubernetes.io/docs/concepts/services-networking/ingress/"}
+	case containsAny(t, []string{"versioning", "backup", "retention", "pitr", "snapshot"}):
+		return "Enable data protection. Back up etcd and PersistentVolumes (Velero) with " +
+				"retention ≥ 7 days (30+ for production). Test restores regularly.",
+			[]string{"https://velero.io/docs/"}
+	case containsAny(t, []string{"deletion protection", "termination protection", "force_destroy"}):
+		return "Protect critical workloads from accidental deletion: use " +
+				"PodDisruptionBudgets, resource quotas, and admission policies " +
+				"(OPA/Kyverno) to block destructive changes.",
+			[]string{"https://kubernetes.io/docs/concepts/policy/"}
+	case containsAny(t, []string{"waf"}):
+		return "Front the service with a reverse proxy + WAF (ModSecurity via Ingress " +
+				"annotation, or a cloud WAF in front of the cluster).",
+			[]string{"https://kubernetes.io/docs/concepts/services-networking/ingress/"}
+	case containsAny(t, []string{"rotation"}):
+		return "Enable automatic rotation. Rotate ServiceAccount tokens, image pull " +
+				"secrets, and TLS certificates (cert-manager auto-renewal). Prefer " +
+				"short-lived bound tokens.",
+			[]string{"https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/"}
+	case containsAny(t, []string{"mfa", "root"}):
+		return "Require MFA / SSO for cluster access; never use the cluster-admin " +
+				"kubeconfig for daily operations. Bind users to least-privilege RBAC.",
+			[]string{"https://kubernetes.io/docs/reference/access-authn-authz/authentication/"}
+	default:
+		return "Review the flagged configuration against Kubernetes security best " +
+				"practices and the CIS Kubernetes Benchmark. Apply the control the rule " +
+				"describes, preferring restrictive defaults, encryption, and audit " +
+				"logging. Validate with `aegis scan` after the change.",
+			[]string{"https://kubernetes.io/docs/concepts/security/"}
+	}
+}
+
+// fallbackContainer is the category-aware guidance for Docker/Compose rules.
+func fallbackContainer(t string) (string, []string) {
+	switch {
+	case containsAny(t, []string{"encrypt", "kms", "sse"}):
+		return "Enable encryption at rest for volumes and registries. Use encrypted " +
+				"storage and a secret manager for sensitive data; never bake secrets " +
+				"into images.",
+			[]string{"https://docs.docker.com/engine/security/"}
+	case containsAny(t, []string{"public", "open to the world", "0.0.0.0", "internet-facing", "exposure"}):
+		return "Remove public exposure. Do not publish container ports to 0.0.0.0 " +
+				"unless required; bind to localhost or specific interfaces and front " +
+				"with a reverse proxy.",
+			[]string{"https://docs.docker.com/engine/security/"}
+	case containsAny(t, []string{"iam", "policy", "privilege", "assume", "role"}):
+		return "Apply least privilege. Run containers as non-root, drop unneeded " +
+				"capabilities, and scope registry / runtime permissions.",
+			[]string{"https://docs.docker.com/engine/security/"}
+	case containsAny(t, []string{"log", "trail", "audit", "monitor", "alarm", "metric"}):
+		return "Enable audit logging. Use a logging driver (json-file with rotation, " +
+				"or a remote driver) and ship container logs to a central store.",
+			[]string{"https://docs.docker.com/engine/security/"}
+	case containsAny(t, []string{"secret", "password", "credential", "token", "hardcoded"}):
+		return "Remove the hardcoded secret immediately and rotate it. Use Docker " +
+				"secrets / Compose secrets or a secrets manager; never bake secrets " +
+				"into images or env files.",
+			[]string{"https://docs.docker.com/engine/swarm/secrets/"}
+	case containsAny(t, []string{"tls", "ssl", "https", "http", "plaintext"}):
+		return "Enforce TLS 1.2+. Terminate TLS at a reverse proxy with a modern " +
+				"config; redirect HTTP→HTTPS.",
+			[]string{"https://docs.docker.com/engine/security/"}
+	case containsAny(t, []string{"versioning", "backup", "retention", "pitr", "snapshot"}):
+		return "Enable data protection. Back up named volumes regularly with retention " +
+				"≥ 7 days (30+ for production). Test restores.",
+			[]string{"https://docs.docker.com/storage/volumes/"}
+	case containsAny(t, []string{"deletion protection", "termination protection", "force_destroy"}):
+		return "Prevent accidental destruction: avoid `--rm` / `docker compose down -v` " +
+				"on production data volumes; use explicit backups before destructive operations.",
+			[]string{"https://docs.docker.com/storage/volumes/"}
+	case containsAny(t, []string{"waf"}):
+		return "Front the service with a reverse proxy + WAF (ModSecurity / cloud WAF) " +
+				"and set the default action to block.",
+			[]string{"https://docs.docker.com/engine/security/"}
+	case containsAny(t, []string{"rotation"}):
+		return "Rotate image pull secrets, registry credentials, and TLS certificates; " +
+				"prefer short-lived credentials.",
+			[]string{"https://docs.docker.com/engine/security/"}
+	case containsAny(t, []string{"mfa", "root"}):
+		return "Require MFA / SSO for registry and host access; never run containers " +
+				"as root or use the root account for daily operations.",
+			[]string{"https://docs.docker.com/engine/security/"}
+	default:
+		return "Review the flagged configuration against Docker and CIS Docker " +
+				"Benchmark best practices. Apply the control the rule describes, " +
+				"preferring restrictive defaults, least privilege, and audit logging. " +
+				"Validate with `aegis scan` after the change.",
+			[]string{"https://docs.docker.com/engine/security/"}
+	}
+}
+
+// fallbackNeutral is the cloud-neutral guidance for Terraform-generic,
+// Alibaba, OCI, supply-chain, and unknown-prefix rules: no cloud-specific
+// service names, commands, or links.
+func fallbackNeutral(t string) (string, []string) {
+	cis := []string{"https://www.cisecurity.org/cis-benchmarks"}
+	switch {
+	case containsAny(t, []string{"encrypt", "kms", "sse"}):
+		return "Enable encryption at rest. Add the service's encryption block and " +
+			"prefer customer-managed keys with rotation.", cis
+	case containsAny(t, []string{"public", "open to the world", "0.0.0.0", "internet-facing", "exposure"}):
+		return "Remove public exposure. Restrict ingress to known CIDR ranges, move " +
+			"the resource into private subnets, and front it with a load balancer " +
+			"or API gateway if external access is required.", cis
+	case containsAny(t, []string{"iam", "policy", "privilege", "assume", "role"}):
+		return "Apply least privilege. Replace wildcard actions with the minimum " +
+			"scoped permissions the workload needs.", cis
+	case containsAny(t, []string{"log", "trail", "audit", "monitor", "alarm", "metric"}):
+		return "Enable audit logging. Turn on the cloud provider's audit trail, flow " +
+			"logs, and service access logs with locked retention.", cis
+	case containsAny(t, []string{"secret", "password", "credential", "token", "hardcoded"}):
+		return "Remove the hardcoded secret immediately and rotate it. Store secrets " +
+			"in your cloud provider's secrets manager (Secrets Manager / Key Vault / " +
+			"Secret Manager) and reference them via data sources. Never commit " +
+			"secrets to version control — scan history with gitleaks if the value " +
+			"was ever committed.", cis
+	case containsAny(t, []string{"tls", "ssl", "https", "http", "plaintext"}):
+		return "Enforce TLS 1.2+. Replace HTTP listeners with HTTPS, set a modern TLS " +
+			"policy, and redirect HTTP→HTTPS. Disable weak ciphers and old protocol " +
+			"versions.", cis
+	case containsAny(t, []string{"versioning", "backup", "retention", "pitr", "snapshot"}):
+		return "Enable data protection. Turn on versioning / point-in-time recovery / " +
+			"automated backups with a retention period ≥ 7 days (30+ for production). " +
+			"Test restores regularly — untested backups are not backups.", cis
+	case containsAny(t, []string{"deletion protection", "termination protection", "force_destroy"}):
+		return "Enable deletion protection to prevent accidental destruction " +
+			"(`deletion_protection = true` / `disable_api_termination = true` / " +
+			"remove `force_destroy`).", cis
+	case containsAny(t, []string{"waf"}):
+		return "Attach a WAF with managed rule groups to the load balancer / API / " +
+			"distribution. Set the default action to block and monitor.", cis
+	case containsAny(t, []string{"rotation"}):
+		return "Enable automatic rotation for keys and secrets; rotate credentials " +
+			"every 90 days and prefer short-lived credentials.", cis
+	case containsAny(t, []string{"mfa", "root"}):
+		return "Enable MFA on the account and restrict privileged/root usage. Use " +
+			"individual accounts with least-privilege roles.", cis
+	default:
+		return "Review the flagged configuration against your cloud provider's " +
+			"security best practices and the relevant CIS Benchmark. Apply the " +
+			"control the rule describes, preferring restrictive defaults, " +
+			"encryption, and audit logging. Validate with `aegis scan` after the " +
+			"change.", cis
 	}
 }
 

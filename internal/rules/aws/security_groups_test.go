@@ -155,10 +155,10 @@ func TestSGEgress_CheckAllSGToSGRefNotAttachment(t *testing.T) {
 	})
 	// An SG-to-SG reference lives in a rule resource, not a workload.
 	rule := res("aws_security_group_rule", "app2db", map[string]ir.Value{
-		"type":                   ks("ingress", 2),
-		"security_group_id":      {Known: false, Ref: "aws_security_group.app.id", Span: spanAt(2)},
+		"type":                     ks("ingress", 2),
+		"security_group_id":        {Known: false, Ref: "aws_security_group.app.id", Span: spanAt(2)},
 		"source_security_group_id": {Known: false, Ref: "aws_security_group.db.id", Span: spanAt(2)},
-		"cidr_blocks":            strList(3, "10.0.0.0/8"),
+		"cidr_blocks":              strList(3, "10.0.0.0/8"),
 	})
 	_ = other
 	if f := (sgOpenEgress{}).CheckAll([]ir.Resource{sg, other, rule}); len(f) != 0 {

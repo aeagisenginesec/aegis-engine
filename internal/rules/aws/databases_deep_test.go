@@ -11,7 +11,7 @@ func TestAuroraPerfInsightsNoCMK(t *testing.T) {
 		"performance_insights_enabled": kv(true, 2),
 	})
 	quiet := res("aws_rds_cluster", "db", map[string]ir.Value{
-		"performance_insights_enabled": kv(true, 2),
+		"performance_insights_enabled":    kv(true, 2),
 		"performance_insights_kms_key_id": ks("arn:aws:kms:eu-west-1:123:key/abc", 3),
 	})
 	disabled := res("aws_rds_cluster", "db", map[string]ir.Value{
@@ -44,7 +44,6 @@ func TestDBInstanceNoEnhancedMon(t *testing.T) {
 		t.Fatalf("expected quiet, got %d", len(got))
 	}
 }
-
 
 func TestAuroraSkipFinalSnapshot(t *testing.T) {
 	fire := res("aws_rds_cluster", "db", map[string]ir.Value{
@@ -181,7 +180,7 @@ func TestDBInstancePasswordNoRotation(t *testing.T) {
 		"password": ks("s3cr3t-static", 2),
 	})
 	quiet := res("aws_db_instance", "db", map[string]ir.Value{
-		"password":                   ks("s3cr3t-static", 2),
+		"password":                    ks("s3cr3t-static", 2),
 		"manage_master_user_password": kv(true, 3),
 	})
 	noPw := res("aws_db_instance", "db", map[string]ir.Value{})

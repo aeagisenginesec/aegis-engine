@@ -32,7 +32,7 @@ func GCP3Rules() []ir.Rule {
 		// Compute 057-066
 		instanceIPForward{}, instanceSerialPort{}, instanceNoSecureBoot{},
 		instanceNoOSLogin{}, instanceDiskNoCMEK{}, instanceDefaultSA{},
-		instanceFullScope{}, instanceNoDeletionProtection{},
+		instanceNoDeletionProtection{},
 		instanceProjectSSHKeys{}, computeDiskNoCMEK{},
 		// Firewall 067-071
 		firewallOpenRDP{}, firewallAllPorts{}, firewallNoLogging{},
@@ -1337,42 +1337,6 @@ func (s instanceDefaultSA) Check(r ir.Resource) []ir.Finding {
 		if !p || !k || strings.TrimSpace(email) == "" || strings.Contains(email, "default") {
 			return []ir.Finding{mkFinding(s, r, "service_account.email", r.Span,
 				"default service account", "dedicated least-privilege service account")}
-		}
-	}
-	return nil
-}
-
-// AEGIS-GCP-063: Compute instance with full cloud-platform scope
-type instanceFullScope struct{}
-
-func (instanceFullScope) ID() string { return "AEGIS-GCP-063" }
-func (instanceFullScope) Title() string {
-	return "Compute instance with full cloud-platform access scope"
-}
-func (instanceFullScope) Description() string {
-	return "google_compute_instance service_account with " +
-		"https://www.googleapis.com/auth/cloud-platform scope grants the " +
-		"instance broad GCP API access."
-}
-func (instanceFullScope) Severity() ir.Severity { return ir.SeverityHigh }
-func (instanceFullScope) AppliesTo(t string) bool {
-	return t == "google_compute_instance"
-}
-func (s instanceFullScope) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "service_account")
-	if !present || !known {
-		return nil
-	}
-	for _, b := range blks {
-		scopes, span, ok := getStringList(mapRes(b), "scopes")
-		if !ok {
-			continue
-		}
-		for _, sc := range scopes {
-			if strings.Contains(sc, "cloud-platform") {
-				return []ir.Finding{mkFinding(s, r, "service_account.scopes", span,
-					sc, "minimal required scopes")}
-			}
 		}
 	}
 	return nil

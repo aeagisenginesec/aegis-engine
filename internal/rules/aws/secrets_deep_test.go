@@ -99,6 +99,76 @@ func Test534_WrongType(t *testing.T) {
 	}
 }
 
+// Test534_UserDataSecretVarInterpolation: the multi-cloud fixture case —
+// user_data writes ${var.database_password} to a world-readable file.
+// The adapter cannot resolve the interpolation, but the preserved
+// template still proves the exposure. Taint finding, High (like 339).
+func Test534_UserDataSecretVarInterpolation(t *testing.T) {
+	tmpl := "#!/bin/bash\necho \"deployment password: ${var.database_password}\" > /tmp/deploy-creds.txt\nchmod 644 /tmp/deploy-creds.txt"
+	r := dsRes("aws_instance", "web", map[string]ir.Value{
+		"user_data": {Known: false, Template: tmpl},
+	})
+	f := (userDataSecret{}).Check(r)
+	if len(f) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(f))
+	}
+	if f[0].Severity != ir.SeverityHigh {
+		t.Fatalf("taint finding must be High, got %s", f[0].Severity)
+	}
+	if !strings.Contains(f[0].Evidence.Actual, "var.database_password") {
+		t.Fatalf("evidence must cite the taint ref, got %q", f[0].Evidence.Actual)
+	}
+}
+
+// Test534_UserDataLocalInterpolation: ${local.<secret-like>} is taint too.
+func Test534_UserDataLocalInterpolation(t *testing.T) {
+	r := dsRes("aws_instance", "web", map[string]ir.Value{
+		"user_data": {Known: false, Template: "export DB_PASS=${local.db_password}"},
+	})
+	if f := (userDataSecret{}).Check(r); len(f) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(f))
+	}
+}
+
+// Test534_UserDataCleanVarInterpolation: a non-secret interpolation
+// (${var.ami_id}) is not evidence of a secret.
+func Test534_UserDataCleanVarInterpolation(t *testing.T) {
+	r := dsRes("aws_instance", "web", map[string]ir.Value{
+		"user_data": {Known: false, Template: "echo ${var.ami_id} ${var.region}"},
+	})
+	if f := (userDataSecret{}).Check(r); len(f) != 0 {
+		t.Errorf("expected no findings, got %d", len(f))
+	}
+}
+
+// Test534_UserDataLiteralSecretInTemplate: a literal secret in the static
+// parts of an interpolated template is a Critical literal finding.
+func Test534_UserDataLiteralSecretInTemplate(t *testing.T) {
+	r := dsRes("aws_instance", "web", map[string]ir.Value{
+		"user_data": {Known: false, Template: "password=hunter2super ${var.ami_id}"},
+	})
+	f := (userDataSecret{}).Check(r)
+	if len(f) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(f))
+	}
+	if f[0].Severity != ir.SeverityCritical {
+		t.Fatalf("literal secret in template must be Critical, got %s", f[0].Severity)
+	}
+	noSecretLeak(t, f, "hunter2super")
+}
+
+// Test534_UserDataOpaqueInterpolationQuiet: a complex interpolation
+// (${upper(var.x)}) is opaque — neither a literal secret nor a bare
+// secret-like reference — so it stays quiet.
+func Test534_UserDataOpaqueInterpolationQuiet(t *testing.T) {
+	r := dsRes("aws_instance", "web", map[string]ir.Value{
+		"user_data": {Known: false, Template: "echo ${upper(var.x)}"},
+	})
+	if f := (userDataSecret{}).Check(r); len(f) != 0 {
+		t.Errorf("expected no findings, got %d", len(f))
+	}
+}
+
 // ---------------------------------------------------------------------------
 // 535: provisioner connection password
 // ---------------------------------------------------------------------------

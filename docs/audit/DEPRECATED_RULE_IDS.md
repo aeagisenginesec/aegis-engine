@@ -4,7 +4,38 @@
 **Branch:** `fix/post-audit-reliability`  
 **Baseline:** `d9eea30`
 
-This document maps the 39 rule IDs removed during post-audit deduplication to their canonical replacements. The removed rules were exact semantic duplicates or strict subsets of the canonical rules.
+This document maps the 48 rule IDs removed during post-audit deduplication to their canonical replacements. The removed rules were exact semantic duplicates, strict subsets, or false-positive-prone single-form checks superseded by comprehensive cross-form rules.
+
+## Multi-cloud quality audit (2026-10-14) — 9 removed
+
+Found by the Aegis Multi-Cloud Finding Quality Audit (report 15) on a
+multi-cloud fixture: the legacy Azure SQL rules check only the inline-block
+form and fire false positives on servers configured via the standalone
+resource form (which the comprehensive CheckAll rules 101/106/107 handle
+correctly). AZR-004/048 are exact duplicates of each other; 047/225 are
+exact duplicates of each other; 025 is a strict subset of 105; 063 is an
+exact duplicate of 018 with a looser (Contains) match. None of these were
+removed to reduce finding counts — each removal fixes a proven false
+positive or an exact-duplicate check. AEGIS-AZURE-206's canonical pointer
+was also updated transitively (206 → 025 → now 105).
+
+| Removed ID | Canonical ID | Reason |
+|------------|--------------|--------|
+| AEGIS-AZR-004 | AEGIS-AZURE-106 | Exact duplicate of 048; subset of 106 (106 also fires on absent, provider default true) |
+| AEGIS-AZURE-008 | AEGIS-AZURE-107 | FP-prone: fires when standalone azuread_administrator resource exists; 107 checks both forms |
+| AEGIS-AZURE-009 | AEGIS-AZURE-101 | FP-prone: fires when standalone auditing-policy resource exists; 101 checks both forms |
+| AEGIS-AZURE-025 | AEGIS-AZURE-105 | Subset: 105 also covers absent minimum_tls_version (default below 1.2) |
+| AEGIS-AZURE-045 | AEGIS-AZURE-101 | Same check as 009 (Medium); FP-prone on standalone form |
+| AEGIS-AZURE-047 | AEGIS-AZURE-107 | Same check as 008 (Medium); FP-prone on standalone form |
+| AEGIS-AZURE-048 | AEGIS-AZURE-106 | Exact duplicate of AZR-004; subset of 106 |
+| AEGIS-AZURE-225 | AEGIS-AZURE-107 | Exact duplicate of 047 ("Entra ID" is the Azure AD rename); FP-prone on standalone form |
+| AEGIS-GCP-063 | AEGIS-GCP-018 | Exact duplicate: 018's exact/suffix scope match subsumes 063's Contains match |
+
+## Post-audit deduplication (2026-10-12) — 39 removed
+
+**Date:** 2026-10-12  
+**Branch:** `fix/post-audit-reliability`  
+**Baseline:** `d9eea30`
 
 ## AWS (12 removed)
 

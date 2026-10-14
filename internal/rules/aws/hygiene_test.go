@@ -120,7 +120,7 @@ func Test607_RDSNoQueryLogging(t *testing.T) {
 		t.Errorf("vulnerable: want 1 finding, got %d", len(got))
 	}
 	ok := res("aws_db_instance", "db", map[string]ir.Value{
-		"engine":                         ks("postgres", 2),
+		"engine":                          ks("postgres", 2),
 		"enabled_cloudwatch_logs_exports": strList(3, "postgresql"),
 	})
 	if got := runRule(rule, ok); len(got) != 0 {

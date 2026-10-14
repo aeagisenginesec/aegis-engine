@@ -23,7 +23,6 @@ func Rules() []ir.Rule {
 		storagePublicBlobAccess{}, // AEGIS-AZR-001
 		storageMinTLS{},           // AEGIS-AZR-002
 		nsgOpenRule{},             // AEGIS-AZR-003
-		sqlPublicAccess{},         // AEGIS-AZR-004
 		keyVaultPurgeProtection{}, // AEGIS-AZR-005
 	}
 	rules = append(rules, Azure2Rules()...)  // AEGIS-AZURE-006..025
@@ -249,39 +248,6 @@ func (s nsgOpenRule) Check(r ir.Resource) []ir.Finding {
 	}
 	// Source absent or unresolved: cannot decide.
 	return nil
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZR-004: SQL server public network access
-// ---------------------------------------------------------------------------
-
-type sqlPublicAccess struct{}
-
-func (sqlPublicAccess) ID() string { return "AEGIS-AZR-004" }
-func (sqlPublicAccess) Title() string {
-	return "SQL server allows public network access"
-}
-func (sqlPublicAccess) Description() string {
-	return "azurerm_mssql_server with public_network_access_enabled exposes " +
-		"the database endpoint to the internet. It should be disabled in favor " +
-		"of private endpoints."
-}
-func (sqlPublicAccess) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (sqlPublicAccess) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
-}
-
-func (s sqlPublicAccess) Check(r ir.Resource) []ir.Finding {
-	pub, span, present, known := getBool(r, "public_network_access_enabled")
-	if !present || !known {
-		return nil // absent or unresolved: cannot decide
-	}
-	if !pub {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "public_network_access_enabled", span,
-		"true", "public_network_access_enabled = false")}
 }
 
 // ---------------------------------------------------------------------------

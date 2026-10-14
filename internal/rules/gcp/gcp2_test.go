@@ -1,6 +1,7 @@
 package gcp
 
 import (
+	"strings"
 	"testing"
 
 	"aegis/internal/ir"
@@ -239,6 +240,45 @@ func TestGCP014_NoSSHQuiet(t *testing.T) {
 	})
 	if len(runRule(firewallOpenSSH{}, r)) != 0 {
 		t.Fatal("expected 0 findings for non-SSH port")
+	}
+}
+
+// TestGCP014_PortRangeFires: a port RANGE containing 22 (e.g. 0-65535,
+// the multi-cloud fixture) permits SSH — the old exact-match logic missed
+// ranges entirely once the parser recovered the ports list.
+func TestGCP014_PortRangeFires(t *testing.T) {
+	r := res("google_compute_firewall", "f", map[string]ir.Value{
+		"source_ranges": strList(3, "0.0.0.0/0"),
+		"allow":         blks(3, blk("protocol", ks("tcp", 4), "ports", strList(4, "0-65535"))),
+	})
+	f := mustFinding(t, runRule(firewallOpenSSH{}, r), "AEGIS-GCP-014")
+	if !strings.Contains(f.Evidence.Actual, "0-65535") {
+		t.Fatalf("evidence must cite the matched range, got %q", f.Evidence.Actual)
+	}
+}
+
+// TestGCP014_RangeExcludingSSHQuiet: a range that does not contain 22
+// stays quiet.
+func TestGCP014_RangeExcludingSSHQuiet(t *testing.T) {
+	r := res("google_compute_firewall", "f", map[string]ir.Value{
+		"source_ranges": strList(3, "0.0.0.0/0"),
+		"allow":         blks(3, blk("protocol", ks("tcp", 4), "ports", strList(4, "80-443"))),
+	})
+	if len(runRule(firewallOpenSSH{}, r)) != 0 {
+		t.Fatal("expected 0 findings for range 80-443 (excludes 22)")
+	}
+}
+
+// TestGCP014_AllProtocolNoPortsFires: protocol "all" with no ports list
+// allows every port including 22.
+func TestGCP014_AllProtocolNoPortsFires(t *testing.T) {
+	r := res("google_compute_firewall", "f", map[string]ir.Value{
+		"source_ranges": strList(3, "0.0.0.0/0"),
+		"allow":         blks(3, blk("protocol", ks("all", 4))),
+	})
+	f := mustFinding(t, runRule(firewallOpenSSH{}, r), "AEGIS-GCP-014")
+	if !strings.Contains(f.Evidence.Actual, "all ports") {
+		t.Fatalf("evidence must say all ports, got %q", f.Evidence.Actual)
 	}
 }
 

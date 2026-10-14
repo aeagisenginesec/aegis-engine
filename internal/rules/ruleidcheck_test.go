@@ -183,10 +183,35 @@ func TestDeprecatedIDsNeverSilentlyMigrate(t *testing.T) {
 }
 
 // TestDeprecatedMapCoversDocCount guards against the map drifting out of
-// sync with docs/audit/DEPRECATED_RULE_IDS.md (42 entries: 39 post-audit
-// + 3 outperform-mission).
+// sync with docs/audit/DEPRECATED_RULE_IDS.md (51 entries: 39 post-audit
+// + 3 outperform-mission + 9 multi-cloud quality audit).
 func TestDeprecatedMapCoversDocCount(t *testing.T) {
-	if len(deprecatedRuleIDs) != 42 {
-		t.Fatalf("deprecated map has %d entries, doc lists 42", len(deprecatedRuleIDs))
+	if len(deprecatedRuleIDs) != 51 {
+		t.Fatalf("deprecated map has %d entries, doc lists 51", len(deprecatedRuleIDs))
+	}
+}
+
+// TestDeprecatedMap_MultiCloudAudit pins the 9 IDs removed by the
+// multi-cloud quality audit to their canonical replacements.
+func TestDeprecatedMap_MultiCloudAudit(t *testing.T) {
+	want := map[string]string{
+		"AEGIS-AZR-004":   "AEGIS-AZURE-106",
+		"AEGIS-AZURE-008": "AEGIS-AZURE-107",
+		"AEGIS-AZURE-009": "AEGIS-AZURE-101",
+		"AEGIS-AZURE-025": "AEGIS-AZURE-105",
+		"AEGIS-AZURE-045": "AEGIS-AZURE-101",
+		"AEGIS-AZURE-047": "AEGIS-AZURE-107",
+		"AEGIS-AZURE-048": "AEGIS-AZURE-106",
+		"AEGIS-AZURE-225": "AEGIS-AZURE-107",
+		"AEGIS-GCP-063":   "AEGIS-GCP-018",
+	}
+	for id, canon := range want {
+		if got := CanonicalReplacement(id); got != canon {
+			t.Fatalf("%s: canonical = %q, want %q", id, got, canon)
+		}
+	}
+	// Transitive pointer: 206's canonical (025) is itself deprecated now.
+	if got := CanonicalReplacement("AEGIS-AZURE-206"); got != "AEGIS-AZURE-105" {
+		t.Fatalf("206: canonical = %q, want AEGIS-AZURE-105", got)
 	}
 }

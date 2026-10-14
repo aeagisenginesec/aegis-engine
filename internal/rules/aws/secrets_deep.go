@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"aegis/internal/ir"
 )
@@ -20,7 +22,12 @@ import (
 //   - Secret VALUES never appear in findings. Evidence.Actual is always
 //     "[REDACTED]" or "[REDACTED via ...]" with a location hint, never
 //     the secret itself.
-//   - Unknown/unresolved values never fire.
+//   - Unknown/unresolved values never fire, EXCEPT when the adapter
+//     preserved the source template text (ir.Value.Template) for an
+//     interpolated string: then 534 scans the template's static parts
+//     for literal secrets and its interpolations for secret-like
+//     variable references. The template is evidence, never a resolved
+//     value.
 //   - No panics: all type assertions are defensive.
 //   - Deterministic: findings sorted by resource, then rule ID.
 // ---------------------------------------------------------------------------
@@ -41,10 +48,20 @@ func DeepSecretsRules() []ir.Rule {
 var awsKeyPattern = regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
 
 // genericSecretPattern matches common secret assignments in scripts:
-// password=..., passwd=..., secret=..., token=..., api_key=... followed
-// by a non-empty value. Case-insensitive.
+// password=..., passwd=..., secret=..., secret_key=..., private_key=...,
+// token=..., api_key=..., auth_token=... followed by a non-empty value.
+// Case-insensitive. Bare "token" is included (the earlier alternation
+// only had auth_token, so token=... was silently missed).
+// The bare "pass" alternative is boundary-guarded ((?:^|[^A-Za-z])pass):
+// unguarded "pass" would match "bypass = ..." and "compass = ...", where
+// "pass" is preceded by a letter. The boundary is "not a letter" (not
+// "not alphanumeric-or-underscore") on purpose: DB_PASS=... must match,
+// and there "_" is the separator. The other alternatives stay unanchored
+// on purpose: DBPASSWORD=... must still match via "password", and a
+// boundary on "password" would break it.
+// containsSecret trims the boundary char from the reported kind label.
 var genericSecretPattern = regexp.MustCompile(
-	`(?i)(password|passwd|pwd|secret|api[_-]?key|auth[_-]?token)\s*[:=]\s*["']?([^\s"'\\]{4,})`)
+	`(?i)(password|passwd|pwd|secret|token|api[_-]?key|auth[_-]?token|secret[_-]?key|private[_-]?key|(?:^|[^A-Za-z])pass)\s*[:=]\s*["']?([^\s"'\\]{4,})`)
 
 // containsSecret scans text for AWS keys or generic secret assignments.
 // Returns a short, redacted description of what was found (never the value).
@@ -52,10 +69,61 @@ func containsSecret(text string) (string, bool) {
 	if awsKeyPattern.MatchString(text) {
 		return "AWS access key ID", true
 	}
-	if m := genericSecretPattern.FindStringSubmatch(text); m != nil {
-		return m[1] + " assignment", true
+	if matches := genericSecretPattern.FindAllStringSubmatch(text, -1); len(matches) > 0 {
+		for _, m := range matches {
+			value := m[2]
+			// A command substitution is a reference, not a baked secret:
+			// DB_PASSWORD=$(aws ssm get-parameter ...) fetches the password
+			// from SSM at boot time; the value is never in the source.
+			// Likewise an ARN reference is a pointer to Secrets Manager,
+			// not the secret itself. Both must stay quiet — but keep
+			// scanning later matches: a reference on one line must not
+			// hide a literal secret on the next.
+			if strings.HasPrefix(value, "$(") || strings.HasPrefix(value, "`") {
+				continue
+			}
+			if strings.Contains(strings.ToLower(value), "arn:aws:secretsmanager") {
+				continue
+			}
+			return strings.Trim(m[1], "_- \t") + " assignment", true
+		}
 	}
 	return "", false
+}
+
+// decodeMaybeBase64 attempts to base64-decode s. It returns the decoded
+// text ONLY when the decode succeeds and the result is valid UTF-8 that
+// is overwhelmingly printable (letters, digits, punctuation, whitespace).
+// Otherwise it returns s unchanged. This lets rules scan user_data values
+// that arrived as base64 (e.g. user_data = base64encode(...), evaluated
+// by the adapter to a Known base64 string, or a pasted base64 blob)
+// without ever misreading a plaintext script that merely happens to
+// decode to binary garbage: random bytes are not 95% printable.
+func decodeMaybeBase64(s string) string {
+	trimmed := strings.TrimSpace(s)
+	if trimmed == "" {
+		return s
+	}
+	decoded, err := base64.StdEncoding.DecodeString(trimmed)
+	if err != nil {
+		decoded, err = base64.RawURLEncoding.DecodeString(trimmed)
+		if err != nil {
+			return s
+		}
+	}
+	if len(decoded) == 0 || !utf8.Valid(decoded) {
+		return s
+	}
+	printable := 0
+	for _, r := range string(decoded) {
+		if unicode.IsPrint(r) || r == '\n' || r == '\r' || r == '\t' {
+			printable++
+		}
+	}
+	if printable*100/len([]rune(string(decoded))) < 95 {
+		return s
+	}
+	return string(decoded)
 }
 
 // decodeUserData returns the plaintext of user_data, decoding base64
@@ -94,7 +162,10 @@ func (userDataSecret) Description() string {
 		"is visible in the console, API responses, and instance metadata. " +
 		"user_data_base64 is decoded before scanning. Pass secrets via " +
 		"instance profiles, SSM Parameter Store, or Secrets Manager instead. " +
-		"The secret value is never included in findings."
+		"The secret value is never included in findings. Interpolated " +
+		"references to secret-like variables (${var.db_password}) are also " +
+		"reported: user_data is visible in the console regardless of " +
+		"variable sensitivity."
 }
 func (userDataSecret) Severity() ir.Severity { return ir.SeverityCritical }
 
@@ -117,10 +188,42 @@ func (userDataSecret) Check(r ir.Resource) []ir.Finding {
 			continue
 		}
 		text := decodeUserData(attr, v)
-		if text == "" {
-			continue // absent, unresolved, or undecodable: silent
+		if text != "" {
+			// user_data may itself hold a base64 blob (adapter-evaluated
+			// base64encode(...) or a pasted blob): scan the decoded text
+			// too when the raw text shows no secret.
+			if attr == "user_data" {
+				if decoded := decodeMaybeBase64(text); decoded != text {
+					text = decoded
+				}
+			}
+			if kind, found := containsSecret(text); found {
+				return []ir.Finding{{
+					RuleID:      "AEGIS-AWS-534",
+					Title:       (userDataSecret{}).Title(),
+					Description: (userDataSecret{}).Description(),
+					Severity:    ir.SeverityCritical,
+					Resource:    r.Address(),
+					Evidence: ir.Evidence{
+						Attribute: attr,
+						Span:      evidenceSpan(v.Span, r.Span),
+						Actual:    "[REDACTED: " + kind + " in " + attr + "]",
+						Expected:  "no secrets in user_data; use instance profiles or SSM/Secrets Manager",
+					},
+				}}
+			}
+			continue
 		}
-		if kind, found := containsSecret(text); found {
+		// Unknown value with a preserved template (interpolated string):
+		// scan the static parts for literal secrets, and the
+		// interpolations for references to secret-like variables.
+		// A ${...} placeholder never matches the literal scan (the
+		// interpolations are stripped first), so an opaque
+		// interpolation cannot produce a literal-secret finding.
+		if v.Template == "" {
+			continue
+		}
+		if kind, found := containsSecret(stripInterpolations(v.Template)); found {
 			return []ir.Finding{{
 				RuleID:      "AEGIS-AWS-534",
 				Title:       (userDataSecret{}).Title(),
@@ -130,13 +233,97 @@ func (userDataSecret) Check(r ir.Resource) []ir.Finding {
 				Evidence: ir.Evidence{
 					Attribute: attr,
 					Span:      evidenceSpan(v.Span, r.Span),
-					Actual:    "[REDACTED: " + kind + " in " + attr + "]",
+					Actual:    "[REDACTED: " + kind + " in " + attr + " template]",
+					Expected:  "no secrets in user_data; use instance profiles or SSM/Secrets Manager",
+				},
+			}}
+		}
+		if ref, found := secretInterpolation(v.Template); found {
+			return []ir.Finding{{
+				RuleID:      "AEGIS-AWS-534",
+				Title:       (userDataSecret{}).Title(),
+				Description: (userDataSecret{}).Description(),
+				Severity:    ir.SeverityHigh,
+				Resource:    r.Address(),
+				Evidence: ir.Evidence{
+					Attribute: attr,
+					Span:      evidenceSpan(v.Span, r.Span),
+					Actual:    "[REDACTED via ${" + ref + "} in " + attr + "]",
 					Expected:  "no secrets in user_data; use instance profiles or SSM/Secrets Manager",
 				},
 			}}
 		}
 	}
 	return nil
+}
+
+// stripInterpolations replaces every ${...} span with a single space,
+// tracking brace depth so nested braces inside an interpolation do not
+// terminate the span early.
+func stripInterpolations(s string) string {
+	var sb strings.Builder
+	for i := 0; i < len(s); {
+		if i+1 < len(s) && s[i] == '$' && s[i+1] == '{' {
+			depth := 0
+			j := i
+			for j < len(s) {
+				switch s[j] {
+				case '{':
+					depth++
+				case '}':
+					depth--
+					if depth == 0 {
+						j++
+						goto done
+					}
+				}
+				j++
+			}
+		done:
+			sb.WriteByte(' ')
+			i = j
+			continue
+		}
+		sb.WriteByte(s[i])
+		i++
+	}
+	return sb.String()
+}
+
+// secretInterpolation reports the first bare ${var.<name>} /
+// ${local.<name>} interpolation in s whose name looks secret-like.
+// Complex interpolations (function calls, conditionals, operators) are
+// skipped: only a bare reference is taint evidence.
+func secretInterpolation(s string) (string, bool) {
+	for i := 0; i < len(s); {
+		if i+1 < len(s) && s[i] == '$' && s[i+1] == '{' {
+			depth := 0
+			j := i + 2
+			for j < len(s) {
+				switch s[j] {
+				case '{':
+					depth++
+				case '}':
+					if depth == 0 {
+						inner := strings.TrimSpace(s[i+2 : j])
+						if head, name, ok := splitTaintRef(inner); ok &&
+							(head == "var" || head == "local") && secretLikeName(name) {
+							return inner, true
+						}
+						i = j + 1
+						goto next
+					}
+					depth--
+				}
+				j++
+			}
+			return "", false // unterminated: stop, do not guess
+		next:
+			continue
+		}
+		i++
+	}
+	return "", false
 }
 
 // ---------------------------------------------------------------------------

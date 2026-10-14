@@ -7,6 +7,7 @@
 package gcp
 
 import (
+	"strconv"
 	"strings"
 
 	"aegis/internal/ir"
@@ -411,29 +412,69 @@ func (firewallOpenSSH) AppliesTo(resType string) bool {
 }
 
 // allowHasPort reports whether any allow block permits the given port on
-// the given protocol (or all ports/protocols).
-func allowHasPort(blks []map[string]ir.Value, protocol, port string) bool {
+// the given protocol (or all ports/protocols). Port entries may be single
+// ports ("22") or ranges ("0-65535", "8000-9000"). On a match it also
+// returns the matched allow entry for evidence (e.g. "tcp 0-65535",
+// "tcp (all ports)"). A protocol of "all" (or absent) matches any
+// requested protocol, including with no ports list — previously the
+// all-protocols/no-ports case was missed.
+func allowHasPort(blks []map[string]ir.Value, protocol, port string) (bool, string) {
+	want, err := strconv.Atoi(strings.TrimSpace(port))
+	if err != nil {
+		return false, ""
+	}
 	for _, b := range blks {
 		proto, _, ppresent, pknown := blockString(b, "protocol")
-		if ppresent && pknown && !strings.EqualFold(strings.TrimSpace(proto), protocol) &&
-			!strings.EqualFold(strings.TrimSpace(proto), "all") {
+		protoMatch := false
+		protoLabel := protocol
+		switch {
+		case !ppresent:
+			// No protocol: GCP treats a missing protocol as all.
+			protoMatch = true
+			protoLabel = "all"
+		case !pknown:
+			continue // unresolved: cannot decide for this block
+		case strings.EqualFold(strings.TrimSpace(proto), protocol):
+			protoMatch = true
+			protoLabel = strings.TrimSpace(proto)
+		case strings.EqualFold(strings.TrimSpace(proto), "all"):
+			protoMatch = true
+			protoLabel = "all"
+		}
+		if !protoMatch {
 			continue
 		}
 		ports, _, ok := blockStringList(b, "ports")
 		if !ok {
 			// No ports list with a matching protocol means all ports.
-			if !ppresent || (pknown && strings.EqualFold(strings.TrimSpace(proto), protocol)) {
-				return true
-			}
-			continue
+			return true, protoLabel + " (all ports)"
 		}
 		for _, p := range ports {
-			if strings.TrimSpace(p) == port {
-				return true
+			p = strings.TrimSpace(p)
+			if p == port {
+				return true, protoLabel + " " + p
+			}
+			if lo, hi, ok := parsePortRange(p); ok && want >= lo && want <= hi {
+				return true, protoLabel + " " + p
 			}
 		}
 	}
-	return false
+	return false, ""
+}
+
+// parsePortRange parses "lo-hi" into (lo, hi). Returns ok=false for
+// anything else (single ports, malformed entries).
+func parsePortRange(s string) (lo, hi int, ok bool) {
+	parts := strings.SplitN(s, "-", 2)
+	if len(parts) != 2 {
+		return 0, 0, false
+	}
+	lo, err1 := strconv.Atoi(strings.TrimSpace(parts[0]))
+	hi, err2 := strconv.Atoi(strings.TrimSpace(parts[1]))
+	if err1 != nil || err2 != nil || lo > hi {
+		return 0, 0, false
+	}
+	return lo, hi, true
 }
 
 // blockStringList extracts a string list from a block map.
@@ -486,9 +527,9 @@ func (s firewallOpenSSH) Check(r ir.Resource) []ir.Finding {
 	if !present || !known || len(blks) == 0 {
 		return nil
 	}
-	if allowHasPort(blks, "tcp", "22") {
+	if matched, entry := allowHasPort(blks, "tcp", "22"); matched {
 		return []ir.Finding{mkFinding(s, r, "allow", span,
-			"tcp:22 from 0.0.0.0/0", "restricted source_ranges for SSH")}
+			entry+" from 0.0.0.0/0 (includes port 22)", "restricted source_ranges for SSH")}
 	}
 	return nil
 }

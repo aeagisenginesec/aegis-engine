@@ -88,7 +88,6 @@ func TestEC2NoTerminationProtection(t *testing.T) {
 	}
 }
 
-
 func TestEC2PasswordDataExposed(t *testing.T) {
 	fire := res("aws_instance", "win", map[string]ir.Value{
 		"get_password_data": kv(true, 2),
@@ -210,7 +209,6 @@ func TestLTEBSOptimizedAbsent(t *testing.T) {
 		t.Fatalf("expected quiet, got %d", len(got))
 	}
 }
-
 
 func TestEC2UnlimitedCPUCredits(t *testing.T) {
 	fire := res("aws_instance", "web", map[string]ir.Value{

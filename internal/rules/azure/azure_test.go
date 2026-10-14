@@ -74,18 +74,18 @@ func TestRulesInIDOrder(t *testing.T) {
 	rules := Rules()
 	want := []string{
 		"AEGIS-AZR-001", "AEGIS-AZR-002", "AEGIS-AZR-003",
-		"AEGIS-AZR-004", "AEGIS-AZR-005",
-		"AEGIS-AZURE-006", "AEGIS-AZURE-007", "AEGIS-AZURE-008", "AEGIS-AZURE-009",
+		"AEGIS-AZR-005",
+		"AEGIS-AZURE-006", "AEGIS-AZURE-007",
 		"AEGIS-AZURE-010", "AEGIS-AZURE-011", "AEGIS-AZURE-012", "AEGIS-AZURE-013",
 		"AEGIS-AZURE-014", "AEGIS-AZURE-015", "AEGIS-AZURE-016", "AEGIS-AZURE-017",
 		"AEGIS-AZURE-018", "AEGIS-AZURE-019", "AEGIS-AZURE-020", "AEGIS-AZURE-021",
-		"AEGIS-AZURE-022", "AEGIS-AZURE-023", "AEGIS-AZURE-024", "AEGIS-AZURE-025",
+		"AEGIS-AZURE-022", "AEGIS-AZURE-023", "AEGIS-AZURE-024",
 		"AEGIS-AZURE-026", "AEGIS-AZURE-027", "AEGIS-AZURE-028", "AEGIS-AZURE-029",
 		"AEGIS-AZURE-030", "AEGIS-AZURE-031", "AEGIS-AZURE-032", "AEGIS-AZURE-033",
 		"AEGIS-AZURE-034", "AEGIS-AZURE-035", "AEGIS-AZURE-037",
 		"AEGIS-AZURE-038", "AEGIS-AZURE-039", "AEGIS-AZURE-040", "AEGIS-AZURE-041",
-		"AEGIS-AZURE-042", "AEGIS-AZURE-043", "AEGIS-AZURE-044", "AEGIS-AZURE-045",
-		"AEGIS-AZURE-046", "AEGIS-AZURE-047", "AEGIS-AZURE-048", "AEGIS-AZURE-049",
+		"AEGIS-AZURE-042", "AEGIS-AZURE-043", "AEGIS-AZURE-044",
+		"AEGIS-AZURE-046", "AEGIS-AZURE-049",
 		"AEGIS-AZURE-050", "AEGIS-AZURE-051", "AEGIS-AZURE-052", "AEGIS-AZURE-053",
 		"AEGIS-AZURE-054", "AEGIS-AZURE-055", "AEGIS-AZURE-056", "AEGIS-AZURE-057",
 		"AEGIS-AZURE-058", "AEGIS-AZURE-059", "AEGIS-AZURE-060", "AEGIS-AZURE-061",
@@ -130,7 +130,7 @@ func TestRulesInIDOrder(t *testing.T) {
 		"AEGIS-AZURE-210", "AEGIS-AZURE-211", "AEGIS-AZURE-212",
 		"AEGIS-AZURE-214", "AEGIS-AZURE-215", "AEGIS-AZURE-216", "AEGIS-AZURE-217",
 		"AEGIS-AZURE-218", "AEGIS-AZURE-219", "AEGIS-AZURE-220", "AEGIS-AZURE-221",
-		"AEGIS-AZURE-222", "AEGIS-AZURE-223", "AEGIS-AZURE-224", "AEGIS-AZURE-225",
+		"AEGIS-AZURE-222", "AEGIS-AZURE-223", "AEGIS-AZURE-224",
 		"AEGIS-AZURE-226", "AEGIS-AZURE-227", "AEGIS-AZURE-228", "AEGIS-AZURE-229",
 		"AEGIS-AZURE-230", "AEGIS-AZURE-231", "AEGIS-AZURE-232", "AEGIS-AZURE-233",
 		"AEGIS-AZURE-235", "AEGIS-AZURE-236", "AEGIS-AZURE-237",
@@ -302,38 +302,6 @@ func TestNSGOpenRule_UnknownDirectionNoFinding(t *testing.T) {
 	})
 	if f := runRule(nsgOpenRule{}, r); len(f) != 0 {
 		t.Fatalf("unknown direction must not fire, got %d", len(f))
-	}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZR-004
-// ---------------------------------------------------------------------------
-
-func TestSQLPublicAccess_Fires(t *testing.T) {
-	r := res("azurerm_mssql_server", "db", map[string]ir.Value{
-		"public_network_access_enabled": kv(true, 3),
-	})
-	f := mustFinding(t, runRule(sqlPublicAccess{}, r), "AEGIS-AZR-004")
-	if f.Severity != ir.SeverityHigh {
-		t.Fatalf("wrong severity: %s", f.Severity)
-	}
-}
-
-func TestSQLPublicAccess_DisabledOK(t *testing.T) {
-	r := res("azurerm_mssql_server", "db", map[string]ir.Value{
-		"public_network_access_enabled": kv(false, 3),
-	})
-	if f := runRule(sqlPublicAccess{}, r); len(f) != 0 {
-		t.Fatalf("disabled access must not fire, got %d", len(f))
-	}
-}
-
-func TestSQLPublicAccess_UnknownNoFinding(t *testing.T) {
-	r := res("azurerm_mssql_server", "db", map[string]ir.Value{
-		"public_network_access_enabled": ku(3),
-	})
-	if f := runRule(sqlPublicAccess{}, r); len(f) != 0 {
-		t.Fatalf("unknown value must not fire, got %d", len(f))
 	}
 }
 

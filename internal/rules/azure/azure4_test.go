@@ -19,26 +19,6 @@ func TestAZURE044_TDEQuiet(t *testing.T) {
 	}
 }
 
-// TestAZURE045_NoAuditingFires verifies auditing detection.
-func TestAZURE045_NoAuditingFires(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{})
-	mustFinding(t, runRule(mssqlNoAuditing{}, r), "AEGIS-AZURE-045")
-}
-
-// TestAZURE048_PublicAccessFires verifies public access detection.
-func TestAZURE048_PublicAccessFires(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"public_network_access_enabled": kv(true, 3)})
-	mustFinding(t, runRule(mssqlPublicAccess{}, r), "AEGIS-AZURE-048")
-}
-
-// TestAZURE048_PrivateAccessQuiet verifies a private MSSQL server stays quiet.
-func TestAZURE048_PrivateAccessQuiet(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"public_network_access_enabled": kv(false, 3)})
-	if len(runRule(mssqlPublicAccess{}, r)) != 0 {
-		t.Fatal("AEGIS-AZURE-048: expected 0 findings")
-	}
-}
-
 // TestAZURE049_NoTDEFires verifies TDE detection.
 func TestAZURE049_NoTDEFires(t *testing.T) {
 	r := res("azurerm_mssql_database", "d", map[string]ir.Value{"transparent_data_encryption_enabled": kv(false, 3)})

@@ -20,17 +20,17 @@ func DatabasesDeepRules() []ir.Rule {
 		auroraPerfInsightsNoCMK{},      // AEGIS-AWS-700
 		auroraSkipFinalSnapshot{},      // AEGIS-AWS-703
 		auroraNoAutomatedBackup{},      // AEGIS-AWS-704
-		dbClusterSnapshotShared{},     // AEGIS-AWS-705
+		dbClusterSnapshotShared{},      // AEGIS-AWS-705
 		dbInstanceDefaultOptionGroup{}, // AEGIS-AWS-706
-		dbSubnetGroupSingleSubnet{},   // AEGIS-AWS-707
-		auroraDefaultParamGroup{},     // AEGIS-AWS-708
-		dbParamGroupNoForceSSL{},      // AEGIS-AWS-709
+		dbSubnetGroupSingleSubnet{},    // AEGIS-AWS-707
+		auroraDefaultParamGroup{},      // AEGIS-AWS-708
+		dbParamGroupNoForceSSL{},       // AEGIS-AWS-709
 		dbInstancePasswordNoRotation{}, // AEGIS-AWS-710
-		redshiftNoVersionUpgrade{},    // AEGIS-AWS-711
-		redshiftShortSnapshotRet{},    // AEGIS-AWS-712
-		redshiftNoCopyTagsSnapshot{},  // AEGIS-AWS-713
-		elasticacheNoSnapRetention{},  // AEGIS-AWS-714
-		elasticacheNoAutoFailover{},   // AEGIS-AWS-716
+		redshiftNoVersionUpgrade{},     // AEGIS-AWS-711
+		redshiftShortSnapshotRet{},     // AEGIS-AWS-712
+		redshiftNoCopyTagsSnapshot{},   // AEGIS-AWS-713
+		elasticacheNoSnapRetention{},   // AEGIS-AWS-714
+		elasticacheNoAutoFailover{},    // AEGIS-AWS-716
 		elasticacheRGNoSnapRetention{}, // AEGIS-AWS-717
 	}
 }
@@ -754,4 +754,3 @@ func (elasticacheRGNoSnapRetention) Check(r ir.Resource) []ir.Finding {
 		},
 	}}
 }
-

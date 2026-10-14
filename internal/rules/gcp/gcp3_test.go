@@ -436,22 +436,6 @@ func TestGCP062_DefaultSAFires(t *testing.T) {
 	mustFinding(t, runRule(instanceDefaultSA{}, r), "AEGIS-GCP-062")
 }
 
-// --- 063: full scope ---
-func TestGCP063_FullScopeFires(t *testing.T) {
-	r := res("google_compute_instance", "i", map[string]ir.Value{
-		"service_account": blks(3, blk("scopes", sl(4, "https://www.googleapis.com/auth/cloud-platform"))),
-	})
-	mustFinding(t, runRule(instanceFullScope{}, r), "AEGIS-GCP-063")
-}
-func TestGCP063_MinimalScopeQuiet(t *testing.T) {
-	r := res("google_compute_instance", "i", map[string]ir.Value{
-		"service_account": blks(3, blk("scopes", sl(4, "https://www.googleapis.com/auth/logging.write"))),
-	})
-	if len(runRule(instanceFullScope{}, r)) != 0 {
-		t.Fatal("AEGIS-GCP-063: expected 0 findings")
-	}
-}
-
 // --- 064: deletion protection ---
 func TestGCP064_NoDeletionProtectionFires(t *testing.T) {
 	r := res("google_compute_instance", "i", map[string]ir.Value{"deletion_protection": kv(false, 3)})
@@ -864,14 +848,21 @@ func TestGCP3_UnknownQuiet(t *testing.T) {
 	}
 }
 
-// Verify all 76 new rules are registered in ID order
+// Verify all 75 rules are registered in ID order (063 removed: exact duplicate of 018)
 func TestGCP3_AllRegistered(t *testing.T) {
 	rules := GCP3Rules()
-	if len(rules) != 76 {
-		t.Fatalf("expected 76 rules, got %d", len(rules))
+	if len(rules) != 75 {
+		t.Fatalf("expected 75 rules, got %d", len(rules))
+	}
+	wantIDs := []int{}
+	for n := 25; n <= 100; n++ {
+		if n == 63 { // removed: exact duplicate of 018
+			continue
+		}
+		wantIDs = append(wantIDs, n)
 	}
 	for i, r := range rules {
-		want := 25 + i
+		want := wantIDs[i]
 		var got int
 		_, err := scanID(r.ID(), &got)
 		if err != nil || got != want {

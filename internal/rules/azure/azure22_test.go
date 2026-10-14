@@ -108,36 +108,36 @@ func TestAZURE314_EndToEndCombat(t *testing.T) {
 	if f := runRule(sqlWeakAdminPassword{}, mod2.Resources[0]); len(f) != 0 {
 		t.Fatalf("hardened SQL server must stay quiet for 314, got %+v", f)
 	}
-	if f := runRule(sqlNoAuditing{}, mod2.Resources[0]); len(f) != 0 {
-		t.Fatalf("hardened SQL server must stay quiet for 009, got %+v", f)
+	if f := runRuleAll(mssqlNoExtAuditPolicy{}, mod2.Resources[0]); len(f) != 0 {
+		t.Fatalf("hardened SQL server must stay quiet for 101, got %+v", f)
 	}
 }
 
-// TestAZURE009_LegacySQLServer: auditing coverage extends to the legacy
-// azurerm_sql_server type (previously mssql_server only).
-func TestAZURE009_LegacySQLServer(t *testing.T) {
+// TestAZURE101_LegacySQLServer: auditing coverage extends to the legacy
+// azurerm_sql_server type (previously via AEGIS-AZURE-009, now via 101).
+func TestAZURE101_LegacySQLServer(t *testing.T) {
 	r := res("azurerm_sql_server", "s", map[string]ir.Value{})
-	mustFinding(t, runRule(sqlNoAuditing{}, r), "AEGIS-AZURE-009")
+	mustFinding(t, runRuleAll(mssqlNoExtAuditPolicy{}, r), "AEGIS-AZURE-101")
 	r2 := res("azurerm_sql_server", "s", map[string]ir.Value{
 		"extended_auditing_policy": blks(3, blk("storage_endpoint", ks("https://x", 4))),
 	})
-	if f := runRule(sqlNoAuditing{}, r2); len(f) != 0 {
+	if f := runRuleAll(mssqlNoExtAuditPolicy{}, r2); len(f) != 0 {
 		t.Fatalf("legacy SQL server with auditing must stay quiet, got %+v", f)
 	}
 }
 
-// TestAzureSQL_VerifyExistingCoverage: TLS (025), firewall (207/208) and
+// TestAzureSQL_VerifyExistingCoverage: TLS (105), firewall (207/208) and
 // TDE (018/044) already cover SQL servers/databases; these tests pin
 // that coverage so the legacy gap fix cannot silently drop it.
 func TestAzureSQL_VerifyExistingCoverage(t *testing.T) {
 	tlsLow := res("azurerm_mssql_server", "s", map[string]ir.Value{
 		"minimum_tls_version": ks("1.0", 3),
 	})
-	mustFinding(t, runRule(sqlServerWeakTLS{}, tlsLow), "AEGIS-AZURE-025")
+	mustFinding(t, runRule(mssqlTLSBelow12{}, tlsLow), "AEGIS-AZURE-105")
 	tlsOK := res("azurerm_mssql_server", "s", map[string]ir.Value{
 		"minimum_tls_version": ks("1.2", 3),
 	})
-	if f := runRule(sqlServerWeakTLS{}, tlsOK); len(f) != 0 {
+	if f := runRule(mssqlTLSBelow12{}, tlsOK); len(f) != 0 {
 		t.Fatalf("TLS 1.2 must stay quiet, got %+v", f)
 	}
 	fwOpen := res("azurerm_sql_firewall_rule", "f", map[string]ir.Value{

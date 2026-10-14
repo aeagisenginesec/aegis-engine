@@ -18,23 +18,23 @@ import (
 func ComputeDeepRules() []ir.Rule {
 	return []ir.Rule{
 		ec2IMDSTagsExposed{},          // AEGIS-AWS-680
-		ec2IMDSHopLimitTooHigh{},     // AEGIS-AWS-681
-		launchTemplateStaleDefault{}, // AEGIS-AWS-682
-		ec2NoTerminationProtection{}, // AEGIS-AWS-683
-		ec2PasswordDataExposed{},     // AEGIS-AWS-685
-		ec2UserDataAWSCreds{},        // AEGIS-AWS-686
+		ec2IMDSHopLimitTooHigh{},      // AEGIS-AWS-681
+		launchTemplateStaleDefault{},  // AEGIS-AWS-682
+		ec2NoTerminationProtection{},  // AEGIS-AWS-683
+		ec2PasswordDataExposed{},      // AEGIS-AWS-685
+		ec2UserDataAWSCreds{},         // AEGIS-AWS-686
 		ltUserDataHardcodedPassword{}, // AEGIS-AWS-687
-		eniPublicIPAssociated{},      // AEGIS-AWS-688
-		ec2SourceDestCheckDisabled{}, // AEGIS-AWS-689
-		asgHealthCheckEC2Only{},      // AEGIS-AWS-690
-		ltEBSOptimizedAbsent{},       // AEGIS-AWS-691
-		ec2UnlimitedCPUCredits{},     // AEGIS-AWS-693
-		amiCopyUnencrypted{},         // AEGIS-AWS-694
-		ebsSnapshotCopyUnencrypted{}, // AEGIS-AWS-695
-		ec2RootVolumeUnencrypted{},   // AEGIS-AWS-696
-		ltEBSDeleteOnTermination{},   // AEGIS-AWS-697
-		asgNoScalingRange{},          // AEGIS-AWS-698
-		ec2NoNitroEnclaves{},         // AEGIS-AWS-699
+		eniPublicIPAssociated{},       // AEGIS-AWS-688
+		ec2SourceDestCheckDisabled{},  // AEGIS-AWS-689
+		asgHealthCheckEC2Only{},       // AEGIS-AWS-690
+		ltEBSOptimizedAbsent{},        // AEGIS-AWS-691
+		ec2UnlimitedCPUCredits{},      // AEGIS-AWS-693
+		amiCopyUnencrypted{},          // AEGIS-AWS-694
+		ebsSnapshotCopyUnencrypted{},  // AEGIS-AWS-695
+		ec2RootVolumeUnencrypted{},    // AEGIS-AWS-696
+		ltEBSDeleteOnTermination{},    // AEGIS-AWS-697
+		asgNoScalingRange{},           // AEGIS-AWS-698
+		ec2NoNitroEnclaves{},          // AEGIS-AWS-699
 	}
 }
 
@@ -56,7 +56,7 @@ func (ec2IMDSTagsExposed) Description() string {
 		"instance read EC2 resource tags through the metadata service, " +
 		"leaking names, roles, and environment labels that aid lateral movement."
 }
-func (ec2IMDSTagsExposed) Severity() ir.Severity { return ir.SeverityMedium }
+func (ec2IMDSTagsExposed) Severity() ir.Severity         { return ir.SeverityMedium }
 func (ec2IMDSTagsExposed) AppliesTo(resType string) bool { return resType == "aws_instance" }
 func (ec2IMDSTagsExposed) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "metadata_options")
@@ -100,7 +100,7 @@ func (ec2IMDSHopLimitTooHigh) Description() string {
 		"the instance, which weakens IMDSv2's SSRF protection; keep the hop " +
 		"limit at 1 unless a proxy on the host legitimately needs it."
 }
-func (ec2IMDSHopLimitTooHigh) Severity() ir.Severity { return ir.SeverityMedium }
+func (ec2IMDSHopLimitTooHigh) Severity() ir.Severity         { return ir.SeverityMedium }
 func (ec2IMDSHopLimitTooHigh) AppliesTo(resType string) bool { return resType == "aws_instance" }
 func (ec2IMDSHopLimitTooHigh) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "metadata_options")
@@ -193,7 +193,7 @@ func (ec2NoTerminationProtection) Description() string {
 		"be terminated by an accidental or malicious API call. Enable it " +
 		"for instances that must not be deleted casually."
 }
-func (ec2NoTerminationProtection) Severity() ir.Severity { return ir.SeverityLow }
+func (ec2NoTerminationProtection) Severity() ir.Severity         { return ir.SeverityLow }
 func (ec2NoTerminationProtection) AppliesTo(resType string) bool { return resType == "aws_instance" }
 func (ec2NoTerminationProtection) Check(r ir.Resource) []ir.Finding {
 	val, _, present, known := getBool(r, "disable_api_termination")
@@ -242,7 +242,7 @@ func (ec2PasswordDataExposed) Description() string {
 		"password through the EC2 API to anyone with ec2:GetPasswordData " +
 		"permission. Keep it disabled unless the password is genuinely needed."
 }
-func (ec2PasswordDataExposed) Severity() ir.Severity { return ir.SeverityMedium }
+func (ec2PasswordDataExposed) Severity() ir.Severity         { return ir.SeverityMedium }
 func (ec2PasswordDataExposed) AppliesTo(resType string) bool { return resType == "aws_instance" }
 func (ec2PasswordDataExposed) Check(r ir.Resource) []ir.Finding {
 	val, span, present, known := getBool(r, "get_password_data")
@@ -276,7 +276,7 @@ var (
 	awsCliCredPattern = regexp.MustCompile(
 		`(?i)(aws_access_key_id|aws_secret_access_key)\s*[:=]\s*["']?[^\s"']+`)
 	ec2UserDataAccessKeyPattern = regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
-	osPasswordPattern   = regexp.MustCompile(
+	osPasswordPattern           = regexp.MustCompile(
 		`(?i)(password|passwd)\s*[:=]\s*["']?[^\s"']{3,}`)
 )
 
@@ -290,6 +290,12 @@ func userDataText(r ir.Resource) (string, bool) {
 		if !ok || strings.TrimSpace(s) == "" {
 			continue
 		}
+		// user_data may hold a base64 blob (adapter-evaluated
+		// base64encode(...), or the base64 attribute itself): decode
+		// before pattern matching, mirroring AEGIS-AWS-534.
+		// decodeMaybeBase64 returns s unchanged when the value is not
+		// really base64, so plaintext scripts are unaffected.
+		s = decodeMaybeBase64(s)
 		return s, true
 	}
 	return "", false
@@ -308,7 +314,7 @@ func (ec2UserDataAWSCreds) Description() string {
 		"console and snapshots; use an instance profile instead. The " +
 		"credential value is never included in findings."
 }
-func (ec2UserDataAWSCreds) Severity() ir.Severity { return ir.SeverityHigh }
+func (ec2UserDataAWSCreds) Severity() ir.Severity         { return ir.SeverityHigh }
 func (ec2UserDataAWSCreds) AppliesTo(resType string) bool { return resType == "aws_instance" }
 func (ec2UserDataAWSCreds) Check(r ir.Resource) []ir.Finding {
 	text, ok := userDataText(r)
@@ -430,7 +436,7 @@ func (ec2SourceDestCheckDisabled) Description() string {
 		"anti-spoofing guard, letting the instance forward or impersonate " +
 		"traffic. Confirm the host is actually a network appliance."
 }
-func (ec2SourceDestCheckDisabled) Severity() ir.Severity { return ir.SeverityLow }
+func (ec2SourceDestCheckDisabled) Severity() ir.Severity         { return ir.SeverityLow }
 func (ec2SourceDestCheckDisabled) AppliesTo(resType string) bool { return resType == "aws_instance" }
 func (ec2SourceDestCheckDisabled) Check(r ir.Resource) []ir.Finding {
 	val, span, present, known := getBool(r, "source_dest_check")
@@ -544,7 +550,7 @@ func (ec2UnlimitedCPUCredits) Description() string {
 		"instance silently accrues surcharges whenever the baseline is " +
 		"exceeded. Confirm the workload needs it, or use \"standard\" mode."
 }
-func (ec2UnlimitedCPUCredits) Severity() ir.Severity { return ir.SeverityLow }
+func (ec2UnlimitedCPUCredits) Severity() ir.Severity         { return ir.SeverityLow }
 func (ec2UnlimitedCPUCredits) AppliesTo(resType string) bool { return resType == "aws_instance" }
 func (ec2UnlimitedCPUCredits) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "credit_specification")
@@ -588,7 +594,7 @@ func (amiCopyUnencrypted) Description() string {
 		"whose snapshots are unencrypted at rest, even when the source AMI " +
 		"was encrypted. Set encrypted = true on copies."
 }
-func (amiCopyUnencrypted) Severity() ir.Severity { return ir.SeverityMedium }
+func (amiCopyUnencrypted) Severity() ir.Severity         { return ir.SeverityMedium }
 func (amiCopyUnencrypted) AppliesTo(resType string) bool { return resType == "aws_ami_copy" }
 func (amiCopyUnencrypted) Check(r ir.Resource) []ir.Finding {
 	val, span, present, known := getBool(r, "encrypted")
@@ -685,7 +691,7 @@ func (ec2RootVolumeUnencrypted) Description() string {
 		"evidence of an unencrypted volume: encryption then follows the " +
 		"AMI snapshot and the account EBS-encryption-by-default setting.)"
 }
-func (ec2RootVolumeUnencrypted) Severity() ir.Severity { return ir.SeverityHigh }
+func (ec2RootVolumeUnencrypted) Severity() ir.Severity         { return ir.SeverityHigh }
 func (ec2RootVolumeUnencrypted) AppliesTo(resType string) bool { return resType == "aws_instance" }
 func (ec2RootVolumeUnencrypted) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "root_block_device")
@@ -838,7 +844,7 @@ func (ec2NoNitroEnclaves) Description() string {
 		"this instance. Workloads that process sensitive data should enable " +
 		"enclave_options { enabled = true } to isolate it."
 }
-func (ec2NoNitroEnclaves) Severity() ir.Severity { return ir.SeverityLow }
+func (ec2NoNitroEnclaves) Severity() ir.Severity         { return ir.SeverityLow }
 func (ec2NoNitroEnclaves) AppliesTo(resType string) bool { return resType == "aws_instance" }
 func (ec2NoNitroEnclaves) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "enclave_options")

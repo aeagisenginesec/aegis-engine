@@ -23,9 +23,9 @@ import (
 // CMKRefinementRules returns CMK refinement rules in ID order.
 func CMKRefinementRules() []ir.Rule {
 	return []ir.Rule{
-		s3NoCMK{},      // AEGIS-AWS-852
-		docdbNoCMK{},   // AEGIS-AWS-853
-		neptuneNoCMK{}, // AEGIS-AWS-854
+		s3NoCMK{},        // AEGIS-AWS-852
+		docdbNoCMK{},     // AEGIS-AWS-853
+		neptuneNoCMK{},   // AEGIS-AWS-854
 		ebsVolumeNoCMK{}, // AEGIS-AWS-855
 	}
 }

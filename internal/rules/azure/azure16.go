@@ -33,7 +33,6 @@ func Azure16Rules() []ir.Rule {
 		linuxWebAppNoIPRestrict{},    // AEGIS-AZURE-222
 		appServiceNoVNet{},           // AEGIS-AZURE-223
 		appServiceSlotNoIPRestrict{}, // AEGIS-AZURE-224
-		mssqlNoAADAdmin{},            // AEGIS-AZURE-225
 	}
 }
 
@@ -582,39 +581,4 @@ func (appServiceSlotNoIPRestrict) AppliesTo(resType string) bool {
 
 func (s appServiceSlotNoIPRestrict) Check(r ir.Resource) []ir.Finding {
 	return ipRestrictCheck(s, r)
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZURE-225: SQL server without Entra ID administrator
-// ---------------------------------------------------------------------------
-
-type mssqlNoAADAdmin struct{}
-
-func (mssqlNoAADAdmin) ID() string { return "AEGIS-AZURE-225" }
-func (mssqlNoAADAdmin) Title() string {
-	return "SQL server without Entra ID administrator"
-}
-func (mssqlNoAADAdmin) Description() string {
-	return "azurerm_mssql_server without an azuread_administrator block " +
-		"cannot use Entra ID authentication and relies on SQL logins. " +
-		"Configure an Entra ID admin and prefer Entra-only " +
-		"authentication."
-}
-func (mssqlNoAADAdmin) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (mssqlNoAADAdmin) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
-}
-
-func (s mssqlNoAADAdmin) Check(r ir.Resource) []ir.Finding {
-	blks, span, present, known := getBlocks(r, "azuread_administrator")
-	if present && !known {
-		return nil
-	}
-	if present && len(blks) > 0 {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "azuread_administrator",
-		evidenceSpan(span, r.Span), "absent (SQL logins only)",
-		"azuread_administrator { login_username = \"...\" }")}
 }
