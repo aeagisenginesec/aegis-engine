@@ -79,3 +79,19 @@ which the scan summary surfaced honestly as 50 skipped files.
   peak RSS stayed under 90 MB regardless.
 - The fixture is ~2.4× the vuln-500 file count; scan time scaled
   sub-linearly (0.47s vs 0.28s) — parsing dominates, not rule count.
+
+## Accuracy audit (2026-10-15, post-scan)
+
+Spot-check of 24 findings (6 critical, 6 high, 6 medium, 6 low, chosen at
+random) against the actual fixture files: **24/24 true positives** — every
+rule correctly identified a real misconfiguration, evidence lines matching
+the code. Zero false positives in the sample.
+
+Honest caveat on the count: the 9,719 findings fall on **3,045 distinct
+file:line locations** (average 3.2 findings per location, up to 17 on a
+single line). Multiple rules fire on the same spot by design — one public
+S3 bucket triggers the public-ACL rule, the exfiltration-path rule, the
+no-TLS rule, the no-versioning rule, etc. Each firing is a valid, distinct
+check with its own remediation step, so 9,719 is honest rule-firing volume,
+not 9,719 distinct vulnerabilities. Raw counts remain a volume metric;
+precision stays separately measured (R4: 1.000).

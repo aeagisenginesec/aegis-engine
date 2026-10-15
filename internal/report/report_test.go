@@ -289,3 +289,43 @@ func stripANSI(s string) string {
 	}
 	return b.String()
 }
+
+func TestWriteTextFindingLayout(t *testing.T) {
+	var buf bytes.Buffer
+	if err := WriteText(&buf, sampleResult()); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	// Plain-language "why" line from the description.
+	if !strings.Contains(out, "why: The bucket ACL allows public read access.") {
+		t.Errorf("missing why line:\n%s", out)
+	}
+	// Evidence and expected on separate scannable lines.
+	if !strings.Contains(out, "evidence: acl = public-read") {
+		t.Errorf("missing evidence line:\n%s", out)
+	}
+	if !strings.Contains(out, "expected: private") {
+		t.Errorf("missing expected line:\n%s", out)
+	}
+	if strings.Contains(out, "(expected:") {
+		t.Errorf("expected must not be parenthesized into the evidence line:\n%s", out)
+	}
+}
+
+func TestWrapField(t *testing.T) {
+	lines := wrapField("why", "one two three four five six seven", 20)
+	if len(lines) < 2 {
+		t.Fatalf("expected wrapping, got %v", lines)
+	}
+	for _, l := range lines {
+		if len(l) > 20 {
+			t.Errorf("line exceeds width: %q", l)
+		}
+	}
+	if !strings.HasPrefix(lines[0], "    why: one") {
+		t.Errorf("bad first line: %q", lines[0])
+	}
+	if !strings.HasPrefix(lines[1], "         three") {
+		t.Errorf("bad hanging indent: %q", lines[1])
+	}
+}

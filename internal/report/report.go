@@ -516,8 +516,33 @@ func WriteTextWithOptions(w io.Writer, res ir.ScanResult, opts TextOptions) erro
 	return nil
 }
 
+// wrapField renders "    label: value" wrapped to width columns, with a
+// hanging indent on continuation lines so wrapped text stays scannable.
+func wrapField(label, value string, width int) []string {
+	prefix := "    " + label + ": "
+	hanging := "    " + strings.Repeat(" ", len(label)+2)
+	words := strings.Fields(value)
+	var lines []string
+	cur := prefix
+	for _, wd := range words {
+		if len(cur) > len(prefix) && len(cur)+1+len(wd) > width {
+			lines = append(lines, cur)
+			cur = hanging + wd
+		} else {
+			if len(cur) > len(prefix) {
+				cur += " "
+			}
+			cur += wd
+		}
+	}
+	lines = append(lines, cur)
+	return lines
+}
+
 // writeTextFinding renders one finding as a compact card, followed by a
-// blank line so cards never run together.
+// blank line so cards never run together. Each card answers: what (rule +
+// title), where (file:line + resource), why it matters (plain-language
+// description), what was found vs. expected, and how to fix it.
 func writeTextFinding(w io.Writer, f ir.Finding, opts TextOptions) {
 	ev := f.Evidence
 	loc := ev.Span.File
@@ -526,14 +551,23 @@ func writeTextFinding(w io.Writer, f ir.Finding, opts TextOptions) {
 	}
 	fmt.Fprintf(w, "  %s  %s\n", ansi(opts.Color, "1", f.RuleID), f.Title)
 	fmt.Fprintf(w, "    %s  %s\n", loc, f.Resource)
+	if f.Description != "" {
+		for _, line := range wrapField("why", f.Description, 100) {
+			fmt.Fprintln(w, line)
+		}
+	}
 	evidence := ev.Actual
 	if ev.Attribute != "" {
 		evidence = ev.Attribute + " = " + evidence
 	}
-	if ev.Expected != "" {
-		evidence += fmt.Sprintf("  (expected: %s)", ev.Expected)
+	for _, line := range wrapField("evidence", evidence, 100) {
+		fmt.Fprintln(w, line)
 	}
-	fmt.Fprintf(w, "    evidence: %s\n", evidence)
+	if ev.Expected != "" {
+		for _, line := range wrapField("expected", ev.Expected, 100) {
+			fmt.Fprintln(w, line)
+		}
+	}
 	if len(f.Compliance) > 0 {
 		fmt.Fprintf(w, "    compliance:")
 		for _, cc := range f.Compliance {
