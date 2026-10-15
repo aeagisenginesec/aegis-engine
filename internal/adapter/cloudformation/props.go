@@ -120,14 +120,14 @@ func (t *template) convertProperties(cfnType, tfType string, props *yaml.Node) m
 // cfnACLToTF maps CloudFormation AccessControl enum values to the
 // Terraform acl values the S3 rules expect.
 var cfnACLToTF = map[string]string{
-	"Private":               "private",
-	"PublicRead":            "public-read",
-	"PublicReadWrite":       "public-read-write",
-	"AuthenticatedRead":     "authenticated-read",
-	"LogDeliveryWrite":      "log-delivery-write",
-	"BucketOwnerRead":       "bucket-owner-read",
+	"Private":                "private",
+	"PublicRead":             "public-read",
+	"PublicReadWrite":        "public-read-write",
+	"AuthenticatedRead":      "authenticated-read",
+	"LogDeliveryWrite":       "log-delivery-write",
+	"BucketOwnerRead":        "bucket-owner-read",
 	"BucketOwnerFullControl": "bucket-owner-full-control",
-	"AwsExecRead":           "aws-exec-read",
+	"AwsExecRead":            "aws-exec-read",
 }
 
 // convertS3Bucket reshapes BucketEncryption, VersioningConfiguration and
@@ -208,7 +208,8 @@ func convertS3Bucket(t *template, logicalID, tfType string, attrs map[string]ir.
 	}
 
 	// PublicAccessBlockConfiguration -> companion aws_s3_bucket_public_access_block.
-	if pab := mappingGet(props, "PublicAccessBlockConfiguration"); pab != nil && pab.Kind == yaml.MappingNode {		cattrs := map[string]ir.Value{
+	if pab := mappingGet(props, "PublicAccessBlockConfiguration"); pab != nil && pab.Kind == yaml.MappingNode {
+		cattrs := map[string]ir.Value{
 			"bucket": {Raw: logicalID, Known: true, Span: nodeSpan(t.path, pab)},
 		}
 		for _, k := range []string{"BlockPublicAcls", "BlockPublicPolicy", "IgnorePublicAcls", "RestrictPublicBuckets"} {

@@ -667,8 +667,8 @@ func TestRemoveBareModuleTwins(t *testing.T) {
 		return ir.Resource{Type: typ, Name: name, Span: span(file, line)}
 	}
 	all := []ir.Resource{
-		res("aws_s3_bucket", "uploads", "/proj/modules/data/main.tf", 1),               // bare twin -> drop
-		res("aws_s3_bucket", "module.data.uploads", "/proj/modules/data/main.tf", 1),   // expanded -> keep
+		res("aws_s3_bucket", "uploads", "/proj/modules/data/main.tf", 1),              // bare twin -> drop
+		res("aws_s3_bucket", "module.data.uploads", "/proj/modules/data/main.tf", 1),  // expanded -> keep
 		res("aws_s3_bucket", "module.other.uploads", "/proj/modules/data/main.tf", 1), // 2nd instance -> keep
 		res("aws_s3_bucket", "root", "/proj/main.tf", 1),                              // bare root -> keep
 		res("aws_s3_bucket", "uploads", "/proj/modules/other/main.tf", 1),             // same name, other file -> keep

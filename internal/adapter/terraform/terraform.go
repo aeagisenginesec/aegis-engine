@@ -304,7 +304,7 @@ type lineMap struct {
 func repairedLineMap(src, fixed []byte) *lineMap {
 	m := &lineMap{origLine: []int{1}, colOff: []int{1}, commaCols: [][]int{{}}}
 	srcLine, fixedLine := 1, 1
-	srcLineStart := 0  // byte offset of the current original line's first byte
+	srcLineStart := 0   // byte offset of the current original line's first byte
 	fixedLineStart := 0 // byte offset of the current repaired line's first byte
 	i, j := 0, 0
 	for i < len(src) || j < len(fixed) {

@@ -236,14 +236,14 @@ func fallbackGCP(t string) (string, []string) {
 	case containsAny(t, []string{"os login", "oslogin", "os-login"}):
 		// Must precede the log/audit branch: "login" contains "log".
 		return "Enable OS Login so SSH access is managed through IAM instead of " +
-			"project metadata keys. Set it on the instance (or project-wide):\n" +
-			"resource \"google_compute_instance\" \"this\" {\n" +
-			"  # ...\n" +
-			"  metadata = {\n" +
-			"    enable-oslogin = \"TRUE\"\n" +
-			"  }\n" +
-			"}",
-		[]string{"https://cloud.google.com/compute/docs/oslogin"}
+				"project metadata keys. Set it on the instance (or project-wide):\n" +
+				"resource \"google_compute_instance\" \"this\" {\n" +
+				"  # ...\n" +
+				"  metadata = {\n" +
+				"    enable-oslogin = \"TRUE\"\n" +
+				"  }\n" +
+				"}",
+			[]string{"https://cloud.google.com/compute/docs/oslogin"}
 	case containsAny(t, []string{"encrypt", "kms", "sse"}):
 		return "Enable encryption at rest. Google-managed keys apply by default; for " +
 				"regulated data use customer-managed keys (CMEK) via Cloud KMS with " +

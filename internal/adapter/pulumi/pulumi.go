@@ -69,6 +69,7 @@ func (Adapter) Handles(path string) bool {
 //   - Modern (per the Pulumi YAML reference): resources:, variables:,
 //     configuration: (or config:) at the document root.
 //   - Legacy/embedded: the same sections nested under template:.
+//
 // The template: layout takes effect only when the root has no resources:
 // of its own; a document with both is read from the root.
 func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, error) {
@@ -233,10 +234,10 @@ func detectUnanalyzedProgram(root, prog *yaml.Node, path string) (string, []stri
 // code, which Aegis never does — so every such language must warn rather
 // than scan silently.
 type unanalyzedLang struct {
-	name     string            // human language name for the warning
-	runtimes []string          // runtime: values (lowercased)
-	exts     map[string]bool   // program entrypoint extensions
-	markers  []string          // marker files; a leading "." means extension match
+	name     string          // human language name for the warning
+	runtimes []string        // runtime: values (lowercased)
+	exts     map[string]bool // program entrypoint extensions
+	markers  []string        // marker files; a leading "." means extension match
 }
 
 var unanalyzedLangs = []unanalyzedLang{

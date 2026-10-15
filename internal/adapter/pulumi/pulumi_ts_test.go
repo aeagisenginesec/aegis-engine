@@ -196,9 +196,9 @@ func TestGoProgramWarns(t *testing.T) {
 func TestDotnetProgramWarns(t *testing.T) {
 	dir := t.TempDir()
 	for name, body := range map[string]string{
-		"Pulumi.yaml": "name: dotnet-prog\nruntime: dotnet\ndescription: .NET program\n",
+		"Pulumi.yaml":    "name: dotnet-prog\nruntime: dotnet\ndescription: .NET program\n",
 		"MyStack.csproj": "<Project Sdk=\"Pulumi/Pulumi.CSharp.Sdk\">\n</Project>\n",
-		"MyStack.cs":  "using Pulumi;\n",
+		"MyStack.cs":     "using Pulumi;\n",
 	} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
 			t.Fatal(err)

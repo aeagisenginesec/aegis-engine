@@ -663,4 +663,3 @@ func (s subnetworkNoFlowLogs) Check(r ir.Resource) []ir.Finding {
 	}
 	return nil
 }
-

@@ -48,6 +48,14 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Format check
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "::error::unformatted files:"; echo "$unformatted"
+            exit 1
+          fi
+
       - name: Full test suite
         run: go test ./...
 

@@ -41,12 +41,12 @@ type normFinding struct {
 func (n normFinding) key() string { return n.RuleID + "|" + n.Severity + "|" + n.ResourceType }
 
 type expectFile struct {
-	Control      string `json:"control"`
-	Variant      string `json:"variant"`
-	Format       string `json:"format"`
-	Files        []string `json:"files"`
-	ExitCode     int    `json:"exit_code"`
-	Findings     []struct {
+	Control  string   `json:"control"`
+	Variant  string   `json:"variant"`
+	Format   string   `json:"format"`
+	Files    []string `json:"files"`
+	ExitCode int      `json:"exit_code"`
+	Findings []struct {
 		RuleID       string `json:"rule_id"`
 		Severity     string `json:"severity"`
 		ResourceType string `json:"resource_type"`
@@ -69,7 +69,7 @@ type scanOut struct {
 		Severity string `json:"severity"`
 		Resource string `json:"resource"`
 	} `json:"findings"`
-	Diagnostics []any `json:"diagnostics"`
+	Diagnostics  []any `json:"diagnostics"`
 	Completeness struct {
 		Discovered int `json:"files_discovered"`
 		Parsed     int `json:"files_parsed"`

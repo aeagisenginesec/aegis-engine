@@ -14,7 +14,7 @@ func TestIsExcludedGlobs(t *testing.T) {
 		"/repo/docs/readme.md":     true,
 		"/repo/main.tf":            false,
 		"/repo/docs/sub/deep.md":   false, // docs/*.md is single-level
-		"/repo/src/vendor/x.tf":    true, // vendor/** matches at any depth (gitignore-style)
+		"/repo/src/vendor/x.tf":    true,  // vendor/** matches at any depth (gitignore-style)
 	}
 	for path, want := range cases {
 		if got := IsExcluded(path); got != want {

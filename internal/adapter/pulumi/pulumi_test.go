@@ -548,11 +548,11 @@ template:
 // 17. New typemap entries resolve without "unmapped type" warnings.
 func TestNewTypemapEntries(t *testing.T) {
 	cases := map[string]string{
-		"aws:ec2:NetworkAclRule":                 "aws_network_acl_rule",
+		"aws:ec2:NetworkAclRule":                    "aws_network_acl_rule",
 		"azure-native:authorization:RoleAssignment": "azurerm_role_assignment",
-		"azure-native:resources:ResourceGroup":     "azurerm_resource_group",
+		"azure-native:resources:ResourceGroup":      "azurerm_resource_group",
 		"azure-native:sql:FirewallRule":             "azurerm_mssql_firewall_rule",
-		"azure-native:storage:BlobContainer":       "azurerm_storage_container",
+		"azure-native:storage:BlobContainer":        "azurerm_storage_container",
 	}
 	for token, want := range cases {
 		rs, diags := parse(t, "Pulumi.yaml", "name: x\nruntime: yaml\nresources:\n  r1:\n    type: "+token+"\n    properties:\n      name: x\n")
