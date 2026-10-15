@@ -88,7 +88,10 @@ func TestC006_EnvSecrets(t *testing.T) {
 }
 
 func TestC007_RootUser(t *testing.T) {
-	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n")), 1)
+	// Audit 2026-10-14: absent user: is quiet — the effective user depends
+	// on the image's USER directive, which the scanner cannot see. Only an
+	// explicit root/0 fires.
+	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n")), 0)
 	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: root\n")), 1)
 	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"0\"\n")), 1)
 	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"1000\"\n")), 0)
@@ -177,8 +180,10 @@ func TestCompose_FullStack(t *testing.T) {
 		"db:AEGIS-COMPOSE-006",     // env secret
 		"runner:AEGIS-COMPOSE-001", // privileged
 		"runner:AEGIS-COMPOSE-004", // docker.sock
-		"runner:AEGIS-COMPOSE-007", // root
 		"runner:AEGIS-COMPOSE-008", // latest
+		// NOTE (audit 2026-10-14): runner:AEGIS-COMPOSE-007 no longer fires —
+		// the runner service sets no user: directive, and without it the
+		// effective user depends on the image's USER (unknown to the scan).
 	} {
 		if !fired[want] {
 			t.Errorf("expected %s to fire", want)
@@ -187,4 +192,23 @@ func TestCompose_FullStack(t *testing.T) {
 	if fired["db:AEGIS-COMPOSE-001"] || fired["db:AEGIS-COMPOSE-007"] {
 		t.Error("db should not fire 001 or 007")
 	}
+}
+
+// Regression tests for the 2026-10-14 sampling audit: COMPOSE-007 must
+// not fire when the user is unknown (pack contract: missing or unknown
+// values never produce a finding).
+func TestC007_UnknownUserQuiet(t *testing.T) {
+	r := ir.Resource{
+		Type: "compose_service",
+		Name: "app",
+		Attributes: map[string]ir.Value{
+			"user": {Known: false},
+		},
+	}
+	expectFinding(t, composeRootUser{}, r, 0)
+}
+
+func TestC007_RootWithGroupFires(t *testing.T) {
+	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"0:1000\"\n")), 1)
+	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"1001:1001\"\n")), 0)
 }

@@ -139,6 +139,18 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			})
 			continue
 		}
+		if nodeScalar(nodeField(rn, "type")) == "" {
+			// A resources: entry with no type: field would otherwise
+			// become a phantom "pulumi_" resource no rule matches — a
+			// silent zero-findings scan of an entry the user clearly
+			// meant to declare. Warn naming the entry instead.
+			p.diags = append(p.diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: fmt.Sprintf("pulumi: resource %q has no type: field; skipped (entry is not analyzable)", name),
+				Span:    p.spanOf(rn, path),
+			})
+			continue
+		}
 		out = append(out, p.resource(name, rn))
 	}
 	return out, p.diags, nil

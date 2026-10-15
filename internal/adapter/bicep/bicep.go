@@ -21,6 +21,7 @@
 package bicep
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -49,8 +50,31 @@ func (Adapter) Handles(path string) bool {
 
 // Parse converts Bicep source into IR resources via ARM translation.
 func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, error) {
+	var diags []ir.Diagnostic
+
+	// NUL bytes are never legitimate in Bicep, and silently keeping them
+	// suppresses findings: a sentinel comparison like sourceAddressPrefix
+	// "'<NUL>*'" no longer matches '*', so NSG findings vanish with no
+	// diagnostic. Strip NULs and say so, so the parsed result is the file
+	// the user meant (same convention as the dockerfile adapter).
+	if bytes.IndexByte(src, 0) >= 0 {
+		diags = append(diags, ir.Diagnostic{
+			Level:   "warning",
+			Message: fmt.Sprintf("bicep: %s contains null bytes; stripped before parsing", path),
+			Span:    ir.Span{File: path, StartLine: 1, StartCol: 1},
+		})
+		cleaned := make([]byte, 0, len(src))
+		for _, b := range src {
+			if b != 0 {
+				cleaned = append(cleaned, b)
+			}
+		}
+		src = cleaned
+	}
+
 	p := &parser{path: path, src: string(src)}
-	tmpl, diags := p.parse()
+	tmpl, pdiags := p.parse()
+	diags = append(diags, pdiags...)
 	if tmpl == nil {
 		return nil, diags, nil
 	}

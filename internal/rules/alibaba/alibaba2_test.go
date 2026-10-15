@@ -114,6 +114,26 @@ func TestALI009_DropQuiet(t *testing.T) {
 	mustQuiet(t, runRule(sgOpenIngress{}, r))
 }
 
+// Regression test for the 2026-10-14 sampling audit: a present-but-
+// unresolved policy must NOT fire — the pack's unknown-value contract
+// says unresolved values yield no finding (the rule might be "drop").
+func TestALI009_UnknownPolicyQuiet(t *testing.T) {
+	attrs := openIngressRule("0.0.0.0/0")
+	attrs["policy"] = ku(3)
+	r := res("alicloud_security_group_rule", "unk", attrs)
+	mustQuiet(t, runRule(sgOpenIngress{}, r))
+}
+
+// Absent policy keeps firing: the provider default is accept.
+func TestALI009_AbsentPolicyFires(t *testing.T) {
+	attrs := map[string]ir.Value{
+		"type":    ks("ingress", 2),
+		"cidr_ip": ks("0.0.0.0/0", 4),
+	}
+	r := res("alicloud_security_group_rule", "nopolicy", attrs)
+	mustFinding(t, runRule(sgOpenIngress{}, r), "AEGIS-ALI-009")
+}
+
 // ---------------------------------------------------------------------------
 // AEGIS-ALI-010: RDS instance without transparent data encryption
 // ---------------------------------------------------------------------------

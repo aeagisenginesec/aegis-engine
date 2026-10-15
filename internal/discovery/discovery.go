@@ -145,7 +145,14 @@ func DiscoverWithReport(root string) ([]File, []Skipped, error) {
 	capHit := ""
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil // skip unreadable entries, don't fail the scan
+			if path == root {
+				// The scan target itself is unreadable: this is a
+				// discovery hard failure, not a skippable entry. Failing
+				// loudly here prevents reporting a clean "0 findings"
+				// scan for a target the scanner could not read at all.
+				return fmt.Errorf("cannot read scan target %s: %w", root, err)
+			}
+			return nil // skip unreadable entries below the root, don't fail the scan
 		}
 		// Never descend into symlinked directories.
 		if d.IsDir() {

@@ -368,9 +368,11 @@ func (composeRootUser) Title() string {
 	return "Service runs as root"
 }
 func (composeRootUser) Description() string {
-	return "Without a user: directive the service runs as root; a " +
+	return "An explicit user: root (or 0) runs the service as root; a " +
 		"container breakout then yields host root. Run as a non-root " +
-		"UID/GID."
+		"UID/GID. (When no user: directive is set the effective user " +
+		"depends on the image's USER, which this scanner cannot see, " +
+		"so a missing user: yields no finding.)"
 }
 func (composeRootUser) Severity() ir.Severity         { return ir.SeverityMedium }
 func (composeRootUser) AppliesTo(resType string) bool { return appliesToCompose(resType) }
@@ -378,15 +380,12 @@ func (composeRootUser) AppliesTo(resType string) bool { return appliesToCompose(
 func (composeRootUser) Check(r ir.Resource) []ir.Finding {
 	rule := composeRootUser{}
 	user, uspan, present, known := getString(r, "user")
-	if present && !known {
+	if !present || !known {
+		// The pack contract is "missing or unknown values never produce
+		// a finding". Without a user: directive the service runs as the
+		// image's USER, which may be non-root — the scanner cannot tell,
+		// so it stays silent rather than assuming root.
 		return nil
-	}
-	if !present || strings.TrimSpace(user) == "" {
-		return []ir.Finding{finding(
-			rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
-			r, "user", r.Span, "no user directive (defaults to root)",
-			"user: \"<uid>\" (non-root)",
-		)}
 	}
 	u := strings.ToLower(strings.TrimSpace(user))
 	// Strip group suffix: "uid:gid".

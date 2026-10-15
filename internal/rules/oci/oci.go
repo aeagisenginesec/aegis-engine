@@ -359,7 +359,7 @@ func (adbNoKMS) Description() string {
 		"Oracle-managed encryption. Assign a customer-managed Vault key " +
 		"for control over key rotation and revocation."
 }
-func (adbNoKMS) Severity() ir.Severity { return ir.SeverityMedium }
+func (adbNoKMS) Severity() ir.Severity { return ir.SeverityHigh }
 
 func (adbNoKMS) AppliesTo(resType string) bool {
 	return resType == "oci_database_autonomous_database"

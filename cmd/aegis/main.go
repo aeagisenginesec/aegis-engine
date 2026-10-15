@@ -99,6 +99,8 @@ Flags:
   --exclude  scan: comma-separated glob patterns for paths to skip
                (e.g. "vendor/**,*.tfvars"); skipped files are reported
   --strict   scan: fail with exit 2 if any file fails to parse
+  --attack-paths scan: report only attack-chain findings (internet-to-data
+               kill chains and exposure paths); works with text and json
   --auth-token serve: require "Authorization: Bearer TOKEN" on /v1/scan
                (or set AEGIS_SERVE_TOKEN); required in practice whenever
                serve binds a non-loopback address
