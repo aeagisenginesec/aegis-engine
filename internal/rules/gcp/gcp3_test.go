@@ -450,6 +450,29 @@ func TestGCP065_ProjectKeysFires(t *testing.T) {
 	mustFinding(t, runRule(instanceProjectSSHKeys{}, r), "AEGIS-GCP-065")
 }
 
+func TestGCP065_NoMetadataFires(t *testing.T) {
+	// No metadata block: project-wide SSH keys are enabled by default.
+	r := res("google_compute_instance", "i", map[string]ir.Value{})
+	mustFinding(t, runRule(instanceProjectSSHKeys{}, r), "AEGIS-GCP-065")
+}
+
+func TestGCP065_MetadataKeyAbsentFires(t *testing.T) {
+	// Metadata block without the key: defaults to accepting project keys.
+	r := res("google_compute_instance", "i", map[string]ir.Value{
+		"metadata": ir.Value{Raw: map[string]ir.Value{"enable-oslogin": ks("TRUE", 4)}, Known: true, Span: spanAt(3)},
+	})
+	mustFinding(t, runRule(instanceProjectSSHKeys{}, r), "AEGIS-GCP-065")
+}
+
+func TestGCP065_KeyTrueQuiet(t *testing.T) {
+	r := res("google_compute_instance", "i", map[string]ir.Value{
+		"metadata": ir.Value{Raw: map[string]ir.Value{"block-project-ssh-keys": ks("TRUE", 4)}, Known: true, Span: spanAt(3)},
+	})
+	if len(runRule(instanceProjectSSHKeys{}, r)) != 0 {
+		t.Fatal("expected 0 findings when block-project-ssh-keys is TRUE")
+	}
+}
+
 // --- 066: disk CMEK ---
 func TestGCP066_DiskNoCMEKFires(t *testing.T) {
 	r := res("google_compute_disk", "d", map[string]ir.Value{})

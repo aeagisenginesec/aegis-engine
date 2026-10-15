@@ -111,6 +111,24 @@ func TestGCP008_UnknownQuiet(t *testing.T) {
 	}
 }
 
+func TestGCP008_AbsentSSLFires(t *testing.T) {
+	// Absent require_ssl: Cloud SQL does not enforce SSL by default.
+	r := res("google_sql_database_instance", "s", map[string]ir.Value{
+		"settings": ipConfig("ipv4_enabled", kv(true, 5)),
+	})
+	mustFinding(t, runRule(sqlNoSSL{}, r), "AEGIS-GCP-008")
+}
+
+func TestGCP008_NoIPConfigQuiet(t *testing.T) {
+	// No ip_configuration block at all: nothing to evaluate.
+	r := res("google_sql_database_instance", "s", map[string]ir.Value{
+		"settings": blks(3),
+	})
+	if len(runRule(sqlNoSSL{}, r)) != 0 {
+		t.Fatal("expected 0 findings without ip_configuration")
+	}
+}
+
 func TestGCP009_LegacyABACFires(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{"enable_legacy_abac": kv(true, 3)})
 	mustFinding(t, runRule(gkeLegacyABAC{}, r), "AEGIS-GCP-009")

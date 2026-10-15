@@ -1390,15 +1390,25 @@ func (instanceProjectSSHKeys) AppliesTo(t string) bool {
 func (s instanceProjectSSHKeys) Check(r ir.Resource) []ir.Finding {
 	v, ok := r.Attributes["metadata"]
 	if !ok || !v.Known {
-		return nil
+		// No metadata block: project-wide SSH keys are enabled by
+		// default, so the instance accepts them.
+		return []ir.Finding{mkFinding(s, r, "metadata.block-project-ssh-keys",
+			r.Span, "absent (project defaults apply)",
+			"block-project-ssh-keys = \"TRUE\"")}
 	}
 	m, ok := v.AsMap()
 	if !ok {
 		return nil
 	}
 	bv, ok := m["block-project-ssh-keys"]
-	if !ok || !bv.Known {
-		return nil
+	if !ok {
+		// Key absent: defaults to false, so project-wide SSH keys
+		// are accepted.
+		return []ir.Finding{mkFinding(s, r, "metadata.block-project-ssh-keys",
+			v.Span, "absent", "block-project-ssh-keys = \"TRUE\"")}
+	}
+	if !bv.Known {
+		return nil // unresolved: cannot decide
 	}
 	if sv, ok := bv.AsString(); ok && strings.ToUpper(sv) != "TRUE" {
 		return []ir.Finding{mkFinding(s, r, "metadata.block-project-ssh-keys", bv.Span,

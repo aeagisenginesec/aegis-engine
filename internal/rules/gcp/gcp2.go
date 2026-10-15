@@ -193,8 +193,15 @@ func (sqlNoSSL) AppliesTo(resType string) bool {
 func (s sqlNoSSL) Check(r ir.Resource) []ir.Finding {
 	for _, ipc := range ipConfigBlocks(r) {
 		req, span, present, known := blockBool(ipc, "require_ssl")
-		if !present || !known {
+		if present && !known {
 			continue // unresolved: cannot decide for this block
+		}
+		if !present {
+			// Absent require_ssl: Cloud SQL does not enforce SSL
+			// connections by default, so plaintext is accepted.
+			return []ir.Finding{mkFinding(s, r,
+				"settings.ip_configuration.require_ssl", span,
+				"absent", "require_ssl = true")}
 		}
 		if !req {
 			return []ir.Finding{mkFinding(s, r,
