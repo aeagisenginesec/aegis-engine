@@ -61,7 +61,7 @@ func TestCLIAuditHelpDocumentsEveryFlag(t *testing.T) {
 		// scan
 		"format", "rules", "advisories", "baseline", "baseline-out",
 		"compliance", "custom-rules", "config", "exclude", "attack-paths",
-		"max-file-size", "timeout", "strict", "fail-on",
+		"max-file-size", "timeout", "strict", "fail-on", "color",
 		// fix
 		"apply", "force", "rule",
 		// serve (manually parsed, not via flag.FlagSet)
@@ -423,4 +423,70 @@ func firstLines(s string, n int) string {
 		lines = lines[:n]
 	}
 	return strings.Join(lines, "\n")
+}
+
+// TestCLIAuditColorFlag checks --color=always forces ANSI colors even when
+// stdout is not a terminal, --color=never suppresses them, and a bogus
+// mode is rejected.
+func TestCLIAuditColorFlag(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "bad.tf"), []byte(vulnTF), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// always: colors even into a buffer.
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"scan", dir, "--color=always"}, &stdout, &stderr); code != 1 {
+		t.Fatalf("expected exit 1, got %d; stderr: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "\x1b[") {
+		t.Errorf("--color=always produced no ANSI codes")
+	}
+	// never: no colors.
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"scan", dir, "--color=never"}, &stdout, &stderr); code != 1 {
+		t.Fatalf("expected exit 1, got %d; stderr: %s", code, stderr.String())
+	}
+	if strings.Contains(stdout.String(), "\x1b[") {
+		t.Errorf("--color=never produced ANSI codes")
+	}
+	// auto into a buffer: no colors (not a terminal).
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"scan", dir}, &stdout, &stderr); code != 1 {
+		t.Fatalf("expected exit 1, got %d; stderr: %s", code, stderr.String())
+	}
+	if strings.Contains(stdout.String(), "\x1b[") {
+		t.Errorf("--color=auto into a pipe produced ANSI codes")
+	}
+	// bogus mode rejected.
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"scan", dir, "--color=rainbow"}, &stdout, &stderr); code != 2 {
+		t.Fatalf("expected exit 2 for bad --color, got %d; stderr: %s", code, stderr.String())
+	}
+}
+
+// TestResolveColor checks the --color mode mapping, including NO_COLOR
+// and TERM=dumb handling in auto mode.
+func TestResolveColor(t *testing.T) {
+	var buf bytes.Buffer
+	if c, ok := resolveColor("always", &buf); !ok || !c {
+		t.Errorf("always: got %v,%v", c, ok)
+	}
+	if c, ok := resolveColor("never", &buf); !ok || c {
+		t.Errorf("never: got %v,%v", c, ok)
+	}
+	if _, ok := resolveColor("rainbow", &buf); ok {
+		t.Errorf("bogus mode should not be ok")
+	}
+	t.Setenv("NO_COLOR", "1")
+	if c, ok := resolveColor("auto", &buf); !ok || c {
+		t.Errorf("NO_COLOR should disable auto color: got %v,%v", c, ok)
+	}
+	t.Setenv("NO_COLOR", "")
+	t.Setenv("TERM", "dumb")
+	if c, ok := resolveColor("auto", &buf); !ok || c {
+		t.Errorf("TERM=dumb should disable auto color: got %v,%v", c, ok)
+	}
 }

@@ -75,6 +75,8 @@ Commands:
 
 Flags:
   --format     output format: text (default), json, sarif (scan only)
+  --color      text colors: auto (default, on when stdout is a terminal),
+               always, never
   --rules      comma-separated rule packs: aws,azure,gcp,k8s,supplychain,all (default "all")
   --advisories threat-advisory JSON feed enabling supply-chain checks
   --custom-rules directory of YAML custom rule files (see docs/custom-rules-example.yaml)
@@ -542,6 +544,41 @@ func (f *failOnValue) Set(s string) error {
 	return nil
 }
 
+// resolveColor maps --color to a boolean. "auto" (the default) enables
+// color only when stdout is a terminal, honoring the NO_COLOR convention
+// and TERM=dumb. It returns false for ok on an unknown mode.
+func resolveColor(mode string, stdout io.Writer) (color, ok bool) {
+	switch strings.ToLower(strings.TrimSpace(mode)) {
+	case "", "auto":
+		if os.Getenv("NO_COLOR") != "" {
+			return false, true
+		}
+		if os.Getenv("TERM") == "dumb" {
+			return false, true
+		}
+		return isTerminal(stdout), true
+	case "always":
+		return true, true
+	case "never":
+		return false, true
+	default:
+		return false, false
+	}
+}
+
+// isTerminal reports whether w is a character device (a terminal).
+func isTerminal(w io.Writer) bool {
+	f, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	st, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return st.Mode()&os.ModeCharDevice != 0
+}
+
 // complianceSummary builds the per-control pass/fail summary for a
 // --compliance run: every control mapped for the framework is listed;
 // controls with at least one finding fail, the rest pass.
@@ -575,6 +612,7 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	format := fs.String("format", "text", "")
 	ruleset := fs.String("rules", "all", "")
+	colorMode := fs.String("color", "auto", "")
 	advisoriesPath := fs.String("advisories", "", "")
 	baselinePath := fs.String("baseline", "", "")
 	baselineOut := fs.String("baseline-out", "", "")
@@ -610,6 +648,11 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	case "text", "json", "sarif":
 	default:
 		fmt.Fprintf(stderr, "aegis: unknown --format %q (want text|json|sarif)\n", *format)
+		return 2
+	}
+	color, ok := resolveColor(*colorMode, stdout)
+	if !ok {
+		fmt.Fprintf(stderr, "aegis: unknown --color %q (want auto|always|never)\n", *colorMode)
 		return 2
 	}
 	if *complianceFw != "" && !rules.HasComplianceFramework(*complianceFw) {
@@ -765,7 +808,7 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		if *attackPaths {
 			werr = report.WriteAttackPathsText(stdout, res)
 		} else {
-			werr = report.WriteText(stdout, res)
+			werr = report.WriteTextWithOptions(stdout, res, report.TextOptions{Color: color})
 		}
 	}
 	if werr != nil {

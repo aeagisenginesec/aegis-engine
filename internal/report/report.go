@@ -377,6 +377,38 @@ func WriteSARIF(w io.Writer, res ir.ScanResult) error {
 	return enc.Encode(log)
 }
 
+// TextOptions controls WriteText rendering.
+type TextOptions struct {
+	// Color enables ANSI colors for severity. The CLI enables it when
+	// stdout is a terminal (see --color); it stays off when piped so
+	// redirected output remains plain text.
+	Color bool
+}
+
+// ansi wraps s in an ANSI color sequence when color is enabled.
+func ansi(color bool, code, s string) string {
+	if !color {
+		return s
+	}
+	return "\x1b[" + code + "m" + s + "\x1b[0m"
+}
+
+// severityColor returns the ANSI code for a severity level.
+func severityColor(sev ir.Severity) string {
+	switch sev {
+	case ir.SeverityCritical:
+		return "1;91" // bold bright red
+	case ir.SeverityHigh:
+		return "38;5;208" // orange (256-color)
+	case ir.SeverityMedium:
+		return "33" // yellow
+	case ir.SeverityLow:
+		return "32" // green
+	default:
+		return "0"
+	}
+}
+
 // WriteText writes the human-readable report. One finding per entry:
 //
 //	SEVERITY rule-id file:line — title
@@ -384,6 +416,14 @@ func WriteSARIF(w io.Writer, res ir.ScanResult) error {
 //
 // followed by a summary line and any diagnostics.
 func WriteText(w io.Writer, res ir.ScanResult) error {
+	return WriteTextWithOptions(w, res, TextOptions{})
+}
+
+// WriteTextWithOptions writes the human-readable report. Findings are
+// grouped severity-first (critical, high, medium, low), each rendered as
+// a card separated from the next by a blank line. When opts.Color is set,
+// severity headers, rollup counts and rule IDs are ANSI-colored.
+func WriteTextWithOptions(w io.Writer, res ir.ScanResult, opts TextOptions) error {
 	findings := redactFindings(res.Findings)
 	s := summarize(res)
 
@@ -402,8 +442,12 @@ func WriteText(w io.Writer, res ir.ScanResult) error {
 		fmt.Fprintf(w, "\n")
 	}
 	fmt.Fprintf(w, "  resources: %d\n", res.Resources)
-	fmt.Fprintf(w, "  findings:  %d  (critical %d, high %d, medium %d, low %d)\n",
-		s.Findings, s.Critical, s.High, s.Medium, s.Low)
+	fmt.Fprintf(w, "  findings:  %d  (%s %d, %s %d, %s %d, %s %d)\n",
+		s.Findings,
+		ansi(opts.Color, severityColor(ir.SeverityCritical), "critical"), s.Critical,
+		ansi(opts.Color, severityColor(ir.SeverityHigh), "high"), s.High,
+		ansi(opts.Color, severityColor(ir.SeverityMedium), "medium"), s.Medium,
+		ansi(opts.Color, severityColor(ir.SeverityLow), "low"), s.Low)
 	fmt.Fprintf(w, "================================================================\n")
 	if !c.Complete() && c.FilesDiscovered > 0 {
 		fmt.Fprintf(w, "WARNING: incomplete scan - %d file(s) could not be parsed. "+
@@ -442,17 +486,18 @@ func WriteText(w io.Writer, res ir.ScanResult) error {
 		if len(fs) == 0 {
 			continue
 		}
-		fmt.Fprintf(w, "\n%s (%d)\n", strings.ToUpper(string(sev)), len(fs))
+		fmt.Fprintf(w, "\n%s\n", ansi(opts.Color, severityColor(sev),
+			fmt.Sprintf("%s (%d)", strings.ToUpper(string(sev)), len(fs))))
 		fmt.Fprintf(w, "----------------------------------------------------------------\n")
 		for _, f := range fs {
-			writeTextFinding(w, f)
+			writeTextFinding(w, f, opts)
 		}
 	}
 	if len(rest) > 0 {
-		fmt.Fprintf(w, "\nOTHER (%d)\n", len(rest))
+		fmt.Fprintf(w, "\n%s\n", ansi(opts.Color, "1", fmt.Sprintf("OTHER (%d)", len(rest))))
 		fmt.Fprintf(w, "----------------------------------------------------------------\n")
 		for _, f := range rest {
-			writeTextFinding(w, f)
+			writeTextFinding(w, f, opts)
 		}
 	}
 	if len(res.Diagnostics) > 0 {
@@ -471,14 +516,15 @@ func WriteText(w io.Writer, res ir.ScanResult) error {
 	return nil
 }
 
-// writeTextFinding renders one finding as a compact card.
-func writeTextFinding(w io.Writer, f ir.Finding) {
+// writeTextFinding renders one finding as a compact card, followed by a
+// blank line so cards never run together.
+func writeTextFinding(w io.Writer, f ir.Finding, opts TextOptions) {
 	ev := f.Evidence
 	loc := ev.Span.File
 	if ev.Span.StartLine > 0 {
 		loc = fmt.Sprintf("%s:%d", loc, ev.Span.StartLine)
 	}
-	fmt.Fprintf(w, "  %s  %s\n", f.RuleID, f.Title)
+	fmt.Fprintf(w, "  %s  %s\n", ansi(opts.Color, "1", f.RuleID), f.Title)
 	fmt.Fprintf(w, "    %s  %s\n", loc, f.Resource)
 	evidence := ev.Actual
 	if ev.Attribute != "" {
@@ -513,4 +559,5 @@ func writeTextFinding(w io.Writer, f ir.Finding) {
 			fmt.Fprintf(w, "    see: %s\n", ref)
 		}
 	}
+	fmt.Fprintf(w, "\n")
 }

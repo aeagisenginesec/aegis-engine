@@ -212,3 +212,80 @@ func TestWriteText(t *testing.T) {
 		t.Errorf("expected redacted marker in text output")
 	}
 }
+
+func TestWriteTextNoColorByDefault(t *testing.T) {
+	var buf bytes.Buffer
+	if err := WriteText(&buf, sampleResult()); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "\x1b[") {
+		t.Errorf("default WriteText must not emit ANSI codes:\n%s", out)
+	}
+	// Findings are separated by a blank line.
+	if !strings.Contains(out, "aws_s3_bucket.data\n\n") && !strings.Contains(out, "\n\n  aws-db-master-password") {
+		// Fallback: count blank-line separators between the two finding cards.
+		critIdx := strings.Index(out, "CRITICAL (1)")
+		highIdx := strings.Index(out, "HIGH (1)")
+		segment := out[critIdx:highIdx]
+		if !strings.Contains(segment, "\n\n") {
+			t.Errorf("expected blank line after finding card:\n%s", out)
+		}
+	}
+}
+
+func TestWriteTextWithColor(t *testing.T) {
+	var buf bytes.Buffer
+	if err := WriteTextWithOptions(&buf, sampleResult(), TextOptions{Color: true}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "\x1b[") {
+		t.Fatalf("colored output must contain ANSI codes:\n%s", out)
+	}
+	// Critical header painted bold bright red.
+	if !strings.Contains(out, "\x1b[1;91mCRITICAL (1)\x1b[0m") {
+		t.Errorf("critical header not colored:\n%s", out)
+	}
+	// High header painted orange (256-color).
+	if !strings.Contains(out, "\x1b[38;5;208mHIGH (1)\x1b[0m") {
+		t.Errorf("high header not colored:\n%s", out)
+	}
+	// Rule ID bolded.
+	if !strings.Contains(out, "\x1b[1maws-s3-public-acl\x1b[0m") {
+		t.Errorf("rule ID not bolded:\n%s", out)
+	}
+	// Rollup severity counts colored.
+	if !strings.Contains(out, "\x1b[1;91mcritical\x1b[0m 1") {
+		t.Errorf("rollup critical count not colored:\n%s", out)
+	}
+	// Stripping ANSI codes must yield the plain rendering.
+	plain := stripANSI(out)
+	var pbuf bytes.Buffer
+	if err := WriteText(&pbuf, sampleResult()); err != nil {
+		t.Fatal(err)
+	}
+	if plain != pbuf.String() {
+		t.Errorf("colored output differs from plain beyond ANSI codes")
+	}
+}
+
+func stripANSI(s string) string {
+	var b strings.Builder
+	inEsc := false
+	for i := 0; i < len(s); i++ {
+		if !inEsc {
+			if s[i] == 0x1b && i+1 < len(s) && s[i+1] == '[' {
+				inEsc = true
+				i++
+				continue
+			}
+			b.WriteByte(s[i])
+			continue
+		}
+		if (s[i] >= 'a' && s[i] <= 'z') || (s[i] >= 'A' && s[i] <= 'Z') {
+			inEsc = false
+		}
+	}
+	return b.String()
+}
