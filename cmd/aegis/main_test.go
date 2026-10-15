@@ -76,7 +76,7 @@ func TestScanCleanExitCode(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("expected exit code 0 (clean), got %d; stderr: %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "findings: 0") {
+	if !strings.Contains(stdout.String(), "findings:  0") {
 		t.Errorf("expected clean text summary, got:\n%s", stdout.String())
 	}
 }
@@ -429,12 +429,11 @@ resource "aws_s3_bucket" "data" {
 		t.Fatalf("stdout is not valid JSON: %v", err)
 	}
 	findings, _ := env["findings"].([]any)
-	// (rule, resource, attribute) triples must be unique: no bare twins.
+	// (rule, resource, evidence) triples must be unique: no bare twins.
 	seen := map[string]int{}
 	for _, f := range findings {
 		fm := f.(map[string]any)
-		ev := fm["evidence"].(map[string]any)
-		key := fm["rule_id"].(string) + "|" + fm["resource"].(string) + "|" + ev["attribute"].(string)
+		key := fm["rule_id"].(string) + "|" + fm["resource"].(string) + "|" + fm["evidence"].(string)
 		seen[key]++
 	}
 	for k, n := range seen {
@@ -455,12 +454,10 @@ resource "aws_s3_bucket" "data" {
 		t.Errorf("expected 6 AEGIS-AWS-002 findings (root + 2x mod-a + 2x nested + mod-b), got %d: %v", len(aclHits), aclHits)
 	}
 	// No bare finding may come from a module file: every finding whose
-	// evidence file is under mod-a/ or mod-b/ must carry a module address.
+	// file is under mod-a/ or mod-b/ must carry a module address.
 	for _, f := range findings {
 		fm := f.(map[string]any)
-		ev := fm["evidence"].(map[string]any)
-		span := ev["span"].(map[string]any)
-		file := span["file"].(string)
+		file := fm["file"].(string)
 		res := fm["resource"].(string)
 		if (strings.Contains(file, "mod-a/") || strings.Contains(file, "mod-b/")) && !strings.Contains(res, ".module.") {
 			t.Errorf("bare twin survived: %s from %s", res, file)

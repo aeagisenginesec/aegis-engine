@@ -62,22 +62,40 @@ func TestWriteJSONEnvelope(t *testing.T) {
 	if env["target"] != "/tmp/proj" {
 		t.Errorf("wrong target: %v", env["target"])
 	}
-	if env["resources_scanned"] != float64(3) {
-		t.Errorf("wrong resources_scanned: %v", env["resources_scanned"])
+	if env["resources_scanned"] != nil {
+		t.Errorf("legacy resources_scanned key should be gone: %v", env["resources_scanned"])
+	}
+	summary, ok := env["summary"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing summary block: %v", env["summary"])
+	}
+	if summary["resources"] != float64(3) {
+		t.Errorf("wrong summary.resources: %v", summary["resources"])
+	}
+	if summary["findings"] != float64(2) {
+		t.Errorf("wrong summary.findings: %v", summary["findings"])
+	}
+	if summary["critical"] != float64(1) || summary["high"] != float64(1) {
+		t.Errorf("wrong severity rollup: %v", summary)
 	}
 	findings, ok := env["findings"].([]any)
 	if !ok || len(findings) != 2 {
 		t.Fatalf("expected 2 findings, got %v", env["findings"])
 	}
-	// Secret redaction must fire in JSON output.
+	// Secret redaction must fire in JSON output (flat evidence string).
 	second := findings[1].(map[string]any)
-	ev := second["evidence"].(map[string]any)
-	if ev["actual"] != "[REDACTED]" {
-		t.Errorf("secret not redacted in JSON: %v", ev["actual"])
+	if ev, _ := second["evidence"].(string); !strings.Contains(ev, "[REDACTED]") {
+		t.Errorf("secret not redacted in JSON evidence: %v", ev)
+	}
+	if second["file"] != "db.tf" || second["line"] != float64(7) {
+		t.Errorf("location not flattened: file=%v line=%v", second["file"], second["line"])
 	}
 	first := findings[0].(map[string]any)
-	if first["evidence"].(map[string]any)["actual"] != "public-read" {
-		t.Errorf("non-secret value wrongly redacted")
+	if ev, _ := first["evidence"].(string); ev != `acl = public-read` {
+		t.Errorf("flat evidence wrong: %q", ev)
+	}
+	if first["expected"] != "private" {
+		t.Errorf("expected field wrong: %v", first["expected"])
 	}
 }
 
@@ -166,11 +184,26 @@ func TestWriteText(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	if !strings.Contains(out, "HIGH aws-s3-public-acl main.tf:12 — S3 bucket has public ACL") {
+	// Severity-grouped sections, most severe first.
+	critIdx := strings.Index(out, "CRITICAL (1)")
+	highIdx := strings.Index(out, "HIGH (1)")
+	if critIdx < 0 || highIdx < 0 {
+		t.Fatalf("missing severity group headers:\n%s", out)
+	}
+	if critIdx > highIdx {
+		t.Errorf("critical group should come before high:\n%s", out)
+	}
+	if !strings.Contains(out, "aws-s3-public-acl  S3 bucket has public ACL") {
 		t.Errorf("missing expected finding line:\n%s", out)
 	}
-	if !strings.Contains(out, `evidence: acl = "public-read"`) {
+	if !strings.Contains(out, "main.tf:12  aws_s3_bucket.data") {
+		t.Errorf("missing location line:\n%s", out)
+	}
+	if !strings.Contains(out, "evidence: acl = public-read") {
 		t.Errorf("missing evidence line:\n%s", out)
+	}
+	if !strings.Contains(out, "findings:  2  (critical 1, high 1, medium 0, low 0)") {
+		t.Errorf("missing summary rollup:\n%s", out)
 	}
 	if strings.Contains(out, "Sup3rSecret123!") {
 		t.Errorf("secret leaked into text output")

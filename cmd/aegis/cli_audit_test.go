@@ -172,18 +172,20 @@ func TestCLIAuditJSONFormat(t *testing.T) {
 		t.Fatalf("expected exit 1, got %d; stderr: %s", code, stderr.String())
 	}
 	var doc struct {
-		Version   string `json:"aegis_version"`
-		Target    string `json:"target"`
-		Resources int    `json:"resources_scanned"`
-		Findings  []struct {
+		Version string `json:"aegis_version"`
+		Target  string `json:"target"`
+		Summary struct {
+			Resources int `json:"resources"`
+			Findings  int `json:"findings"`
+			Critical  int `json:"critical"`
+			High      int `json:"high"`
+		} `json:"summary"`
+		Findings []struct {
 			RuleID   string `json:"rule_id"`
 			Severity string `json:"severity"`
-			Evidence struct {
-				Span struct {
-					File      string `json:"file"`
-					StartLine int    `json:"start_line"`
-				} `json:"span"`
-			} `json:"evidence"`
+			File     string `json:"file"`
+			Line     int    `json:"line"`
+			Evidence string `json:"evidence"`
 		} `json:"findings"`
 	}
 	if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil {
@@ -199,9 +201,15 @@ func TestCLIAuditJSONFormat(t *testing.T) {
 		if f.RuleID == "" || f.Severity == "" {
 			t.Errorf("finding missing rule_id/severity: %+v", f)
 		}
-		if f.Evidence.Span.File == "" || f.Evidence.Span.StartLine < 1 {
-			t.Errorf("finding %s missing file:line span: %+v", f.RuleID, f.Evidence.Span)
+		if f.File == "" || f.Line < 1 {
+			t.Errorf("finding %s missing file:line location: %+v", f.RuleID, f)
 		}
+		if f.Evidence == "" {
+			t.Errorf("finding %s missing flat evidence string", f.RuleID)
+		}
+	}
+	if doc.Summary.Findings != len(doc.Findings) {
+		t.Errorf("summary.findings = %d, want %d", doc.Summary.Findings, len(doc.Findings))
 	}
 }
 
@@ -274,7 +282,7 @@ func TestCLIAuditSARIFFormat(t *testing.T) {
 }
 
 // TestCLIAuditTextFormat checks the human-readable format carries
-// file:line references on finding headers.
+// severity-grouped sections and file:line locations on finding cards.
 func TestCLIAuditTextFormat(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "bad.tf"), []byte(vulnTF), 0o644); err != nil {
@@ -284,11 +292,21 @@ func TestCLIAuditTextFormat(t *testing.T) {
 	if code := run([]string{"scan", dir}, &stdout, &stderr); code != 1 {
 		t.Fatalf("expected exit 1, got %d; stderr: %s", code, stderr.String())
 	}
-	header := regexp.MustCompile(`(?m)^[A-Z]+ AEGIS-[A-Z]+-\d+ \S+:\d+ — `)
-	matches := header.FindAllString(stdout.String(), -1)
-	if len(matches) == 0 {
-		t.Errorf("text report has no '<SEV> <RULE> <file>:<line> — <title>' headers;\n%s",
-			firstLines(stdout.String(), 10))
+	out := stdout.String()
+	// Severity group headers, most severe first.
+	for _, grp := range []string{"CRITICAL (", "HIGH ("} {
+		if !strings.Contains(out, grp) {
+			t.Errorf("text report missing %q group header;\n%s", grp, firstLines(out, 12))
+		}
+	}
+	// Finding cards: rule + title line, then an indented file:line location.
+	card := regexp.MustCompile(`(?m)^  AEGIS-[A-Z]+-\d+  .+\n    \S+:\d+  \S+`)
+	if !card.MatchString(out) {
+		t.Errorf("text report has no '<RULE>  <title>' / '<file>:<line>  <resource>' cards;\n%s",
+			firstLines(out, 14))
+	}
+	if !strings.Contains(out, "evidence:") {
+		t.Errorf("text report has no evidence lines;\n%s", firstLines(out, 14))
 	}
 }
 

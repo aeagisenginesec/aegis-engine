@@ -46,12 +46,101 @@ func redactFindings(fs []ir.Finding) []ir.Finding {
 	return out
 }
 
+// jsonSummary is the at-a-glance rollup every JSON report carries.
+type jsonSummary struct {
+	Resources       int `json:"resources"`
+	FilesDiscovered int `json:"files_discovered"`
+	FilesParsed     int `json:"files_parsed"`
+	FilesSkipped    int `json:"files_skipped"`
+	Findings        int `json:"findings"`
+	Critical        int `json:"critical"`
+	High            int `json:"high"`
+	Medium          int `json:"medium"`
+	Low             int `json:"low"`
+}
+
+// summarize rolls findings and completeness into a jsonSummary.
+func summarize(res ir.ScanResult) jsonSummary {
+	s := jsonSummary{
+		Resources:       res.Resources,
+		FilesDiscovered: res.Completeness.FilesDiscovered,
+		FilesParsed:     res.Completeness.FilesParsed,
+		FilesSkipped:    res.Completeness.FilesSkipped,
+		Findings:        len(res.Findings),
+	}
+	for _, f := range res.Findings {
+		switch f.Severity {
+		case ir.SeverityCritical:
+			s.Critical++
+		case ir.SeverityHigh:
+			s.High++
+		case ir.SeverityMedium:
+			s.Medium++
+		case ir.SeverityLow:
+			s.Low++
+		}
+	}
+	return s
+}
+
+// jsonFinding is the flattened, human-scannable JSON finding shape.
+// Location is hoisted to top-level file/line instead of a nested span,
+// and evidence is a single readable string.
+type jsonFinding struct {
+	RuleID      string             `json:"rule_id"`
+	Severity    string             `json:"severity"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	Resource    string             `json:"resource"`
+	File        string             `json:"file"`
+	Line        int                `json:"line"`
+	Evidence    string             `json:"evidence"`
+	Expected    string             `json:"expected,omitempty"`
+	Remediation string             `json:"remediation,omitempty"`
+	References  []string           `json:"references,omitempty"`
+	Compliance  []ir.ComplianceRef `json:"compliance,omitempty"`
+	Path        []ir.PathStep      `json:"path,omitempty"`
+}
+
+// flattenFinding converts an ir.Finding to the flat JSON shape.
+// Callers must pass findings through redactFindings first.
+func flattenFinding(f ir.Finding) jsonFinding {
+	ev := f.Evidence.Actual
+	if f.Evidence.Attribute != "" {
+		ev = f.Evidence.Attribute + " = " + ev
+	}
+	return jsonFinding{
+		RuleID:      f.RuleID,
+		Severity:    string(f.Severity),
+		Title:       f.Title,
+		Description: f.Description,
+		Resource:    f.Resource,
+		File:        f.Evidence.Span.File,
+		Line:        f.Evidence.Span.StartLine,
+		Evidence:    ev,
+		Expected:    f.Evidence.Expected,
+		Remediation: f.Remediation,
+		References:  f.References,
+		Compliance:  f.Compliance,
+		Path:        f.Path,
+	}
+}
+
+// flattenFindings converts a redacted finding list to the flat JSON shape.
+func flattenFindings(fs []ir.Finding) []jsonFinding {
+	out := make([]jsonFinding, 0, len(fs))
+	for _, f := range fs {
+		out = append(out, flattenFinding(f))
+	}
+	return out
+}
+
 // jsonEnvelope is the versioned JSON report format.
 type jsonEnvelope struct {
 	Version           string                `json:"aegis_version"`
 	Target            string                `json:"target"`
-	Resources         int                   `json:"resources_scanned"`
-	Findings          []ir.Finding          `json:"findings"`
+	Summary           jsonSummary           `json:"summary"`
+	Findings          []jsonFinding         `json:"findings"`
 	Diagnostics       []ir.Diagnostic       `json:"diagnostics"`
 	Completeness      ir.ScanCompleteness   `json:"scan_completeness"`
 	ComplianceSummary *ir.ComplianceSummary `json:"compliance_summary,omitempty"`
@@ -63,11 +152,12 @@ func WriteJSON(w io.Writer, res ir.ScanResult) error {
 	if diags == nil {
 		diags = []ir.Diagnostic{}
 	}
+	redacted := redactFindings(res.Findings)
 	env := jsonEnvelope{
 		Version:           Version,
 		Target:            res.Target,
-		Resources:         res.Resources,
-		Findings:          redactFindings(res.Findings),
+		Summary:           summarize(res),
+		Findings:          flattenFindings(redacted),
 		Diagnostics:       diags,
 		Completeness:      res.Completeness,
 		ComplianceSummary: res.ComplianceSummary,
@@ -157,11 +247,14 @@ func sarifLevel(s ir.Severity) string {
 // as a focused JSON document for kill-chain consumers.
 func WriteAttackPathsJSON(w io.Writer, res ir.ScanResult) error {
 	findings := filterPathFindings(res.Findings)
+	redacted := redactFindings(findings)
+	filtered := res
+	filtered.Findings = redacted
 	env := jsonEnvelope{
 		Version:     Version,
 		Target:      res.Target,
-		Resources:   res.Resources,
-		Findings:    redactFindings(findings),
+		Summary:     summarize(filtered),
+		Findings:    flattenFindings(redacted),
 		Diagnostics: res.Diagnostics,
 	}
 	enc := json.NewEncoder(w)
@@ -292,12 +385,13 @@ func WriteSARIF(w io.Writer, res ir.ScanResult) error {
 // followed by a summary line and any diagnostics.
 func WriteText(w io.Writer, res ir.ScanResult) error {
 	findings := redactFindings(res.Findings)
-	fmt.Fprintf(w, "aegis scan: %s\n", res.Target)
-	fmt.Fprintf(w, "resources: %d, findings: %d\n", res.Resources, len(findings))
-	// Scan-completeness: distinguish "zero findings" from "incomplete scan"
+	s := summarize(res)
+
+	fmt.Fprintf(w, "Aegis %s - scan: %s\n", Version, res.Target)
+	fmt.Fprintf(w, "================================================================\n")
 	c := res.Completeness
 	if c.FilesDiscovered > 0 {
-		fmt.Fprintf(w, "files: %d discovered, %d parsed",
+		fmt.Fprintf(w, "  files:     %d discovered, %d parsed",
 			c.FilesDiscovered, c.FilesParsed)
 		if c.FilesSkipped > 0 {
 			fmt.Fprintf(w, ", %d skipped", c.FilesSkipped)
@@ -306,61 +400,117 @@ func WriteText(w io.Writer, res ir.ScanResult) error {
 			fmt.Fprintf(w, ", %d FAILED", c.FilesFailed)
 		}
 		fmt.Fprintf(w, "\n")
-		if !c.Complete() {
-			fmt.Fprintf(w, "WARNING: incomplete scan — %d file(s) could not be parsed. "+
-				"\"0 findings\" does not mean \"clean\".\n", c.FilesFailed)
-			for _, f := range c.Files {
-				if f.Status == "failed" {
-					fmt.Fprintf(w, "  failed: %s (%s)\n", f.Path, f.Reason)
-				}
+	}
+	fmt.Fprintf(w, "  resources: %d\n", res.Resources)
+	fmt.Fprintf(w, "  findings:  %d  (critical %d, high %d, medium %d, low %d)\n",
+		s.Findings, s.Critical, s.High, s.Medium, s.Low)
+	fmt.Fprintf(w, "================================================================\n")
+	if !c.Complete() && c.FilesDiscovered > 0 {
+		fmt.Fprintf(w, "WARNING: incomplete scan - %d file(s) could not be parsed. "+
+			"\"0 findings\" does not mean \"clean\".\n", c.FilesFailed)
+		for _, f := range c.Files {
+			if f.Status == "failed" {
+				fmt.Fprintf(w, "  failed: %s (%s)\n", f.Path, f.Reason)
 			}
 		}
 	}
+
+	// Group findings by severity, most severe first.
+	ordered := []ir.Severity{
+		ir.SeverityCritical, ir.SeverityHigh, ir.SeverityMedium, ir.SeverityLow,
+	}
+	seen := map[ir.Severity]bool{}
+	var rest []ir.Finding
+	groups := map[ir.Severity][]ir.Finding{}
 	for _, f := range findings {
-		sev := strings.ToUpper(string(f.Severity))
-		fmt.Fprintf(w, "%s %s %s:%d — %s\n",
-			sev, f.RuleID, f.Evidence.Span.File, f.Evidence.Span.StartLine, f.Title)
-		ev := f.Evidence
-		fmt.Fprintf(w, "  evidence: %s = %q (expected %q) in %s\n",
-			ev.Attribute, ev.Actual, ev.Expected, f.Resource)
-		if len(f.Compliance) > 0 {
-			fmt.Fprintf(w, "  compliance:")
-			for _, c := range f.Compliance {
-				fmt.Fprintf(w, " %s:%s", c.Framework, c.Control)
-			}
-			fmt.Fprintf(w, "\n")
-		}
-		if len(f.Path) > 0 {
-			fmt.Fprintf(w, "  attack path:\n")
-			for _, step := range f.Path {
-				fmt.Fprintf(w, "    → %s — %s\n", step.Resource, step.Detail)
+		known := false
+		for _, sev := range ordered {
+			if f.Severity == sev {
+				known = true
+				break
 			}
 		}
-		if f.Remediation != "" {
-			fmt.Fprintf(w, "  fix:\n")
-			for _, line := range strings.Split(f.Remediation, "\n") {
-				fmt.Fprintf(w, "    %s\n", line)
-			}
+		if known {
+			groups[f.Severity] = append(groups[f.Severity], f)
+			seen[f.Severity] = true
+		} else {
+			rest = append(rest, f)
 		}
-		if len(f.References) > 0 {
-			fmt.Fprintf(w, "  learn more:\n")
-			for _, ref := range f.References {
-				fmt.Fprintf(w, "    %s\n", ref)
-			}
+	}
+	for _, sev := range ordered {
+		fs := groups[sev]
+		if len(fs) == 0 {
+			continue
+		}
+		fmt.Fprintf(w, "\n%s (%d)\n", strings.ToUpper(string(sev)), len(fs))
+		fmt.Fprintf(w, "----------------------------------------------------------------\n")
+		for _, f := range fs {
+			writeTextFinding(w, f)
+		}
+	}
+	if len(rest) > 0 {
+		fmt.Fprintf(w, "\nOTHER (%d)\n", len(rest))
+		fmt.Fprintf(w, "----------------------------------------------------------------\n")
+		for _, f := range rest {
+			writeTextFinding(w, f)
 		}
 	}
 	if len(res.Diagnostics) > 0 {
-		fmt.Fprintf(w, "diagnostics: %d\n", len(res.Diagnostics))
+		fmt.Fprintf(w, "\ndiagnostics: %d\n", len(res.Diagnostics))
 		for _, d := range res.Diagnostics {
-			fmt.Fprintf(w, "  [%s] %s:%d — %s\n", d.Level, d.Span.File, d.Span.StartLine, d.Message)
+			fmt.Fprintf(w, "  [%s] %s:%d - %s\n", d.Level, d.Span.File, d.Span.StartLine, d.Message)
 		}
 	}
-	if s := res.ComplianceSummary; s != nil {
-		fmt.Fprintf(w, "compliance %s: %d/%d controls passing", s.Framework, s.ControlsPassing, s.ControlsTotal)
-		if s.ControlsFailing > 0 {
-			fmt.Fprintf(w, " — FAILING: %s", strings.Join(s.FailedControls, ", "))
+	if cs := res.ComplianceSummary; cs != nil {
+		fmt.Fprintf(w, "\ncompliance %s: %d/%d controls passing", cs.Framework, cs.ControlsPassing, cs.ControlsTotal)
+		if cs.ControlsFailing > 0 {
+			fmt.Fprintf(w, " - FAILING: %s", strings.Join(cs.FailedControls, ", "))
 		}
 		fmt.Fprintf(w, "\n")
 	}
 	return nil
+}
+
+// writeTextFinding renders one finding as a compact card.
+func writeTextFinding(w io.Writer, f ir.Finding) {
+	ev := f.Evidence
+	loc := ev.Span.File
+	if ev.Span.StartLine > 0 {
+		loc = fmt.Sprintf("%s:%d", loc, ev.Span.StartLine)
+	}
+	fmt.Fprintf(w, "  %s  %s\n", f.RuleID, f.Title)
+	fmt.Fprintf(w, "    %s  %s\n", loc, f.Resource)
+	evidence := ev.Actual
+	if ev.Attribute != "" {
+		evidence = ev.Attribute + " = " + evidence
+	}
+	if ev.Expected != "" {
+		evidence += fmt.Sprintf("  (expected: %s)", ev.Expected)
+	}
+	fmt.Fprintf(w, "    evidence: %s\n", evidence)
+	if len(f.Compliance) > 0 {
+		fmt.Fprintf(w, "    compliance:")
+		for _, cc := range f.Compliance {
+			fmt.Fprintf(w, " %s:%s", cc.Framework, cc.Control)
+		}
+		fmt.Fprintf(w, "\n")
+	}
+	if len(f.Path) > 0 {
+		fmt.Fprintf(w, "    attack path:\n")
+		for _, step := range f.Path {
+			fmt.Fprintf(w, "      -> %s - %s\n", step.Resource, step.Detail)
+		}
+	}
+	if f.Remediation != "" {
+		lines := strings.Split(strings.TrimSpace(f.Remediation), "\n")
+		fmt.Fprintf(w, "    fix: %s\n", strings.TrimSpace(lines[0]))
+		for _, line := range lines[1:] {
+			fmt.Fprintf(w, "         %s\n", strings.TrimRight(line, " \t"))
+		}
+	}
+	if len(f.References) > 0 {
+		for _, ref := range f.References {
+			fmt.Fprintf(w, "    see: %s\n", ref)
+		}
+	}
 }
