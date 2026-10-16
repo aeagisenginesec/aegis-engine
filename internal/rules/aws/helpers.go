@@ -261,6 +261,9 @@ func linkedBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 			return "", false
 		}
 		for _, b := range resources {
+			if b.Type != "aws_s3_bucket" {
+				continue
+			}
 			if b.Address() == addr && sameScope(r, b) {
 				return scopeKey(b), true
 			}
@@ -325,6 +328,9 @@ func linkedTargetBucketAddr(r ir.Resource, resources []ir.Resource) (string, boo
 			return "", false
 		}
 		for _, b := range resources {
+			if b.Type != "aws_s3_bucket" {
+				continue
+			}
 			if b.Address() == addr && sameScope(r, b) {
 				return scopeKey(b), true
 			}

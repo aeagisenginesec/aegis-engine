@@ -43,6 +43,7 @@ func (s3Encryption) CheckAll(resources []ir.Resource) []ir.Finding {
 		}
 	}
 	logTargets := logDeliveryBuckets(resources)
+	publicSet := publicBucketScopeKeys(resources)
 	var out []ir.Finding
 	for _, r := range resources {
 		if r.Type != "aws_s3_bucket" {
@@ -54,7 +55,7 @@ func (s3Encryption) CheckAll(resources []ir.Resource) []ir.Finding {
 			// requirement for their published content: flagging missing
 			// at-rest encryption on them is noise.
 			if !encrypted[scopeKey(r)] && !logTargets[scopeKey(r)] &&
-				!bucketIntentionallyPublic(resources, r) {
+				!bucketIntentionallyPublicSet(r, publicSet) {
 				out = append(out, f)
 			}
 		}
@@ -273,7 +274,50 @@ func lookupMapFold(m map[string]any, key string) any {
 // definition), or a bucket policy granting a public principal. Absence
 // of evidence is NOT public intent: an unconfigured bucket is private
 // by default and stays flagged by the hardening rules.
-func bucketIntentionallyPublic(resources []ir.Resource, b ir.Resource) bool {
+// publicBucketScopeKeys precomputes, once per rule evaluation, the set of
+// bucket scopeKeys that are intentionally public via standalone config
+// resources: a public aws_s3_bucket_acl, any
+// aws_s3_bucket_website_configuration, or an aws_s3_bucket_policy granting
+// a public principal. Callers that evaluate many buckets must build this
+// set once and consult it via bucketIntentionallyPublicSet: resolving the
+// links inline per bucket costs O(R^2) per bucket and dominated the
+// vuln-10000 CPU profile (86% of total time in linkedBucketAddr).
+func publicBucketScopeKeys(resources []ir.Resource) map[string]bool {
+	out := map[string]bool{}
+	for _, r := range resources {
+		switch r.Type {
+		case "aws_s3_bucket_acl":
+			addr, ok := linkedBucketAddr(r, resources)
+			if !ok {
+				continue
+			}
+			if acl, _, present, known := getString(r, "acl"); present && known &&
+				publicACLs[strings.ToLower(strings.TrimSpace(acl))] {
+				out[addr] = true
+			}
+		case "aws_s3_bucket_website_configuration":
+			if addr, ok := linkedBucketAddr(r, resources); ok {
+				out[addr] = true
+			}
+		case "aws_s3_bucket_policy":
+			addr, ok := linkedBucketAddr(r, resources)
+			if !ok {
+				continue
+			}
+			if pol, _, present, known := getString(r, "policy"); present && known &&
+				policyAllowsPublicPrincipal(pol) {
+				out[addr] = true
+			}
+		}
+	}
+	return out
+}
+
+// bucketIntentionallyPublicSet is bucketIntentionallyPublic with the
+// standalone-resource correlation precomputed (see publicBucketScopeKeys).
+// The inline checks are O(1); the set lookup replaces the per-bucket
+// O(R^2) link resolution.
+func bucketIntentionallyPublicSet(b ir.Resource, publicSet map[string]bool) bool {
 	if acl, _, present, known := getString(b, "acl"); present && known &&
 		publicACLs[strings.ToLower(strings.TrimSpace(acl))] {
 		return true
@@ -283,37 +327,14 @@ func bucketIntentionallyPublic(resources []ir.Resource, b ir.Resource) bool {
 			return true
 		}
 	}
-	for _, r := range resources {
-		if !sameScope(r, b) {
-			continue
-		}
-		switch r.Type {
-		case "aws_s3_bucket_acl":
-			addr, ok := linkedBucketAddr(r, resources)
-			if !ok || addr != scopeKey(b) {
-				continue
-			}
-			if acl, _, present, known := getString(r, "acl"); present && known &&
-				publicACLs[strings.ToLower(strings.TrimSpace(acl))] {
-				return true
-			}
-		case "aws_s3_bucket_website_configuration":
-			addr, ok := linkedBucketAddr(r, resources)
-			if ok && addr == scopeKey(b) {
-				return true
-			}
-		case "aws_s3_bucket_policy":
-			addr, ok := linkedBucketAddr(r, resources)
-			if !ok || addr != scopeKey(b) {
-				continue
-			}
-			if pol, _, present, known := getString(r, "policy"); present && known &&
-				policyAllowsPublicPrincipal(pol) {
-				return true
-			}
-		}
-	}
-	return false
+	return publicSet[scopeKey(b)]
+}
+
+// bucketIntentionallyPublic is the single-bucket convenience wrapper.
+// Prefer publicBucketScopeKeys + bucketIntentionallyPublicSet when
+// evaluating many buckets.
+func bucketIntentionallyPublic(resources []ir.Resource, b ir.Resource) bool {
+	return bucketIntentionallyPublicSet(b, publicBucketScopeKeys(resources))
 }
 
 // principalIsPublic reports whether a Principal value is "*" or contains "*"

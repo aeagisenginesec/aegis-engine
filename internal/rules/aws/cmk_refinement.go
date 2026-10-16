@@ -157,6 +157,7 @@ func (s3NoCMK) CheckAll(resources []ir.Resource) []ir.Finding {
 		}
 	}
 	logTargets := logDeliveryBuckets(resources)
+	publicSet := publicBucketScopeKeys(resources)
 	var out []ir.Finding
 	for _, b := range resources {
 		if b.Type != "aws_s3_bucket" {
@@ -177,7 +178,7 @@ func (s3NoCMK) CheckAll(resources []ir.Resource) []ir.Finding {
 		if !awsManaged {
 			continue
 		}
-		if logTargets[scopeKey(b)] || bucketIntentionallyPublic(resources, b) {
+		if logTargets[scopeKey(b)] || bucketIntentionallyPublicSet(b, publicSet) {
 			continue
 		}
 		out = append(out, ir.Finding{

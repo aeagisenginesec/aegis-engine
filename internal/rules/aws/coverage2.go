@@ -310,6 +310,7 @@ func (s3NoPublicAccessBlock) CheckAll(resources []ir.Resource) []ir.Finding {
 	// Buckets that serve as log-delivery targets are logging infrastructure,
 	// not data buckets: skip them.
 	logTargets := logDeliveryBuckets(sorted)
+	publicSet := publicBucketScopeKeys(sorted)
 	var out []ir.Finding
 	for _, b := range sorted {
 		if b.Type != "aws_s3_bucket" {
@@ -320,7 +321,7 @@ func (s3NoPublicAccessBlock) CheckAll(resources []ir.Resource) []ir.Finding {
 		// bucket exists to provide (website hosting, public ACL, or a
 		// public-granting bucket policy). Recommending it is wrong
 		// advice, not a hardening gap.
-		if bucketIntentionallyPublic(sorted, b) {
+		if bucketIntentionallyPublicSet(b, publicSet) {
 			continue
 		}
 		protected := false

@@ -49,3 +49,34 @@
 ## Verdict
 
 Aegis did not break at 10,000 files: no crashes, no skipped files, no failed parses, fully deterministic output, and spot-checked accuracy held. The scaling curve is the honest headline — time grows faster than the input, and that is now measured across three rungs, not guessed.
+
+## Post-fix re-benchmark (2026-10-16)
+
+CPU profiling (`pprof`) on the vuln-10000 run found the actual bottleneck —
+**not** JSON serialization as suspected, but S3 bucket public-intent
+correlation: `bucketIntentionallyPublic` re-resolved standalone-config links
+with an O(R²) nested loop **per bucket** (86% of total CPU in
+`linkedBucketAddr`, death by `Address()` string concatenation in the hot
+loop). Fix: resolve the links once per rule evaluation into a
+`map[scopeKey]bool` (`publicBucketScopeKeys`), consult it in O(1) per
+bucket (`bucketIntentionallyPublicSet`); hoisted at all three call sites
+(s3.go, coverage2.go, cmk_refinement.go). `linkedBucketAddr` inner loops
+now check resource type before building address strings.
+
+| Run | Wall time | Peak RSS | Findings |
+|---|---|---|---|
+| 1 | 5.24 s | 807 MB | 100,926 |
+| 2 | 6.04 s | 653 MB | 100,926 |
+| 3 | 5.03 s | 742 MB | 100,926 |
+
+**Result: 38.2 s → ~5.4 s average — 7.1× faster, byte-identical findings**
+(same 100,926 / 4,910 / 28,328 / 38,210 / 29,478 split, deterministic ×3).
+Memory unchanged within noise. Full suite 32/32 green after the fix.
+
+Updated scaling curve:
+
+| Fixture | Files | Findings | Wall time (pre-fix) | Wall time (fixed) |
+|---|---|---|---|---|
+| vuln-1000 | 1,000 | 9,719 | ~0.5 s | — |
+| vuln-4000 | 4,000 | 39,543 | ~5.5 s | — |
+| vuln-10000 | 10,000 | 100,926 | ~38.2 s | **~5.4 s** |
