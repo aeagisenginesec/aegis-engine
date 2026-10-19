@@ -367,6 +367,23 @@ func Test568_SilentWithKMS(t *testing.T) {
 	}
 }
 
+// AEGIS-AWS-568 is a defense-in-depth hygiene check (like sibling rules
+// AEGIS-AWS-567/569), not a vulnerability: it must stay Low severity so it
+// never counts as a false positive on hardened fixtures (compliant-lab).
+func Test568_SeverityIsLow(t *testing.T) {
+	if got := (cloudtrailNoKMS{}).Severity(); got != ir.SeverityLow {
+		t.Fatalf("expected Low severity, got %v", got)
+	}
+	r := res("aws_cloudtrail", "t", map[string]ir.Value{})
+	fs := runRule(cloudtrailNoKMS{}, r)
+	if len(fs) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(fs))
+	}
+	if fs[0].Severity != ir.SeverityLow {
+		t.Fatalf("expected Low finding severity, got %v", fs[0].Severity)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-569: Detective not enabled
 // ---------------------------------------------------------------------------

@@ -732,7 +732,7 @@ func (cloudtrailNoKMS) Description() string {
 		"KMS key so log integrity is under your control. Set kms_key_id on " +
 		"the aws_cloudtrail resource."
 }
-func (cloudtrailNoKMS) Severity() ir.Severity { return ir.SeverityMedium }
+func (cloudtrailNoKMS) Severity() ir.Severity { return ir.SeverityLow }
 func (cloudtrailNoKMS) AppliesTo(resType string) bool {
 	return resType == "aws_cloudtrail"
 }
@@ -746,7 +746,7 @@ func (cloudtrailNoKMS) Check(r ir.Resource) []ir.Finding {
 			RuleID:      "AEGIS-AWS-568",
 			Title:       (cloudtrailNoKMS{}).Title(),
 			Description: (cloudtrailNoKMS{}).Description(),
-			Severity:    ir.SeverityMedium,
+			Severity:    ir.SeverityLow,
 			Resource:    r.Address(),
 			Evidence: ir.Evidence{
 				Attribute: "kms_key_id",
