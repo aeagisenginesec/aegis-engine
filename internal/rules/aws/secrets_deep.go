@@ -44,6 +44,13 @@ func DeepSecretsRules() []ir.Rule {
 	}
 }
 
+// CFNParameterSecretRules returns the CloudFormation parameter secret
+// rule (AEGIS-AWS-857). It lives in its own group so the pack keeps
+// global ID order (857 sorts after 856, not inside the 534-539 block).
+func CFNParameterSecretRules() []ir.Rule {
+	return []ir.Rule{cfnParameterSecret{}}
+}
+
 // awsKeyPattern matches AWS access key IDs (AKIA...).
 var awsKeyPattern = regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
 
@@ -614,4 +621,66 @@ func (localSecret) Check(r ir.Resource) []ir.Finding {
 		}}
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-AWS-857: Secret in plaintext CloudFormation parameter default
+// ---------------------------------------------------------------------------
+
+type cfnParameterSecret struct{}
+
+func (cfnParameterSecret) ID() string { return "AEGIS-AWS-857" }
+func (cfnParameterSecret) Title() string {
+	return "Secret in plaintext CloudFormation parameter default"
+}
+func (cfnParameterSecret) Description() string {
+	return "A CloudFormation parameter with a secret-like name (password, " +
+		"secret, token) and a hardcoded plaintext default bakes the " +
+		"credential into version control. Leave the default empty and " +
+		"inject via a secrets manager, SSM Parameter Store, or CI secret. " +
+		"The secret value is never included in findings."
+}
+func (cfnParameterSecret) Severity() ir.Severity { return ir.SeverityHigh }
+
+func (cfnParameterSecret) AppliesTo(resType string) bool {
+	return resType == "cfn_parameter"
+}
+
+func (cfnParameterSecret) Check(r ir.Resource) []ir.Finding {
+	if !secretLikeName(r.Name) {
+		return nil
+	}
+	defVal, ok := r.Attributes["default"]
+	if !ok {
+		return nil
+	}
+	def, ok := defVal.AsString()
+	if !ok || strings.TrimSpace(def) == "" {
+		return nil // unresolved or empty default: silent
+	}
+	// Skip values that look like secret-manager / SSM / dynamic references.
+	lower := strings.ToLower(def)
+	for _, safe := range []string{"vault", "secretsmanager", "ssm", "keyvault", "resolve", "arn:aws"} {
+		if strings.Contains(lower, safe) {
+			return nil
+		}
+	}
+	// Skip obvious placeholder defaults.
+	switch lower {
+	case "changeme", "change_me", "example", "test", "xxx", "xxxx", "dummy", "placeholder":
+		return nil
+	}
+	return []ir.Finding{{
+		RuleID:      "AEGIS-AWS-857",
+		Title:       (cfnParameterSecret{}).Title(),
+		Description: (cfnParameterSecret{}).Description(),
+		Severity:    ir.SeverityHigh,
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "default",
+			Span:      evidenceSpan(defVal.Span, r.Span),
+			Actual:    "[REDACTED: plaintext default for secret-like parameter '" + r.Name + "']",
+			Expected:  "empty default; inject via secrets manager, SSM, or CI secret",
+		},
+	}}
 }

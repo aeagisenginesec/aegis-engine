@@ -383,3 +383,61 @@ func TestDeepSecretsRulesInIDOrder(t *testing.T) {
 		}
 	}
 }
+
+// ---------------------------------------------------------------------------
+// 857: CloudFormation parameter default secrets (R4 FN class: 5 misses)
+// ---------------------------------------------------------------------------
+
+func Test857_CFNParameterDefaultSecret(t *testing.T) {
+	secret := "Sup3rSecret!-prod-2024"
+	r := dsRes("cfn_parameter", "DbPassword", map[string]ir.Value{
+		"default": dsStrVal(secret),
+	})
+	r.Provider = "cfn"
+	f := (cfnParameterSecret{}).Check(r)
+	if len(f) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(f))
+	}
+	if f[0].Severity != ir.SeverityHigh {
+		t.Errorf("expected High severity, got %v", f[0].Severity)
+	}
+	noSecretLeak(t, f, secret)
+}
+
+func Test857_CFNParameterNoDefault(t *testing.T) {
+	r := dsRes("cfn_parameter", "DbPassword", map[string]ir.Value{})
+	r.Provider = "cfn"
+	if f := (cfnParameterSecret{}).Check(r); len(f) != 0 {
+		t.Errorf("expected no findings, got %d", len(f))
+	}
+}
+
+func Test857_CFNParameterSSMRef(t *testing.T) {
+	r := dsRes("cfn_parameter", "DbPassword", map[string]ir.Value{
+		"default": dsStrVal("{{resolve:ssm:/prod/db/password:1}}"),
+	})
+	r.Provider = "cfn"
+	if f := (cfnParameterSecret{}).Check(r); len(f) != 0 {
+		t.Errorf("expected no findings for SSM reference, got %d", len(f))
+	}
+}
+
+func Test857_CFNParameterPlaceholder(t *testing.T) {
+	r := dsRes("cfn_parameter", "DbPassword", map[string]ir.Value{
+		"default": dsStrVal("changeme"),
+	})
+	r.Provider = "cfn"
+	if f := (cfnParameterSecret{}).Check(r); len(f) != 0 {
+		t.Errorf("expected no findings for placeholder, got %d", len(f))
+	}
+}
+
+func Test857_CFNParameterCleanName(t *testing.T) {
+	r := dsRes("cfn_parameter", "InstanceType", map[string]ir.Value{
+		"default": dsStrVal("t3.micro"),
+	})
+	r.Provider = "cfn"
+	if f := (cfnParameterSecret{}).Check(r); len(f) != 0 {
+		t.Errorf("expected no findings, got %d", len(f))
+	}
+}

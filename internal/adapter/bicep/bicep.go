@@ -10,6 +10,10 @@
 //   - param <name> <type> = <default>
 //   - var <name> = <expr>
 //   - resource <sym> '<type>@<apiVersion>' = { ... }
+//   - resource <sym> '<type>@<apiVersion>' = [for x in <coll>: { ... }]
+//     (expanded per element when the collection is statically resolvable:
+//     array literal, param/var with array default, or range(a,b); otherwise
+//     a single representative resource is emitted)
 //   - resource <sym> '<type>@<apiVersion>' existing = { ... } (skipped: not managed)
 //   - targetScope, output, module, import: skipped with diagnostics
 //   - Values: strings (with ${} interpolation), numbers, bools, arrays,
@@ -24,6 +28,7 @@ import (
 	"bytes"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -93,6 +98,13 @@ type parser struct {
 	vars    map[string]bool
 	resSym  map[string]string // resource symbol -> ARM type
 	resName map[string]tval   // resource symbol -> translated name
+	// paramDefs/varDefs hold static defaults for for-loop collection
+	// resolution (param names array = ['a','b']).
+	paramDefs map[string]tval
+	varDefs   map[string]tval
+	// loopScope binds for-loop variables to their current static raw
+	// value while a loop body is parsed (nil when not in a loop).
+	loopScope map[string]any
 }
 
 func (p *parser) diag(level, msg string) {
@@ -122,6 +134,9 @@ func (p *parser) parse() (map[string]any, []ir.Diagnostic) {
 	p.vars = map[string]bool{}
 	p.resSym = map[string]string{}
 	p.resName = map[string]tval{}
+	p.paramDefs = map[string]tval{}
+	p.varDefs = map[string]tval{}
+	p.loopScope = map[string]any{}
 	tmpl := map[string]any{
 		"$schema":        "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 		"contentVersion": "1.0.0.0",
@@ -154,6 +169,7 @@ func (p *parser) parse() (map[string]any, []ir.Diagnostic) {
 			entry := map[string]any{"type": ptype}
 			if def != nil {
 				entry["defaultValue"] = def.v
+				p.paramDefs[name] = *def
 			}
 			params[name] = entry
 		case "var":
@@ -162,10 +178,10 @@ func (p *parser) parse() (map[string]any, []ir.Diagnostic) {
 				break
 			}
 			p.vars[name] = true
+			p.varDefs[name] = val
 			variables[name] = val.v
 		case "resource":
-			rmap := p.parseResource()
-			if rmap != nil {
+			for _, rmap := range p.parseResource() {
 				resources = append(resources, rmap)
 			}
 		case "module", "output", "import", "using", "targetScope", "func", "type":
@@ -387,8 +403,11 @@ func (p *parser) parseVar() (string, tval) {
 }
 
 // parseResource parses: resource <sym> '<type>@<api>' [=|existing =] { ... }
-// or the for-loop form (skipped with warning).
-func (p *parser) parseResource() map[string]any {
+// or the for-loop form: resource <sym> '<type>@<api>' = [for ...: { ... }].
+// A for-loop expands to one resource map per statically-resolvable element;
+// when the collection cannot be resolved, a single representative resource
+// is emitted (loop variable unknown) so static properties are still checked.
+func (p *parser) parseResource() []map[string]any {
 	p.skipWSAndComments()
 	sym := p.parseIdent()
 	if sym == "" {
@@ -423,9 +442,7 @@ func (p *parser) parseResource() map[string]any {
 	p.skipWSAndComments()
 	// for-loop form: = [for ...]
 	if p.peek() == '[' {
-		p.diag("warning", fmt.Sprintf("resource %q uses a for-loop; not expanded, skipped", sym))
-		p.skipStatement()
-		return nil
+		return p.parseResourceForLoop(sym, armType)
 	}
 	if !p.expect('{') {
 		p.diag("warning", fmt.Sprintf("resource %q body is not an object", sym))
@@ -436,6 +453,165 @@ func (p *parser) parseResource() map[string]any {
 		p.diag("warning", fmt.Sprintf("resource %q is 'existing' (not managed); skipped", sym))
 		return nil
 	}
+	return []map[string]any{p.buildResourceMap(sym, armType, body)}
+}
+
+// parseResourceForLoop parses: [for <var> in <collection> : { ... }]
+// with the '[' already peeked (not consumed). It expands the loop into
+// one resource map per element when the collection is statically
+// resolvable (array literal, param/var with array default, or range(a,b)).
+// Otherwise it emits a single representative resource with the loop
+// variable unknown, so statically-known properties are still checked.
+func (p *parser) parseResourceForLoop(sym, armType string) []map[string]any {
+	fail := func(msg string) []map[string]any {
+		p.diag("warning", fmt.Sprintf("resource %q for-loop %s; skipped", sym, msg))
+		p.skipStatement()
+		return nil
+	}
+	p.pos++ // consume '['
+	p.skipWSAndComments()
+	if p.parseKeyword() != "for" {
+		return fail("missing 'for'")
+	}
+	p.skipWSAndComments()
+	// Loop variables: `n` or `(item, index)`.
+	var loopVar, indexVar string
+	if p.peek() == '(' {
+		p.pos++
+		p.skipWSAndComments()
+		loopVar = p.parseIdent()
+		p.skipWSAndComments()
+		if !p.expect(',') {
+			return fail("malformed loop variables")
+		}
+		p.skipWSAndComments()
+		indexVar = p.parseIdent()
+		p.skipWSAndComments()
+		if !p.expect(')') {
+			return fail("malformed loop variables")
+		}
+	} else {
+		loopVar = p.parseIdent()
+	}
+	if loopVar == "" {
+		return fail("missing loop variable")
+	}
+	p.skipWSAndComments()
+	if p.parseKeyword() != "in" {
+		return fail("missing 'in'")
+	}
+	p.skipWSAndComments()
+	coll, ok := p.parseExprOK()
+	if !ok {
+		return fail("collection expression failed to parse")
+	}
+	p.skipWSAndComments()
+	if !p.expect(':') {
+		return fail("missing ':'")
+	}
+	elems := p.resolveForElements(coll)
+	p.skipWSAndComments()
+	if !p.expect('{') {
+		return fail("body is not an object")
+	}
+	bodyStart := p.pos - 1 // rewind point for per-element re-parse
+	var out []map[string]any
+	emit := func() {
+		body := p.parseObject()
+		out = append(out, p.buildResourceMap(sym, armType, body))
+	}
+	if len(elems) == 0 {
+		// Unresolvable collection: single representative resource with
+		// the loop variable unknown.
+		p.diag("warning", fmt.Sprintf("resource %q for-loop collection not statically resolvable; single representative emitted", sym))
+		emit()
+	} else {
+		for i, e := range elems {
+			p.pos = bodyStart
+			p.expect('{')
+			p.loopScope[loopVar] = e
+			if indexVar != "" {
+				p.loopScope[indexVar] = float64(i)
+			}
+			diagMark := len(p.diags)
+			emit()
+			if i > 0 {
+				// Drop duplicate diagnostics from re-parsing the body.
+				p.diags = p.diags[:diagMark]
+			}
+			delete(p.loopScope, loopVar)
+			delete(p.loopScope, indexVar)
+		}
+	}
+	p.skipWSAndComments()
+	if !p.expect(']') {
+		p.diag("warning", fmt.Sprintf("resource %q for-loop missing closing ']'", sym))
+	}
+	return out
+}
+
+// resolveForElements maps a for-loop collection expression to its static
+// elements (raw values). It handles array literals, identifiers bound to
+// params/vars with array defaults, and range(start, count) calls.
+// Anything else returns nil (unresolvable).
+func (p *parser) resolveForElements(coll tval) []any {
+	if !coll.isExpr {
+		if arr, ok := coll.v.([]any); ok {
+			return arr
+		}
+		return nil
+	}
+	s, _ := coll.v.(string)
+	s = strings.TrimSpace(s)
+	// [parameters('x')] / [variables('x')]
+	if m := forParamRef.FindStringSubmatch(s); m != nil {
+		if d, ok := p.paramDefs[m[1]]; ok && !d.isExpr {
+			if arr, ok := d.v.([]any); ok {
+				return arr
+			}
+		}
+		return nil
+	}
+	if m := forVarRef.FindStringSubmatch(s); m != nil {
+		if d, ok := p.varDefs[m[1]]; ok && !d.isExpr {
+			if arr, ok := d.v.([]any); ok {
+				return arr
+			}
+		}
+		return nil
+	}
+	// [range(start, count)]
+	if m := forRangeCall.FindStringSubmatch(s); m != nil {
+		var start, count int
+		if _, err := fmt.Sscanf(m[1], "%d", &start); err != nil {
+			return nil
+		}
+		if _, err := fmt.Sscanf(m[2], "%d", &count); err != nil {
+			return nil
+		}
+		if count < 0 || count > 1000 {
+			return nil // sanity cap
+		}
+		out := make([]any, 0, count)
+		for i := 0; i < count; i++ {
+			out = append(out, float64(start+i))
+		}
+		return out
+	}
+	return nil
+}
+
+var (
+	// Function-call collections arrive unbracketed (range(0, 2)); ident
+	// references arrive bracketed ([parameters('x')]). Accept both.
+	forParamRef  = regexp.MustCompile(`^\[?parameters\('([^']+)'\)\]?$`)
+	forVarRef    = regexp.MustCompile(`^\[?variables\('([^']+)'\)\]?$`)
+	forRangeCall = regexp.MustCompile(`^\[?range\(\s*(\d+)\s*,\s*(\d+)\s*\)\]?$`)
+)
+
+// buildResourceMap converts a parsed resource body into the ARM-template-
+// equivalent resource map (shared by the plain and for-loop paths).
+func (p *parser) buildResourceMap(sym, armType string, body map[string]any) map[string]any {
 	p.resSym[sym] = armType
 	rmap := map[string]any{"type": armType}
 	// name (required in ARM-ish form)
@@ -800,6 +976,17 @@ func (p *parser) parseIdentOrCall() (tval, bool) {
 		return static(false), true
 	case "null":
 		return static(nil), true
+	}
+	// For-loop variable bound to a static value while a loop body parses.
+	// Bare references substitute directly; dotted/indexed suffixes on a
+	// loop variable are not expanded and degrade to unknown (documented
+	// limitation) rather than mis-resolving.
+	if lv, ok := p.loopScope[name]; ok {
+		p.skipWSAndComments()
+		if p.peek() != '.' && p.peek() != '[' {
+			return static(lv), true
+		}
+		return unknownExpr(), true
 	}
 	p.skipWSAndComments()
 	if p.peek() == '(' {

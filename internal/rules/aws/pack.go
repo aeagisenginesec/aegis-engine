@@ -80,5 +80,6 @@ func Rules() []ir.Rule {
 	base = append(base, CloudTrailCloudWatchRules()...)   // AEGIS-AWS-851
 	base = append(base, CMKRefinementRules()...)          // AEGIS-AWS-852..855
 	base = append(base, EOLImageRules()...)               // AEGIS-AWS-856
+	base = append(base, CFNParameterSecretRules()...)     // AEGIS-AWS-857
 	return base
 }

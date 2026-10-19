@@ -211,6 +211,34 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			})
 		}
 	}
+	// Synthetic parameter resources for secret-detection parity with
+	// terraform_variable: parameters WITH known defaults become
+	// cfn_parameter resources so rules can flag hardcoded secret defaults.
+	// Parameters without defaults (or with unresolved defaults) are
+	// skipped: there is nothing baked into the template to flag.
+	if paramsNode := mappingGet(root, "Parameters"); paramsNode != nil {
+		for i := 0; i+1 < len(paramsNode.Content); i += 2 {
+			name := paramsNode.Content[i].Value
+			def := paramsNode.Content[i+1]
+			pd, ok := t.params[name]
+			if !ok || !pd.def.Known {
+				continue
+			}
+			attrs := map[string]ir.Value{"default": pd.def}
+			if def.Kind == yaml.MappingNode {
+				if typ := mappingGet(def, "Type"); typ != nil {
+					attrs["type"] = scalarValue(path, typ)
+				}
+			}
+			out = append(out, ir.Resource{
+				Type:       "cfn_parameter",
+				Name:       name,
+				Provider:   "cfn",
+				Attributes: attrs,
+				Span:       nodeSpan(path, def),
+			})
+		}
+	}
 	return out, t.diags, nil
 }
 

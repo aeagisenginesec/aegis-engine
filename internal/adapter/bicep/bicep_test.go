@@ -344,12 +344,15 @@ resource stg 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 	}
 }
 
-func TestForLoopSkipped(t *testing.T) {
+func TestForLoopExpanded(t *testing.T) {
 	src := `
-resource stg 'Microsoft.Storage/storageAccounts@2023-01-01' = [for i in range(0, 2): {
-  name: 'loopstore${i}'
+param names array = ['storea', 'storeb']
+resource stg 'Microsoft.Storage/storageAccounts@2023-01-01' = [for n in names: {
+  name: n
   location: 'westeurope'
-  properties: {}
+  properties: {
+    allowBlobPublicAccess: true
+  }
 }]
 `
 	a := New()
@@ -357,17 +360,78 @@ resource stg 'Microsoft.Storage/storageAccounts@2023-01-01' = [for i in range(0,
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res) != 0 {
-		t.Errorf("for-loop resource should be skipped, got %d", len(res))
+	// One resource per element, with the loop variable substituted.
+	if len(res) != 2 {
+		t.Fatalf("for-loop should expand to 2 resources, got %d", len(res))
+	}
+	names := map[string]bool{}
+	for _, r := range res {
+		names[r.Name] = true
+		v, ok := r.Attributes["allow_blob_public_access"]
+		if !ok {
+			t.Fatalf("allow_blob_public_access missing on %s", r.Name)
+		}
+		if b, ok := v.AsBool(); !ok || !b {
+			t.Errorf("allow_blob_public_access should be true on %s", r.Name)
+		}
+	}
+	if !names["storea"] || !names["storeb"] {
+		t.Errorf("loop variable not substituted into names: %v", names)
+	}
+	for _, d := range diags {
+		if d.Level == "error" {
+			t.Errorf("unexpected error diagnostic: %s", d.Message)
+		}
+	}
+}
+
+func TestForLoopRangeExpanded(t *testing.T) {
+	src := `
+resource stg 'Microsoft.Storage/storageAccounts@2023-01-01' = [for i in range(0, 2): {
+  name: 'loopstore'
+  location: 'westeurope'
+  properties: {}
+}]
+`
+	a := New()
+	res, _, err := a.Parse("main.bicep", []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 2 {
+		t.Errorf("range(0,2) for-loop should expand to 2 resources, got %d", len(res))
+	}
+}
+
+func TestForLoopUnresolvableEmitsRepresentative(t *testing.T) {
+	src := `
+param names array
+resource stg 'Microsoft.Storage/storageAccounts@2023-01-01' = [for n in names: {
+  name: n
+  location: 'westeurope'
+  properties: {
+    allowBlobPublicAccess: true
+  }
+}]
+`
+	a := New()
+	res, diags, err := a.Parse("main.bicep", []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Collection not statically resolvable: single representative resource
+	// so static properties are still checked (better than silence).
+	if len(res) != 1 {
+		t.Fatalf("expected 1 representative resource, got %d", len(res))
 	}
 	found := false
 	for _, d := range diags {
-		if strings.Contains(d.Message, "for-loop") {
+		if strings.Contains(d.Message, "not statically resolvable") {
 			found = true
 		}
 	}
 	if !found {
-		t.Errorf("expected for-loop warning diagnostic")
+		t.Errorf("expected 'not statically resolvable' warning diagnostic")
 	}
 }
 

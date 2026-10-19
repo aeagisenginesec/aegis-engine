@@ -411,8 +411,10 @@ Resources:
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(resources) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(resources))
+	// 1 bucket + 1 synthetic cfn_parameter (EnvName has a default;
+	// NoDefault has none and emits nothing).
+	if len(resources) != 2 {
+		t.Fatalf("expected 2 resources, got %d", len(resources))
 	}
 	attrs := resources[0].Attributes
 	bn, ok := attrs["bucket"]
@@ -644,5 +646,54 @@ Resources:
 		if !ids[want] {
 			t.Errorf("expected %s on duplicate-Resources template, got %v", want, ids)
 		}
+	}
+}
+
+func TestParametersEmitSyntheticResources(t *testing.T) {
+	src := `AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+  InstanceType:
+    Type: String
+    Default: t3.micro
+  NoDefault:
+    Type: String
+Resources:
+  B:
+    Type: AWS::S3::Bucket
+`
+	ad := New()
+	path := filepath.Join(t.TempDir(), "t.yaml")
+	resources, _, err := ad.Parse(path, []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var params []*ir.Resource
+	for i := range resources {
+		if resources[i].Type == "cfn_parameter" {
+			params = append(params, &resources[i])
+		}
+	}
+	// DbPassword + InstanceType have defaults; NoDefault must not emit.
+	if len(params) != 2 {
+		t.Fatalf("expected 2 cfn_parameter resources, got %d", len(params))
+	}
+	byName := map[string]*ir.Resource{}
+	for _, p := range params {
+		byName[p.Name] = p
+	}
+	pw := byName["DbPassword"]
+	if pw == nil {
+		t.Fatalf("cfn_parameter DbPassword missing")
+	}
+	def, ok := pw.Attributes["default"]
+	if !ok || !def.Known {
+		t.Fatalf("DbPassword default missing or unknown")
+	}
+	s, ok := def.AsString()
+	if !ok || s != "Sup3rSecret!-prod-2024" {
+		t.Fatalf("DbPassword default = %q, want the plaintext default", s)
 	}
 }

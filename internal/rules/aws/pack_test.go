@@ -9,8 +9,9 @@ func TestPack_HasExpectedRulesWithUniqueIDs(t *testing.T) {
 	// 474: pre-audit baseline 473 (282 baseline + 200 deep-expansion rules
 	// (650-849) + AWS-850 + AWS-851..855, minus 684/692/702) + 1 AWS-856
 	// (EC2 EOL image; concurrent addition, kept after audit review).
-	if len(rules) != 474 {
-		t.Fatalf("expected 474 rules, got %d", len(rules))
+	// + 1 AWS-857 (CFN parameter secret default; R4 recall gap closure).
+	if len(rules) != 475 {
+		t.Fatalf("expected 475 rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	var prev string
