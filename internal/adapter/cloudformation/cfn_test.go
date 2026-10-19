@@ -721,3 +721,67 @@ func TestHandlesContent(t *testing.T) {
 	}
 	var _ ir.ContentSniffer = ad
 }
+
+func TestEC2InstanceBlockDeviceMappings(t *testing.T) {
+	src := `
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  Srv:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-12345
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 50
+            Encrypted: false
+        - DeviceName: /dev/sdb
+          Ebs:
+            VolumeSize: 100
+            Encrypted: true
+`
+	ad := New()
+	path := filepath.Join(t.TempDir(), "t.yaml")
+	resources, _, err := ad.Parse(path, []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var inst *ir.Resource
+	for i := range resources {
+		if resources[i].Type == "aws_instance" {
+			inst = &resources[i]
+		}
+	}
+	if inst == nil {
+		t.Fatal("no aws_instance parsed")
+	}
+	// Root device (/dev/sda1) -> root_block_device with encrypted=false.
+	rb, ok := inst.Attributes["root_block_device"]
+	if !ok {
+		t.Fatal("missing root_block_device")
+	}
+	l, ok := rb.AsList()
+	if !ok || len(l) != 1 {
+		t.Fatalf("root_block_device should be a 1-block list, got %#v", rb.Raw)
+	}
+	m, ok := l[0].AsMap()
+	if !ok {
+		t.Fatalf("root_block_device block not a map: %#v", l[0].Raw)
+	}
+	enc, ok := m["encrypted"]
+	if !ok || !enc.Known {
+		t.Fatalf("root_block_device.encrypted missing/unknown: %#v", m)
+	}
+	if b, _ := enc.AsBool(); b {
+		t.Errorf("root_block_device.encrypted = true, want false")
+	}
+	// Non-root device -> ebs_block_device.
+	eb, ok := inst.Attributes["ebs_block_device"]
+	if !ok {
+		t.Fatal("missing ebs_block_device")
+	}
+	el, ok := eb.AsList()
+	if !ok || len(el) != 1 {
+		t.Fatalf("ebs_block_device should be a 1-block list, got %#v", eb.Raw)
+	}
+}

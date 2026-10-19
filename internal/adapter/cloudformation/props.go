@@ -24,6 +24,7 @@ var specialConverters = map[string]specialConverter{
 	"AWS::IAM::User":                     convertIAMUser,
 	"AWS::KMS::Key":                      convertKMSKey,
 	"AWS::EC2::SecurityGroup":            convertSecurityGroup,
+	"AWS::EC2::Instance":                 convertEC2Instance,
 	"AWS::RDS::DBInstance":               convertDBInstance,
 	"AWS::CloudTrail::Trail":             convertCloudTrail,
 	"AWS::DynamoDB::Table":               convertDynamoDBTable,
@@ -593,6 +594,58 @@ func convertOpenSearch(t *template, logicalID, tfType string, attrs map[string]i
 		}
 		attrs["node_to_node_encryption"] = blockList(t.path, n, m)
 		delete(attrs, "node_to_node_encryption_options")
+	}
+	return attrs, nil
+}
+
+// convertEC2Instance maps BlockDeviceMappings to the Terraform block shapes
+// the rule pack expects: the root device (/dev/sda1, else the first mapping)
+// becomes root_block_device, the rest become ebs_block_device. Without this,
+// rule AEGIS-AWS-696 (root volume encryption) cannot see CFN-declared
+// volumes — generic snake_case conversion leaves block_device_mappings,
+// which no aws_instance rule reads.
+func convertEC2Instance(t *template, logicalID, tfType string, attrs map[string]ir.Value, def *yaml.Node) (map[string]ir.Value, []ir.Resource) {
+	props := mappingGet(def, "Properties")
+	if props == nil {
+		return attrs, nil
+	}
+	bdm := mappingGet(props, "BlockDeviceMappings")
+	if bdm == nil || bdm.Kind != yaml.SequenceNode || len(bdm.Content) == 0 {
+		return attrs, nil
+	}
+	rootIdx := 0
+	for i, item := range bdm.Content {
+		if item.Kind != yaml.MappingNode {
+			continue
+		}
+		if dn := mappingGet(item, "DeviceName"); dn != nil && dn.Kind == yaml.ScalarNode && dn.Value == "/dev/sda1" {
+			rootIdx = i
+			break
+		}
+	}
+	var ebsBlocks []ir.Value
+	for i, item := range bdm.Content {
+		if item.Kind != yaml.MappingNode {
+			continue
+		}
+		m := map[string]ir.Value{}
+		if ebs := mappingGet(item, "Ebs"); ebs != nil && ebs.Kind == yaml.MappingNode {
+			if enc := mappingGet(ebs, "Encrypted"); enc != nil {
+				m["encrypted"] = t.resolveValue(enc)
+			}
+			if vs := mappingGet(ebs, "VolumeSize"); vs != nil {
+				m["volume_size"] = t.resolveValue(vs)
+			}
+		}
+		blk := ir.Value{Raw: m, Known: true, Span: nodeSpan(t.path, item)}
+		if i == rootIdx {
+			attrs["root_block_device"] = ir.Value{Raw: []ir.Value{blk}, Known: true, Span: nodeSpan(t.path, item)}
+		} else {
+			ebsBlocks = append(ebsBlocks, blk)
+		}
+	}
+	if len(ebsBlocks) > 0 {
+		attrs["ebs_block_device"] = ir.Value{Raw: ebsBlocks, Known: true, Span: nodeSpan(t.path, bdm)}
 	}
 	return attrs, nil
 }
