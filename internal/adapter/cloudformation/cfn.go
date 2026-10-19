@@ -37,6 +37,9 @@ type Adapter struct{}
 // Compile-time check that Adapter satisfies ir.Adapter.
 var _ ir.Adapter = Adapter{}
 
+// Compile-time check that Adapter satisfies ir.ContentSniffer.
+var _ ir.ContentSniffer = Adapter{}
+
 // New constructs the adapter.
 func New() *Adapter { return &Adapter{} }
 
@@ -49,6 +52,17 @@ const planJSONSuffix = ".plan.json"
 // Handles reports whether the file looks like a CloudFormation template.
 // Extension gate first (cheap), then content sniffing for CFN markers.
 func (Adapter) Handles(path string) bool {
+	src, err := readBounded(path, 1<<20) // 1 MiB is plenty for a marker scan
+	if err != nil {
+		return false
+	}
+	return Adapter{}.HandlesContent(path, src)
+}
+
+// HandlesContent is the content-aware form of Handles for pipelines that
+// already hold the file bytes (in-memory API scans): same extension gate,
+// sniffing the provided bytes instead of reading from disk.
+func (Adapter) HandlesContent(path string, src []byte) bool {
 	lower := strings.ToLower(path)
 	if strings.HasSuffix(lower, planJSONSuffix) {
 		return false
@@ -60,16 +74,21 @@ func (Adapter) Handles(path string) bool {
 	default:
 		return false
 	}
-	return looksLikeCFN(path)
+	return looksLikeCFNContent(src)
 }
 
-// looksLikeCFN reads the file and checks for CloudFormation markers.
-// Bounded: discovery already caps file size; we additionally cap the sniff.
+// looksLikeCFN reads the file (bounded) and checks for CloudFormation
+// markers. Prefer HandlesContent when the bytes are already in hand.
 func looksLikeCFN(path string) bool {
-	src, err := readBounded(path, 1<<20) // 1 MiB is plenty for a marker scan
+	src, err := readBounded(path, 1<<20)
 	if err != nil {
 		return false
 	}
+	return looksLikeCFNContent(src)
+}
+
+// looksLikeCFNContent checks bytes for CloudFormation markers.
+func looksLikeCFNContent(src []byte) bool {
 	// Fast path: textual markers.
 	if bytes.Contains(src, []byte("AWSTemplateFormatVersion")) {
 		return true

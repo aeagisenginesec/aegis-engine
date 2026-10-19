@@ -40,6 +40,9 @@ type Adapter struct{}
 // Compile-time check that Adapter satisfies ir.Adapter.
 var _ ir.Adapter = Adapter{}
 
+// Compile-time check that Adapter satisfies ir.ContentSniffer.
+var _ ir.ContentSniffer = Adapter{}
+
 // New constructs the adapter.
 func New() *Adapter { return &Adapter{} }
 
@@ -56,16 +59,39 @@ func (Adapter) Handles(path string) bool {
 	if strings.HasSuffix(strings.ToLower(path), ".plan.json") {
 		return false
 	}
-	return looksLikeARM(path)
-}
-
-// looksLikeARM reads the file (bounded) and checks for the ARM deployment
-// template schema marker.
-func looksLikeARM(path string) bool {
 	src, err := readBounded(path, 64<<10) // 64 KiB is plenty for a $schema scan
 	if err != nil {
 		return false
 	}
+	return Adapter{}.HandlesContent(path, src)
+}
+
+// HandlesContent is the content-aware form of Handles for pipelines that
+// already hold the file bytes (in-memory API scans): same extension gate,
+// sniffing the provided bytes instead of reading from disk.
+func (Adapter) HandlesContent(path string, src []byte) bool {
+	if !strings.EqualFold(filepath.Ext(path), ".json") {
+		return false
+	}
+	// .plan.json belongs to the planjson adapter.
+	if strings.HasSuffix(strings.ToLower(path), ".plan.json") {
+		return false
+	}
+	return looksLikeARMContent(src)
+}
+
+// looksLikeARM reads the file (bounded) and checks for the ARM deployment
+// template schema marker. Prefer HandlesContent when bytes are in hand.
+func looksLikeARM(path string) bool {
+	src, err := readBounded(path, 64<<10)
+	if err != nil {
+		return false
+	}
+	return looksLikeARMContent(src)
+}
+
+// looksLikeARMContent checks bytes for the ARM deployment template marker.
+func looksLikeARMContent(src []byte) bool {
 	// The canonical marker: "$schema": ".../deploymentTemplate.json#"
 	// Case-insensitive match on the schema file name.
 	lower := strings.ToLower(string(src))

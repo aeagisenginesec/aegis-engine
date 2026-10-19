@@ -698,3 +698,22 @@ func TestKnownUnresolvableARMFunctionSilent(t *testing.T) {
 		}
 	}
 }
+
+func TestHandlesContent(t *testing.T) {
+	ad := New()
+	armJSON := []byte(`{"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#", "contentVersion": "1.0.0.0", "resources": []}`)
+	if !ad.HandlesContent("azuredeploy.json", armJSON) {
+		t.Errorf("HandlesContent should accept ARM JSON bytes")
+	}
+	plainJSON := []byte(`{"foo": "bar"}`)
+	if ad.HandlesContent("azuredeploy.json", plainJSON) {
+		t.Errorf("HandlesContent should reject non-ARM JSON bytes")
+	}
+	if ad.HandlesContent("azuredeploy.yaml", armJSON) {
+		t.Errorf("HandlesContent should reject non-json extensions")
+	}
+	if ad.HandlesContent("main.plan.json", armJSON) {
+		t.Errorf("HandlesContent should reject .plan.json")
+	}
+	var _ ir.ContentSniffer = ad
+}

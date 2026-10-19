@@ -270,8 +270,19 @@ func scanFilesInMemory(files []scanFile, registry *rules.Registry) scanResponse 
 	var mods []terraform.Module
 	diags := []ir.Diagnostic{}
 	for _, f := range files {
+		src := []byte(f.Content)
 		var ad ir.Adapter
 		for _, a := range adapters {
+			// Content-sniffing adapters (CFN, ARM) must decide from the
+			// in-memory bytes: their Handles(path) reads from disk,
+			// and the path is virtual here, so it would always miss.
+			if cs, ok := a.(ir.ContentSniffer); ok {
+				if cs.HandlesContent(f.Path, src) {
+					ad = a
+					break
+				}
+				continue
+			}
 			if a.Handles(f.Path) {
 				ad = a
 				break
@@ -285,7 +296,6 @@ func scanFilesInMemory(files []scanFile, registry *rules.Registry) scanResponse 
 			})
 			continue
 		}
-		src := []byte(f.Content)
 		if ta, ok := ad.(*terraform.Adapter); ok {
 			mod, d, err := safeParseModule(ta, f.Path, src)
 			diags = append(diags, d...)

@@ -697,3 +697,27 @@ Resources:
 		t.Fatalf("DbPassword default = %q, want the plaintext default", s)
 	}
 }
+
+func TestHandlesContent(t *testing.T) {
+	ad := New()
+	cfnYAML := []byte("AWSTemplateFormatVersion: '2010-09-09'\nResources:\n  B:\n    Type: AWS::S3::Bucket\n")
+	if !ad.HandlesContent("template.yaml", cfnYAML) {
+		t.Errorf("HandlesContent should accept CFN YAML bytes")
+	}
+	// Structural (no AWSTemplateFormatVersion marker).
+	cfnStruct := []byte("Resources:\n  B:\n    Type: AWS::S3::Bucket\n    Properties:\n      BucketName: x\n")
+	if !ad.HandlesContent("template.yaml", cfnStruct) {
+		t.Errorf("HandlesContent should accept structural CFN YAML bytes")
+	}
+	plainYAML := []byte("foo: bar\nbaz: 1\n")
+	if ad.HandlesContent("template.yaml", plainYAML) {
+		t.Errorf("HandlesContent should reject non-CFN YAML bytes")
+	}
+	if ad.HandlesContent("notes.txt", cfnYAML) {
+		t.Errorf("HandlesContent should reject non-template extensions")
+	}
+	if ad.HandlesContent("plan.plan.json", cfnYAML) {
+		t.Errorf("HandlesContent should reject .plan.json")
+	}
+	var _ ir.ContentSniffer = ad
+}

@@ -210,6 +210,20 @@ type Adapter interface {
 	Parse(path string, src []byte) ([]Resource, []Diagnostic, error)
 }
 
+// ContentSniffer is an optional interface for adapters whose Handles
+// decision depends on file content rather than the path alone (e.g.
+// CloudFormation and ARM, which sniff for format markers because the
+// manifests adapter claims every .yaml/.json file).
+// Pipelines that already hold the file bytes — notably in-memory API
+// scans, where the path is virtual and no file exists on disk — must
+// prefer HandlesContent over Handles, or content-sniffed formats are
+// misrouted and their findings silently lost.
+type ContentSniffer interface {
+	// HandlesContent reports whether this adapter parses the file with
+	// the given path and content, without touching disk.
+	HandlesContent(path string, src []byte) bool
+}
+
 // ScanResult is the complete output of one scan.
 type ScanResult struct {
 	Target            string             `json:"target"`

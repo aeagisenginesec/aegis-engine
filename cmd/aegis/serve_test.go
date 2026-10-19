@@ -321,3 +321,89 @@ func keys(m map[string]bool) []string {
 	}
 	return out
 }
+
+const serveVulnCFN = `
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+Resources:
+  OpenSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: open
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+`
+
+const serveVulnARM = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "teststore",
+      "location": "westeurope",
+      "sku": {"name": "Standard_LRS"},
+      "kind": "StorageV2",
+      "properties": {"allowBlobPublicAccess": true}
+    }
+  ]
+}`
+
+// TestScanInMemoryCFNParity guards the HandlesContent fix: in-memory API
+// scans must route CFN/ARM bytes to their adapters (not manifests), or
+// their findings are silently lost (CFN 11/14, ARM 0/35 in the old code).
+func TestScanInMemoryCFNParity(t *testing.T) {
+	body := `{"files": [{"path": "template.yaml", "content": ` + jsonString(serveVulnCFN) + `}], "rules": "aws"}`
+	rr := postScan(t, body)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200: %s", rr.Code, rr.Body.String())
+	}
+	var resp scanResponse
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if resp.Resources == 0 {
+		t.Fatalf("expected CFN resources parsed in-memory, got 0")
+	}
+	seen := map[string]bool{}
+	for _, f := range resp.Findings {
+		seen[f.RuleID] = true
+	}
+	if !seen["AEGIS-AWS-004"] {
+		t.Errorf("missing AEGIS-AWS-004 on in-memory CFN scan; got %v", keys(seen))
+	}
+	// AEGIS-AWS-857 needs the real CFN adapter's synthetic cfn_parameter
+	// resources; the manifests fallback path cannot produce it.
+	if !seen["AEGIS-AWS-857"] {
+		t.Errorf("missing AEGIS-AWS-857 on in-memory CFN scan; got %v", keys(seen))
+	}
+}
+
+func TestScanInMemoryARMParity(t *testing.T) {
+	body := `{"files": [{"path": "azuredeploy.json", "content": ` + jsonString(serveVulnARM) + `}], "rules": "azure"}`
+	rr := postScan(t, body)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200: %s", rr.Code, rr.Body.String())
+	}
+	var resp scanResponse
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if resp.Resources == 0 {
+		t.Fatalf("expected ARM resources parsed in-memory, got 0")
+	}
+	seen := map[string]bool{}
+	for _, f := range resp.Findings {
+		seen[f.RuleID] = true
+	}
+	if !seen["AEGIS-AZR-001"] {
+		t.Errorf("missing AEGIS-AZR-001 on in-memory ARM scan; got %v", keys(seen))
+	}
+}
