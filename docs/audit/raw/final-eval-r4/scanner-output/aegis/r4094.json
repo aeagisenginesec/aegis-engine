@@ -6,28 +6,13 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 17,
+    "findings": 15,
     "critical": 0,
-    "high": 3,
-    "medium": 10,
+    "high": 2,
+    "medium": 9,
     "low": 4
   },
   "findings": [
-    {
-      "rule_id": "AEGIS-AZURE-007",
-      "severity": "high",
-      "title": "Key Vault without firewall",
-      "description": "A Key Vault with no network_acls block, or with network_acls.default_action = \"Allow\", accepts connections from any network. Restrict access with default_action = \"Deny\".",
-      "resource": "azurerm_key_vault.kv-d597b6",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4094/main.bicep",
-      "line": 1,
-      "evidence": "network_acls = absent (default allow)",
-      "expected": "network_acls { default_action = \"Deny\" }",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
     {
       "rule_id": "AEGIS-AZURE-028",
       "severity": "medium",
@@ -236,21 +221,6 @@
       "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
       "references": [
         "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-191",
-      "severity": "medium",
-      "title": "Storage account with shared key access enabled",
-      "description": "azurerm_storage_account with shared_access_key_enabled (the provider default) permits Shared Key authorization, which bypasses Entra ID and cannot be scoped. Disable it and use Entra ID with default_to_oauth_authentication.",
-      "resource": "azurerm_storage_account.datad597b6",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4094/main.bicep",
-      "line": 1,
-      "evidence": "shared_access_key_enabled = [REDACTED]",
-      "expected": "shared_access_key_enabled = false",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
       ]
     },
     {

@@ -6,10 +6,10 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 20,
+    "findings": 18,
     "critical": 0,
-    "high": 5,
-    "medium": 9,
+    "high": 4,
+    "medium": 8,
     "low": 6
   },
   "findings": [
@@ -88,21 +88,6 @@
       ]
     },
     {
-      "rule_id": "AEGIS-GCP-010",
-      "severity": "high",
-      "title": "GKE cluster without network policy",
-      "description": "google_container_cluster with no network_policy block, or with network_policy disabled, allows unrestricted pod-to-pod traffic.",
-      "resource": "google_container_cluster.main",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
-      "line": 1,
-      "evidence": "network_policy = absent (disabled by default)",
-      "expected": "network_policy { enabled = true }",
-      "remediation": "Apply least privilege. Replace broad roles with the minimum predefined or custom IAM roles the workload needs. Use Workload Identity Federation and service accounts with minimal scopes.",
-      "references": [
-        "https://cloud.google.com/iam/docs/using-iam-securely"
-      ]
-    },
-    {
       "rule_id": "AEGIS-GCP-011",
       "severity": "high",
       "title": "GKE cluster not private",
@@ -127,21 +112,6 @@
       "line": 1,
       "evidence": "workload_identity_config = absent",
       "expected": "workload_identity_config { workload_pool = \"...svc.id.goog\" }",
-      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://cloud.google.com/security/best-practices"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-GCP-048",
-      "severity": "medium",
-      "title": "GKE cluster without binary authorization",
-      "description": "google_container_cluster with no binary_authorization block deploys container images without signature verification.",
-      "resource": "google_container_cluster.main",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
-      "line": 1,
-      "evidence": "binary_authorization = absent",
-      "expected": "binary_authorization { evaluation_mode = \"PROJECT_SINGLETON_POLICY_ENFORCE\" }",
       "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://cloud.google.com/security/best-practices"

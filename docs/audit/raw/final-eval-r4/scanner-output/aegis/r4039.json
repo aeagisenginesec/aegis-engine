@@ -6,10 +6,10 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 30,
+    "findings": 27,
     "critical": 0,
-    "high": 4,
-    "medium": 16,
+    "high": 3,
+    "medium": 14,
     "low": 10
   },
   "findings": [
@@ -32,7 +32,7 @@
       "rule_id": "AEGIS-AWS-311",
       "severity": "medium",
       "title": "RDS without IAM database authentication",
-      "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene.",
+      "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene. Engine-scoped: only mysql, postgres and mariadb instances support IAM database authentication; aurora engines are covered by the cluster rules.",
       "resource": "aws_db_instance.dev",
       "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4039/main.tf",
       "line": 1,
@@ -77,21 +77,6 @@
       "remediation": "Enable Multi-AZ for high availability and automatic failover:\nresource \"aws_db_instance\" \"this\" {\n  multi_az = true\n}",
       "references": [
         "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AWS-540",
-      "severity": "high",
-      "title": "RDS MySQL/Postgres instance without IAM database authentication",
-      "description": "MySQL and Postgres RDS instances support IAM database authentication, which replaces long-lived passwords with short-lived IAM credentials. With iam_database_authentication_enabled absent or false, access relies on static passwords. Engine-scoped: only fires for mysql/postgres engines; aurora and unknown engines are out of scope.",
-      "resource": "aws_db_instance.dev",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4039/main.tf",
-      "line": 1,
-      "evidence": "iam_database_authentication_enabled = absent (provider default: disabled)",
-      "expected": "iam_database_authentication_enabled = true",
-      "remediation": "Enable IAM database authentication on the RDS instance so access is granted\nvia IAM instead of static passwords:\nresource \"aws_db_instance\" \"this\" {\n  # ...\n  iam_database_authentication_enabled = true\n}",
-      "references": [
-        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html"
       ]
     },
     {
@@ -235,21 +220,6 @@
       "severity": "medium",
       "title": "Storage account below TLS 1.2",
       "description": "Storage accounts should enforce TLS 1.2 as the minimum version to protect data in transit against protocol downgrade attacks.",
-      "resource": "azurerm_storage_account.legacy",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4039/main.tf",
-      "line": 22,
-      "evidence": "min_tls_version = TLS1_0",
-      "expected": "min_tls_version = \"TLS1_2\"",
-      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS1_2\"` / `minimum_tls_version = \"1.2\"`, replace HTTP listeners with HTTPS, and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions.",
-      "references": [
-        "https://learn.microsoft.com/en-us/azure/security/fundamentals/tls-best-practices"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-027",
-      "severity": "medium",
-      "title": "Storage account allows weak TLS version",
-      "description": "azurerm_storage_account with min_tls_version below TLS1_2 permits deprecated TLS. Require TLS1_2 or higher.",
       "resource": "azurerm_storage_account.legacy",
       "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4039/main.tf",
       "line": 22,
@@ -450,21 +420,6 @@
       "line": 15,
       "evidence": "identity = absent (no managed identity)",
       "expected": "identity { type = \"SystemAssigned\" }",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-191",
-      "severity": "medium",
-      "title": "Storage account with shared key access enabled",
-      "description": "azurerm_storage_account with shared_access_key_enabled (the provider default) permits Shared Key authorization, which bypasses Entra ID and cannot be scoped. Disable it and use Entra ID with default_to_oauth_authentication.",
-      "resource": "azurerm_storage_account.legacy",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4039/main.tf",
-      "line": 15,
-      "evidence": "shared_access_key_enabled = [REDACTED]",
-      "expected": "shared_access_key_enabled = false",
       "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://learn.microsoft.com/en-us/security/benchmark/azure/"

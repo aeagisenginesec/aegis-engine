@@ -6,10 +6,10 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 35,
+    "findings": 30,
     "critical": 0,
-    "high": 8,
-    "medium": 18,
+    "high": 7,
+    "medium": 14,
     "low": 9
   },
   "findings": [
@@ -161,36 +161,6 @@
       "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-075",
-      "severity": "medium",
-      "title": "AKS API server without authorized IP ranges",
-      "description": "azurerm_kubernetes_cluster with public API access but no api_server_access_profile authorized_ip_ranges accepts connections from anywhere. Restrict authorized ranges.",
-      "resource": "azurerm_kubernetes_cluster.aks-2669c8",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4093/main.bicep",
-      "line": 1,
-      "evidence": "api_server_access_profile = absent",
-      "expected": "api_server_access_profile { authorized_ip_ranges = [...] }",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-119",
-      "severity": "high",
-      "title": "Storage account allows public nested item access",
-      "description": "azurerm_storage_account with allow_blob_public_access = true (the provider default) or allow_nested_items_to_be_public = true exposes blob data to anonymous requests. Disable public access unless public content delivery is intended.",
-      "resource": "azurerm_storage_account.data2669c8",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4093/main.bicep",
-      "line": 1,
-      "evidence": "allow_blob_public_access = true",
-      "expected": "allow_blob_public_access = false",
-      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
-      "references": [
-        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
       ]
     },
     {
@@ -419,21 +389,6 @@
       ]
     },
     {
-      "rule_id": "AEGIS-AZURE-191",
-      "severity": "medium",
-      "title": "Storage account with shared key access enabled",
-      "description": "azurerm_storage_account with shared_access_key_enabled (the provider default) permits Shared Key authorization, which bypasses Entra ID and cannot be scoped. Disable it and use Entra ID with default_to_oauth_authentication.",
-      "resource": "azurerm_storage_account.data2669c8",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4093/main.bicep",
-      "line": 1,
-      "evidence": "shared_access_key_enabled = [REDACTED]",
-      "expected": "shared_access_key_enabled = false",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
       "rule_id": "AEGIS-AZURE-192",
       "severity": "medium",
       "title": "Storage account not defaulting to OAuth authentication",
@@ -494,21 +449,6 @@
       ]
     },
     {
-      "rule_id": "AEGIS-AZURE-230",
-      "severity": "medium",
-      "title": "AKS cluster without Entra ID RBAC",
-      "description": "azurerm_kubernetes_cluster without an azure_active_directory_role_based_access_control block manages cluster access with local accounts. Integrate Entra ID for centralized identity, MFA and conditional access.",
-      "resource": "azurerm_kubernetes_cluster.aks-2669c8",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4093/main.bicep",
-      "line": 1,
-      "evidence": "azure_active_directory_role_based_access_control = absent (local accounts only)",
-      "expected": "azure_active_directory_role_based_access_control { ... }",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
       "rule_id": "AEGIS-AZURE-231",
       "severity": "medium",
       "title": "AKS cluster with run command enabled",
@@ -518,21 +458,6 @@
       "line": 1,
       "evidence": "run_command_enabled = absent (provider default: enabled)",
       "expected": "run_command_enabled = false",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-245",
-      "severity": "medium",
-      "title": "AKS cluster with local accounts enabled",
-      "description": "azurerm_kubernetes_cluster without local_account_disabled = true keeps the static cluster-admin kubeconfig credential active, bypassing Entra ID controls. Disable local accounts once Entra ID RBAC is configured.",
-      "resource": "azurerm_kubernetes_cluster.aks-2669c8",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4093/main.bicep",
-      "line": 1,
-      "evidence": "local_account_disabled = absent (provider default: false)",
-      "expected": "local_account_disabled = true",
       "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://learn.microsoft.com/en-us/security/benchmark/azure/"

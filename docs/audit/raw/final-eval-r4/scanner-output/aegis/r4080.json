@@ -6,10 +6,10 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 17,
+    "findings": 15,
     "critical": 0,
     "high": 1,
-    "medium": 12,
+    "medium": 10,
     "low": 4
   },
   "findings": [
@@ -18,21 +18,6 @@
       "severity": "medium",
       "title": "Storage account below TLS 1.2",
       "description": "Storage accounts should enforce TLS 1.2 as the minimum version to protect data in transit against protocol downgrade attacks.",
-      "resource": "azurerm_storage_account.legacye7c7ad",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4080/azuredeploy.json",
-      "line": 1,
-      "evidence": "min_tls_version = TLS1_0",
-      "expected": "min_tls_version = \"TLS1_2\"",
-      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS1_2\"` / `minimum_tls_version = \"1.2\"`, replace HTTP listeners with HTTPS, and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions.",
-      "references": [
-        "https://learn.microsoft.com/en-us/azure/security/fundamentals/tls-best-practices"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-027",
-      "severity": "medium",
-      "title": "Storage account allows weak TLS version",
-      "description": "azurerm_storage_account with min_tls_version below TLS1_2 permits deprecated TLS. Require TLS1_2 or higher.",
       "resource": "azurerm_storage_account.legacye7c7ad",
       "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4080/azuredeploy.json",
       "line": 1,
@@ -233,21 +218,6 @@
       "line": 1,
       "evidence": "identity = absent (no managed identity)",
       "expected": "identity { type = \"SystemAssigned\" }",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-191",
-      "severity": "medium",
-      "title": "Storage account with shared key access enabled",
-      "description": "azurerm_storage_account with shared_access_key_enabled (the provider default) permits Shared Key authorization, which bypasses Entra ID and cannot be scoped. Disable it and use Entra ID with default_to_oauth_authentication.",
-      "resource": "azurerm_storage_account.legacye7c7ad",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4080/azuredeploy.json",
-      "line": 1,
-      "evidence": "shared_access_key_enabled = [REDACTED]",
-      "expected": "shared_access_key_enabled = false",
       "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://learn.microsoft.com/en-us/security/benchmark/azure/"

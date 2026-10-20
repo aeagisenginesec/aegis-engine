@@ -6,10 +6,10 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 36,
+    "findings": 32,
     "critical": 0,
-    "high": 8,
-    "medium": 20,
+    "high": 6,
+    "medium": 18,
     "low": 8
   },
   "findings": [
@@ -224,36 +224,6 @@
       ]
     },
     {
-      "rule_id": "AEGIS-AZURE-119",
-      "severity": "high",
-      "title": "Storage account allows public nested item access",
-      "description": "azurerm_storage_account with allow_blob_public_access = true (the provider default) or allow_nested_items_to_be_public = true exposes blob data to anonymous requests. Disable public access unless public content delivery is intended.",
-      "resource": "azurerm_storage_account.store89103ea",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4097/main.bicep",
-      "line": 1,
-      "evidence": "allow_blob_public_access = true",
-      "expected": "allow_blob_public_access = false",
-      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
-      "references": [
-        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-119",
-      "severity": "high",
-      "title": "Storage account allows public nested item access",
-      "description": "azurerm_storage_account with allow_blob_public_access = true (the provider default) or allow_nested_items_to_be_public = true exposes blob data to anonymous requests. Disable public access unless public content delivery is intended.",
-      "resource": "azurerm_storage_account.store89103eb",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4097/main.bicep",
-      "line": 1,
-      "evidence": "allow_blob_public_access = true",
-      "expected": "allow_blob_public_access = false",
-      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
-      "references": [
-        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
-      ]
-    },
-    {
       "rule_id": "AEGIS-AZURE-122",
       "severity": "high",
       "title": "Storage blobs allow public access",
@@ -458,36 +428,6 @@
       "line": 1,
       "evidence": "identity = absent (no managed identity)",
       "expected": "identity { type = \"SystemAssigned\" }",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-191",
-      "severity": "medium",
-      "title": "Storage account with shared key access enabled",
-      "description": "azurerm_storage_account with shared_access_key_enabled (the provider default) permits Shared Key authorization, which bypasses Entra ID and cannot be scoped. Disable it and use Entra ID with default_to_oauth_authentication.",
-      "resource": "azurerm_storage_account.store89103ea",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4097/main.bicep",
-      "line": 1,
-      "evidence": "shared_access_key_enabled = [REDACTED]",
-      "expected": "shared_access_key_enabled = false",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-191",
-      "severity": "medium",
-      "title": "Storage account with shared key access enabled",
-      "description": "azurerm_storage_account with shared_access_key_enabled (the provider default) permits Shared Key authorization, which bypasses Entra ID and cannot be scoped. Disable it and use Entra ID with default_to_oauth_authentication.",
-      "resource": "azurerm_storage_account.store89103eb",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4097/main.bicep",
-      "line": 1,
-      "evidence": "shared_access_key_enabled = [REDACTED]",
-      "expected": "shared_access_key_enabled = false",
       "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://learn.microsoft.com/en-us/security/benchmark/azure/"

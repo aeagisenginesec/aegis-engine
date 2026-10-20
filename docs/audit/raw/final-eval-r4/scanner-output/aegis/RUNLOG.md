@@ -2,4 +2,4 @@
 
 accuracy: 210 projects, 0 failures
 timing: 30 projects x 5 runs
-wall: 4.5s
+wall: 4.3s

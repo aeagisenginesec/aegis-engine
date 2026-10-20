@@ -6,9 +6,9 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 16,
+    "findings": 15,
     "critical": 0,
-    "high": 3,
+    "high": 2,
     "medium": 5,
     "low": 8
   },
@@ -76,7 +76,7 @@
       "rule_id": "AEGIS-AWS-311",
       "severity": "medium",
       "title": "RDS without IAM database authentication",
-      "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene.",
+      "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene. Engine-scoped: only mysql, postgres and mariadb instances support IAM database authentication; aurora engines are covered by the cluster rules.",
       "resource": "aws_db_instance.AppDB",
       "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4063/template.yaml",
       "line": 15,
@@ -121,21 +121,6 @@
       "remediation": "Enable Multi-AZ for high availability and automatic failover:\nresource \"aws_db_instance\" \"this\" {\n  multi_az = true\n}",
       "references": [
         "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AWS-540",
-      "severity": "high",
-      "title": "RDS MySQL/Postgres instance without IAM database authentication",
-      "description": "MySQL and Postgres RDS instances support IAM database authentication, which replaces long-lived passwords with short-lived IAM credentials. With iam_database_authentication_enabled absent or false, access relies on static passwords. Engine-scoped: only fires for mysql/postgres engines; aurora and unknown engines are out of scope.",
-      "resource": "aws_db_instance.AppDB",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4063/template.yaml",
-      "line": 15,
-      "evidence": "iam_database_authentication_enabled = absent (provider default: disabled)",
-      "expected": "iam_database_authentication_enabled = true",
-      "remediation": "Enable IAM database authentication on the RDS instance so access is granted\nvia IAM instead of static passwords:\nresource \"aws_db_instance\" \"this\" {\n  # ...\n  iam_database_authentication_enabled = true\n}",
-      "references": [
-        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html"
       ]
     },
     {

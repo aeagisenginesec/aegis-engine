@@ -6,10 +6,10 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 16,
+    "findings": 15,
     "critical": 3,
     "high": 5,
-    "medium": 6,
+    "medium": 5,
     "low": 2
   },
   "findings": [
@@ -350,21 +350,6 @@
       "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
       "references": [
         "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AWS-840",
-      "severity": "medium",
-      "title": "Load balancer target group using plaintext HTTP",
-      "description": "A load balancer target group with protocol = \"HTTP\" forwards traffic to targets unencrypted inside the VPC, exposing request data and credentials to network sniffing. Use HTTPS with valid target certificates.",
-      "resource": "aws_lb_target_group.web",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
-      "line": 33,
-      "evidence": "protocol = \"HTTP\"",
-      "expected": "protocol = \"HTTPS\"",
-      "remediation": "Enforce TLS 1.2+. Replace HTTP listeners with HTTPS, set a modern TLS policy (e.g. `ELBSecurityPolicy-TLS13-1-2-2021-06`), and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions everywhere.",
-      "references": [
-        "https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html"
       ]
     }
   ],
