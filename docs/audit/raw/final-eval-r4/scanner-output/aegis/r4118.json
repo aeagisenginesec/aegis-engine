@@ -6,10 +6,10 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 27,
+    "findings": 26,
     "critical": 0,
     "high": 5,
-    "medium": 17,
+    "medium": 16,
     "low": 5
   },
   "findings": [
@@ -284,21 +284,6 @@
       ]
     },
     {
-      "rule_id": "AEGIS-AZURE-145",
-      "severity": "medium",
-      "title": "Storage account allows cross-tenant replication",
-      "description": "azurerm_storage_account without allow_cross_tenant_replication = false permits object replication to storage accounts in other Microsoft Entra tenants, enabling data exfiltration paths. Disable cross-tenant replication.",
-      "resource": "azurerm_storage_account.dataAccount",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
-      "line": 6,
-      "evidence": "allow_cross_tenant_replication = absent (default true)",
-      "expected": "allow_cross_tenant_replication = false",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
       "rule_id": "AEGIS-AZURE-147",
       "severity": "low",
       "title": "Storage account without blob change feed",
@@ -407,7 +392,7 @@
       "rule_id": "AEGIS-AZURE-195",
       "severity": "medium",
       "title": "Storage account allows nested public items",
-      "description": "azurerm_storage_account with allow_nested_items_to_be_public (the provider default) lets containers and blobs be marked public even when account-level public access is off. Disable it to enforce private-by-default.",
+      "description": "azurerm_storage_account with allow_nested_items_to_be_public lets containers and blobs be marked public while account-level blob public access is enabled. Disable it to enforce private-by-default.",
       "resource": "azurerm_storage_account.dataAccount",
       "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
       "line": 6,

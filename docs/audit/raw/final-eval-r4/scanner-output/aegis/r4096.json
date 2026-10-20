@@ -6,13 +6,28 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 16,
+    "findings": 17,
     "critical": 0,
-    "high": 3,
+    "high": 4,
     "medium": 8,
     "low": 5
   },
   "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-014",
+      "severity": "high",
+      "title": "AKS cluster without RBAC",
+      "description": "azurerm_kubernetes_cluster with role_based_access_control_enabled = false disables Kubernetes RBAC, giving every credential full cluster access.",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+      "line": 1,
+      "evidence": "role_based_access_control_enabled = false",
+      "expected": "role_based_access_control_enabled = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
     {
       "rule_id": "AEGIS-AZURE-015",
       "severity": "high",

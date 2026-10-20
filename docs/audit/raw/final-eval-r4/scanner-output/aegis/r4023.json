@@ -6,9 +6,9 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 3,
+    "findings": 4,
     "critical": 0,
-    "high": 1,
+    "high": 2,
     "medium": 0,
     "low": 2
   },
@@ -67,6 +67,21 @@
       "line": 1,
       "evidence": "ingress[0].description = absent",
       "expected": "description on each inline ingress rule",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-858",
+      "severity": "high",
+      "title": "Security group exposes database port 5432 to the internet",
+      "description": "Ingress allowing 0.0.0.0/0 or ::/0 to a database port (PostgreSQL 5432, MySQL/MariaDB 3306, SQL Server 1433, Redis 6379, MongoDB 27017, Oracle 1521, Elasticsearch 9200, CouchDB 5984) exposes the database to internet-wide scanning and credential attacks. Restrict source CIDRs to application tiers or bastions, or use private connectivity. (AEGIS-AWS-004 reports the world-open ingress itself; this rule fires additionally when the open range covers a database port.)",
+      "resource": "aws_security_group.db",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4023/main.tf",
+      "line": 7,
+      "evidence": "ingress.cidr_blocks = 0.0.0.0/0 to port 5432",
+      "expected": "database ports reachable only from restricted source CIDRs",
       "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"

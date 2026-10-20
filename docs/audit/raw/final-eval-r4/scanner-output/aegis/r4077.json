@@ -6,10 +6,10 @@
     "files_discovered": 1,
     "files_parsed": 1,
     "files_skipped": 0,
-    "findings": 23,
+    "findings": 21,
     "critical": 0,
     "high": 6,
-    "medium": 13,
+    "medium": 11,
     "low": 4
   },
   "findings": [
@@ -209,21 +209,6 @@
       ]
     },
     {
-      "rule_id": "AEGIS-AZURE-145",
-      "severity": "medium",
-      "title": "Storage account allows cross-tenant replication",
-      "description": "azurerm_storage_account without allow_cross_tenant_replication = false permits object replication to storage accounts in other Microsoft Entra tenants, enabling data exfiltration paths. Disable cross-tenant replication.",
-      "resource": "azurerm_storage_account.datadfcb39",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4077/azuredeploy.json",
-      "line": 1,
-      "evidence": "allow_cross_tenant_replication = absent (default true)",
-      "expected": "allow_cross_tenant_replication = false",
-      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
-      "references": [
-        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
       "rule_id": "AEGIS-AZURE-147",
       "severity": "low",
       "title": "Storage account without blob change feed",
@@ -341,21 +326,6 @@
       "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://learn.microsoft.com/en-us/security/benchmark/azure/"
-      ]
-    },
-    {
-      "rule_id": "AEGIS-AZURE-195",
-      "severity": "medium",
-      "title": "Storage account allows nested public items",
-      "description": "azurerm_storage_account with allow_nested_items_to_be_public (the provider default) lets containers and blobs be marked public even when account-level public access is off. Disable it to enforce private-by-default.",
-      "resource": "azurerm_storage_account.datadfcb39",
-      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4077/azuredeploy.json",
-      "line": 1,
-      "evidence": "allow_nested_items_to_be_public = absent (provider default: enabled)",
-      "expected": "allow_nested_items_to_be_public = false",
-      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
-      "references": [
-        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
       ]
     }
   ],

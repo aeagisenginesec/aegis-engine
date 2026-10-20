@@ -17,27 +17,27 @@
       "rule_id": "AEGIS-COMPOSE-003",
       "severity": "medium",
       "title": "Service shares host namespaces",
-      "description": "network_mode: host (or pid: host) drops network/process isolation: the service sees host interfaces and processes, bypassing network policies. Use explicit port publishing and keep the default namespaces.",
+      "description": "pid: host (or ipc: host) drops process/IPC isolation: the service sees and can signal host processes and shares IPC with the host. Keep the default PID and IPC namespaces. (Host networking via network_mode: host is AEGIS-COMPOSE-009.)",
       "resource": "compose_service.monitor",
       "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4154/docker-compose.yml",
       "line": 4,
-      "evidence": "network_mode = host",
-      "expected": "published ports on the default bridge network",
+      "evidence": "pid = host",
+      "expected": "default PID namespace",
       "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://docs.docker.com/engine/security/"
       ]
     },
     {
-      "rule_id": "AEGIS-COMPOSE-003",
+      "rule_id": "AEGIS-COMPOSE-009",
       "severity": "medium",
-      "title": "Service shares host namespaces",
-      "description": "network_mode: host (or pid: host) drops network/process isolation: the service sees host interfaces and processes, bypassing network policies. Use explicit port publishing and keep the default namespaces.",
+      "title": "Service uses host network namespace (network_mode: host)",
+      "description": "network_mode: host removes network isolation entirely: the service shares the host's network stack, sees all host interfaces and traffic, and binds host ports directly — port publishing and network policies do not apply. Publish explicit ports on the default bridge network instead. (Split out of AEGIS-COMPOSE-003, which now covers host PID/IPC namespaces only: host networking is a distinct exposure.)",
       "resource": "compose_service.monitor",
       "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4154/docker-compose.yml",
       "line": 4,
-      "evidence": "pid = host",
-      "expected": "default PID namespace",
+      "evidence": "network_mode = host",
+      "expected": "published ports on the default bridge network",
       "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
       "references": [
         "https://docs.docker.com/engine/security/"
