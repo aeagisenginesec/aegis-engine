@@ -325,22 +325,6 @@ func TestAcmNoTransparencyLogging_PassesWhenEnabled(t *testing.T) {
 // AEGIS-AWS-840
 // ---------------------------------------------------------------------------
 
-func TestLBTargetGroupHTTP_FiresOnHTTP(t *testing.T) {
-	r := res("aws_lb_target_group", "x",
-		map[string]ir.Value{"protocol": ks("HTTP", 2)})
-	if f := runRule(lbTargetGroupHTTP{}, r); len(f) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(f))
-	}
-}
-
-func TestLBTargetGroupHTTP_PassesOnHTTPS(t *testing.T) {
-	r := res("aws_lb_target_group", "x",
-		map[string]ir.Value{"protocol": ks("HTTPS", 2)})
-	if f := runRule(lbTargetGroupHTTP{}, r); len(f) != 0 {
-		t.Fatalf("expected no findings, got %d", len(f))
-	}
-}
-
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-841
 // ---------------------------------------------------------------------------
@@ -533,8 +517,8 @@ func TestTransferServerFTP_UnknownEntryNoFinding(t *testing.T) {
 
 func TestEdgeDeepRules_AllIDs(t *testing.T) {
 	rules := EdgeDeepRules()
-	if len(rules) != 23 {
-		t.Fatalf("expected 23 rules, got %d", len(rules))
+	if len(rules) != 22 {
+		t.Fatalf("expected 22 rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	prev := ""

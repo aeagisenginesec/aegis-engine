@@ -40,7 +40,6 @@ func EdgeDeepRules() []ir.Rule {
 		organizationsFeatureSet{},    // AEGIS-AWS-837
 		orgUnitNoName{},              // AEGIS-AWS-838
 		acmNoTransparencyLogging{},   // AEGIS-AWS-839
-		lbTargetGroupHTTP{},          // AEGIS-AWS-840
 		lbTargetGroupHCHTTP{},        // AEGIS-AWS-841
 		albListenerOldSSLPolicy{},    // AEGIS-AWS-842
 		apigwAccountNoCWRole{},       // AEGIS-AWS-843
@@ -549,36 +548,6 @@ func (s acmNoTransparencyLogging) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-840: LB target group using plaintext HTTP
-// ---------------------------------------------------------------------------
-
-type lbTargetGroupHTTP struct{}
-
-func (lbTargetGroupHTTP) ID() string { return "AEGIS-AWS-840" }
-func (lbTargetGroupHTTP) Title() string {
-	return "Load balancer target group using plaintext HTTP"
-}
-func (lbTargetGroupHTTP) Description() string {
-	return "A load balancer target group with protocol = \"HTTP\" forwards " +
-		"traffic to targets unencrypted inside the VPC, exposing request " +
-		"data and credentials to network sniffing. Use HTTPS with valid " +
-		"target certificates."
-}
-func (lbTargetGroupHTTP) Severity() ir.Severity { return ir.SeverityMedium }
-func (lbTargetGroupHTTP) AppliesTo(resType string) bool {
-	return resType == "aws_lb_target_group"
-}
-
-func (s lbTargetGroupHTTP) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getString(r, "protocol")
-	if !present || !known {
-		return nil // default follows target_type: cannot assume HTTP
-	}
-	if val != "HTTP" {
-		return nil
-	}
-	return []ir.Finding{sdFinding(s, r, "protocol", span,
-		"\"HTTP\"", "protocol = \"HTTPS\"")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-841: LB target group with HTTP health checks

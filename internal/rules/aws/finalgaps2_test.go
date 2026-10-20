@@ -39,31 +39,6 @@ func Test546_SilentWhenTrue(t *testing.T) {
 // AEGIS-AWS-547: Lambda function without X-Ray tracing
 // ---------------------------------------------------------------------------
 
-func Test547_FiresWhenAbsent(t *testing.T) {
-	r := res("aws_lambda_function", "fn", map[string]ir.Value{})
-	if fs := runRule(lambdaNoTracing{}, r); len(fs) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(fs))
-	}
-}
-
-func Test547_FiresWhenPassThrough(t *testing.T) {
-	r := res("aws_lambda_function", "fn", map[string]ir.Value{
-		"tracing_config": blks(3, blk("mode", ks("PassThrough", 4))),
-	})
-	if fs := runRule(lambdaNoTracing{}, r); len(fs) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(fs))
-	}
-}
-
-func Test547_SilentWhenActive(t *testing.T) {
-	r := res("aws_lambda_function", "fn", map[string]ir.Value{
-		"tracing_config": blks(3, blk("mode", ks("Active", 4))),
-	})
-	if fs := runRule(lambdaNoTracing{}, r); len(fs) != 0 {
-		t.Fatalf("expected 0 findings, got %d", len(fs))
-	}
-}
-
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-548: Lambda function without reserved concurrency
 // ---------------------------------------------------------------------------
@@ -215,8 +190,9 @@ func Test551_SilentWhenUnknown(t *testing.T) {
 func TestFinalGap2_InIDOrder(t *testing.T) {
 	rules := FinalGap2Rules()
 	// 549, 550 removed as post-audit duplicates of 321, 320.
+	// 547 removed in Sprint 2 as an exact duplicate of 308.
 	want := []string{
-		"AEGIS-AWS-546", "AEGIS-AWS-547", "AEGIS-AWS-548",
+		"AEGIS-AWS-546", "AEGIS-AWS-548",
 		"AEGIS-AWS-551",
 	}
 	if len(rules) != len(want) {

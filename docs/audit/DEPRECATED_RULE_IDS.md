@@ -144,3 +144,5 @@ after each batch must keep TP = 136 / FN = 0.
 | AEGIS-AZURE-230 | AEGIS-AZURE-128 | Strict subset: 230 fires only when the AAD RBAC block is absent; 128 also fires when the block is present with managed absent/false |
 | AEGIS-AZURE-245 | AEGIS-AZURE-127 | Exact duplicate: same attribute (local_account_disabled), same truth table (absent/false fires, true quiet) |
 | AEGIS-AWS-540 | AEGIS-AWS-311 | Exact duplicate on mysql/postgres instances (identical firing sets in the R4 sweep) with inconsistent severity (High vs Medium); 540's engine scoping was ported into 311, which also no longer fires on engines without IAM database authentication (oracle/sqlserver — a latent factual FP) |
+| AEGIS-AWS-547 | AEGIS-AWS-308 | Exact duplicate: same tracing_config truth table on aws_lambda_function |
+| AEGIS-AWS-840 | AEGIS-AWS-329 | Strict subset: 329 matches protocol case-insensitively (EqualFold) and also covers block-absent HTTPS health-check configs; 840 was case-sensitive |
