@@ -717,3 +717,64 @@ func TestHandlesContent(t *testing.T) {
 	}
 	var _ ir.ContentSniffer = ad
 }
+
+// R5 regression (AEGIS-AZURE-313/169): the publicNetworkAccess enum ->
+// boolean conversion used to run only for azurerm_mssql_server, so for
+// every other type the property stayed a string that bool rules read
+// as "unknown". A Redis cache with publicNetworkAccess "Enabled" must
+// surface public_network_access_enabled=true (bool), and "Disabled"
+// must surface false.
+const armRedisPublic = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Cache/Redis",
+      "apiVersion": "2023-08-01",
+      "name": "pubcache",
+      "location": "northeurope",
+      "properties": {
+        "enableNonSslPort": false,
+        "minimumTlsVersion": "1.2",
+        "publicNetworkAccess": "Enabled"
+      }
+    }
+  ]
+}`
+
+const armRedisPrivate = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Cache/Redis",
+      "apiVersion": "2023-08-01",
+      "name": "privcache",
+      "location": "northeurope",
+      "properties": {
+        "enableNonSslPort": false,
+        "minimumTlsVersion": "1.2",
+        "publicNetworkAccess": "Disabled"
+      }
+    }
+  ]
+}`
+
+func TestRedisPublicNetworkAccessEnumConverted(t *testing.T) {
+	res := parseARM(t, armRedisPublic)
+	r := findResource(res, "azurerm_redis_cache")
+	if r == nil {
+		t.Fatalf("no azurerm_redis_cache")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != true {
+		t.Errorf("public_network_access_enabled = %v, want true (bool)", got)
+	}
+	res = parseARM(t, armRedisPrivate)
+	r = findResource(res, "azurerm_redis_cache")
+	if r == nil {
+		t.Fatalf("no azurerm_redis_cache")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != false {
+		t.Errorf("public_network_access_enabled = %v, want false (bool)", got)
+	}
+}

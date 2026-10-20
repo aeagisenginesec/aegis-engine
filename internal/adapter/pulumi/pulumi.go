@@ -424,6 +424,26 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 			attrs[toSnake(k)] = p.value(nodeField(props, k), span)
 		}
 	}
+	// publicNetworkAccess is an enum in Pulumi azure-native
+	// ("Enabled"/"Disabled"); the rules expect the boolean
+	// public_network_access_enabled. Convert for every Azure type
+	// (this used to exist only inside the storage-account and
+	// mssql-server blocks, leaving e.g. Redis caches with the raw
+	// string under public_network_access, which bool rules cannot
+	// read).
+	if strings.HasPrefix(tfType, "azurerm_") {
+		if v, ok := attrs["public_network_access"]; ok {
+			if s, ok := v.AsString(); ok {
+				switch s {
+				case "Enabled":
+					attrs["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
+				case "Disabled":
+					attrs["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
+				}
+			}
+			delete(attrs, "public_network_access")
+		}
+	}
 	// options.protect / options.ignoreChanges are metadata, not security
 	// signals; they are intentionally not mapped to attributes.
 	// Promote nested encryption.requireInfrastructureEncryption for Azure
@@ -447,19 +467,6 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 		renameAttr(attrs, "supports_https_traffic_only", "https_traffic_only_enabled")
 		renameAttr(attrs, "allow_shared_key_access", "shared_access_key_enabled")
 		renameAttr(attrs, "network_rule_set", "network_rules")
-		// publicNetworkAccess is an enum in Pulumi ("Enabled"/"Disabled");
-		// the rules expect the boolean public_network_access_enabled.
-		if v, ok := attrs["public_network_access"]; ok {
-			if s, ok := v.AsString(); ok {
-				switch s {
-				case "Enabled":
-					attrs["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
-				case "Disabled":
-					attrs["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
-				}
-			}
-			delete(attrs, "public_network_access")
-		}
 	}
 	// Rename securityRules -> security_rule for NSGs (TF attribute name).
 	if tfType == "azurerm_network_security_group" {
@@ -492,21 +499,8 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 			delete(attrs, "allows")
 		}
 	}
-	// Convert publicNetworkAccess enum to boolean for MSSQL servers.
-	// Pulumi uses public_network_access; TF rules expect public_network_access_enabled.
-	if tfType == "azurerm_mssql_server" {
-		if v, ok := attrs["public_network_access"]; ok {
-			if s, ok := v.AsString(); ok {
-				switch s {
-				case "Enabled":
-					attrs["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
-				case "Disabled":
-					attrs["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
-				}
-			}
-			delete(attrs, "public_network_access")
-		}
-	}
+	// (The mssql publicNetworkAccess enum conversion that used to live
+	// here is now the general azurerm_* conversion above.)
 	// Terraform policy attributes are JSON strings; a Pulumi YAML mapping
 	// for `policy` (e.g. an S3 BucketPolicy document) must be stringified
 	// so the policy rules (which parse a JSON string) can read it. If any

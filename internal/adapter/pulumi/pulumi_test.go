@@ -845,3 +845,38 @@ template:
 		t.Errorf("policy with Unknown content was stringified; want mapping left intact")
 	}
 }
+
+// R5 regression (AEGIS-AZURE-313): the publicNetworkAccess enum ->
+// boolean conversion used to run only for storage accounts and MSSQL
+// servers, so a Pulumi Redis cache kept the raw string under
+// public_network_access and bool rules saw no
+// public_network_access_enabled at all.
+func TestAzureRedisPublicNetworkAccessEnum(t *testing.T) {
+	rs, _ := parse(t, "Pulumi.yaml", `
+name: r5-redis
+runtime: yaml
+template:
+  resources:
+    sessionsCache:
+      type: azure-native:cache:Redis
+      properties:
+        redisName: sessions-x
+        resourceGroupName: rg-cache
+        location: northeurope
+        enableNonSslPort: false
+        minimumTlsVersion: '1.2'
+        publicNetworkAccess: Enabled
+`)
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(rs))
+	}
+	r := rs[0]
+	if r.Type != "azurerm_redis_cache" {
+		t.Fatalf("type = %q, want azurerm_redis_cache", r.Type)
+	}
+	if v, ok := r.Attributes["public_network_access_enabled"]; !ok {
+		t.Errorf("public_network_access_enabled missing after enum conversion")
+	} else if b, ok := v.AsBool(); !ok || !b {
+		t.Errorf("public_network_access_enabled = %v; want bool true", v.Raw)
+	}
+}

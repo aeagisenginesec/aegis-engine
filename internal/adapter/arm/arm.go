@@ -1002,18 +1002,28 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 			}
 		}
 	}
-	// Convert ARM publicNetworkAccess enum to boolean for mssql servers.
-	// ARM uses "Enabled"/"Disabled", TF rules expect a boolean.
-	if res.Type == "azurerm_mssql_server" {
-		if v, ok := res.Attributes["public_network_access_enabled"]; ok {
-			if s, ok := v.AsString(); ok {
-				switch s {
-				case "Enabled":
-					res.Attributes["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
-				case "Disabled":
-					res.Attributes["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
-				}
-			}
+	// Convert the ARM publicNetworkAccess enum to the boolean
+	// public_network_access_enabled the TF rules expect, for every
+	// resource type (this used to be mssql-only, which left the string
+	// enum unreadable — getBool reports it unknown — for all other
+	// types). ARM uses "Enabled"/"Disabled". Depending on the
+	// per-type renames, the property lands either under
+	// public_network_access_enabled (renamed types) or under the
+	// generic snake_case name public_network_access.
+	for _, key := range []string{"public_network_access_enabled", "public_network_access"} {
+		v, ok := res.Attributes[key]
+		if !ok {
+			continue
+		}
+		s, ok := v.AsString()
+		if !ok {
+			continue
+		}
+		switch s {
+		case "Enabled":
+			res.Attributes["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
+		case "Disabled":
+			res.Attributes["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
 		}
 	}
 	// Flatten ARM securityRules: [{name, properties: {access, ...}}]

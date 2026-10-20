@@ -520,8 +520,8 @@ func (redisPublicNet) Title() string {
 }
 func (redisPublicNet) Description() string {
 	return "azurerm_redis_cache with public_network_access_enabled " +
-		"(the provider default) exposes the cache endpoint over the " +
-		"public internet. Disable it and use private endpoints."
+		"= true exposes the cache endpoint over the public internet. " +
+		"Disable it and use private endpoints."
 }
 func (redisPublicNet) Severity() ir.Severity { return ir.SeverityHigh }
 
@@ -529,6 +529,18 @@ func (redisPublicNet) AppliesTo(resType string) bool {
 	return resType == "azurerm_redis_cache"
 }
 
+// Check fires only on explicit enablement. The previous absence-based
+// firing (provider default: enabled) produced false positives in the
+// R5 blind eval on Redis caches with no public-exposure evidence
+// (Pulumi/ARM resources where the property was simply unset, e.g.
+// r5107/r5113/r5114), while every true firing carried the property
+// explicitly. The rule now requires the enablement it claims.
 func (s redisPublicNet) Check(r ir.Resource) []ir.Finding {
-	return publicNetOpen(s, r, "public_network_access_enabled", "azurerm_redis_cache")
+	open, span, present, known := getBool(r, "public_network_access_enabled")
+	if !present || !known || !open {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "public_network_access_enabled",
+		evidenceSpan(span, r.Span), "true",
+		"public_network_access_enabled = false on azurerm_redis_cache")}
 }

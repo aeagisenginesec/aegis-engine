@@ -13294,9 +13294,13 @@ func TestEffectivenessReplay_AZURE_311(t *testing.T) {
 }
 func TestEffectivenessReplay_AZURE_313(t *testing.T) {
 	rule := eaRuleFor(t, "AEGIS-AZURE-313")
-	// Positive: black-box probe witness (must fire).
+	// Positive: black-box probe witness (must fire). The witness now
+	// carries the property explicitly: since the R5 fix, AEGIS-AZURE-313
+	// fires only on explicit enablement, not on absence.
 	pos := []ir.Resource{
-		eaRes("azurerm_redis_cache", "probe", map[string]ir.Value{}),
+		eaRes("azurerm_redis_cache", "probe", map[string]ir.Value{
+			"public_network_access_enabled": eaB(true),
+		}),
 	}
 	f := eaRun(rule, pos...)
 	if len(f) == 0 {
