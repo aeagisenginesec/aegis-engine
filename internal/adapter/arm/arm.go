@@ -229,6 +229,9 @@ func BuildResources(path string, tmpl map[string]any) ([]ir.Resource, []ir.Diagn
 		out = append(out, res)
 	}
 	out = foldBlobServices(out, t)
+	out = foldQueueServices(out, t)
+	out = translateStorageBlocks(out)
+	out = translateVNetDNS(out)
 	return out, t.diags
 }
 
@@ -879,8 +882,32 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 			return ir.Value{Raw: string(tv[len(tv)-1]), Known: true, Span: span}
 		}
 		return unknown
+	case "resourceid":
+		// resourceId('Microsoft.Storage/storageAccounts', 'name', ...)
+		// with all-literal arguments statically names a resource in
+		// this template, even though the full Azure resource ID
+		// string cannot be constructed here: surface it as a
+		// reference so cross-resource rules (private-endpoint
+		// linkage, role assignments) can correlate the resources.
+		// Non-literal arguments stay Unknown.
+		if len(args) < 2 {
+			return unknown
+		}
+		strs := make([]string, len(args))
+		for i, a := range args {
+			s, ok := a.Raw.(string)
+			if !a.Known || !ok {
+				return unknown
+			}
+			strs[i] = s
+		}
+		tfType, _ := normalizeType(strs[0])
+		return ir.Value{
+			Ref:   tfType + "." + strs[len(strs)-1] + ".id",
+			Known: true, Span: span,
+		}
 	}
-	// Everything else (resourceId, reference, listKeys, subscription(),
+	// Everything else (reference, listKeys, subscription(),
 	// resourceGroup(), if(), equals(), guid(), uniqueString(), utcNow(),
 	// providers(), extensionResourceId(), ...) -> explicit Unknown.
 	// Known-but-unresolvable functions stay silent: their values
@@ -1134,18 +1161,38 @@ func unwrapSingleKeyList(v ir.Value, key string) (ir.Value, bool) {
 	return ir.Value{Raw: out, Known: true, Span: v.Span}, true
 }
 
+// findStorageAccount locates the (single) parent storage account in
+// the partially built output slice. Folds search the OUTPUT slice, not
+// the input: indices into the input go stale as soon as an earlier
+// child is dropped, which mis-folded (or panicked on) templates whose
+// service children sit between two accounts.
+func findStorageAccount(out []ir.Resource, name string) *ir.Resource {
+	for i := range out {
+		if out[i].Type == "azurerm_storage_account" && out[i].Name == name {
+			return &out[i]
+		}
+	}
+	return nil
+}
+
+// objectField extracts one field from an object-valued attribute.
+func objectField(v ir.Value, key string) (ir.Value, bool) {
+	m, ok := v.Raw.(map[string]ir.Value)
+	if !ok {
+		return ir.Value{}, false
+	}
+	f, ok := m[key]
+	return f, ok
+}
+
 // foldBlobServices merges Microsoft.Storage/storageAccounts/blobServices
 // child resources into their parent storage account as a blob_properties
 // block, so the blob-property rules apply. The child resource itself is
 // dropped (it carries no independent security surface).
 func foldBlobServices(resources []ir.Resource, t *template) []ir.Resource {
-	byAddr := map[string]int{}
-	for i, r := range resources {
-		byAddr[r.Type+"\x00"+r.Name] = i
-	}
 	var out []ir.Resource
 	for _, r := range resources {
-		if r.Type != "arm_Microsoft.Storage/storageAccounts/blobServices" &&
+		if r.Type != "arm_microsoft_storage_storageaccounts_blobservices" &&
 			r.Type != "azurerm_storage_account_blob_services" {
 			out = append(out, r)
 			continue
@@ -1155,12 +1202,11 @@ func foldBlobServices(resources []ir.Resource, t *template) []ir.Resource {
 		if idx := strings.Index(parentName, "/"); idx >= 0 {
 			parentName = parentName[:idx]
 		}
-		pi, ok := byAddr["azurerm_storage_account\x00"+parentName]
-		if !ok {
+		parent := findStorageAccount(out, parentName)
+		if parent == nil {
 			out = append(out, r) // orphan: keep as-is
 			continue
 		}
-		parent := &out[pi]
 		blk := map[string]ir.Value{}
 		if v, ok := r.Attributes["is_versioning_enabled"]; ok {
 			blk["versioning_enabled"] = v
@@ -1168,8 +1214,18 @@ func foldBlobServices(resources []ir.Resource, t *template) []ir.Resource {
 		if v, ok := r.Attributes["delete_retention_policy"]; ok {
 			blk["delete_retention_policy"] = v
 		}
+		if v, ok := r.Attributes["container_delete_retention_policy"]; ok {
+			blk["container_delete_retention_policy"] = v
+		}
 		if v, ok := r.Attributes["change_feed_enabled"]; ok {
 			blk["change_feed_enabled"] = v
+		}
+		// ARM spells it changeFeed { enabled = ... }: an object, not a
+		// flat change_feed_enabled boolean.
+		if v, ok := r.Attributes["change_feed"]; ok {
+			if en, eok := objectField(v, "enabled"); eok {
+				blk["change_feed_enabled"] = en
+			}
 		}
 		if len(blk) > 0 {
 			parent.Attributes["blob_properties"] = ir.Value{
@@ -1180,6 +1236,158 @@ func foldBlobServices(resources []ir.Resource, t *template) []ir.Resource {
 		// child dropped
 	}
 	return out
+}
+
+// foldQueueServices merges Microsoft.Storage/storageAccounts/queueServices
+// child resources into their parent storage account as a queue_properties
+// block (analytics logging + metrics), mirroring foldBlobServices. The
+// child resource itself is dropped.
+func foldQueueServices(resources []ir.Resource, t *template) []ir.Resource {
+	var out []ir.Resource
+	for _, r := range resources {
+		if r.Type != "arm_microsoft_storage_storageaccounts_queueservices" &&
+			r.Type != "azurerm_storage_account_queue_services" {
+			out = append(out, r)
+			continue
+		}
+		// Child name is "<account>/default": find the parent account.
+		parentName := r.Name
+		if idx := strings.Index(parentName, "/"); idx >= 0 {
+			parentName = parentName[:idx]
+		}
+		parent := findStorageAccount(out, parentName)
+		if parent == nil {
+			out = append(out, r) // orphan: keep as-is
+			continue
+		}
+		blk := map[string]ir.Value{}
+		if v, ok := r.Attributes["analytics_logging"]; ok {
+			log := map[string]ir.Value{}
+			for _, k := range []string{"delete", "read", "write", "version"} {
+				if fv, fok := objectField(v, k); fok {
+					log[k] = fv
+				}
+			}
+			if rp, rok := objectField(v, "retention_policy"); rok {
+				if d, dok := objectField(rp, "days"); dok {
+					log["retention_policy_days"] = d
+				}
+			}
+			if len(log) > 0 {
+				blk["logging"] = ir.Value{
+					Raw:   []ir.Value{{Raw: log, Known: true, Span: v.Span}},
+					Known: true, Span: v.Span,
+				}
+			}
+		}
+		if v, ok := r.Attributes["hour_metrics"]; ok {
+			blk["hour_metrics"] = ir.Value{
+				Raw:   []ir.Value{v},
+				Known: true, Span: v.Span,
+			}
+		}
+		if v, ok := r.Attributes["minute_metrics"]; ok {
+			blk["minute_metrics"] = ir.Value{
+				Raw:   []ir.Value{v},
+				Known: true, Span: v.Span,
+			}
+		}
+		if len(blk) > 0 {
+			parent.Attributes["queue_properties"] = ir.Value{
+				Raw:   []ir.Value{{Raw: blk, Known: true, Span: r.Span}},
+				Known: true, Span: r.Span,
+			}
+		}
+		// child dropped
+	}
+	return out
+}
+
+// translateStorageBlocks reshapes two storage-account property groups
+// into the Terraform block forms the rule pack reads:
+//
+//   - properties.sasPolicy (a single object attribute) becomes a
+//     sas_policy block, with sasExpirationPeriod renamed to the
+//     Terraform field expiration_period.
+//   - properties.encryption.keyVaultProperties becomes a
+//     customer_managed_key block carrying the versioned key URL.
+//
+// Object-valued attributes are invisible to block-based rules, so
+// without this the controls are present but unreadable — FPs
+// AZURE-125 and AZURE-033 on correctly configured accounts.
+func translateStorageBlocks(resources []ir.Resource) []ir.Resource {
+	for i := range resources {
+		r := &resources[i]
+		if r.Type != "azurerm_storage_account" {
+			continue
+		}
+		if v, ok := r.Attributes["sas_policy"]; ok {
+			if obj, isObj := v.Raw.(map[string]ir.Value); isObj {
+				blk := map[string]ir.Value{}
+				if ep, eok := obj["sas_expiration_period"]; eok {
+					blk["expiration_period"] = ep
+				}
+				if ea, eok := obj["expiration_action"]; eok {
+					blk["expiration_action"] = ea
+				}
+				if len(blk) > 0 {
+					r.Attributes["sas_policy"] = ir.Value{
+						Raw:   []ir.Value{{Raw: blk, Known: true, Span: v.Span}},
+						Known: true, Span: v.Span,
+					}
+				}
+			}
+		}
+		if v, ok := r.Attributes["encryption"]; ok {
+			if kv, kok := objectField(v, "key_vault_properties"); kok {
+				name, nok := objectField(kv, "key_name")
+				uri, uok := objectField(kv, "key_vault_uri")
+				if nok && uok {
+					ns, _ := name.AsString()
+					us, _ := uri.AsString()
+					if ns != "" && us != "" {
+						keyID := strings.TrimSuffix(us, "/") + "/keys/" + ns
+						if ver, vok := objectField(kv, "key_version"); vok {
+							if vs, _ := ver.AsString(); vs != "" {
+								keyID += "/" + vs
+							}
+						}
+						blk := map[string]ir.Value{
+							"key_vault_key_id": {Raw: keyID, Known: true, Span: kv.Span},
+						}
+						r.Attributes["customer_managed_key"] = ir.Value{
+							Raw:   []ir.Value{{Raw: blk, Known: true, Span: kv.Span}},
+							Known: true, Span: kv.Span,
+						}
+					}
+				}
+			}
+		}
+	}
+	return resources
+}
+
+// translateVNetDNS flattens properties.dhcpOptions.dnsServers onto
+// the azurerm_virtual_network resource as the flat dns_servers list
+// the rule pack reads (Terraform models it as a top-level attribute).
+// Without this, VNets with custom DNS configured still drew
+// AZURE-058 ("without custom DNS servers").
+func translateVNetDNS(resources []ir.Resource) []ir.Resource {
+	for i := range resources {
+		r := &resources[i]
+		if r.Type != "azurerm_virtual_network" {
+			continue
+		}
+		if _, ok := r.Attributes["dns_servers"]; ok {
+			continue
+		}
+		if v, ok := r.Attributes["dhcp_options"]; ok {
+			if ds, dok := objectField(v, "dns_servers"); dok {
+				r.Attributes["dns_servers"] = ds
+			}
+		}
+	}
+	return resources
 }
 
 // snake converts camelCase to snake_case. Runs of capitals are treated as

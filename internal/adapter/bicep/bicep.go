@@ -1018,6 +1018,40 @@ func (p *parser) parseIdentOrCall() (tval, bool) {
 		}
 		return expr(frag), true
 	}
+	// Resource .id access compiles to resourceId() in ARM. Emit that
+	// form (instead of the name-fragment + ".id", which degrades to
+	// Unknown) so the ARM evaluator can surface a reference and
+	// cross-resource rules can link the resources. Only when the
+	// resource name is a static literal and .id is the terminal
+	// suffix; anything else falls through to generic handling.
+	if armType := p.resSym[name]; armType != "" {
+		save := p.pos
+		p.skipWSAndComments()
+		consumed := false
+		if p.peek() == '.' {
+			p.pos++
+			if prop := p.parseIdent(); prop == "id" {
+				p.skipWSAndComments()
+				if p.peek() != '.' && p.peek() != '[' {
+					if nv, ok := p.resName[name]; ok {
+						if ns, ok2 := nv.v.(string); ok2 && ns != "" {
+							parts := strings.Split(ns, "/")
+							quoted := make([]string, 0, len(parts)+1)
+							quoted = append(quoted, armQuote(armType))
+							for _, part := range parts {
+								quoted = append(quoted, armQuote(part))
+							}
+							consumed = true
+							return expr("[resourceId(" + strings.Join(quoted, ", ") + ")]"), true
+						}
+					}
+				}
+			}
+		}
+		if !consumed {
+			p.pos = save
+		}
+	}
 	frag := p.identFrag(name)
 	// suffixes: .prop, [n], ['k']
 	for {

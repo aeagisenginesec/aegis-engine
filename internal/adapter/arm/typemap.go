@@ -9,6 +9,8 @@ import "strings"
 var armTypeTable = map[string]string{
 	// Storage
 	"Microsoft.Storage/storageAccounts":                         "azurerm_storage_account",
+	"Microsoft.Storage/storageAccounts/blobServices":            "azurerm_storage_account_blob_services",
+	"Microsoft.Storage/storageAccounts/queueServices":           "azurerm_storage_account_queue_services",
 	"Microsoft.Storage/storageAccounts/blobServices/containers": "azurerm_storage_container",
 	"Microsoft.Storage/storageAccounts/fileServices/shares":     "azurerm_storage_share",
 	"Microsoft.Storage/storageAccounts/queueServices/queues":    "azurerm_storage_queue",
@@ -188,6 +190,9 @@ func propertyRenames(tfType string) map[string]string {
 			"isSftpEnabled":               "sftp_enabled",
 			"publicNetworkAccess":         "public_network_access_enabled",
 			"networkAcls":                 "network_rules",
+			// Generic snake() splits "OAuth" as "o_auth"; the rule
+			// pack reads the Terraform spelling below.
+			"defaultToOAuthAuthentication": "default_to_oauth_authentication",
 		}
 	case "azurerm_key_vault":
 		return map[string]string{
