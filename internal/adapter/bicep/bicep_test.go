@@ -295,6 +295,54 @@ func TestAKSSecure(t *testing.T) {
 	}
 }
 
+// Real Bicep templates spell the property enableRBAC (all-caps RBAC), as
+// the R4 corpus does (idx 76/81/84). The fixtures above use the historical
+// enableRbac casing; these pin the real spelling to the renamed attribute
+// AEGIS-AZURE-014 reads.
+const bicepAKSVulnRBAC = `
+resource aks 'Microsoft.ContainerService/managedClusters@2024-01-01' = {
+  name: 'vulnaksrbac'
+  location: 'westeurope'
+  properties: {
+    enableRBAC: false
+    dnsPrefix: 'vulnaksrbac'
+  }
+}
+`
+
+const bicepAKSSecureRBAC = `
+resource aks 'Microsoft.ContainerService/managedClusters@2024-01-01' = {
+  name: 'secureaksrbac'
+  location: 'westeurope'
+  properties: {
+    enableRBAC: true
+    dnsPrefix: 'secureaksrbac'
+  }
+}
+`
+
+func TestAKSVulnerableRBACSpelling(t *testing.T) {
+	res := parseBicep(t, bicepAKSVulnRBAC)
+	r := findResource(res, "azurerm_kubernetes_cluster")
+	if r == nil {
+		t.Fatalf("no azurerm_kubernetes_cluster")
+	}
+	if mustBool(t, r, "role_based_access_control_enabled") {
+		t.Errorf("role_based_access_control_enabled should be false for enableRBAC: false")
+	}
+}
+
+func TestAKSSecureRBACSpelling(t *testing.T) {
+	res := parseBicep(t, bicepAKSSecureRBAC)
+	r := findResource(res, "azurerm_kubernetes_cluster")
+	if r == nil {
+		t.Fatalf("no azurerm_kubernetes_cluster")
+	}
+	if !mustBool(t, r, "role_based_access_control_enabled") {
+		t.Errorf("role_based_access_control_enabled should be true for enableRBAC: true")
+	}
+}
+
 func TestInterpolation(t *testing.T) {
 	src := `
 param base string = 'myapp'

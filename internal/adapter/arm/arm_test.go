@@ -372,6 +372,67 @@ func TestAKSSecure(t *testing.T) {
 	}
 }
 
+// The real ARM property spelling is enableRBAC (all-caps RBAC). The
+// fixtures above use the historical enableRbac casing; these use the
+// spelling actual templates carry (R4 FN idx 76/81/84: AEGIS-AZURE-014
+// never fired because enableRBAC missed the rename table and landed as
+// enable_rbac, invisible to the rule).
+const armAKSVulnRBAC = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.ContainerService/managedClusters",
+      "apiVersion": "2024-01-01",
+      "name": "vulnaksrbac",
+      "location": "westeurope",
+      "properties": {
+        "enableRBAC": false,
+        "dnsPrefix": "vulnaksrbac"
+      }
+    }
+  ]
+}`
+
+const armAKSSecureRBAC = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.ContainerService/managedClusters",
+      "apiVersion": "2024-01-01",
+      "name": "secureaksrbac",
+      "location": "westeurope",
+      "properties": {
+        "enableRBAC": true,
+        "dnsPrefix": "secureaksrbac"
+      }
+    }
+  ]
+}`
+
+func TestAKSVulnerableRBACSpelling(t *testing.T) {
+	res := parseARM(t, armAKSVulnRBAC)
+	r := findResource(res, "azurerm_kubernetes_cluster")
+	if r == nil {
+		t.Fatalf("no azurerm_kubernetes_cluster")
+	}
+	if mustBool(t, r, "role_based_access_control_enabled") {
+		t.Errorf("role_based_access_control_enabled should be false for enableRBAC: false")
+	}
+}
+
+func TestAKSSecureRBACSpelling(t *testing.T) {
+	res := parseARM(t, armAKSSecureRBAC)
+	r := findResource(res, "azurerm_kubernetes_cluster")
+	if r == nil {
+		t.Fatalf("no azurerm_kubernetes_cluster")
+	}
+	if !mustBool(t, r, "role_based_access_control_enabled") {
+		t.Errorf("role_based_access_control_enabled should be true for enableRBAC: true")
+	}
+}
+
 func TestUnknownParameter(t *testing.T) {
 	tmpl := `{
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",

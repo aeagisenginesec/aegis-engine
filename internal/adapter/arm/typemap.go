@@ -209,6 +209,7 @@ func propertyRenames(tfType string) map[string]string {
 	case "azurerm_kubernetes_cluster":
 		return map[string]string{
 			"enableRbac":             "role_based_access_control_enabled",
+			"enableRBAC":             "role_based_access_control_enabled",
 			"enablePrivateCluster":   "private_cluster_enabled",
 			"dnsPrefix":              "dns_prefix",
 			"kubernetesVersion":      "kubernetes_version",
