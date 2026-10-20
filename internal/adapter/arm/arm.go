@@ -965,6 +965,41 @@ func knownARMFunction(name string) bool {
 // mapResource converts one ARM resource's fields into IR attributes:
 // top-level fields (location, tags, kind, sku, identity) plus the
 // properties object flattened with per-type renames.
+// mergeDdosProtectionPlan combines the two ARM VNet properties
+// enableDdosProtection (bool) and ddosProtectionPlan ({id}) into the
+// single Terraform block value ddos_protection_plan { id, enable }
+// the Azure rules read. Only the facts present in the template are
+// carried: no enable is invented when the template omits the flag.
+// Returns false when neither property is present.
+func mergeDdosProtectionPlan(c *evalCtx, props map[string]any) (ir.Value, bool) {
+	planRaw, hasPlan := props["ddosProtectionPlan"]
+	enRaw, hasEnable := props["enableDdosProtection"]
+	if !hasPlan && !hasEnable {
+		return ir.Value{}, false
+	}
+	fields := map[string]ir.Value{}
+	span := c.t.span
+	if hasPlan {
+		pv := c.eval(planRaw)
+		span = pv.Span
+		if m, ok := pv.AsMap(); ok {
+			for k, fv := range m {
+				fields[snake(k)] = fv
+			}
+		} else {
+			// Non-object plan value (bare reference): keep it as id.
+			fields["id"] = pv
+		}
+	}
+	if hasEnable {
+		fields["enable"] = c.eval(enRaw)
+	}
+	if len(fields) == 0 {
+		return ir.Value{}, false
+	}
+	return ir.Value{Raw: fields, Known: true, Span: span}, true
+}
+
 func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 	span := c.t.span
 	if v, ok := rdm["location"]; ok {
@@ -999,6 +1034,22 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 		props = map[string]any{}
 	}
 	renames := propertyRenames(res.Type)
+	// Merge the ARM VNet DDoS pair into the single TF block
+	// ddos_protection_plan { id, enable } BEFORE the generic loop.
+	// The two ARM properties collide on that one IR name —
+	// enableDdosProtection via the rename table, ddosProtectionPlan
+	// via snake_case — and the loop's first-writer-wins guard made
+	// the winner a coin flip on Go map iteration order: when the
+	// plan object won, AEGIS-AZURE-057 saw a block with no enable
+	// and fired on compliant VNets (intermittent compliant-gate
+	// failure); when the bare bool won, the rule could not decide
+	// at all. Pre-setting the merged block makes the loop skip both
+	// source keys deterministically.
+	if res.Type == "azurerm_virtual_network" {
+		if merged, ok := mergeDdosProtectionPlan(c, props); ok {
+			res.Attributes["ddos_protection_plan"] = merged
+		}
+	}
 	for k, v := range props {
 		name := k
 		if rn, ok := renames[k]; ok {
