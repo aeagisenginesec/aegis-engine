@@ -315,9 +315,9 @@ func (storageNestedPublic) Title() string {
 }
 func (storageNestedPublic) Description() string {
 	return "azurerm_storage_account with allow_nested_items_to_be_public " +
-		"(the provider default) lets containers and blobs be marked " +
-		"public even when account-level public access is off. Disable it " +
-		"to enforce private-by-default."
+		"lets containers and blobs be marked public while account-level " +
+		"blob public access is enabled. Disable it to enforce " +
+		"private-by-default."
 }
 func (storageNestedPublic) Severity() ir.Severity { return ir.SeverityMedium }
 
@@ -326,6 +326,14 @@ func (storageNestedPublic) AppliesTo(resType string) bool {
 }
 
 func (s storageNestedPublic) Check(r ir.Resource) []ir.Finding {
+	// When account-level blob public access is explicitly disabled,
+	// nested items cannot be public no matter what this flag says:
+	// there is no exposure to report. Firing anyway produced 13
+	// false positives in the R5 blind eval (every firing had
+	// allowBlobPublicAccess=false).
+	if bpa, _, bPresent, bKnown := getBool(r, "allow_blob_public_access"); bPresent && bKnown && !bpa {
+		return nil
+	}
 	en, span, present, known := getBool(r, "allow_nested_items_to_be_public")
 	if present && !known {
 		return nil

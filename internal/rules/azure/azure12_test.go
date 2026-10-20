@@ -23,8 +23,14 @@ func TestAZURE032_EnabledQuiet(t *testing.T) {
 }
 
 // AEGIS-AZURE-145: cross-tenant replication
-func TestAZURE145_AbsentFires(t *testing.T) {
-	mustFinding(t, runRule(storageCrossTenantRepl{}, saRes(nil)), "AEGIS-AZURE-145")
+// R5 regression: absence must NOT fire. The platform default for
+// allowCrossTenantReplication is false (opt-in), so an account that
+// never mentions the property is in the secure state; the old code
+// claimed "absent (default true)" and fired — 13 R5 false positives.
+func TestAZURE145_AbsentQuiet(t *testing.T) {
+	if len(runRule(storageCrossTenantRepl{}, saRes(nil))) != 0 {
+		t.Fatal("expected 0 findings: absent allow_cross_tenant_replication is the secure default")
+	}
 }
 
 func TestAZURE145_TrueFires(t *testing.T) {

@@ -457,6 +457,13 @@ func (mssqlNoPrivateEndpoint) CheckAll(resources []ir.Resource) []ir.Finding {
 		if withPE[r.Address()] {
 			continue
 		}
+		// A server with public network access explicitly disabled has
+		// no public exposure for a private endpoint to mitigate; the
+		// finding's implied exposure is factually wrong there (R5
+		// blind eval: r5104/r5105, publicNetworkAccess='Disabled').
+		if pna, _, pPresent, pKnown := getBool(r, "public_network_access_enabled"); pPresent && pKnown && !pna {
+			continue
+		}
 		out = append(out, mkFinding(s, r, "private_endpoint",
 			evidenceSpan(ir.Span{}, r.Span), "absent",
 			"azurerm_private_endpoint with private_service_connection targeting "+r.Address()))

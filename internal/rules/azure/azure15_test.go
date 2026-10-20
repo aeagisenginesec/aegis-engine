@@ -149,6 +149,32 @@ func TestAZURE191_193_195_196(t *testing.T) {
 	}
 }
 
+// R5 regression (AEGIS-AZURE-195): when account-level blob public
+// access is explicitly disabled, nested items cannot be public, so
+// the rule must stay quiet whether the nested flag is absent or true
+// (13 R5 false positives, all with allowBlobPublicAccess=false).
+// Control: with blob public access enabled, the rule still fires.
+func TestAZURE195_BlobPublicAccessDisabledQuiet(t *testing.T) {
+	absent := res("azurerm_storage_account", "s", map[string]ir.Value{
+		"allow_blob_public_access": kv(false, 3),
+	})
+	if f := runRule(storageNestedPublic{}, absent); len(f) != 0 {
+		t.Fatalf("195: blob public access disabled must not fire (nested absent), got %v", f)
+	}
+	explicit := res("azurerm_storage_account", "s", map[string]ir.Value{
+		"allow_blob_public_access":        kv(false, 3),
+		"allow_nested_items_to_be_public": kv(true, 3),
+	})
+	if f := runRule(storageNestedPublic{}, explicit); len(f) != 0 {
+		t.Fatalf("195: blob public access disabled must not fire (nested true), got %v", f)
+	}
+	control := res("azurerm_storage_account", "s", map[string]ir.Value{
+		"allow_blob_public_access":        kv(true, 3),
+		"allow_nested_items_to_be_public": kv(true, 3),
+	})
+	mustFinding(t, runRule(storageNestedPublic{}, control), "AEGIS-AZURE-195")
+}
+
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-029: Storage account without blob soft delete
 // ---------------------------------------------------------------------------

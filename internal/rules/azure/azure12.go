@@ -46,8 +46,8 @@ func (storageCrossTenantRepl) Title() string {
 	return "Storage account allows cross-tenant replication"
 }
 func (storageCrossTenantRepl) Description() string {
-	return "azurerm_storage_account without allow_cross_tenant_replication " +
-		"= false permits object replication to storage accounts in other " +
+	return "azurerm_storage_account with allow_cross_tenant_replication " +
+		"= true permits object replication to storage accounts in other " +
 		"Microsoft Entra tenants, enabling data exfiltration paths. Disable " +
 		"cross-tenant replication."
 }
@@ -57,20 +57,18 @@ func (storageCrossTenantRepl) AppliesTo(resType string) bool {
 	return resType == "azurerm_storage_account"
 }
 
+// Check fires only on explicit enablement. Cross-tenant replication
+// is opt-in: the Azure platform default for allowCrossTenantReplication
+// is false, so absence is the secure state. The previous code claimed
+// "absent (default true)" and fired on every account that simply did
+// not mention the property — 13 false positives in the R5 blind eval.
 func (s storageCrossTenantRepl) Check(r ir.Resource) []ir.Finding {
 	allowed, span, present, known := getBool(r, "allow_cross_tenant_replication")
-	if present && !known {
+	if !present || !known || !allowed {
 		return nil
-	}
-	if present && !allowed {
-		return nil
-	}
-	actual := "absent (default true)"
-	if present {
-		actual = "true"
 	}
 	return []ir.Finding{mkFinding(s, r, "allow_cross_tenant_replication",
-		evidenceSpan(span, r.Span), actual,
+		evidenceSpan(span, r.Span), "true",
 		"allow_cross_tenant_replication = false")}
 }
 
