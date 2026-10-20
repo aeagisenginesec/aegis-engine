@@ -1181,55 +1181,6 @@ func TestEffectivenessReplay_AWS_539(t *testing.T) {
 		t.Fatalf("AEGIS-AWS-539: expected 0 findings on unknown input, got %d: %v", len(got), got)
 	}
 }
-func TestEffectivenessReplay_AWS_540(t *testing.T) {
-	rule := eaRuleFor(t, "AEGIS-AWS-540")
-	// Positive: black-box probe witness (must fire).
-	pos := []ir.Resource{
-		eaRes("aws_db_instance", "probe", map[string]ir.Value{
-			"engine": eaS("postgres"),
-		}),
-	}
-	f := eaRun(rule, pos...)
-	if len(f) == 0 {
-		t.Fatalf("AEGIS-AWS-540: expected >=1 finding on positive witness, got 0")
-	}
-	if f[0].Severity != rule.Severity() {
-		t.Fatalf("AEGIS-AWS-540: severity = %s, want %s", f[0].Severity, rule.Severity())
-	}
-	if f[0].Evidence.Attribute == "" || f[0].Evidence.Actual == "" || f[0].Evidence.Expected == "" {
-		t.Fatalf("AEGIS-AWS-540: evidence must be non-empty, got %v", f[0].Evidence)
-	}
-	// Negative: black-box probe witness (must stay quiet).
-	neg := []ir.Resource{
-		eaRes("aws_db_instance", "probe", map[string]ir.Value{}),
-	}
-	if got := eaRun(rule, neg...); len(got) != 0 {
-		t.Fatalf("AEGIS-AWS-540: expected 0 findings on negative witness, got %d: %v", len(got), got)
-	}
-	// Unknown: all-unknown kitchen-sink input must stay quiet.
-	unk := eaRes("aws_db_instance", "probe", map[string]ir.Value{
-		"absent":                              eaU(),
-		"aurora":                              eaU(),
-		"auto_minor_version_upgrade":          eaU(),
-		"bucket":                              eaU(),
-		"enabled_cloudwatch_logs_exports":     eaU(),
-		"engine":                              eaU(),
-		"false":                               eaU(),
-		"http_tokens":                         eaU(),
-		"iam_database_authentication_enabled": eaU(),
-		"metadata_options":                    eaU(),
-		"mysql":                               eaU(),
-		"postgres":                            eaU(),
-		"required":                            eaU(),
-		"rule":                                eaU(),
-		"strings":                             eaU(),
-		"target_bucket":                       eaU(),
-		"vpc_config":                          eaU(),
-	})
-	if got := eaRun(rule, unk); len(got) != 0 {
-		t.Fatalf("AEGIS-AWS-540: expected 0 findings on unknown input, got %d: %v", len(got), got)
-	}
-}
 func TestEffectivenessReplay_AWS_541(t *testing.T) {
 	rule := eaRuleFor(t, "AEGIS-AWS-541")
 	// Positive: black-box probe witness (must fire).

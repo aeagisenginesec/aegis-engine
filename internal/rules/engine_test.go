@@ -133,8 +133,8 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	// + 1 AWS-857 CFN parameter secret default (R4 recall gap closure).
 	// + 2 R4 Sprint-1 FN closures (AEGIS-AWS-858 SG database-port exposure,
 	//   AEGIS-COMPOSE-009 host network split out of COMPOSE-003).
-	if len(all) != 1148 {
-		t.Fatalf("default registry should wire 1148 rules, got %d", len(all))
+	if len(all) != 1147 {
+		t.Fatalf("default registry should wire 1147 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {

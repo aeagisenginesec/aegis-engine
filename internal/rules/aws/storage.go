@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"strings"
+
 	"aegis/internal/ir"
 )
 
@@ -36,13 +38,33 @@ func (rdsNoIAMAuth) Title() string {
 func (rdsNoIAMAuth) Description() string {
 	return "With iam_database_authentication_enabled absent or false, database " +
 		"access relies on long-lived passwords instead of short-lived IAM " +
-		"credentials, weakening credential hygiene."
+		"credentials, weakening credential hygiene. Engine-scoped: only " +
+		"mysql, postgres and mariadb instances support IAM database " +
+		"authentication; aurora engines are covered by the cluster rules."
 }
 func (rdsNoIAMAuth) Severity() ir.Severity { return ir.SeverityMedium }
 
 func (rdsNoIAMAuth) AppliesTo(resType string) bool { return resType == "aws_db_instance" }
 
 func (rdsNoIAMAuth) Check(r ir.Resource) []ir.Finding {
+	// Engine scoping (ported from the removed AEGIS-AWS-540 in
+	// Sprint 2): IAM database authentication exists only for the
+	// mysql, postgres and mariadb engine families. Firing on oracle,
+	// sqlserver or other engines recommends a setting that does not
+	// exist there. Aurora engines are covered by the aws_rds_cluster
+	// rules; an unknown engine cannot be decided.
+	engine, _, epresent, eknown := getString(r, "engine")
+	if !epresent || !eknown {
+		return nil
+	}
+	el := strings.ToLower(strings.TrimSpace(engine))
+	if strings.HasPrefix(el, "aurora") {
+		return nil
+	}
+	if !strings.HasPrefix(el, "mysql") && !strings.HasPrefix(el, "postgres") &&
+		!strings.HasPrefix(el, "mariadb") {
+		return nil
+	}
 	en, span, present, known := getBool(r, "iam_database_authentication_enabled")
 	if present && !known {
 		return nil // unresolved: cannot decide

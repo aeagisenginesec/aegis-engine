@@ -41,69 +41,6 @@ func fgList(items ...ir.Value) ir.Value {
 // AEGIS-AWS-540: RDS IAM auth (mysql/postgres scoped)
 // ---------------------------------------------------------------------------
 
-func Test540_MySQLWithoutIAMAuth(t *testing.T) {
-	r := fgRes("aws_db_instance", "db", map[string]ir.Value{
-		"engine": fgStr("mysql"),
-	})
-	if got := (rdsNoIAMAuthScoped{}).Check(r); len(got) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(got))
-	}
-}
-
-func Test540_PostgresExplicitFalse(t *testing.T) {
-	r := fgRes("aws_db_instance", "db", map[string]ir.Value{
-		"engine":                              fgStr("postgres"),
-		"iam_database_authentication_enabled": fgBool(false),
-	})
-	got := (rdsNoIAMAuthScoped{}).Check(r)
-	if len(got) != 1 || got[0].Evidence.Actual != "false" {
-		t.Fatalf("expected 1 finding with actual=false, got %+v", got)
-	}
-}
-
-func Test540_EnabledSilent(t *testing.T) {
-	r := fgRes("aws_db_instance", "db", map[string]ir.Value{
-		"engine":                              fgStr("mysql"),
-		"iam_database_authentication_enabled": fgBool(true),
-	})
-	if got := (rdsNoIAMAuthScoped{}).Check(r); len(got) != 0 {
-		t.Fatalf("expected silent, got %d findings", len(got))
-	}
-}
-
-func Test540_AuroraSkipped(t *testing.T) {
-	for _, eng := range []string{"aurora-mysql", "aurora-postgresql"} {
-		r := fgRes("aws_db_instance", "db", map[string]ir.Value{"engine": fgStr(eng)})
-		if got := (rdsNoIAMAuthScoped{}).Check(r); len(got) != 0 {
-			t.Fatalf("engine %s: expected silent, got %d", eng, len(got))
-		}
-	}
-}
-
-func Test540_UnsupportedEngineSilent(t *testing.T) {
-	r := fgRes("aws_db_instance", "db", map[string]ir.Value{"engine": fgStr("oracle-ee")})
-	if got := (rdsNoIAMAuthScoped{}).Check(r); len(got) != 0 {
-		t.Fatalf("expected silent for oracle-ee, got %d", len(got))
-	}
-}
-
-func Test540_UnknownEngineSilent(t *testing.T) {
-	r := fgRes("aws_db_instance", "db", map[string]ir.Value{"engine": fgUnknown()})
-	if got := (rdsNoIAMAuthScoped{}).Check(r); len(got) != 0 {
-		t.Fatalf("expected silent for unknown engine, got %d", len(got))
-	}
-}
-
-func Test540_UnknownFlagSilent(t *testing.T) {
-	r := fgRes("aws_db_instance", "db", map[string]ir.Value{
-		"engine":                              fgStr("mysql"),
-		"iam_database_authentication_enabled": fgUnknown(),
-	})
-	if got := (rdsNoIAMAuthScoped{}).Check(r); len(got) != 0 {
-		t.Fatalf("expected silent for unknown flag, got %d", len(got))
-	}
-}
-
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-541: Launch configuration IMDSv1
 // ---------------------------------------------------------------------------
@@ -271,7 +208,7 @@ func Test544_UnknownSilent(t *testing.T) {
 func TestFinalGapRules_InIDOrder(t *testing.T) {
 	rules := FinalGapRules()
 	want := []string{
-		"AEGIS-AWS-540", "AEGIS-AWS-541", "AEGIS-AWS-542",
+		"AEGIS-AWS-541", "AEGIS-AWS-542",
 		"AEGIS-AWS-543", "AEGIS-AWS-544",
 	}
 	if len(rules) != len(want) {
