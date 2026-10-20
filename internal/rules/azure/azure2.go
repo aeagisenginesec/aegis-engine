@@ -16,7 +16,6 @@ import (
 func Azure2Rules() []ir.Rule {
 	return []ir.Rule{
 		storagePublicNetworkAccess{}, // AEGIS-AZURE-006
-		keyVaultNoFirewall{},         // AEGIS-AZURE-007
 		nsgOpenSensitivePort{},       // AEGIS-AZURE-010
 		appServiceNoHTTPSOnly{},      // AEGIS-AZURE-011
 		appServiceWeakTLS{},          // AEGIS-AZURE-012
@@ -141,45 +140,6 @@ func (s storagePublicNetworkAccess) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-007: Key Vault without firewall
-// ---------------------------------------------------------------------------
-
-type keyVaultNoFirewall struct{}
-
-func (keyVaultNoFirewall) ID() string { return "AEGIS-AZURE-007" }
-func (keyVaultNoFirewall) Title() string {
-	return "Key Vault without firewall"
-}
-func (keyVaultNoFirewall) Description() string {
-	return "A Key Vault with no network_acls block, or with " +
-		"network_acls.default_action = \"Allow\", accepts connections from " +
-		"any network. Restrict access with default_action = \"Deny\"."
-}
-func (keyVaultNoFirewall) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (keyVaultNoFirewall) AppliesTo(resType string) bool {
-	return resType == "azurerm_key_vault"
-}
-
-func (s keyVaultNoFirewall) Check(r ir.Resource) []ir.Finding {
-	blks, span, present, known := getBlocks(r, "network_acls")
-	if !present {
-		return []ir.Finding{mkFinding(s, r, "network_acls", r.Span,
-			"absent (default allow)", "network_acls { default_action = \"Deny\" }")}
-	}
-	if !known || len(blks) == 0 {
-		return nil // unresolved: cannot decide
-	}
-	action, aspan, apresent, aknown := blockString(blks[0], "default_action")
-	if !apresent || !aknown {
-		return nil // unresolved: cannot decide
-	}
-	if strings.EqualFold(strings.TrimSpace(action), "Allow") {
-		return []ir.Finding{mkFinding(s, r, "network_acls.default_action", aspan,
-			action, "default_action = \"Deny\"")}
-	}
-	_ = span
-	return nil
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-010: NSG rule open to the internet on a sensitive port

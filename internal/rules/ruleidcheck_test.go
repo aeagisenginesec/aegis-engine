@@ -183,11 +183,12 @@ func TestDeprecatedIDsNeverSilentlyMigrate(t *testing.T) {
 }
 
 // TestDeprecatedMapCoversDocCount guards against the map drifting out of
-// sync with docs/audit/DEPRECATED_RULE_IDS.md (52 entries: 39 post-audit
-// + 3 outperform-mission + 9 multi-cloud quality audit + 1 follow-up).
+// sync with docs/audit/DEPRECATED_RULE_IDS.md (56 entries: 39 post-audit
+// + 3 outperform-mission + 9 multi-cloud quality audit + 1 follow-up
+// + 4 Sprint-2 R4 FP-family).
 func TestDeprecatedMapCoversDocCount(t *testing.T) {
-	if len(deprecatedRuleIDs) != 52 {
-		t.Fatalf("deprecated map has %d entries, doc lists 52", len(deprecatedRuleIDs))
+	if len(deprecatedRuleIDs) != 56 {
+		t.Fatalf("deprecated map has %d entries, doc lists 56", len(deprecatedRuleIDs))
 	}
 }
 

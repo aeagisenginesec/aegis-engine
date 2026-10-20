@@ -11,30 +11,6 @@ func storageRes(attrs map[string]ir.Value) ir.Resource {
 }
 
 // TestAZURE119_PublicBlobDefaultFires verifies public blob access (strict).
-func TestAZURE119_PublicBlobDefaultFires(t *testing.T) {
-	mustFinding(t, runRule(storageNestedItemsPublic{}, storageRes(nil)), "AEGIS-AZURE-119")
-}
-
-func TestAZURE119_PublicTrueFires(t *testing.T) {
-	r := storageRes(map[string]ir.Value{"allow_blob_public_access": kv(true, 3)})
-	mustFinding(t, runRule(storageNestedItemsPublic{}, r), "AEGIS-AZURE-119")
-}
-
-func TestAZURE119_NestedPublicFires(t *testing.T) {
-	r := storageRes(map[string]ir.Value{
-		"allow_blob_public_access":        kv(false, 3),
-		"allow_nested_items_to_be_public": kv(true, 4),
-	})
-	mustFinding(t, runRule(storageNestedItemsPublic{}, r), "AEGIS-AZURE-119")
-}
-
-func TestAZURE119_DisabledQuiet(t *testing.T) {
-	r := storageRes(map[string]ir.Value{"allow_blob_public_access": kv(false, 3)})
-	if len(runRule(storageNestedItemsPublic{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
-	}
-}
-
 // TestAZURE120_QueueLoggingAbsentFires verifies queue logging (strict).
 func TestAZURE120_QueueLoggingAbsentFires(t *testing.T) {
 	mustFinding(t, runRule(storageQueueNoLogging{}, storageRes(nil)), "AEGIS-AZURE-034")

@@ -14,7 +14,6 @@ import (
 func Azure3Rules() []ir.Rule {
 	return []ir.Rule{
 		storageNoHTTPSOnly{},       // AEGIS-AZURE-026
-		storageWeakTLS{},           // AEGIS-AZURE-027
 		storageNoBlobVersioning{},  // AEGIS-AZURE-028
 		storageNoBlobSoftDelete{},  // AEGIS-AZURE-029
 		storageNoContainerDelete{}, // AEGIS-AZURE-030
@@ -66,37 +65,7 @@ func (s storageNoHTTPSOnly) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-027: Storage account with weak TLS version
-// ---------------------------------------------------------------------------
-
-type storageWeakTLS struct{}
-
-func (storageWeakTLS) ID() string { return "AEGIS-AZURE-027" }
-func (storageWeakTLS) Title() string {
-	return "Storage account allows weak TLS version"
-}
-func (storageWeakTLS) Description() string {
-	return "azurerm_storage_account with min_tls_version below TLS1_2 " +
-		"permits deprecated TLS. Require TLS1_2 or higher."
-}
-func (storageWeakTLS) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageWeakTLS) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageWeakTLS) Check(r ir.Resource) []ir.Finding {
-	ver, span, present, known := getString(r, "min_tls_version")
-	if !present || !known {
-		return nil
-	}
-	v := strings.ToUpper(strings.ReplaceAll(ver, " ", ""))
-	if v == "TLS1_2" || v == "TLS1_3" {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "min_tls_version", span,
-		ver, "min_tls_version = \"TLS1_2\"")}
-}
+// AEGIS-AZURE-027: Storage account allows weak TLS version
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-028: Storage account without blob versioning

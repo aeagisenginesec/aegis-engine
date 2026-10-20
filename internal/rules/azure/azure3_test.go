@@ -20,18 +20,6 @@ func TestAZURE026_HTTPSQuiet(t *testing.T) {
 }
 
 // TestAZURE027_WeakTLSFires verifies weak TLS detection.
-func TestAZURE027_WeakTLSFires(t *testing.T) {
-	r := res("azurerm_storage_account", "s", map[string]ir.Value{"min_tls_version": ks("TLS1_0", 3)})
-	mustFinding(t, runRule(storageWeakTLS{}, r), "AEGIS-AZURE-027")
-}
-
-func TestAZURE027_TLS12Quiet(t *testing.T) {
-	r := res("azurerm_storage_account", "s", map[string]ir.Value{"min_tls_version": ks("TLS1_2", 3)})
-	if len(runRule(storageWeakTLS{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
-	}
-}
-
 // TestAZURE028_NoVersioningFires verifies blob versioning detection.
 func TestAZURE028_NoVersioningFires(t *testing.T) {
 	r := res("azurerm_storage_account", "s", map[string]ir.Value{

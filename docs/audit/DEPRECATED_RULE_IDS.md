@@ -124,3 +124,19 @@ The removed rule IDs will no longer appear in scan output. Suppressions referenc
 - Before: 1,185 rules
 - After: 1,146 rules
 - Removed: 39 duplicates
+
+## R4 FP-family deduplication — Sprint 2 (2026-10-20)
+
+Found by the Sprint-2 false-positive-family hunt over the R4 blind-eval
+sweep (report 25): later "round" files re-implemented checks that already
+existed, so one weakness was reported two or three times per resource.
+Each removal below was verified at the mechanism level (firing truth
+tables compared in code, not just on the corpus) and the R4 rescore
+after each batch must keep TP = 136 / FN = 0.
+
+| Removed ID | Canonical ID | Reason |
+|------------|--------------|--------|
+| AEGIS-AZURE-007 | AEGIS-AZURE-187 | Strict subset: 007 fires only on network_acls absent or default_action = "Allow"; 187 fires on absent or any default_action ≠ "Deny" (all blocks) |
+| AEGIS-AZURE-027 | AEGIS-AZURE-121 | Strict subset: 027 is 121 without the absent case (min_tls_version, default TLS1_0) |
+| AEGIS-AZURE-119 | AEGIS-AZURE-122 | Subset + FP-prone: with allow_nested_items_to_be_public absent, 119 is identical to 122; its nested-present path fires even when allow_blob_public_access = false (no exposure possible — the bug class fixed in AEGIS-AZURE-195 during R5) |
+| AEGIS-AZURE-191 | AEGIS-AZURE-031 | Exact duplicate: same attribute (shared_access_key_enabled), same truth table, same severity |

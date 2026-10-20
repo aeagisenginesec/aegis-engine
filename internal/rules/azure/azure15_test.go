@@ -19,8 +19,9 @@ func TestAzure15RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	// 188,190,193,196,198,202,203 removed as post-audit duplicates.
-	want := []int{186, 187, 189, 191, 192, 194, 195, 197, 199, 200, 201, 204, 205}
+	// 188,190,193,196,198,202,203 removed as post-audit duplicates;
+	// 191 removed in Sprint 2 (exact duplicate of AEGIS-AZURE-031).
+	want := []int{186, 187, 189, 192, 194, 195, 197, 199, 200, 201, 204, 205}
 	for i, n := range want {
 		id := "AEGIS-AZURE-" + strconv.Itoa(n)
 		pos, ok := idx[id]
@@ -127,7 +128,6 @@ func TestAZURE191_193_195_196(t *testing.T) {
 		fireWhenTrue bool
 		absentFires  bool
 	}{
-		{storageSharedKeyEnabled{}, "AEGIS-AZURE-191", "shared_access_key_enabled", true, true},
 		{storageNoOAuthDefault{}, "AEGIS-AZURE-192", "default_to_oauth_authentication", false, true},
 		{storageNestedPublic{}, "AEGIS-AZURE-195", "allow_nested_items_to_be_public", true, true},
 		{storageNoInfraEncryption{}, "AEGIS-AZURE-032", "infrastructure_encryption_enabled", false, true},

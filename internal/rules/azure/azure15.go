@@ -22,7 +22,6 @@ func Azure15Rules() []ir.Rule {
 		kvSoftDeleteRetention{},   // AEGIS-AZURE-186
 		kvNetworkAclsOpen{},       // AEGIS-AZURE-187
 		kvKeyNotHSM{},             // AEGIS-AZURE-189
-		storageSharedKeyEnabled{}, // AEGIS-AZURE-191
 		storageNoOAuthDefault{},   // AEGIS-AZURE-192
 		storageSasNotBlocked{},    // AEGIS-AZURE-194
 		storageNestedPublic{},     // AEGIS-AZURE-195
@@ -173,42 +172,6 @@ func (s kvKeyNotHSM) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-191: Storage account with shared key access enabled
-// ---------------------------------------------------------------------------
-
-type storageSharedKeyEnabled struct{}
-
-func (storageSharedKeyEnabled) ID() string { return "AEGIS-AZURE-191" }
-func (storageSharedKeyEnabled) Title() string {
-	return "Storage account with shared key access enabled"
-}
-func (storageSharedKeyEnabled) Description() string {
-	return "azurerm_storage_account with shared_access_key_enabled " +
-		"(the provider default) permits Shared Key authorization, which " +
-		"bypasses Entra ID and cannot be scoped. Disable it and use " +
-		"Entra ID with default_to_oauth_authentication."
-}
-func (storageSharedKeyEnabled) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageSharedKeyEnabled) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageSharedKeyEnabled) Check(r ir.Resource) []ir.Finding {
-	en, span, present, known := getBool(r, "shared_access_key_enabled")
-	if present && !known {
-		return nil
-	}
-	if present && !en {
-		return nil
-	}
-	actual := "true"
-	if !present {
-		actual = "absent (provider default: enabled)"
-	}
-	return []ir.Finding{mkFinding(s, r, "shared_access_key_enabled",
-		evidenceSpan(span, r.Span), actual,
-		"shared_access_key_enabled = false")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-192: Storage account not defaulting to OAuth authentication
