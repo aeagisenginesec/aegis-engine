@@ -10,8 +10,9 @@ func TestPack_HasExpectedRulesWithUniqueIDs(t *testing.T) {
 	// (650-849) + AWS-850 + AWS-851..855, minus 684/692/702) + 1 AWS-856
 	// (EC2 EOL image; concurrent addition, kept after audit review).
 	// + 1 AWS-857 (CFN parameter secret default; R4 recall gap closure).
-	if len(rules) != 475 {
-		t.Fatalf("expected 475 rules, got %d", len(rules))
+	// + 1 AWS-858 (SG database-port exposure; R4 Sprint-1 FN closure).
+	if len(rules) != 476 {
+		t.Fatalf("expected 476 rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	var prev string

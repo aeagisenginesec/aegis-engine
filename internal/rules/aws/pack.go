@@ -81,5 +81,6 @@ func Rules() []ir.Rule {
 	base = append(base, CMKRefinementRules()...)          // AEGIS-AWS-852..855
 	base = append(base, EOLImageRules()...)               // AEGIS-AWS-856
 	base = append(base, CFNParameterSecretRules()...)     // AEGIS-AWS-857
+	base = append(base, sgDatabasePort{})                 // AEGIS-AWS-858
 	return base
 }
