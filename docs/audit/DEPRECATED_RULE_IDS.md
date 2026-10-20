@@ -146,3 +146,6 @@ after each batch must keep TP = 136 / FN = 0.
 | AEGIS-AWS-540 | AEGIS-AWS-311 | Exact duplicate on mysql/postgres instances (identical firing sets in the R4 sweep) with inconsistent severity (High vs Medium); 540's engine scoping was ported into 311, which also no longer fires on engines without IAM database authentication (oracle/sqlserver — a latent factual FP) |
 | AEGIS-AWS-547 | AEGIS-AWS-308 | Exact duplicate: same tracing_config truth table on aws_lambda_function |
 | AEGIS-AWS-840 | AEGIS-AWS-329 | Strict subset: 329 matches protocol case-insensitively (EqualFold) and also covers block-absent HTTPS health-check configs; 840 was case-sensitive |
+| AEGIS-AWS-418 | AEGIS-AWS-523 | Subset: three rules reported one missing OpenSearch control; 523's truth table is the union of 418 and 811 on advanced_security_options |
+| AEGIS-AWS-811 | AEGIS-AWS-523 | Exact duplicate of 523 (advanced_security_options) with inconsistent severity (High vs Medium) |
+| AEGIS-AWS-812 | AEGIS-AWS-623 | Duplicate on aws_opensearch_domain (log_publishing_options absent); 623 also covers aws_elasticsearch_domain |

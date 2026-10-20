@@ -17,7 +17,6 @@ func Data2Rules() []ir.Rule {
 		efsFileSystemPolicyPublic{},
 		fsxOpenZFSUnencrypted{},
 		dynamoNoDeletionProtection{},
-		opensearchNoAdvancedSecurity{},
 		athenaWorkgroupNotEnforced{},
 		kmsKeyPolicyPublic{},
 	}
@@ -350,32 +349,6 @@ func (dynamoNoDeletionProtection) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-418: OpenSearch advanced security disabled
-// ---------------------------------------------------------------------------
-
-type opensearchNoAdvancedSecurity struct{}
-
-func (opensearchNoAdvancedSecurity) ID() string { return "AEGIS-AWS-418" }
-func (opensearchNoAdvancedSecurity) Title() string {
-	return "OpenSearch domain without advanced security"
-}
-func (opensearchNoAdvancedSecurity) Description() string {
-	return "An OpenSearch domain without advanced_security_options (fine-" +
-		"grained access control) cannot restrict index-level access."
-}
-func (opensearchNoAdvancedSecurity) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (opensearchNoAdvancedSecurity) AppliesTo(resType string) bool {
-	return resType == "aws_opensearch_domain"
-}
-
-func (opensearchNoAdvancedSecurity) Check(r ir.Resource) []ir.Finding {
-	return nestedEnabledCheck(r, "advanced_security_options",
-		"AEGIS-AWS-418",
-		(opensearchNoAdvancedSecurity{}).Title(),
-		(opensearchNoAdvancedSecurity{}).Description(),
-		ir.SeverityMedium,
-		"absent (advanced security disabled)")
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-419: Athena workgroup configuration not enforced

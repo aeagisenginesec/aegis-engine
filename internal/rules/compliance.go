@@ -792,10 +792,10 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-AWS-809": { // MSK cluster without per-topic enhanced monitoring
 		ref(nist, "AU-2"),
 	},
-	"AEGIS-AWS-811": { // OpenSearch domain without advanced security options
+	"AEGIS-AWS-523": { // OpenSearch domain without fine-grained access control (canonical; ex-811)
 		ref(nist, "SC-7"),
 	},
-	"AEGIS-AWS-812": { // OpenSearch domain without log publishing options
+	"AEGIS-AWS-623": { // OpenSearch domain without audit/search logs (canonical; ex-812)
 		ref(nist, "AU-2"), ref(nist, "SC-7"),
 	},
 	"AEGIS-AWS-813": { // Neptune cluster skipping the final snapshot

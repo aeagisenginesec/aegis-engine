@@ -20,9 +20,9 @@ func TestDeepRulesCoverage(t *testing.T) {
 	rules = append(rules, KMSSecretsDeepRules()...)
 	rules = append(rules, ServicesDeepRules()...)
 	rules = append(rules, EdgeDeepRules()...)
-	// 188 - 1: AWS-840 removed in Sprint 2 (subset of AWS-329).
-	if len(rules) != 187 {
-		t.Fatalf("expected 187 deep rules, got %d", len(rules))
+	// 188 - 3: AWS-840/811/812 removed in Sprint 2 (duplicates).
+	if len(rules) != 185 {
+		t.Fatalf("expected 185 deep rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	for _, r := range rules {
