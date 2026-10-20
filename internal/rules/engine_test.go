@@ -131,8 +131,10 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	// + 2 multi-cloud quality audit rules (AEGIS-GCP-293, AEGIS-GCP-294).
 	// + 1 AWS-856 EC2 EOL image (concurrent addition, kept after audit review).
 	// + 1 AWS-857 CFN parameter secret default (R4 recall gap closure).
-	if len(all) != 1153 {
-		t.Fatalf("default registry should wire 1153 rules, got %d", len(all))
+	// + 2 R4 Sprint-1 FN closures (AEGIS-AWS-858 SG database-port exposure,
+	//   AEGIS-COMPOSE-009 host network split out of COMPOSE-003).
+	if len(all) != 1155 {
+		t.Fatalf("default registry should wire 1155 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {
