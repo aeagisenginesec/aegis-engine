@@ -1,6 +1,7 @@
 package arm
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -776,5 +777,48 @@ func TestRedisPublicNetworkAccessEnumConverted(t *testing.T) {
 	}
 	if got := mustBool(t, r, "public_network_access_enabled"); got != false {
 		t.Errorf("public_network_access_enabled = %v, want false (bool)", got)
+	}
+}
+
+// R5 regression (AEGIS-AZURE-169): PostgreSQL flexible servers nest
+// publicNetworkAccess under properties.network. The adapter never
+// promoted it, so the rules saw the property as absent and AZURE-169
+// fired even when the template explicitly disabled public access
+// (17 of 18 R5 firings, e.g. r5071).
+const armFlexNet = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "apiVersion": "2023-06-01-preview",
+      "name": "shopdb",
+      "location": "northeurope",
+      "properties": {
+        "version": "15",
+        "network": {
+          "publicNetworkAccess": "%s"
+        }
+      }
+    }
+  ]
+}`
+
+func TestFlexServerNestedPublicNetworkAccess(t *testing.T) {
+	res := parseARM(t, fmt.Sprintf(armFlexNet, "Disabled"))
+	r := findResource(res, "azurerm_postgresql_flexible_server")
+	if r == nil {
+		t.Fatalf("no azurerm_postgresql_flexible_server")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != false {
+		t.Errorf("Disabled: public_network_access_enabled = %v, want false (bool)", got)
+	}
+	res = parseARM(t, fmt.Sprintf(armFlexNet, "Enabled"))
+	r = findResource(res, "azurerm_postgresql_flexible_server")
+	if r == nil {
+		t.Fatalf("no azurerm_postgresql_flexible_server")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != true {
+		t.Errorf("Enabled: public_network_access_enabled = %v, want true (bool)", got)
 	}
 }

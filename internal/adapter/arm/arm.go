@@ -1002,6 +1002,29 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 			}
 		}
 	}
+	// Promote nested network.publicNetworkAccess to the top level for
+	// PostgreSQL flexible servers. ARM nests it as
+	// properties.network.publicNetworkAccess, while the TF attribute
+	// (and AEGIS-AZURE-169) is the flat public_network_access_enabled.
+	// Without this promotion the property was invisible to the rules,
+	// so AZURE-169 fired on "absence" even when the template explicitly
+	// set publicNetworkAccess to "Disabled" (17 of 18 R5 firings).
+	if res.Type == "azurerm_postgresql_flexible_server" {
+		_, hasEnabled := res.Attributes["public_network_access_enabled"]
+		_, hasPlain := res.Attributes["public_network_access"]
+		if !hasEnabled && !hasPlain {
+			if net, ok := res.Attributes["network"]; ok {
+				if m, ok := net.AsMap(); ok {
+					for ek, ev := range m {
+						if ek == "publicNetworkAccess" || ek == "public_network_access" {
+							res.Attributes["public_network_access"] = ev
+							break
+						}
+					}
+				}
+			}
+		}
+	}
 	// Convert the ARM publicNetworkAccess enum to the boolean
 	// public_network_access_enabled the TF rules expect, for every
 	// resource type (this used to be mssql-only, which left the string
