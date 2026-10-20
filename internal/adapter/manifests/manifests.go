@@ -59,9 +59,17 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 	p := &parser{path: path}
 	var out []ir.Resource
 	for i, doc := range p.decode(src) {
-		out = append(out, p.parseDocument(doc, i)...)
+		out = append(out, p.parseDocument(doc.value, i, doc.line)...)
 	}
 	return out, p.diags, nil
+}
+
+// decodedDoc is one decoded document plus the 1-based source line of
+// its root node, so resource spans can point at the document's real
+// position in the file.
+type decodedDoc struct {
+	value any
+	line  int
 }
 
 // parser carries per-parse state: the path and accumulated diagnostics.
@@ -83,7 +91,7 @@ type parser struct {
 // OOM-killed the process (Item 5, 2026-10-13). The Node path does no
 // duplicate-key checking at all; the converter below fails fast on the
 // first duplicate with a single short diagnostic.
-func (p *parser) decode(src []byte) []any {
+func (p *parser) decode(src []byte) []decodedDoc {
 	if strings.HasSuffix(strings.ToLower(p.path), ".json") {
 		var doc any
 		if err := json.Unmarshal(src, &doc); err != nil {
@@ -97,9 +105,9 @@ func (p *parser) decode(src []byte) []any {
 		if doc == nil {
 			return nil
 		}
-		return []any{doc}
+		return []decodedDoc{{value: doc, line: 1}}
 	}
-	var docs []any
+	var docs []decodedDoc
 	dec := yaml.NewDecoder(bytes.NewReader(src))
 	for {
 		var node yaml.Node
@@ -135,7 +143,11 @@ func (p *parser) decode(src []byte) []any {
 		if doc == nil {
 			continue
 		}
-		docs = append(docs, doc)
+		line := node.Content[0].Line
+		if line <= 0 {
+			line = 1
+		}
+		docs = append(docs, decodedDoc{value: doc, line: line})
 	}
 	return docs
 }
@@ -319,10 +331,17 @@ func toStringOrAnyMap(v any) (map[any]any, bool) {
 
 // parseDocument sniffs one document and dispatches to the Kubernetes or
 // CloudFormation path. Anything else becomes a warning diagnostic.
-// Spans carry the file and the 1-based document index: an approximation,
-// documented as such, since YAML sub-spans are not tracked.
-func (p *parser) parseDocument(doc any, idx int) []ir.Resource {
-	span := ir.Span{File: p.path, StartLine: idx + 1, StartCol: 1}
+// Spans carry the file and the document's real 1-based start line in
+// the source (the YAML root node's line). This used to be the document
+// INDEX + 1, which attributed every finding in a multi-document file
+// to a line near the top of the file — e.g. a K8S-027 finding against
+// the second of two same-name Deployments pointed at line 2 instead
+// of the second document's actual start (R5: r5180/r5193).
+func (p *parser) parseDocument(doc any, idx int, line int) []ir.Resource {
+	if line <= 0 {
+		line = idx + 1
+	}
+	span := ir.Span{File: p.path, StartLine: line, StartCol: 1}
 	m, ok := asStringMap(doc)
 	if !ok {
 		p.unrecognized(idx, span)
