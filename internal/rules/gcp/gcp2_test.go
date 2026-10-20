@@ -148,27 +148,6 @@ func TestGCP009_UnknownQuiet(t *testing.T) {
 	}
 }
 
-func TestGCP010_NoNetworkPolicyFires(t *testing.T) {
-	r := res("google_container_cluster", "c", map[string]ir.Value{})
-	mustFinding(t, runRule(gkeNoNetworkPolicy{}, r), "AEGIS-GCP-010")
-}
-
-func TestGCP010_DisabledFires(t *testing.T) {
-	r := res("google_container_cluster", "c", map[string]ir.Value{
-		"network_policy": blks(3, blk("enabled", kv(false, 4))),
-	})
-	mustFinding(t, runRule(gkeNoNetworkPolicy{}, r), "AEGIS-GCP-010")
-}
-
-func TestGCP010_EnabledQuiet(t *testing.T) {
-	r := res("google_container_cluster", "c", map[string]ir.Value{
-		"network_policy": blks(3, blk("enabled", kv(true, 4))),
-	})
-	if len(runRule(gkeNoNetworkPolicy{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
-	}
-}
-
 func TestGCP011_NoPrivateClusterFires(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{})
 	mustFinding(t, runRule(gkeNoPrivateCluster{}, r), "AEGIS-GCP-011")
@@ -542,7 +521,7 @@ func TestGCP2Rules_IDOrder(t *testing.T) {
 	rules := GCP2Rules()
 	want := []string{
 		"AEGIS-GCP-005", "AEGIS-GCP-006", "AEGIS-GCP-007", "AEGIS-GCP-008",
-		"AEGIS-GCP-009", "AEGIS-GCP-010", "AEGIS-GCP-011", "AEGIS-GCP-012",
+		"AEGIS-GCP-009", "AEGIS-GCP-011", "AEGIS-GCP-012",
 		"AEGIS-GCP-013", "AEGIS-GCP-014", "AEGIS-GCP-015", "AEGIS-GCP-016",
 		"AEGIS-GCP-017", "AEGIS-GCP-018", "AEGIS-GCP-019", "AEGIS-GCP-020",
 		"AEGIS-GCP-021", "AEGIS-GCP-022", "AEGIS-GCP-023", "AEGIS-GCP-024",

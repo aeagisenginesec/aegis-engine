@@ -21,7 +21,6 @@ func GCP2Rules() []ir.Rule {
 		sqlPublicIP{},             // AEGIS-GCP-007
 		sqlNoSSL{},                // AEGIS-GCP-008
 		gkeLegacyABAC{},           // AEGIS-GCP-009
-		gkeNoNetworkPolicy{},      // AEGIS-GCP-010
 		gkeNoPrivateCluster{},     // AEGIS-GCP-011
 		kmsNoRotation{},           // AEGIS-GCP-012
 		functionIngressAll{},      // AEGIS-GCP-013
@@ -246,44 +245,6 @@ func (s gkeLegacyABAC) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-GCP-010: GKE cluster without network policy
-// ---------------------------------------------------------------------------
-
-type gkeNoNetworkPolicy struct{}
-
-func (gkeNoNetworkPolicy) ID() string { return "AEGIS-GCP-010" }
-func (gkeNoNetworkPolicy) Title() string {
-	return "GKE cluster without network policy"
-}
-func (gkeNoNetworkPolicy) Description() string {
-	return "google_container_cluster with no network_policy block, or with " +
-		"network_policy disabled, allows unrestricted pod-to-pod traffic."
-}
-func (gkeNoNetworkPolicy) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (gkeNoNetworkPolicy) AppliesTo(resType string) bool {
-	return resType == "google_container_cluster"
-}
-
-func (s gkeNoNetworkPolicy) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "network_policy")
-	if !present {
-		// No network_policy block: disabled by default. Documented.
-		return []ir.Finding{mkFinding(s, r, "network_policy", r.Span,
-			"absent (disabled by default)", "network_policy { enabled = true }")}
-	}
-	if !known || len(blks) == 0 {
-		return nil // unresolved: cannot decide
-	}
-	en, span, epresent, eknown := blockBool(blks[0], "enabled")
-	if !epresent || !eknown {
-		return nil // unresolved: cannot decide
-	}
-	if !en {
-		return []ir.Finding{mkFinding(s, r, "network_policy.enabled", span,
-			"false", "enabled = true")}
-	}
-	return nil
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-GCP-011: GKE cluster not private

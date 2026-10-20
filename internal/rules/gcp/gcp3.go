@@ -25,7 +25,7 @@ func GCP3Rules() []ir.Rule {
 		sqlNoMaintWindow{}, sqlOldVersion{}, sqlNoIAMAuth{},
 		sqlLocalInfile{}, sqlNoLogDisconnections{},
 		// GKE 047-056
-		gkeNoWorkloadIdentity{}, gkeNoBinaryAuth{}, gkeNoAutoUpgrade{},
+		gkeNoWorkloadIdentity{}, gkeNoAutoUpgrade{},
 		gkeNoAutoRepair{}, gkeBasicAuth{}, gkeClientCert{},
 		gkeDefaultSAFullScope{}, gkeNoIntranodeVisibility{},
 		gkeNoShieldedNodes{}, gkeNoConfidentialNodes{},
@@ -840,31 +840,6 @@ func (s gkeNoWorkloadIdentity) Check(r ir.Resource) []ir.Finding {
 }
 
 // AEGIS-GCP-048: GKE without binary authorization
-type gkeNoBinaryAuth struct{}
-
-func (gkeNoBinaryAuth) ID() string { return "AEGIS-GCP-048" }
-func (gkeNoBinaryAuth) Title() string {
-	return "GKE cluster without binary authorization"
-}
-func (gkeNoBinaryAuth) Description() string {
-	return "google_container_cluster with no binary_authorization block " +
-		"deploys container images without signature verification."
-}
-func (gkeNoBinaryAuth) Severity() ir.Severity { return ir.SeverityMedium }
-func (gkeNoBinaryAuth) AppliesTo(t string) bool {
-	return t == "google_container_cluster"
-}
-func (s gkeNoBinaryAuth) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "binary_authorization")
-	if present && !known {
-		return nil
-	}
-	if !present || len(blks) == 0 {
-		return []ir.Finding{mkFinding(s, r, "binary_authorization", r.Span,
-			"absent", "binary_authorization { evaluation_mode = \"PROJECT_SINGLETON_POLICY_ENFORCE\" }")}
-	}
-	return nil
-}
 
 // AEGIS-GCP-049: GKE node auto-upgrade disabled
 type gkeNoAutoUpgrade struct{}

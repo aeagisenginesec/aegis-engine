@@ -149,3 +149,5 @@ after each batch must keep TP = 136 / FN = 0.
 | AEGIS-AWS-418 | AEGIS-AWS-523 | Subset: three rules reported one missing OpenSearch control; 523's truth table is the union of 418 and 811 on advanced_security_options |
 | AEGIS-AWS-811 | AEGIS-AWS-523 | Exact duplicate of 523 (advanced_security_options) with inconsistent severity (High vs Medium) |
 | AEGIS-AWS-812 | AEGIS-AWS-623 | Duplicate on aws_opensearch_domain (log_publishing_options absent); 623 also covers aws_elasticsearch_domain |
+| AEGIS-GCP-048 | AEGIS-GCP-109 | Strict subset: 048 fires only when the binary_authorization block is absent; 109 also fires on enabled = false / missing evaluation_mode |
+| AEGIS-GCP-010 | AEGIS-GCP-111 | Strict subset: 111 also fires when the network_policy block is present with enabled absent (010 stayed silent); surviving severity is Medium (010 was High) |

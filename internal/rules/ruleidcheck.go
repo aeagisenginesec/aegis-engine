@@ -25,7 +25,7 @@ import (
 
 // deprecatedRuleIDs maps rule IDs removed during the post-audit
 // deduplication to their surviving canonical replacements.
-// Source of truth: docs/audit/DEPRECATED_RULE_IDS.md (65 entries).
+// Source of truth: docs/audit/DEPRECATED_RULE_IDS.md (67 entries).
 var deprecatedRuleIDs = map[string]string{
 	"AEGIS-AWS-418":   "AEGIS-AWS-523",
 	"AEGIS-AWS-540":   "AEGIS-AWS-311",
@@ -85,6 +85,8 @@ var deprecatedRuleIDs = map[string]string{
 	"AEGIS-AZURE-298": "AEGIS-AZURE-155",
 	"AEGIS-AZURE-312": "AEGIS-AZURE-020",
 	"AEGIS-AZR-004":   "AEGIS-AZURE-106",
+	"AEGIS-GCP-010":   "AEGIS-GCP-111",
+	"AEGIS-GCP-048":   "AEGIS-GCP-109",
 	"AEGIS-GCP-063":   "AEGIS-GCP-018",
 	"AEGIS-GCP-110":   "AEGIS-GCP-009",
 	"AEGIS-GCP-112":   "AEGIS-GCP-011",

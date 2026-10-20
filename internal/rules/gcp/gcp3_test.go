@@ -288,11 +288,6 @@ func TestGCP047_WIQuiet(t *testing.T) {
 }
 
 // --- 048: GKE binary auth ---
-func TestGCP048_NoBinaryAuthFires(t *testing.T) {
-	r := res("google_container_cluster", "c", map[string]ir.Value{})
-	mustFinding(t, runRule(gkeNoBinaryAuth{}, r), "AEGIS-GCP-048")
-}
-
 // --- 049: GKE auto-upgrade ---
 func TestGCP049_NoAutoUpgradeFires(t *testing.T) {
 	r := res("google_container_node_pool", "p", map[string]ir.Value{
@@ -874,12 +869,15 @@ func TestGCP3_UnknownQuiet(t *testing.T) {
 // Verify all 75 rules are registered in ID order (063 removed: exact duplicate of 018)
 func TestGCP3_AllRegistered(t *testing.T) {
 	rules := GCP3Rules()
-	if len(rules) != 75 {
-		t.Fatalf("expected 75 rules, got %d", len(rules))
+	if len(rules) != 74 {
+		t.Fatalf("expected 74 rules, got %d", len(rules))
 	}
 	wantIDs := []int{}
 	for n := 25; n <= 100; n++ {
 		if n == 63 { // removed: exact duplicate of 018
+			continue
+		}
+		if n == 48 { // removed in Sprint 2: strict subset of 109
 			continue
 		}
 		wantIDs = append(wantIDs, n)
