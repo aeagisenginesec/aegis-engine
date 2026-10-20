@@ -7,6 +7,7 @@
 //   - cap_add: []Value of capability strings
 //   - network_mode: string (absent when none)
 //   - pid: string (absent when none)
+//   - ipc: string (absent when none)
 //   - user: string (absent when none)
 //   - ports: []Value of published port strings
 //   - volumes: []Value of host-side source paths for bind/volume mounts
@@ -142,6 +143,9 @@ func parseService(path, name string, svc *yaml.Node) (ir.Resource, []ir.Diagnost
 	}
 	if pid := mappingScalar(svc, "pid"); pid != "" {
 		attrs["pid"] = ir.Value{Raw: pid, Known: true, Span: span}
+	}
+	if ipc := mappingScalar(svc, "ipc"); ipc != "" {
+		attrs["ipc"] = ir.Value{Raw: ipc, Known: true, Span: span}
 	}
 	if user := mappingScalar(svc, "user"); user != "" {
 		attrs["user"] = ir.Value{Raw: user, Known: true, Span: span}

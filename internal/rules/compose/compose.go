@@ -26,6 +26,7 @@ func Rules() []ir.Rule {
 		composeEnvSecrets{},  // AEGIS-COMPOSE-006
 		composeRootUser{},    // AEGIS-COMPOSE-007
 		composeLatestTag{},   // AEGIS-COMPOSE-008
+		hostNetworkMode{},    // AEGIS-COMPOSE-009
 	}
 }
 
@@ -163,7 +164,7 @@ func (dangerousCaps) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-COMPOSE-003: host network/PID namespaces (medium)
+// AEGIS-COMPOSE-003: host PID/IPC namespaces (medium)
 // ---------------------------------------------------------------------------
 
 type hostNamespaces struct{}
@@ -173,10 +174,10 @@ func (hostNamespaces) Title() string {
 	return "Service shares host namespaces"
 }
 func (hostNamespaces) Description() string {
-	return "network_mode: host (or pid: host) drops network/process " +
-		"isolation: the service sees host interfaces and processes, " +
-		"bypassing network policies. Use explicit port publishing and " +
-		"keep the default namespaces."
+	return "pid: host (or ipc: host) drops process/IPC isolation: the " +
+		"service sees and can signal host processes and shares IPC with " +
+		"the host. Keep the default PID and IPC namespaces. (Host " +
+		"networking via network_mode: host is AEGIS-COMPOSE-009.)"
 }
 func (hostNamespaces) Severity() ir.Severity         { return ir.SeverityMedium }
 func (hostNamespaces) AppliesTo(resType string) bool { return appliesToCompose(resType) }
@@ -184,20 +185,20 @@ func (hostNamespaces) AppliesTo(resType string) bool { return appliesToCompose(r
 func (hostNamespaces) Check(r ir.Resource) []ir.Finding {
 	rule := hostNamespaces{}
 	var out []ir.Finding
-	if nm, nspan, present, known := getString(r, "network_mode"); present && known &&
-		strings.EqualFold(strings.TrimSpace(nm), "host") {
-		out = append(out, finding(
-			rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
-			r, "network_mode", nspan, "host",
-			"published ports on the default bridge network",
-		))
-	}
 	if pid, pspan, present, known := getString(r, "pid"); present && known &&
 		strings.EqualFold(strings.TrimSpace(pid), "host") {
 		out = append(out, finding(
 			rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
 			r, "pid", pspan, "host",
 			"default PID namespace",
+		))
+	}
+	if ipc, ispan, present, known := getString(r, "ipc"); present && known &&
+		strings.EqualFold(strings.TrimSpace(ipc), "host") {
+		out = append(out, finding(
+			rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+			r, "ipc", ispan, "host",
+			"default IPC namespace",
 		))
 	}
 	return out
@@ -460,4 +461,39 @@ func (composeLatestTag) Check(r ir.Resource) []ir.Finding {
 		)}
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-COMPOSE-009: host network namespace (medium)
+// ---------------------------------------------------------------------------
+
+type hostNetworkMode struct{}
+
+func (hostNetworkMode) ID() string { return "AEGIS-COMPOSE-009" }
+func (hostNetworkMode) Title() string {
+	return "Service uses host network namespace (network_mode: host)"
+}
+func (hostNetworkMode) Description() string {
+	return "network_mode: host removes network isolation entirely: the " +
+		"service shares the host's network stack, sees all host " +
+		"interfaces and traffic, and binds host ports directly — port " +
+		"publishing and network policies do not apply. Publish explicit " +
+		"ports on the default bridge network instead. (Split out of " +
+		"AEGIS-COMPOSE-003, which now covers host PID/IPC namespaces " +
+		"only: host networking is a distinct exposure.)"
+}
+func (hostNetworkMode) Severity() ir.Severity         { return ir.SeverityMedium }
+func (hostNetworkMode) AppliesTo(resType string) bool { return appliesToCompose(resType) }
+
+func (hostNetworkMode) Check(r ir.Resource) []ir.Finding {
+	rule := hostNetworkMode{}
+	nm, nspan, present, known := getString(r, "network_mode")
+	if !present || !known || !strings.EqualFold(strings.TrimSpace(nm), "host") {
+		return nil
+	}
+	return []ir.Finding{finding(
+		rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+		r, "network_mode", nspan, "host",
+		"published ports on the default bridge network",
+	)}
 }

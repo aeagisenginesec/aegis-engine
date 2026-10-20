@@ -61,9 +61,22 @@ func TestC002_DangerousCaps(t *testing.T) {
 }
 
 func TestC003_HostNamespaces(t *testing.T) {
-	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: host\n")), 1)
 	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    pid: host\n")), 1)
+	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    ipc: host\n")), 1)
+	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    pid: host\n    ipc: host\n")), 2)
+	// Host networking is AEGIS-COMPOSE-009's finding, no longer C003's.
+	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: host\n")), 0)
 	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: bridge\n")), 0)
+	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n")), 0)
+}
+
+func TestC009_HostNetworkMode(t *testing.T) {
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: host\n")), 1)
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: bridge\n")), 0)
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: service:app\n")), 0)
+	// pid: host alone is C003's finding, not C009's.
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n    pid: host\n")), 0)
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n")), 0)
 }
 
 func TestC004_DockerSock(t *testing.T) {
@@ -107,8 +120,8 @@ func TestC008_LatestTag(t *testing.T) {
 
 func TestCompose_IDOrder(t *testing.T) {
 	rules := Rules()
-	if len(rules) != 8 {
-		t.Fatalf("want 8 rules, got %d", len(rules))
+	if len(rules) != 9 {
+		t.Fatalf("want 9 rules, got %d", len(rules))
 	}
 	for i, r := range rules {
 		want := "AEGIS-COMPOSE-00" + string(rune('1'+i))
@@ -133,7 +146,7 @@ func TestCompose_Coverage(t *testing.T) {
 	ids := []string{
 		"AEGIS-COMPOSE-001", "AEGIS-COMPOSE-002", "AEGIS-COMPOSE-003",
 		"AEGIS-COMPOSE-004", "AEGIS-COMPOSE-005", "AEGIS-COMPOSE-006",
-		"AEGIS-COMPOSE-007", "AEGIS-COMPOSE-008",
+		"AEGIS-COMPOSE-007", "AEGIS-COMPOSE-008", "AEGIS-COMPOSE-009",
 	}
 	byID := map[string]ir.Rule{}
 	for _, r := range Rules() {
