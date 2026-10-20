@@ -1,0 +1,112 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5028",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 5,
+    "critical": 1,
+    "high": 1,
+    "medium": 1,
+    "low": 2
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-204",
+      "severity": "high",
+      "title": "EC2 instance without IMDSv2 enforcement",
+      "description": "Without metadata_options.http_tokens = \"required\", the instance metadata service accepts IMDSv1 requests, which SSRF vulnerabilities can abuse to steal credentials.",
+      "resource": "aws_instance.legacy_app",
+      "file": "corpus/r5028/main.tf",
+      "line": 1,
+      "evidence": "metadata_options.http_tokens = [REDACTED]",
+      "expected": "metadata_options { http_tokens = \"required\" }",
+      "remediation": "Enforce IMDSv2 on the instance / launch template:\nmetadata_options {\n  http_endpoint = \"enabled\"\n  http_tokens   = \"required\"   # IMDSv2 only\n  http_put_response_hop_limit = 1\n}",
+      "references": [
+        "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-3"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-310",
+      "severity": "medium",
+      "title": "EC2 instance without detailed monitoring",
+      "description": "With monitoring absent or false (the provider default), the instance ships only basic 5-minute CloudWatch metrics, delaying detection of performance and availability issues.",
+      "resource": "aws_instance.legacy_app",
+      "file": "corpus/r5028/main.tf",
+      "line": 1,
+      "evidence": "monitoring = absent (provider default: disabled)",
+      "expected": "monitoring = true",
+      "remediation": "Enable detailed monitoring on the EC2 instance (1-minute CloudWatch metrics):\nresource \"aws_instance\" \"this\" {\n  # ...\n  monitoring = true\n}",
+      "references": [
+        "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-cloudwatch-new.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-534",
+      "severity": "critical",
+      "title": "Secrets in EC2 user_data",
+      "description": "A secret (AWS key, password, token) embedded in EC2 user_data is visible in the console, API responses, and instance metadata. user_data_base64 is decoded before scanning. Pass secrets via instance profiles, SSM Parameter Store, or Secrets Manager instead. The secret value is never included in findings. Interpolated references to secret-like variables (${var.db_password}) are also reported: user_data is visible in the console regardless of variable sensitivity.",
+      "resource": "aws_instance.legacy_app",
+      "file": "corpus/r5028/main.tf",
+      "line": 4,
+      "evidence": "user_data = [REDACTED: PASSWORD assignment in user_data]",
+      "expected": "no secrets in user_data; use instance profiles or SSM/Secrets Manager",
+      "remediation": "Remove secrets from user_data immediately and rotate every exposed value.\nPass secrets via instance tags + Secrets Manager lookup at boot, or use an IAM\ninstance profile so the instance fetches secrets at runtime:\nuser_data = base64encode(templatefile(\"bootstrap.sh\", {}))  # no secrets inside\nNote: user_data is visible to anyone with EC2 DescribeInstances — treat any\nsecret ever placed there as compromised.",
+      "references": [
+        "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-683",
+      "severity": "low",
+      "title": "EC2 instance without termination protection",
+      "description": "disable_api_termination is absent or false, so the instance can be terminated by an accidental or malicious API call. Enable it for instances that must not be deleted casually.",
+      "resource": "aws_instance.legacy_app",
+      "file": "corpus/r5028/main.tf",
+      "line": 1,
+      "evidence": "disable_api_termination = absent (provider default: false)",
+      "expected": "disable_api_termination = true",
+      "remediation": "Enable deletion protection to prevent accidental destruction:\nresource \"aws_db_instance\" \"this\" {\n  deletion_protection = true\n}\nFor S3, remove `force_destroy = true`. For EC2, set `disable_api_termination = true`.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-699",
+      "severity": "low",
+      "title": "EC2 instance without Nitro Enclaves enabled",
+      "description": "enclave_options is absent, so Nitro Enclaves are unavailable on this instance. Workloads that process sensitive data should enable enclave_options { enabled = true } to isolate it.",
+      "resource": "aws_instance.legacy_app",
+      "file": "corpus/r5028/main.tf",
+      "line": 1,
+      "evidence": "enclave_options = absent (provider default: enclaves unavailable)",
+      "expected": "enclave_options { enabled = true }",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5028/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

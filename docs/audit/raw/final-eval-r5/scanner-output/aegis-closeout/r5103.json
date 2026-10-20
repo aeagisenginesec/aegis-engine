@@ -1,0 +1,61 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5103",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 2,
+    "critical": 0,
+    "high": 2,
+    "medium": 0,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-019",
+      "severity": "high",
+      "title": "Redis cache with non-SSL port enabled",
+      "description": "azurerm_redis_cache with enable_non_ssl_port = true accepts plaintext Redis connections, exposing credentials and data in transit.",
+      "resource": "azurerm_redis_cache.sessions-299d37",
+      "file": "corpus/r5103/main.bicep",
+      "line": 1,
+      "evidence": "enable_non_ssl_port = true",
+      "expected": "enable_non_ssl_port = false",
+      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS1_2\"` / `minimum_tls_version = \"1.2\"`, replace HTTP listeners with HTTPS, and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/tls-best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-169",
+      "severity": "high",
+      "title": "PostgreSQL flexible server with public network access enabled",
+      "description": "azurerm_postgresql_flexible_server with public_network_access_enabled (the provider default) exposes the database to the internet. Disable public network access and use VNet integration or private endpoints.",
+      "resource": "azurerm_postgresql_flexible_server.orders-299d37",
+      "file": "corpus/r5103/main.bicep",
+      "line": 1,
+      "evidence": "public_network_access_enabled = true",
+      "expected": "public_network_access_enabled = false on azurerm_postgresql_flexible_server",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5103/main.bicep",
+        "status": "parsed",
+        "format": "bicep"
+      }
+    ]
+  }
+}

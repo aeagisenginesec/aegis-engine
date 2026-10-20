@@ -1,0 +1,85 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5056",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 2,
+    "critical": 0,
+    "high": 2,
+    "medium": 0,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-004",
+      "severity": "high",
+      "title": "Security group ingress open to the world",
+      "description": "Ingress rules allowing 0.0.0.0/0 expose the workload to the entire internet. Restrict source CIDRs to known ranges.",
+      "resource": "aws_security_group.PortalSg",
+      "file": "corpus/r5056/template.yaml",
+      "line": 24,
+      "evidence": "ingress.cidr_blocks = 0.0.0.0/0",
+      "expected": "restricted source CIDR ranges",
+      "remediation": "Restrict the ingress CIDR to trusted ranges. Replace `0.0.0.0/0` with your\noffice/VPN CIDRs, or remove the rule and use SSM Session Manager (no inbound\nSSH needed):\ningress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"203.0.113.0/24\"]  # your trusted range\n}",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "5.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-341",
+      "severity": "high",
+      "title": "SNS topic without KMS encryption",
+      "description": "SNS topics should encrypt messages at rest with a KMS key. A topic with no kms_master_key_id relies on unencrypted delivery.",
+      "resource": "aws_sns_topic.AlertsTopic",
+      "file": "corpus/r5056/template.yaml",
+      "line": 5,
+      "evidence": "kms_master_key_id = [REDACTED]",
+      "expected": "kms_master_key_id set to a KMS key ARN or alias",
+      "remediation": "Encrypt the SNS topic with a customer-managed KMS key:\nresource \"aws_sns_topic\" \"this\" {\n  kms_master_key_id = aws_kms_key.sns.arn\n}",
+      "references": [
+        "https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.5.1"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5056/template.yaml",
+        "status": "parsed",
+        "format": "cloudformation"
+      }
+    ]
+  }
+}

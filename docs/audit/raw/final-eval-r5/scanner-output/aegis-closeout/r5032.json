@@ -1,0 +1,82 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5032",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 3,
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 2
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-622",
+      "severity": "low",
+      "title": "MSK cluster without logging",
+      "description": "Hygiene: MSK clusters should enable broker logging to CloudWatch, S3 or Firehose. Add a logging_info block.",
+      "resource": "aws_msk_cluster.events",
+      "file": "corpus/r5032/main.tf",
+      "line": 1,
+      "evidence": "logging_info = absent",
+      "expected": "logging_info block with broker_logs configured",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-809",
+      "severity": "low",
+      "title": "MSK cluster without per-topic enhanced monitoring",
+      "description": "An MSK cluster whose enhanced_monitoring is not PER_TOPIC_PER_BROKER emits only coarse cluster metrics, hiding per-topic anomalies that signal misuse or exfiltration. Enable PER_TOPIC_PER_BROKER monitoring.",
+      "resource": "aws_msk_cluster.events",
+      "file": "corpus/r5032/main.tf",
+      "line": 1,
+      "evidence": "enhanced_monitoring = absent (provider default: DEFAULT)",
+      "expected": "enhanced_monitoring = \"PER_TOPIC_PER_BROKER\"",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "AU-2"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-810",
+      "severity": "medium",
+      "title": "MSK cluster with fewer than three broker nodes",
+      "description": "An MSK cluster with number_of_broker_nodes below 3 cannot sustain a broker failure without losing partition availability, and single-AZ deployments concentrate blast radius. Run at least three brokers spread across availability zones.",
+      "resource": "aws_msk_cluster.events",
+      "file": "corpus/r5032/main.tf",
+      "line": 4,
+      "evidence": "number_of_broker_nodes = 2",
+      "expected": "number_of_broker_nodes \u003e= 3",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5032/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

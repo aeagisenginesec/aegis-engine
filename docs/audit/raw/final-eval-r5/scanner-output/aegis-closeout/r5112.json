@@ -1,0 +1,69 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5112",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 1,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 1
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-773",
+      "severity": "low",
+      "title": "SNS topic without display name",
+      "description": "A topic with no display_name is harder to identify in notifications and audit trails. Set a human-readable display name for every topic.",
+      "resource": "aws_sns_topic.alertsTopic",
+      "file": "corpus/r5112/Pulumi.yaml",
+      "line": 7,
+      "evidence": "display_name = absent",
+      "expected": "human-readable display name",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "level": "info",
+      "message": "pulumi: corpus/r5112/Pulumi.yaml uses the template:-nested program layout",
+      "span": {
+        "file": "corpus/r5112/Pulumi.yaml",
+        "start_line": 0,
+        "start_col": 0,
+        "end_line": 0,
+        "end_col": 0
+      }
+    },
+    {
+      "level": "warning",
+      "message": "pulumi: resource \"shopDb\" has unmapped type \"azure-native:dbforpostgresql:FlexibleServer\"; using fallback type \"pulumi_azure_native_dbforpostgresql_flexibleserver\" (some rules may not apply)",
+      "span": {
+        "file": "corpus/r5112/Pulumi.yaml",
+        "start_line": 12,
+        "start_col": 7,
+        "end_line": 0,
+        "end_col": 0
+      }
+    }
+  ],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5112/Pulumi.yaml",
+        "status": "parsed",
+        "format": "pulumi"
+      }
+    ]
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5100",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 5,
+    "critical": 0,
+    "high": 2,
+    "medium": 2,
+    "low": 1
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-016",
+      "severity": "high",
+      "title": "Container Registry with admin user enabled",
+      "description": "azurerm_container_registry with admin_enabled = true exposes a long-lived admin credential. Use Azure AD / managed identity authentication instead.",
+      "resource": "azurerm_container_registry.platforma75cf6",
+      "file": "corpus/r5100/main.bicep",
+      "line": 1,
+      "evidence": "admin_enabled = true",
+      "expected": "admin_enabled = false",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-251",
+      "severity": "medium",
+      "title": "Container Registry without content trust",
+      "description": "azurerm_container_registry without trust_policy_enabled = true (Premium SKU) cannot enforce signed-image policies, so tampered images can be pulled. Enable content trust.",
+      "resource": "azurerm_container_registry.platforma75cf6",
+      "file": "corpus/r5100/main.bicep",
+      "line": 1,
+      "evidence": "trust_policy_enabled = absent (provider default: false)",
+      "expected": "trust_policy_enabled = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-255",
+      "severity": "high",
+      "title": "Container Registry with public network access enabled",
+      "description": "azurerm_container_registry with public_network_access_enabled (the provider default) serves the registry over the public internet. Disable it and use private endpoints.",
+      "resource": "azurerm_container_registry.platforma75cf6",
+      "file": "corpus/r5100/main.bicep",
+      "line": 1,
+      "evidence": "public_network_access_enabled = absent (provider default: enabled)",
+      "expected": "public_network_access_enabled = false on azurerm_container_registry",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-257",
+      "severity": "medium",
+      "title": "Container Registry without customer-managed key",
+      "description": "azurerm_container_registry (Premium) without an encryption block using a Key Vault key relies on Microsoft-managed keys. Configure customer-managed keys.",
+      "resource": "azurerm_container_registry.platforma75cf6",
+      "file": "corpus/r5100/main.bicep",
+      "line": 1,
+      "evidence": "encryption = absent (Microsoft-managed keys)",
+      "expected": "encryption { key_vault_key_id = \"...\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-261",
+      "severity": "low",
+      "title": "Container Registry without retention policy",
+      "description": "azurerm_container_registry (Premium) without a retention_policy block accumulates untagged manifests indefinitely, widening the stale-image attack surface. Enable retention with a sensible day count.",
+      "resource": "azurerm_container_registry.platforma75cf6",
+      "file": "corpus/r5100/main.bicep",
+      "line": 1,
+      "evidence": "retention_policy = absent",
+      "expected": "retention_policy { enabled = true, days = 7 }",
+      "remediation": "Apply least privilege. Replace wildcard permissions with the minimum scoped Azure RBAC roles the workload needs. Use Entra ID groups, managed identities, and Privileged Identity Management for privileged roles.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/role-based-access-control/best-practices"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5100/main.bicep",
+        "status": "parsed",
+        "format": "bicep"
+      }
+    ]
+  }
+}

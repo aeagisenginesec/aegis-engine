@@ -1,0 +1,541 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5099",
+  "summary": {
+    "resources": 3,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 34,
+    "critical": 0,
+    "high": 2,
+    "medium": 18,
+    "low": 14
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-011",
+      "severity": "high",
+      "title": "App Service without HTTPS-only",
+      "description": "App Service with https_only = false serves traffic over plaintext HTTP. Enable https_only to force TLS.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "https_only = false",
+      "expected": "https_only = true",
+      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS1_2\"` / `minimum_tls_version = \"1.2\"`, replace HTTP listeners with HTTPS, and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/tls-best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-028",
+      "severity": "medium",
+      "title": "Storage account without blob versioning",
+      "description": "azurerm_storage_account blob_properties without versioning_enabled loses protection against accidental overwrite or deletion. Enable versioning.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "blob_properties = absent",
+      "expected": "blob_properties { versioning_enabled = true }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time restore / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/backup/backup-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-029",
+      "severity": "medium",
+      "title": "Storage account without blob soft delete",
+      "description": "azurerm_storage_account blob_properties without delete_retention_policy cannot recover accidentally deleted blobs. Enable soft delete.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "blob_properties = absent",
+      "expected": "blob_properties { delete_retention_policy { days = 7 } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-031",
+      "severity": "medium",
+      "title": "Storage account allows shared key access",
+      "description": "azurerm_storage_account with shared_access_key_enabled = true permits storage account key authentication. Prefer Microsoft Entra ID and disable shared key access.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "shared_access_key_enabled = [REDACTED]",
+      "expected": "shared_access_key_enabled = false",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-032",
+      "severity": "medium",
+      "title": "Storage account without infrastructure encryption",
+      "description": "azurerm_storage_account without infrastructure_encryption_enabled lacks double encryption at the infrastructure layer. Enable it for defense in depth.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "infrastructure_encryption_enabled = absent",
+      "expected": "infrastructure_encryption_enabled = true",
+      "remediation": "Enable encryption at rest. For storage accounts set `infrastructure_encryption_enabled = true` and use a customer-managed key via `azurerm_key_vault_key`. For regulated data use a customer-managed key in Key Vault with purge protection and key rotation.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-atrest"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-033",
+      "severity": "low",
+      "title": "Storage account without customer-managed key",
+      "description": "azurerm_storage_account without customer_managed_key block uses Microsoft-managed keys. Use a customer-managed key in Key Vault for sensitive data.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "customer_managed_key = [REDACTED]",
+      "expected": "customer_managed_key { key_vault_key_id = ... }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-034",
+      "severity": "low",
+      "title": "Storage account queue without logging",
+      "description": "azurerm_storage_account queue_properties without logging loses audit trail for queue operations. Enable queue logging.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "queue_properties = absent",
+      "expected": "queue_properties { logging { read = true } }",
+      "remediation": "Enable audit logging. Turn on Azure Monitor diagnostic settings, the Activity Log, and Defender for Cloud. Ship logs to a Log Analytics workspace in a security subscription.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-061",
+      "severity": "high",
+      "title": "App Service without authentication",
+      "description": "azurerm_app_service without auth_settings enabled allows anonymous access. Enable App Service authentication.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "auth_settings = absent",
+      "expected": "auth_settings block with enabled = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-062",
+      "severity": "medium",
+      "title": "App Service without managed identity",
+      "description": "azurerm_app_service without identity block cannot use managed identities for Key Vault or database access. Configure a system-assigned identity.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "identity = absent",
+      "expected": "identity { type = \"SystemAssigned\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-063",
+      "severity": "low",
+      "title": "App Service without VNet integration",
+      "description": "azurerm_app_service without virtual_network_subnet_id reaches backend resources over public endpoints. Integrate with a VNet.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "virtual_network_subnet_id = absent",
+      "expected": "virtual_network_subnet_id = azurerm_subnet.example.id",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-066",
+      "severity": "low",
+      "title": "App Service without health check path",
+      "description": "azurerm_app_service site_config without health_check_path misses unhealthy instance detection. Configure a health check path.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "site_config.health_check_path = absent",
+      "expected": "health_check_path = \"/health\"",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-110",
+      "severity": "medium",
+      "title": "App Service without client certificates",
+      "description": "azurerm_app_service without client_cert_enabled = true skips mutual TLS. Require client certificates for sensitive apps.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "client_cert_enabled = absent",
+      "expected": "client_cert_enabled = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-111",
+      "severity": "low",
+      "title": "App Service without detailed error messages",
+      "description": "Web app logs block without detailed error messages enabled loses diagnostic detail for failed requests. Enable detailed error messages in the logs configuration.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "logs.detailed_error_messages_enabled = disabled or absent",
+      "expected": "logs { detailed_error_messages_enabled = true }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-112",
+      "severity": "low",
+      "title": "App Service without failed request tracing",
+      "description": "Web app logs block without failed_request_tracing_enabled loses FREB traces for diagnosing failures. Enable failed request tracing.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "logs.failed_request_tracing_enabled = disabled or absent",
+      "expected": "logs { failed_request_tracing_enabled = true }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-113",
+      "severity": "medium",
+      "title": "App Service with FTP enabled",
+      "description": "Web app site_config without ftps_state = \"FtpsOnly\" (or \"Disabled\") permits plaintext FTP deployments. The provider default is AllAllowed. Restrict to FTPS only.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "site_config.ftps_state = absent (default AllAllowed)",
+      "expected": "ftps_state = \"FtpsOnly\"",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-114",
+      "severity": "low",
+      "title": "App Service without HTTP logging",
+      "description": "Web app without HTTP request logging (logs { http_logs } or http_logging_enabled) loses the web-server audit trail. Enable HTTP logging to storage or the file system.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "logs.http_logs = absent",
+      "expected": "logs { http_logs { file_system { retention_in_days = 30 } } }",
+      "remediation": "Enable audit logging. Turn on Azure Monitor diagnostic settings, the Activity Log, and Defender for Cloud. Ship logs to a Log Analytics workspace in a security subscription.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-115",
+      "severity": "medium",
+      "title": "App Service not using latest HTTP version",
+      "description": "Web app site_config without http2_enabled = true serves traffic over HTTP/1.1. Enable HTTP/2 for the latest protocol behavior and performance.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "site_config.http2_enabled = absent (default false)",
+      "expected": "site_config { http2_enabled = true }",
+      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS1_2\"` / `minimum_tls_version = \"1.2\"`, replace HTTP listeners with HTTPS, and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/tls-best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-116",
+      "severity": "medium",
+      "title": "App Service without system-assigned managed identity",
+      "description": "Web app identity block without type containing \"SystemAssigned\" cannot use a system-assigned managed identity for Key Vault or database access. Set identity { type = \"SystemAssigned\" }.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "identity = absent",
+      "expected": "identity { type = \"SystemAssigned\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-118",
+      "severity": "low",
+      "title": "App Service without Azure Files storage mount",
+      "description": "azurerm_app_service without a storage_account block has no persistent Azure Files mount. Mount Azure Files for durable shared storage across instances.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "storage_account = absent",
+      "expected": "storage_account { name = \"...\" type = \"AzureFiles\" account_name = azurerm_storage_account.example.name share_name = \"...\" access_key = \"...\" mount_path = \"/mounts/files\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-124",
+      "severity": "medium",
+      "title": "Storage account without private endpoint",
+      "description": "azurerm_storage_account with no azurerm_private_endpoint targeting it is reachable over the public endpoint. Connect it via a private endpoint on the storage subresource (blob, dfs, queue, table, or file).",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "private_endpoint = no azurerm_private_endpoint targets this account",
+      "expected": "azurerm_private_endpoint { private_service_connection { private_connection_resource_id = azurerm_storage_account.this.id subresource_names = [\"blob\"] } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-125",
+      "severity": "low",
+      "title": "Storage account without SAS expiry policy",
+      "description": "azurerm_storage_account without a sas_policy block issues shared access signatures with no enforced expiry. Set sas_policy { expiration_period and expiration_action } to bound SAS lifetimes.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "sas_policy = absent",
+      "expected": "sas_policy { expiration_period = \"90.00:00:00\" expiration_action = \"Log\" }",
+      "remediation": "Set a SAS expiry policy on the storage account so shared access signatures\ncannot be minted without an expiration:\nresource \"azurerm_storage_account\" \"this\" {\n  # ...\n  sas_policy {\n    expiration_period = \"00.01:00:00\"\n    expiration_action = \"Log\"\n  }\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account#sas_policy"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-137",
+      "severity": "medium",
+      "title": "App Service without IP access restrictions",
+      "description": "Web app site_config without ip_restriction blocks accepts traffic from any source address. Add ip_restriction rules to allow-list the networks that may reach the app.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "site_config.ip_restriction = absent (default allow all)",
+      "expected": "site_config { ip_restriction { ip_address = \"203.0.113.0/24\" } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-138",
+      "severity": "medium",
+      "title": "App Service SCM site without access restrictions",
+      "description": "Web app site_config without scm_ip_restriction blocks (or scm_use_main_ip_restriction = true) leaves the Kudu SCM/deployment endpoint reachable from any address. Restrict the SCM site to trusted networks.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "site_config.scm_ip_restriction = absent (default allow all)",
+      "expected": "scm_ip_restriction { ip_address = \"203.0.113.0/24\" } or scm_use_main_ip_restriction = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-140",
+      "severity": "low",
+      "title": "App Service without backup configuration",
+      "description": "Hygiene: web app without a backup block has no scheduled backups of app content and configuration, slowing recovery from misconfiguration or compromise. Configure automated backups.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "backup = absent",
+      "expected": "backup { name = \"...\" storage_account_url = \"...\" schedule { frequency_interval = 1 frequency_unit = \"Day\" } }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time restore / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/backup/backup-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-141",
+      "severity": "low",
+      "title": "App Service without application logs",
+      "description": "Web app logs block without application_logs loses the application diagnostic stream needed to detect abuse or compromise. Enable application logging to storage or the file system. (HTTP request logging: AEGIS-AZURE-114.)",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "logs.application_logs = absent",
+      "expected": "logs { application_logs { file_system_level = \"Warning\" } }",
+      "remediation": "Enable audit logging. Turn on Azure Monitor diagnostic settings, the Activity Log, and Defender for Cloud. Ship logs to a Log Analytics workspace in a security subscription.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-147",
+      "severity": "low",
+      "title": "Storage account without blob change feed",
+      "description": "azurerm_storage_account blob_properties without change_feed_enabled = true records no ordered log of blob create/update/delete events, blinding incident response to data tampering. Enable the blob change feed.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "blob_properties.change_feed_enabled = absent (default false)",
+      "expected": "blob_properties { change_feed_enabled = true }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-149",
+      "severity": "medium",
+      "title": "Storage account without network rules",
+      "description": "azurerm_storage_account without a network_rules block accepts storage traffic from any network by default. Add network_rules with default_action = \"Deny\" and explicit allow rules. (Strict complement of AEGIS-AZURE-021, which covers an explicit Allow default action.)",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "network_rules = absent (default allow all)",
+      "expected": "network_rules { default_action = \"Deny\" ... }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-181",
+      "severity": "medium",
+      "title": "Storage account without managed identity",
+      "description": "azurerm_storage_account without an identity block cannot use customer-managed keys stored in Key Vault. Enable a system-assigned identity when CMK encryption is required.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "identity = absent (no managed identity)",
+      "expected": "identity { type = \"SystemAssigned\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-192",
+      "severity": "medium",
+      "title": "Storage account not defaulting to OAuth authentication",
+      "description": "azurerm_storage_account without default_to_oauth_authentication = true lets clients fall back to Shared Key auth. Default to Entra ID OAuth for data-plane operations.",
+      "resource": "azurerm_storage_account.backups6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "default_to_oauth_authentication = absent (provider default: false)",
+      "expected": "default_to_oauth_authentication = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-211",
+      "severity": "medium",
+      "title": "App Service with FTPS enabled",
+      "description": "azurerm_app_service site_config with ftps_state other than \"Disabled\" allows FTP/S deployment, which can transmit credentials insecurely. Set ftps_state = \"Disabled\" and deploy via CI/CD with managed identity.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "site_config = absent (provider default: AllAllowed)",
+      "expected": "site_config { ftps_state = \"Disabled\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-212",
+      "severity": "low",
+      "title": "App Service without HTTP/2",
+      "description": "azurerm_app_service site_config without http2_enabled = true serves traffic over HTTP/1.1 only. Enable HTTP/2 for modern transport security features.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "site_config = absent (provider default: false)",
+      "expected": "site_config { http2_enabled = true }",
+      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS1_2\"` / `minimum_tls_version = \"1.2\"`, replace HTTP listeners with HTTPS, and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/tls-best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-214",
+      "severity": "medium",
+      "title": "App Service without IP restrictions",
+      "description": "azurerm_app_service site_config without ip_restriction accepts traffic from any source IP. Restrict the app to known callers or front it with WAF.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "site_config = no ip_restriction block",
+      "expected": "site_config { ip_restriction { ip_address = \"\u003ccidr\u003e\" } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-215",
+      "severity": "low",
+      "title": "App Service without client certificate requirement",
+      "description": "azurerm_app_service without client_cert_enabled = true accepts requests without mutual TLS. Require client certificates for sensitive internal applications.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "client_cert_enabled = absent (provider default: false)",
+      "expected": "client_cert_enabled = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-223",
+      "severity": "medium",
+      "title": "App Service without virtual network integration",
+      "description": "azurerm_app_service without virtual_network_subnet_id is not integrated with a virtual network, so outbound traffic to databases and Key Vault traverses public endpoints. Enable regional VNet integration.",
+      "resource": "azurerm_app_service.ingest-6b5ec6",
+      "file": "corpus/r5099/main.bicep",
+      "line": 1,
+      "evidence": "virtual_network_subnet_id = absent (no VNet integration)",
+      "expected": "virtual_network_subnet_id = azurerm_subnet.example.id",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5099/main.bicep",
+        "status": "parsed",
+        "format": "bicep"
+      }
+    ]
+  }
+}

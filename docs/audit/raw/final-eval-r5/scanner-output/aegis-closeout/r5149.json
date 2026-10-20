@@ -1,0 +1,61 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5149",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 2,
+    "critical": 0,
+    "high": 1,
+    "medium": 1,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-COMPOSE-001",
+      "severity": "high",
+      "title": "Service runs privileged",
+      "description": "privileged: true disables all container isolation: the service gets every capability and full device access, so a compromise is a host compromise. Grant only the capabilities the service needs via cap_add.",
+      "resource": "compose_service.netprobe",
+      "file": "corpus/r5149/docker-compose.yml",
+      "line": 4,
+      "evidence": "privileged = privileged: true",
+      "expected": "least-privilege cap_add instead of privileged",
+      "remediation": "Apply least privilege. Run containers as non-root, drop unneeded capabilities, and scope registry / runtime permissions.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-COMPOSE-009",
+      "severity": "medium",
+      "title": "Service uses host network namespace (network_mode: host)",
+      "description": "network_mode: host removes network isolation entirely: the service shares the host's network stack, sees all host interfaces and traffic, and binds host ports directly — port publishing and network policies do not apply. Publish explicit ports on the default bridge network instead. (Split out of AEGIS-COMPOSE-003, which now covers host PID/IPC namespaces only: host networking is a distinct exposure.)",
+      "resource": "compose_service.netprobe",
+      "file": "corpus/r5149/docker-compose.yml",
+      "line": 4,
+      "evidence": "network_mode = host",
+      "expected": "published ports on the default bridge network",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5149/docker-compose.yml",
+        "status": "parsed",
+        "format": "compose"
+      }
+    ]
+  }
+}

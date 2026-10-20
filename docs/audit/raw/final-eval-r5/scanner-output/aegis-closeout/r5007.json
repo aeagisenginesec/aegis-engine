@@ -1,0 +1,311 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5007",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 14,
+    "critical": 0,
+    "high": 1,
+    "medium": 9,
+    "low": 4
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-334",
+      "severity": "medium",
+      "title": "Weak or absent account password policy",
+      "description": "The IAM account password policy is the baseline for human credentials. A short minimum length, missing character-class requirements, or disabled password-reuse prevention weakens every console login in the account.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5007/main.tf",
+      "line": 25,
+      "evidence": "minimum_password_length = [REDACTED]",
+      "expected": "\u003e= 14",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-650",
+      "severity": "high",
+      "title": "IAM password policy minimum length below 14",
+      "description": "The account password policy allows passwords shorter than 14 characters. Short minimum lengths make console passwords far easier to brute-force. Set minimum_password_length to 14 or more.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5007/main.tf",
+      "line": 25,
+      "evidence": "minimum_password_length = [REDACTED]",
+      "expected": "\u003e= 14",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-651",
+      "severity": "medium",
+      "title": "IAM password policy does not require uppercase characters",
+      "description": "The account password policy does not require uppercase letters, shrinking the password search space. Set require_uppercase_characters to true.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5007/main.tf",
+      "line": 28,
+      "evidence": "require_uppercase_characters = false",
+      "expected": "true",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-653",
+      "severity": "medium",
+      "title": "IAM password policy does not require numbers",
+      "description": "The account password policy does not require numeric characters, shrinking the password search space. Set require_numbers to true.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5007/main.tf",
+      "line": 27,
+      "evidence": "require_numbers = false",
+      "expected": "true",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-654",
+      "severity": "medium",
+      "title": "IAM password policy does not require symbols",
+      "description": "The account password policy does not require symbol characters, shrinking the password search space. Set require_symbols to true.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5007/main.tf",
+      "line": 29,
+      "evidence": "require_symbols = false",
+      "expected": "true",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-655",
+      "severity": "medium",
+      "title": "IAM password policy allows password reuse",
+      "description": "The account password policy does not prevent password reuse (absent or 0), so users can cycle back to old (possibly compromised) passwords. Set password_reuse_prevention to a positive value (24 recommended by CIS AWS Foundations Benchmark).",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5007/main.tf",
+      "line": 32,
+      "evidence": "password_reuse_prevention = [REDACTED]",
+      "expected": "\u003e 0",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-656",
+      "severity": "medium",
+      "title": "IAM password maximum age too long or disabled",
+      "description": "The account password policy lets passwords live longer than 90 days (or never expire when set to 0), widening the window in which a compromised password stays useful. Set max_password_age between 1 and 90.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5007/main.tf",
+      "line": 31,
+      "evidence": "max_password_age = [REDACTED]",
+      "expected": "1-90",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-662",
+      "severity": "low",
+      "title": "IAM account has no alias",
+      "description": "No aws_iam_account_alias is defined, so the account is only identifiable by its numeric ID in the console sign-in URL and in audit trails. A memorable alias reduces the risk of operating in the wrong account.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5007/main.tf",
+      "line": 24,
+      "evidence": "account_alias = absent (AWS default: numeric account ID only)",
+      "expected": "aws_iam_account_alias defined",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-675",
+      "severity": "low",
+      "title": "IAM password policy allows reset after expiry",
+      "description": "hard_expiry is disabled, so users can set a new password after their password has expired instead of being forced through the administrative reset flow. Enable hard_expiry for stricter expired-password handling.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5007/main.tf",
+      "line": 24,
+      "evidence": "hard_expiry = absent (AWS default: false)",
+      "expected": "true",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-077",
+      "severity": "medium",
+      "title": "Virtual machine OS disk without encryption",
+      "description": "azurerm_linux_virtual_machine / azurerm_windows_virtual_machine os_disk without disk_encryption_set_id stores the OS disk with platform-managed keys. Use a disk encryption set.",
+      "resource": "azurerm_linux_virtual_machine.worker",
+      "file": "corpus/r5007/main.tf",
+      "line": 1,
+      "evidence": "os_disk.disk_encryption_set_id = absent",
+      "expected": "disk_encryption_set_id = azurerm_disk_encryption_set.example.id",
+      "remediation": "Enable encryption at rest. For storage accounts set `infrastructure_encryption_enabled = true` and use a customer-managed key via `azurerm_key_vault_key`. For regulated data use a customer-managed key in Key Vault with purge protection and key rotation.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-atrest"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-078",
+      "severity": "low",
+      "title": "Virtual machine without managed identity",
+      "description": "azurerm_linux_virtual_machine without identity block cannot use managed identities. Configure a system-assigned identity.",
+      "resource": "azurerm_linux_virtual_machine.worker",
+      "file": "corpus/r5007/main.tf",
+      "line": 1,
+      "evidence": "identity = absent",
+      "expected": "identity { type = \"SystemAssigned\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-294",
+      "severity": "medium",
+      "title": "Virtual machine without encryption at host",
+      "description": "azurerm_virtual_machine / azurerm_linux_virtual_machine / azurerm_windows_virtual_machine without encryption_at_host_enabled = true leaves VM data unencrypted at the host layer. Enable encryption at host.",
+      "resource": "azurerm_linux_virtual_machine.worker",
+      "file": "corpus/r5007/main.tf",
+      "line": 7,
+      "evidence": "encryption_at_host_enabled = false",
+      "expected": "encryption_at_host_enabled = true",
+      "remediation": "Enable encryption at rest. For storage accounts set `infrastructure_encryption_enabled = true` and use a customer-managed key via `azurerm_key_vault_key`. For regulated data use a customer-managed key in Key Vault with purge protection and key rotation.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-atrest"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-295",
+      "severity": "medium",
+      "title": "Virtual machine without secure boot",
+      "description": "azurerm_linux_virtual_machine / azurerm_windows_virtual_machine with secure_boot_enabled = false (or absent) boots without UEFI secure boot, allowing rootkit persistence. Enable secure boot with a trusted launch configuration.",
+      "resource": "azurerm_linux_virtual_machine.worker",
+      "file": "corpus/r5007/main.tf",
+      "line": 1,
+      "evidence": "secure_boot_enabled = absent (provider default: false)",
+      "expected": "secure_boot_enabled = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-297",
+      "severity": "low",
+      "title": "Virtual machine without boot diagnostics",
+      "description": "azurerm_virtual_machine / azurerm_linux_virtual_machine / azurerm_windows_virtual_machine without a boot_diagnostics block loses serial console and screenshot evidence needed for incident response. Enable boot diagnostics with a managed storage account.",
+      "resource": "azurerm_linux_virtual_machine.worker",
+      "file": "corpus/r5007/main.tf",
+      "line": 1,
+      "evidence": "boot_diagnostics = absent or disabled",
+      "expected": "boot_diagnostics { storage_account_uri = \"...\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5007/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

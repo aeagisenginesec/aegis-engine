@@ -1,0 +1,113 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5051",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 4,
+    "critical": 0,
+    "high": 1,
+    "medium": 3,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-303",
+      "severity": "medium",
+      "title": "ECR repository without image scanning",
+      "description": "Without image_scanning_configuration { scan_on_push = true }, vulnerable images are pushed and deployed without any scan.",
+      "resource": "aws_ecr_repository.SvcRepo",
+      "file": "corpus/r5051/template.yaml",
+      "line": 8,
+      "evidence": "image_scanning_configuration.scan_on_push = false",
+      "expected": "image_scanning_configuration { scan_on_push = true }",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-341",
+      "severity": "high",
+      "title": "SNS topic without KMS encryption",
+      "description": "SNS topics should encrypt messages at rest with a KMS key. A topic with no kms_master_key_id relies on unencrypted delivery.",
+      "resource": "aws_sns_topic.AlertsTopic",
+      "file": "corpus/r5051/template.yaml",
+      "line": 24,
+      "evidence": "kms_master_key_id = [REDACTED]",
+      "expected": "kms_master_key_id set to a KMS key ARN or alias",
+      "remediation": "Encrypt the SNS topic with a customer-managed KMS key:\nresource \"aws_sns_topic\" \"this\" {\n  kms_master_key_id = aws_kms_key.sns.arn\n}",
+      "references": [
+        "https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.5.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-515",
+      "severity": "medium",
+      "title": "ECR repository without KMS encryption",
+      "description": "ECR repositories default to AES256-managed encryption. A customer managed KMS key (encryption_type = KMS) gives key control and audit. Absent configuration defaults to AES256.",
+      "resource": "aws_ecr_repository.SvcRepo",
+      "file": "corpus/r5051/template.yaml",
+      "line": 5,
+      "evidence": "encryption_configuration = absent (defaults to AES256)",
+      "expected": "encryption_configuration with encryption_type = \"KMS\"",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-521",
+      "severity": "medium",
+      "title": "ECR repository allows mutable image tags",
+      "description": "With image_tag_mutability = MUTABLE (the default when absent), an attacker who pushes to the repository can overwrite a trusted tag such as 'latest' with a malicious image. Set image_tag_mutability to IMMUTABLE so tags cannot be overwritten.",
+      "resource": "aws_ecr_repository.SvcRepo",
+      "file": "corpus/r5051/template.yaml",
+      "line": 5,
+      "evidence": "image_tag_mutability = absent (defaults to MUTABLE)",
+      "expected": "IMMUTABLE",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "level": "warning",
+      "message": "cloudformation: unmapped resource type AWS::ECR::RepositoryPolicy (SvcRepoPolicy); skipped",
+      "span": {
+        "file": "corpus/r5051/template.yaml",
+        "start_line": 11,
+        "start_col": 11,
+        "end_line": 11,
+        "end_col": 37
+      }
+    }
+  ],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5051/template.yaml",
+        "status": "parsed",
+        "format": "cloudformation"
+      }
+    ]
+  }
+}

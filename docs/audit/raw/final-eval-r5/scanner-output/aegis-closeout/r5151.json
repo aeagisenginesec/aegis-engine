@@ -1,0 +1,46 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5151",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 1,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-COMPOSE-002",
+      "severity": "high",
+      "title": "Dangerous Linux capability granted",
+      "description": "The granted capability breaks container isolation: ALL grants everything, SYS_ADMIN is near-root, NET_ADMIN can reconfigure host networking, SYS_PTRACE can inspect host processes, and DAC_OVERRIDE bypasses file permissions. Grant only the minimal capabilities required.",
+      "resource": "compose_service.profiler",
+      "file": "corpus/r5151/docker-compose.yml",
+      "line": 9,
+      "evidence": "cap_add = SYS_PTRACE",
+      "expected": "minimal capability set; avoid ALL/SYS_ADMIN/NET_ADMIN/SYS_PTRACE/DAC_OVERRIDE",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5151/docker-compose.yml",
+        "status": "parsed",
+        "format": "compose"
+      }
+    ]
+  }
+}

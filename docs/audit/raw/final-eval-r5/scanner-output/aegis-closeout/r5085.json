@@ -1,0 +1,46 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5085",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 1,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-169",
+      "severity": "high",
+      "title": "PostgreSQL flexible server with public network access enabled",
+      "description": "azurerm_postgresql_flexible_server with public_network_access_enabled (the provider default) exposes the database to the internet. Disable public network access and use VNet integration or private endpoints.",
+      "resource": "azurerm_postgresql_flexible_server.orders-f4b0bb",
+      "file": "corpus/r5085/azuredeploy.json",
+      "line": 1,
+      "evidence": "public_network_access_enabled = true",
+      "expected": "public_network_access_enabled = false on azurerm_postgresql_flexible_server",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5085/azuredeploy.json",
+        "status": "parsed",
+        "format": "arm"
+      }
+    ]
+  }
+}

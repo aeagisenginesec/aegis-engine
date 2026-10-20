@@ -1,0 +1,46 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5075",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 1,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 1
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-205",
+      "severity": "low",
+      "title": "Key Vault firewall without IP rules",
+      "description": "azurerm_key_vault network_acls with default_action = \"Deny\" but no ip_rules or virtual_network_subnet_ids leaves the vault unreachable — or, when combined with bypass, silently wide open. Define explicit IP or VNet allowances alongside the Deny default.",
+      "resource": "azurerm_key_vault.kv-pay-c72ad1",
+      "file": "corpus/r5075/azuredeploy.json",
+      "line": 1,
+      "evidence": "network_acls = default_action = \"Deny\" with no allowances",
+      "expected": "network_acls { ip_rules = [...] }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5075/azuredeploy.json",
+        "status": "parsed",
+        "format": "arm"
+      }
+    ]
+  }
+}

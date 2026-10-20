@@ -1,0 +1,61 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5156",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 2,
+    "critical": 0,
+    "high": 2,
+    "medium": 0,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-COMPOSE-006",
+      "severity": "high",
+      "title": "Secret in service environment",
+      "description": "Literal secrets in the compose file are committed to version control and visible to anyone who can read the file or inspect the service. Reference secrets from a secrets manager or an env_file outside version control.",
+      "resource": "compose_service.web",
+      "file": "corpus/r5156/docker-compose.yml",
+      "line": 4,
+      "evidence": "environment = SESSION_SECRET=[REDACTED]",
+      "expected": "secret from a manager or env_file outside version control",
+      "remediation": "Remove the hardcoded secret immediately and rotate it. Use Docker secrets / Compose secrets or a secrets manager; never bake secrets into images or env files.",
+      "references": [
+        "https://docs.docker.com/engine/swarm/secrets/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-COMPOSE-006",
+      "severity": "high",
+      "title": "Secret in service environment",
+      "description": "Literal secrets in the compose file are committed to version control and visible to anyone who can read the file or inspect the service. Reference secrets from a secrets manager or an env_file outside version control.",
+      "resource": "compose_service.web",
+      "file": "corpus/r5156/docker-compose.yml",
+      "line": 4,
+      "evidence": "environment = SMTP_PASSWORD=[REDACTED]",
+      "expected": "secret from a manager or env_file outside version control",
+      "remediation": "Remove the hardcoded secret immediately and rotate it. Use Docker secrets / Compose secrets or a secrets manager; never bake secrets into images or env files.",
+      "references": [
+        "https://docs.docker.com/engine/swarm/secrets/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5156/docker-compose.yml",
+        "status": "parsed",
+        "format": "compose"
+      }
+    ]
+  }
+}

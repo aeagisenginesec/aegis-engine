@@ -1,0 +1,46 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5191",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 1,
+    "critical": 1,
+    "high": 0,
+    "medium": 0,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-K8S-023",
+      "severity": "critical",
+      "title": "Binding grants cluster-admin",
+      "description": "A RoleBinding or ClusterRoleBinding whose roleRef points at cluster-admin grants full cluster control to its subjects. Bind least-privilege roles instead and audit cluster-admin bindings.",
+      "resource": "k8s_RoleBinding.deployer-048cd1",
+      "file": "corpus/r5191/deployment.yaml",
+      "line": 10,
+      "evidence": "roleRef.name = cluster-admin",
+      "expected": "bind a least-privilege role",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5191/deployment.yaml",
+        "status": "parsed",
+        "format": "manifests"
+      }
+    ]
+  }
+}
