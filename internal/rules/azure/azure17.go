@@ -719,4 +719,3 @@ func (s nsgInlineOpenRule) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-245: AKS cluster with local accounts enabled
-

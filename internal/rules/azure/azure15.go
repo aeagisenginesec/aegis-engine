@@ -19,18 +19,18 @@ import (
 // Azure15Rules returns Key Vault & Storage hardening rules in ID order.
 func Azure15Rules() []ir.Rule {
 	return []ir.Rule{
-		kvSoftDeleteRetention{},   // AEGIS-AZURE-186
-		kvNetworkAclsOpen{},       // AEGIS-AZURE-187
-		kvKeyNotHSM{},             // AEGIS-AZURE-189
-		storageNoOAuthDefault{},   // AEGIS-AZURE-192
-		storageSasNotBlocked{},    // AEGIS-AZURE-194
-		storageNestedPublic{},     // AEGIS-AZURE-195
-		storageContainerPublic{},  // AEGIS-AZURE-197
-		storageNetRulesOpen{},     // AEGIS-AZURE-199
-		kvKeyNearExpiry{},         // AEGIS-AZURE-200
-		storageStaticWebsite{},    // AEGIS-AZURE-201
-		storageSFTPEnabled{},      // AEGIS-AZURE-204
-		kvNoFirewallRules{},       // AEGIS-AZURE-205
+		kvSoftDeleteRetention{},  // AEGIS-AZURE-186
+		kvNetworkAclsOpen{},      // AEGIS-AZURE-187
+		kvKeyNotHSM{},            // AEGIS-AZURE-189
+		storageNoOAuthDefault{},  // AEGIS-AZURE-192
+		storageSasNotBlocked{},   // AEGIS-AZURE-194
+		storageNestedPublic{},    // AEGIS-AZURE-195
+		storageContainerPublic{}, // AEGIS-AZURE-197
+		storageNetRulesOpen{},    // AEGIS-AZURE-199
+		kvKeyNearExpiry{},        // AEGIS-AZURE-200
+		storageStaticWebsite{},   // AEGIS-AZURE-201
+		storageSFTPEnabled{},     // AEGIS-AZURE-204
+		kvNoFirewallRules{},      // AEGIS-AZURE-205
 	}
 }
 
