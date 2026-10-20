@@ -129,7 +129,6 @@ func TestRemediationFor_AuditCorrections(t *testing.T) {
 	cases := map[string]string{
 		"AEGIS-AWS-310":   "monitoring = true",
 		"AEGIS-AWS-311":   "iam_database_authentication_enabled = true",
-		"AEGIS-AWS-540":   "iam_database_authentication_enabled = true",
 		"AEGIS-AWS-546":   "copy_tags_to_snapshot = true",
 		"AEGIS-AWS-605":   "monitoring_interval",
 		"AEGIS-AWS-667":   "permissions_boundary",

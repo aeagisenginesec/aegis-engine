@@ -37,9 +37,9 @@ func fgList(items ...ir.Value) ir.Value {
 	return ir.Value{Raw: items, Known: true}
 }
 
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-540: RDS IAM auth (mysql/postgres scoped)
-// ---------------------------------------------------------------------------
+// AEGIS-AWS-540 tests removed in Sprint 2 with the rule itself
+// (duplicate of AEGIS-AWS-311; its engine-scope cases live in
+// Test311_EngineScope in storage_test.go).
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-541: Launch configuration IMDSv1

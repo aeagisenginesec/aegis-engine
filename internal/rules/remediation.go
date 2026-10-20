@@ -1188,17 +1188,8 @@ var remediationDB = map[string]remediationEntry{
 			"https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html",
 		},
 	},
-	"AEGIS-AWS-540": {
-		fix: "Enable IAM database authentication on the RDS instance so access is granted\n" +
-			"via IAM instead of static passwords:\n" +
-			"resource \"aws_db_instance\" \"this\" {\n" +
-			"  # ...\n" +
-			"  iam_database_authentication_enabled = true\n" +
-			"}",
-		refs: []string{
-			"https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html",
-		},
-	},
+	// AEGIS-AWS-540's remediation was identical to AEGIS-AWS-311's;
+	// 540 was removed in Sprint 2 as a duplicate of 311.
 	"AEGIS-AWS-546": {
 		fix: "Copy resource tags to automated snapshots so they inherit ownership and\n" +
 			"cost-allocation metadata:\n" +

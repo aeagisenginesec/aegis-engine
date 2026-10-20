@@ -435,9 +435,10 @@ func (dbParamGroupNoForceSSL) Check(r ir.Resource) []ir.Finding {
 // AEGIS-AWS-710: RDS master password without Secrets Manager rotation (medium)
 // ---------------------------------------------------------------------------
 // Replaces the originally-planned iam_database_authentication check:
-// AEGIS-AWS-311 (rdsNoIAMAuth) and AEGIS-AWS-540 (rdsNoIAMAuthScoped)
-// already cover it on aws_db_instance. Static master passwords are the
-// remaining credential-hygiene gap in this area.
+// AEGIS-AWS-311 (rdsNoIAMAuth) already covers it on aws_db_instance
+// (AEGIS-AWS-540, its scoped duplicate, was removed in Sprint 2).
+// Static master passwords are the remaining credential-hygiene gap
+// in this area.
 
 type dbInstancePasswordNoRotation struct{}
 

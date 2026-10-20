@@ -78,7 +78,7 @@
   {
     "rule_id": "AEGIS-AWS-311",
     "title": "RDS without IAM database authentication",
-    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene.",
+    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene. Engine-scoped: only mysql, postgres and mariadb instances support IAM database authentication; aurora engines are covered by the cluster rules.",
     "severity": "medium",
     "resource": "aws_db_instance.legacy",
     "evidence": {
@@ -97,7 +97,7 @@
   {
     "rule_id": "AEGIS-AWS-311",
     "title": "RDS without IAM database authentication",
-    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene.",
+    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene. Engine-scoped: only mysql, postgres and mariadb instances support IAM database authentication; aurora engines are covered by the cluster rules.",
     "severity": "medium",
     "resource": "aws_db_instance.orders",
     "evidence": {
@@ -168,44 +168,6 @@
       },
       "actual": "absent (provider default: false)",
       "expected": "true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-540",
-    "title": "RDS MySQL/Postgres instance without IAM database authentication",
-    "description": "MySQL and Postgres RDS instances support IAM database authentication, which replaces long-lived passwords with short-lived IAM credentials. With iam_database_authentication_enabled absent or false, access relies on static passwords. Engine-scoped: only fires for mysql/postgres engines; aurora and unknown engines are out of scope.",
-    "severity": "high",
-    "resource": "aws_db_instance.legacy",
-    "evidence": {
-      "attribute": "iam_database_authentication_enabled",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 5,
-        "start_col": 1,
-        "end_line": 18,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: disabled)",
-      "expected": "iam_database_authentication_enabled = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-540",
-    "title": "RDS MySQL/Postgres instance without IAM database authentication",
-    "description": "MySQL and Postgres RDS instances support IAM database authentication, which replaces long-lived passwords with short-lived IAM credentials. With iam_database_authentication_enabled absent or false, access relies on static passwords. Engine-scoped: only fires for mysql/postgres engines; aurora and unknown engines are out of scope.",
-    "severity": "high",
-    "resource": "aws_db_instance.orders",
-    "evidence": {
-      "attribute": "iam_database_authentication_enabled",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 20,
-        "start_col": 1,
-        "end_line": 32,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: disabled)",
-      "expected": "iam_database_authentication_enabled = true"
     }
   },
   {
