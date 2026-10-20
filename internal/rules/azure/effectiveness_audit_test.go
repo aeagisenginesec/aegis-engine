@@ -205,37 +205,6 @@ func TestEffectiveness_AZURE072_AKSNoPodIdentity(t *testing.T) {
 
 // AEGIS-AZURE-075 (FIXED: present-but-unknown api_server_access_profile
 // used to fire): AKS API server without authorized IP ranges.
-func TestEffectiveness_AZURE075_AKSPublicAPI_UnknownQuiet(t *testing.T) {
-	pos := res("azurerm_kubernetes_cluster", "c", map[string]ir.Value{})
-	if got := runRule(aksPublicAPI{}, pos); len(got) != 1 {
-		t.Fatalf("expected 1 finding for absent access profile, got %d", len(got))
-	}
-	neg := res("azurerm_kubernetes_cluster", "c", map[string]ir.Value{
-		"api_server_access_profile": blks(2, blk("authorized_ip_ranges", strList(3, "203.0.113.0/24"))),
-	})
-	if got := runRule(aksPublicAPI{}, neg); len(got) != 0 {
-		t.Fatalf("restricted ranges must be quiet, got %d", len(got))
-	}
-	negPrivate := res("azurerm_kubernetes_cluster", "c", map[string]ir.Value{
-		"private_cluster_enabled": kv(true, 2),
-	})
-	if got := runRule(aksPublicAPI{}, negPrivate); len(got) != 0 {
-		t.Fatalf("private cluster must be quiet, got %d", len(got))
-	}
-	unk := res("azurerm_kubernetes_cluster", "c", map[string]ir.Value{
-		"api_server_access_profile": ku(2),
-	})
-	if got := runRule(aksPublicAPI{}, unk); len(got) != 0 {
-		t.Fatalf("unknown access profile must be quiet, got %d", len(got))
-	}
-	unkRanges := res("azurerm_kubernetes_cluster", "c", map[string]ir.Value{
-		"api_server_access_profile": blks(2, blk("authorized_ip_ranges", ku(3))),
-	})
-	if got := runRule(aksPublicAPI{}, unkRanges); len(got) != 0 {
-		t.Fatalf("unknown authorized_ip_ranges must be quiet, got %d", len(got))
-	}
-}
-
 // AEGIS-AZURE-083: CosmosDB account with eventual consistency.
 func TestEffectiveness_AZURE083_CosmosWeakConsistency(t *testing.T) {
 	pos := res("azurerm_cosmosdb_account", "c", map[string]ir.Value{
@@ -398,25 +367,6 @@ func TestEffectiveness_AZURE205_KVNoFirewallRules(t *testing.T) {
 }
 
 // AEGIS-AZURE-230: AKS cluster without Entra ID RBAC.
-func TestEffectiveness_AZURE230_AKSNoAADRBAC(t *testing.T) {
-	pos := res("azurerm_kubernetes_cluster", "c", map[string]ir.Value{})
-	if got := runRule(aksNoAADRBAC{}, pos); len(got) != 1 {
-		t.Fatalf("expected 1 finding for absent block, got %d", len(got))
-	}
-	neg := res("azurerm_kubernetes_cluster", "c", map[string]ir.Value{
-		"azure_active_directory_role_based_access_control": blks(2, blk("managed", kv(true, 3))),
-	})
-	if got := runRule(aksNoAADRBAC{}, neg); len(got) != 0 {
-		t.Fatalf("present block must be quiet, got %d", len(got))
-	}
-	unk := res("azurerm_kubernetes_cluster", "c", map[string]ir.Value{
-		"azure_active_directory_role_based_access_control": ku(2),
-	})
-	if got := runRule(aksNoAADRBAC{}, unk); len(got) != 0 {
-		t.Fatalf("unknown block must be quiet, got %d", len(got))
-	}
-}
-
 // AEGIS-AZURE-260: Defender for Resource Manager plan not enabled.
 func TestEffectiveness_AZURE260_DefenderARMPlanOff(t *testing.T) {
 	pos := res("azurerm_security_center_subscription_pricing", "p", map[string]ir.Value{
@@ -1911,60 +1861,6 @@ func TestEffectivenessReplay_AZURE_074(t *testing.T) {
 	})
 	if got := eaRun(rule, unk); len(got) != 0 {
 		t.Fatalf("AEGIS-AZURE-074: expected 0 findings on unknown input, got %d: %v", len(got), got)
-	}
-}
-func TestEffectivenessReplay_AZURE_075(t *testing.T) {
-	rule := eaRuleFor(t, "AEGIS-AZURE-075")
-	// Positive: black-box probe witness (must fire).
-	pos := []ir.Resource{
-		eaRes("azurerm_kubernetes_cluster", "probe", map[string]ir.Value{}),
-	}
-	f := eaRun(rule, pos...)
-	if len(f) == 0 {
-		t.Fatalf("AEGIS-AZURE-075: expected >=1 finding on positive witness, got 0")
-	}
-	if f[0].Severity != rule.Severity() {
-		t.Fatalf("AEGIS-AZURE-075: severity = %s, want %s", f[0].Severity, rule.Severity())
-	}
-	if f[0].Evidence.Attribute == "" || f[0].Evidence.Actual == "" || f[0].Evidence.Expected == "" {
-		t.Fatalf("AEGIS-AZURE-075: evidence must be non-empty, got %v", f[0].Evidence)
-	}
-	// Negative: black-box probe witness (must stay quiet).
-	neg := []ir.Resource{
-		eaRes("azurerm_kubernetes_cluster", "probe", map[string]ir.Value{
-			"AutomaticByPlatform":       eaS("private"),
-			"Disabled":                  eaB(false),
-			"FtpsOnly":                  eaS("private"),
-			"absent":                    eaS("private"),
-			"addon_profile":             eaS("private"),
-			"api_server_access_profile": eaS("Deny"),
-			"auth_settings":             eaS("private"),
-			"authorized_ip_ranges":      eaL(eaS("10.0.0.0/8")),
-			"automatic_upgrade_channel": eaS("private"),
-			"azure_policy":              eaS("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::123456789012:root\"},\"Action\":\"sts:AssumeRole\"}]}"),
-			"default_node_pool":         eaS("private"),
-			"disk_encryption_set_id":    eaB(true),
-			"enabled":                   eaB(true),
-			"ftps_state":                eaS("private"),
-			"health_check_path":         eaB(true),
-			"https_only":                eaS("private"),
-			"identity":                  eaS("private"),
-			"ip_configuration":          eaS("private"),
-			"min_tls_version":           eaS("TLS1.2"),
-			"none":                      eaS("private"),
-			"oidc_issuer_enabled":       eaB(true),
-			"oms_agent":                 eaS("private"),
-			"os_disk":                   eaS("private"),
-			"patch_mode":                eaS("private"),
-			"private_cluster_enabled":   eaB(true),
-			"public_ip_address_id":      eaB(false),
-			"remote_debugging_enabled":  eaB(true),
-			"site_config":               eaS("private"),
-			"virtual_network_subnet_id": eaS("private"),
-		}),
-	}
-	if got := eaRun(rule, neg...); len(got) != 0 {
-		t.Fatalf("AEGIS-AZURE-075: expected 0 findings on negative witness, got %d: %v", len(got), got)
 	}
 }
 func TestEffectivenessReplay_AZURE_076(t *testing.T) {
@@ -8200,117 +8096,6 @@ func TestEffectivenessReplay_AZURE_244(t *testing.T) {
 	})
 	if got := eaRun(rule, unk); len(got) != 0 {
 		t.Fatalf("AEGIS-AZURE-244: expected 0 findings on unknown input, got %d: %v", len(got), got)
-	}
-}
-func TestEffectivenessReplay_AZURE_245(t *testing.T) {
-	rule := eaRuleFor(t, "AEGIS-AZURE-245")
-	// Positive: black-box probe witness (must fire).
-	pos := []ir.Resource{
-		eaRes("azurerm_kubernetes_cluster", "probe", map[string]ir.Value{}),
-	}
-	f := eaRun(rule, pos...)
-	if len(f) == 0 {
-		t.Fatalf("AEGIS-AZURE-245: expected >=1 finding on positive witness, got 0")
-	}
-	if f[0].Severity != rule.Severity() {
-		t.Fatalf("AEGIS-AZURE-245: severity = %s, want %s", f[0].Severity, rule.Severity())
-	}
-	if f[0].Evidence.Attribute == "" || f[0].Evidence.Actual == "" || f[0].Evidence.Expected == "" {
-		t.Fatalf("AEGIS-AZURE-245: evidence must be non-empty, got %v", f[0].Evidence)
-	}
-	// Negative: black-box probe witness (must stay quiet).
-	neg := []ir.Resource{
-		eaRes("azurerm_kubernetes_cluster", "probe", map[string]ir.Value{
-			"Alert":                            eaS("public"),
-			"Allow":                            eaS("public"),
-			"Deny":                             eaS("public"),
-			"Detection":                        eaS("public"),
-			"Ephemeral":                        eaS("public"),
-			"Inbound":                          eaS("public"),
-			"NodeImage":                        eaS("ubuntu:latest"),
-			"Prevention":                       eaS("public"),
-			"SecurityPatch":                    eaB(false),
-			"Standard":                         eaS("public"),
-			"TLSv1_2":                          eaS("public"),
-			"absent":                           eaS("public"),
-			"access":                           eaS("Allow"),
-			"api_server_access_profile":        eaS("Allow"),
-			"authorized_ip_ranges":             eaL(eaS("0.0.0.0/0")),
-			"copy_paste_enabled":               eaB(false),
-			"default_node_pool":                eaS("public"),
-			"direction":                        eaS("Inbound"),
-			"enable_auto_scaling":              eaB(false),
-			"enabled":                          eaB(false),
-			"http_application_routing_enabled": eaB(true),
-			"identity":                         eaS("public"),
-			"load_balancer_sku":                eaS("public"),
-			"local_account_disabled":           eaB(true),
-			"min_protocol_version":             eaS(">= 1.0"),
-			"mode":                             eaS("public"),
-			"network_profile":                  eaS("public"),
-			"node_os_upgrade_channel":          eaS("public"),
-			"os_disk_type":                     eaS("String"),
-			"private_cluster_enabled":          eaB(false),
-			"run_command_enabled":              eaL(eaS("curl https://example.com/install.sh | sh")),
-			"security_rule":                    eaB(false),
-			"sku":                              eaS("public"),
-			"source_address_prefix":            eaS("*"),
-			"source_address_prefixes":          eaS("*"),
-			"ssl_policy":                       eaS("TLS_1_0"),
-			"standard":                         eaS("public"),
-			"threat_intel_mode":                eaS("public"),
-			"waf_configuration":                eaS("public"),
-		}),
-	}
-	if got := eaRun(rule, neg...); len(got) != 0 {
-		t.Fatalf("AEGIS-AZURE-245: expected 0 findings on negative witness, got %d: %v", len(got), got)
-	}
-	// Unknown: all-unknown kitchen-sink input must stay quiet.
-	unk := eaRes("azurerm_kubernetes_cluster", "probe", map[string]ir.Value{
-		"Alert":                            eaU(),
-		"Allow":                            eaU(),
-		"Deny":                             eaU(),
-		"Detection":                        eaU(),
-		"Ephemeral":                        eaU(),
-		"Inbound":                          eaU(),
-		"NodeImage":                        eaU(),
-		"Prevention":                       eaU(),
-		"SecurityPatch":                    eaU(),
-		"Standard":                         eaU(),
-		"TLSv1_2":                          eaU(),
-		"absent":                           eaU(),
-		"access":                           eaU(),
-		"api_server_access_profile":        eaU(),
-		"authorized_ip_ranges":             eaU(),
-		"copy_paste_enabled":               eaU(),
-		"default_node_pool":                eaU(),
-		"direction":                        eaU(),
-		"enable_auto_scaling":              eaU(),
-		"enabled":                          eaU(),
-		"false":                            eaU(),
-		"http_application_routing_enabled": eaU(),
-		"identity":                         eaU(),
-		"load_balancer_sku":                eaU(),
-		"local_account_disabled":           eaU(),
-		"min_protocol_version":             eaU(),
-		"mode":                             eaU(),
-		"network_profile":                  eaU(),
-		"node_os_upgrade_channel":          eaU(),
-		"os_disk_type":                     eaU(),
-		"private_cluster_enabled":          eaU(),
-		"run_command_enabled":              eaU(),
-		"security_rule":                    eaU(),
-		"sku":                              eaU(),
-		"source_address_prefix":            eaU(),
-		"source_address_prefixes":          eaU(),
-		"ssl_policy":                       eaU(),
-		"standard":                         eaU(),
-		"threat_intel_mode":                eaU(),
-		"true":                             eaU(),
-		"waf_configuration":                eaU(),
-	})
-	if got := eaRun(rule, unk); len(got) != 0 {
-		t.Fatalf("AEGIS-AZURE-245: expected 0 findings on unknown input, got %d: %v", len(got), got)
 	}
 }
 func TestEffectivenessReplay_AZURE_246(t *testing.T) {

@@ -14,8 +14,9 @@ func TestAzure17RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	// 234,243 removed as post-audit duplicates.
-	want := []int{226, 227, 228, 229, 230, 231, 232, 233, 235, 236, 237, 238, 239, 240, 241, 242, 244, 245}
+	// 234,243 removed as post-audit duplicates; 230,245 removed in
+	// Sprint 2 (duplicates of AEGIS-AZURE-128 / AEGIS-AZURE-127).
+	want := []int{226, 227, 228, 229, 231, 232, 233, 235, 236, 237, 238, 239, 240, 241, 242, 244}
 	for i, n := range want {
 		id := "AEGIS-AZURE-" + strconv.Itoa(n)
 		pos, ok := idx[id]
@@ -47,7 +48,6 @@ func TestAZURE226_228_231_234_245(t *testing.T) {
 		sev  ir.Severity
 	}{
 		{aksNoOIDCIssuerStrict{}, "AEGIS-AZURE-136", "oidc_issuer_enabled", ir.SeverityLow},
-		{aksLocalAccounts{}, "AEGIS-AZURE-245", "local_account_disabled", ir.SeverityMedium},
 	}
 	for _, c := range cases {
 		f := mustFinding(t, runRule(c.rule, aksRes17(nil)), c.id)
@@ -173,17 +173,6 @@ func TestAZURE229(t *testing.T) {
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-230: AAD RBAC
 // ---------------------------------------------------------------------------
-
-func TestAZURE230(t *testing.T) {
-	id := "AEGIS-AZURE-230"
-	mustFinding(t, runRule(aksNoAADRBAC{}, aksRes17(nil)), id)
-	r := aksRes17(map[string]ir.Value{
-		"azure_active_directory_role_based_access_control": blks(3, blk("tenant_id", ks("t", 4))),
-	})
-	if f := runRule(aksNoAADRBAC{}, r); len(f) != 0 {
-		t.Fatalf("AAD RBAC present must not fire, got %d", len(f))
-	}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-232/233: LB SKU & ephemeral disk

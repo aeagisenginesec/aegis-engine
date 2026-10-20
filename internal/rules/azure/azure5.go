@@ -24,7 +24,6 @@ func Azure5Rules() []ir.Rule {
 		aksNoPodIdentity{},      // AEGIS-AZURE-072
 		aksNoAutoUpgrade{},      // AEGIS-AZURE-073
 		aksNoDiskEncryption{},   // AEGIS-AZURE-074
-		aksPublicAPI{},          // AEGIS-AZURE-075
 		aksNoWorkloadIdentity{}, // AEGIS-AZURE-076
 		vmNoDiskEncryption{},    // AEGIS-AZURE-077
 		vmNoManagedIdentity{},   // AEGIS-AZURE-078
@@ -542,50 +541,7 @@ func (s aksNoDiskEncryption) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-075: AKS API server authorized IP ranges not set
-// ---------------------------------------------------------------------------
-
-type aksPublicAPI struct{}
-
-func (aksPublicAPI) ID() string { return "AEGIS-AZURE-075" }
-func (aksPublicAPI) Title() string {
-	return "AKS API server without authorized IP ranges"
-}
-func (aksPublicAPI) Description() string {
-	return "azurerm_kubernetes_cluster with public API access but no " +
-		"api_server_access_profile authorized_ip_ranges accepts connections " +
-		"from anywhere. Restrict authorized ranges."
-}
-func (aksPublicAPI) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (aksPublicAPI) AppliesTo(resType string) bool {
-	return resType == "azurerm_kubernetes_cluster"
-}
-
-func (s aksPublicAPI) Check(r ir.Resource) []ir.Finding {
-	priv, _, ppresent, pknown := getBool(r, "private_cluster_enabled")
-	if ppresent && pknown && priv {
-		return nil // private: no need for IP ranges
-	}
-	blks, _, present, known := getBlocks(r, "api_server_access_profile")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if !present || len(blks) == 0 {
-		return []ir.Finding{mkFinding(s, r, "api_server_access_profile",
-			evidenceSpan(ir.Span{}, r.Span), "absent",
-			"api_server_access_profile { authorized_ip_ranges = [...] }")}
-	}
-	if v, ok := blks[0]["authorized_ip_ranges"]; ok && !v.Known {
-		return nil // unresolved: cannot decide
-	}
-	if _, _, ok := getStringListFromBlock(blks[0], "authorized_ip_ranges"); ok {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "api_server_access_profile.authorized_ip_ranges",
-		evidenceSpan(ir.Span{}, r.Span), "absent",
-		"authorized_ip_ranges = [\"203.0.113.0/24\"]")}
-}
+// AEGIS-AZURE-075: AKS API server without authorized IP ranges
 
 // getStringListFromBlock extracts a string list from a block map.
 func getStringListFromBlock(m map[string]ir.Value, name string) ([]string, ir.Span, bool) {

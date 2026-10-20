@@ -140,3 +140,6 @@ after each batch must keep TP = 136 / FN = 0.
 | AEGIS-AZURE-027 | AEGIS-AZURE-121 | Strict subset: 027 is 121 without the absent case (min_tls_version, default TLS1_0) |
 | AEGIS-AZURE-119 | AEGIS-AZURE-122 | Subset + FP-prone: with allow_nested_items_to_be_public absent, 119 is identical to 122; its nested-present path fires even when allow_blob_public_access = false (no exposure possible — the bug class fixed in AEGIS-AZURE-195 during R5) |
 | AEGIS-AZURE-191 | AEGIS-AZURE-031 | Exact duplicate: same attribute (shared_access_key_enabled), same truth table, same severity |
+| AEGIS-AZURE-075 | AEGIS-AZURE-229 | Strict subset: 229 also fires on empty authorized_ip_ranges and scans all api_server_access_profile blocks; 075 checked only the first block |
+| AEGIS-AZURE-230 | AEGIS-AZURE-128 | Strict subset: 230 fires only when the AAD RBAC block is absent; 128 also fires when the block is present with managed absent/false |
+| AEGIS-AZURE-245 | AEGIS-AZURE-127 | Exact duplicate: same attribute (local_account_disabled), same truth table (absent/false fires, true quiet) |
