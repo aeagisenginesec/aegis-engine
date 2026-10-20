@@ -311,6 +311,71 @@ func TestSQLSecure(t *testing.T) {
 	}
 }
 
+// R4 FN idx 62/65 regression lock: a Cosmos DB account's
+// publicNetworkAccess enum must reach the IR as the boolean
+// public_network_access_enabled AEGIS-AZURE-263 reads. The enum->bool
+// conversion used to be mssql-only, which left DocumentDB accounts with
+// an unreadable string and zero findings.
+const armCosmosPublic = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2023-04-15",
+      "name": "vulncosmos",
+      "location": "westeurope",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "publicNetworkAccess": "Enabled",
+        "ipRules": []
+      }
+    }
+  ]
+}`
+
+const armCosmosPrivate = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2023-04-15",
+      "name": "securecosmos",
+      "location": "westeurope",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "publicNetworkAccess": "Disabled",
+        "ipRules": []
+      }
+    }
+  ]
+}`
+
+func TestCosmosPublicNetworkAccessEnabled(t *testing.T) {
+	res := parseARM(t, armCosmosPublic)
+	r := findResource(res, "azurerm_cosmosdb_account")
+	if r == nil {
+		t.Fatalf("no azurerm_cosmosdb_account")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != true {
+		t.Errorf("public_network_access_enabled = %v, want true", got)
+	}
+}
+
+func TestCosmosPublicNetworkAccessDisabled(t *testing.T) {
+	res := parseARM(t, armCosmosPrivate)
+	r := findResource(res, "azurerm_cosmosdb_account")
+	if r == nil {
+		t.Fatalf("no azurerm_cosmosdb_account")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != false {
+		t.Errorf("public_network_access_enabled = %v, want false", got)
+	}
+}
+
 const armAKSVuln = `{
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
