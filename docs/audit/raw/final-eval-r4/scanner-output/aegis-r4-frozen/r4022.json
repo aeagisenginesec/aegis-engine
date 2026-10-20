@@ -1,0 +1,435 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZR-002",
+      "title": "Storage account below TLS 1.2",
+      "description": "Storage accounts should enforce TLS 1.2 as the minimum version to protect data in transit against protocol downgrade attacks.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "min_tls_version",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 8,
+          "start_col": 21,
+          "end_line": 8,
+          "end_col": 29
+        },
+        "actual": "TLS1_0",
+        "expected": "min_tls_version = \"TLS1_2\""
+      },
+      "remediation": "Enforce TLS 1.2+. Replace HTTP listeners with HTTPS, set a modern TLS policy (e.g. `ELBSecurityPolicy-TLS13-1-2-2021-06`), and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions everywhere.",
+      "references": [
+        "https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-027",
+      "title": "Storage account allows weak TLS version",
+      "description": "azurerm_storage_account with min_tls_version below TLS1_2 permits deprecated TLS. Require TLS1_2 or higher.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "min_tls_version",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 8,
+          "start_col": 21,
+          "end_line": 8,
+          "end_col": 29
+        },
+        "actual": "TLS1_0",
+        "expected": "min_tls_version = \"TLS1_2\""
+      },
+      "remediation": "Enforce TLS 1.2+. Replace HTTP listeners with HTTPS, set a modern TLS policy (e.g. `ELBSecurityPolicy-TLS13-1-2-2021-06`), and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions everywhere.",
+      "references": [
+        "https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-028",
+      "title": "Storage account without blob versioning",
+      "description": "azurerm_storage_account blob_properties without versioning_enabled loses protection against accidental overwrite or deletion. Enable versioning.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "blob_properties",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "blob_properties { versioning_enabled = true }"
+      },
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-029",
+      "title": "Storage account without blob soft delete",
+      "description": "azurerm_storage_account blob_properties without delete_retention_policy cannot recover accidentally deleted blobs. Enable soft delete.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "blob_properties",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "blob_properties { delete_retention_policy { days = 7 } }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-031",
+      "title": "Storage account allows shared key access",
+      "description": "azurerm_storage_account with shared_access_key_enabled = true permits storage account key authentication. Prefer Microsoft Entra ID and disable shared key access.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "shared_access_key_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "shared_access_key_enabled = false"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-032",
+      "title": "Storage account without infrastructure encryption",
+      "description": "azurerm_storage_account without infrastructure_encryption_enabled lacks double encryption at the infrastructure layer. Enable it for defense in depth.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "infrastructure_encryption_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "infrastructure_encryption_enabled = true"
+      },
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-034",
+      "title": "Storage account queue without logging",
+      "description": "azurerm_storage_account queue_properties without logging loses audit trail for queue operations. Enable queue logging.",
+      "severity": "low",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "queue_properties",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "queue_properties { logging { read = true } }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-121",
+      "title": "Storage account not using latest TLS version",
+      "description": "azurerm_storage_account without min_tls_version = \"TLS1_2\" (the provider default is TLS1_0) permits deprecated TLS. Require TLS 1.2 or higher.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "min_tls_version",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 8,
+          "start_col": 21,
+          "end_line": 8,
+          "end_col": 29
+        },
+        "actual": "TLS1_0",
+        "expected": "min_tls_version = \"TLS1_2\""
+      },
+      "remediation": "Enforce TLS 1.2+. Replace HTTP listeners with HTTPS, set a modern TLS policy (e.g. `ELBSecurityPolicy-TLS13-1-2-2021-06`), and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions everywhere.",
+      "references": [
+        "https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-124",
+      "title": "Storage account without private endpoint",
+      "description": "azurerm_storage_account with no azurerm_private_endpoint targeting it is reachable over the public endpoint. Connect it via a private endpoint on the storage subresource (blob, dfs, queue, table, or file).",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "private_endpoint",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "no azurerm_private_endpoint targets this account",
+        "expected": "azurerm_private_endpoint { private_service_connection { private_connection_resource_id = azurerm_storage_account.this.id subresource_names = [\"blob\"] } }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-125",
+      "title": "Storage account without SAS expiry policy",
+      "description": "azurerm_storage_account without a sas_policy block issues shared access signatures with no enforced expiry. Set sas_policy { expiration_period and expiration_action } to bound SAS lifetimes.",
+      "severity": "low",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "sas_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "sas_policy { expiration_period = \"90.00:00:00\" expiration_action = \"Log\" }"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-145",
+      "title": "Storage account allows cross-tenant replication",
+      "description": "azurerm_storage_account without allow_cross_tenant_replication = false permits object replication to storage accounts in other Microsoft Entra tenants, enabling data exfiltration paths. Disable cross-tenant replication.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "allow_cross_tenant_replication",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (default true)",
+        "expected": "allow_cross_tenant_replication = false"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-147",
+      "title": "Storage account without blob change feed",
+      "description": "azurerm_storage_account blob_properties without change_feed_enabled = true records no ordered log of blob create/update/delete events, blinding incident response to data tampering. Enable the blob change feed.",
+      "severity": "low",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "blob_properties.change_feed_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (default false)",
+        "expected": "blob_properties { change_feed_enabled = true }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-148",
+      "title": "Storage account with public network access (default)",
+      "description": "azurerm_storage_account without public_network_access_enabled = false exposes the storage endpoint to the internet by default. Disable public network access and use private endpoints instead. (Strict complement of AEGIS-AZURE-006, which covers an explicit true value.)",
+      "severity": "high",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "public_network_access_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (default true)",
+        "expected": "public_network_access_enabled = false"
+      },
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-149",
+      "title": "Storage account without network rules",
+      "description": "azurerm_storage_account without a network_rules block accepts storage traffic from any network by default. Add network_rules with default_action = \"Deny\" and explicit allow rules. (Strict complement of AEGIS-AZURE-021, which covers an explicit Allow default action.)",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "network_rules",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (default allow all)",
+        "expected": "network_rules { default_action = \"Deny\" ... }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-181",
+      "title": "Storage account without managed identity",
+      "description": "azurerm_storage_account without an identity block cannot use customer-managed keys stored in Key Vault. Enable a system-assigned identity when CMK encryption is required.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "identity",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (no managed identity)",
+        "expected": "identity { type = \"SystemAssigned\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-191",
+      "title": "Storage account with shared key access enabled",
+      "description": "azurerm_storage_account with shared_access_key_enabled (the provider default) permits Shared Key authorization, which bypasses Entra ID and cannot be scoped. Disable it and use Entra ID with default_to_oauth_authentication.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "shared_access_key_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "shared_access_key_enabled = false"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-192",
+      "title": "Storage account not defaulting to OAuth authentication",
+      "description": "azurerm_storage_account without default_to_oauth_authentication = true lets clients fall back to Shared Key auth. Default to Entra ID OAuth for data-plane operations.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "default_to_oauth_authentication",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "default_to_oauth_authentication = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-195",
+      "title": "Storage account allows nested public items",
+      "description": "azurerm_storage_account with allow_nested_items_to_be_public (the provider default) lets containers and blobs be marked public even when account-level public access is off. Disable it to enforce private-by-default.",
+      "severity": "medium",
+      "resource": "azurerm_storage_account.legacy",
+      "evidence": {
+        "attribute": "allow_nested_items_to_be_public",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: enabled)",
+        "expected": "allow_nested_items_to_be_public = false"
+      },
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4022/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

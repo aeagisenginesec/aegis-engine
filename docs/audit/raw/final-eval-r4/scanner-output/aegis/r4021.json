@@ -1,0 +1,292 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 15,
+    "critical": 0,
+    "high": 5,
+    "medium": 6,
+    "low": 4
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-318",
+      "severity": "high",
+      "title": "OpenSearch domain without node-to-node encryption",
+      "description": "Without node_to_node_encryption { enabled = true }, traffic between cluster nodes is unencrypted and observable on the network.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 6,
+      "evidence": "node_to_node_encryption.enabled = false",
+      "expected": "node_to_node_encryption { enabled = true }",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.5.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-319",
+      "severity": "high",
+      "title": "OpenSearch domain without encryption at rest",
+      "description": "Without encrypt_at_rest { enabled = true }, indexed data is stored unencrypted on domain volumes.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 5,
+      "evidence": "encrypt_at_rest.enabled = false",
+      "expected": "encrypt_at_rest { enabled = true }",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.5.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-418",
+      "severity": "medium",
+      "title": "OpenSearch domain without advanced security",
+      "description": "An OpenSearch domain without advanced_security_options (fine-grained access control) cannot restrict index-level access.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "advanced_security_options.enabled = absent (advanced security disabled)",
+      "expected": "advanced_security_options { enabled = true }",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-507",
+      "severity": "high",
+      "title": "Search domain outside VPC",
+      "description": "An Elasticsearch or OpenSearch domain without vpc_options is deployed with a public endpoint, exposing cluster APIs to the internet instead of keeping traffic inside the VPC.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "vpc_options = absent (public endpoint)",
+      "expected": "vpc_options { ... } with subnet_ids and security_group_ids",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-523",
+      "severity": "medium",
+      "title": "OpenSearch domain without fine-grained access control",
+      "description": "Without advanced_security_options.enabled, the domain has no fine-grained access control: any principal reaching the endpoint can read and write any index. Enable fine-grained access control with a master user.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "advanced_security_options = absent",
+      "expected": "advanced_security_options block with enabled = true",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-618",
+      "severity": "low",
+      "title": "Elasticsearch domain without audit logging",
+      "description": "Hygiene: Elasticsearch/OpenSearch domains should publish audit logs. Add a log_publishing_options block with log_type AUDIT_LOGS.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "log_publishing_options = no AUDIT_LOGS option",
+      "expected": "log_publishing_options with log_type AUDIT_LOGS",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-623",
+      "severity": "low",
+      "title": "Elasticsearch domain without any log publishing",
+      "description": "Hygiene: Elasticsearch/OpenSearch domains should publish at least one log type (search, index, error or audit). Add a log_publishing_options block. (Audit-specific coverage: AEGIS-AWS-618.)",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "log_publishing_options = absent",
+      "expected": "log_publishing_options block with at least one log type",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-637",
+      "severity": "high",
+      "title": "Elasticsearch/OpenSearch domain without HTTPS enforcement",
+      "description": "A search domain whose domain_endpoint_options does not set enforce_https = true serves the cluster endpoint over plaintext HTTP, exposing credentials and query data in transit.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "domain_endpoint_options.enforce_https = false",
+      "expected": "enforce_https = true",
+      "remediation": "Enforce TLS 1.2+. Replace HTTP listeners with HTTPS, set a modern TLS policy (e.g. `ELBSecurityPolicy-TLS13-1-2-2021-06`), and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions everywhere.",
+      "references": [
+        "https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-638",
+      "severity": "medium",
+      "title": "Elasticsearch/OpenSearch domain without dedicated master nodes",
+      "description": "A search domain whose cluster_config does not set dedicated_master_enabled = true runs cluster coordination on data nodes, risking split-brain and instability under load. Use dedicated master nodes for production domains.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "cluster_config.dedicated_master_enabled = absent (default false)",
+      "expected": "dedicated_master_enabled = true",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-639",
+      "severity": "medium",
+      "title": "Elasticsearch/OpenSearch domain without zone awareness",
+      "description": "A search domain whose cluster_config does not set zone_awareness_enabled = true places all nodes in one availability zone: a zone failure takes the domain down. Enable zone awareness for multi-AZ resilience.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "cluster_config.zone_awareness_enabled = absent (default false)",
+      "expected": "zone_awareness_enabled = true",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-640",
+      "severity": "medium",
+      "title": "OpenSearch domain without internal user database",
+      "description": "An OpenSearch domain whose advanced_security_options does not set internal_user_database_enabled = true has no built-in master user store, weakening fine-grained access control. Enable the internal user database.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "advanced_security_options.internal_user_database_enabled = absent (default false)",
+      "expected": "advanced_security_options { internal_user_database_enabled = true }",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-641",
+      "severity": "low",
+      "title": "Elasticsearch/OpenSearch domain without snapshot configuration",
+      "description": "Hygiene: a search domain without a snapshot_options block has no configured automated snapshot schedule, slowing recovery from data loss or corruption. Set automated_snapshot_start_hour.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "snapshot_options = absent",
+      "expected": "snapshot_options { automated_snapshot_start_hour = 3 }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-642",
+      "severity": "low",
+      "title": "Elasticsearch/OpenSearch domain without slow logs",
+      "description": "Hygiene: a search domain whose log_publishing_options publish neither SEARCH_SLOW_LOGS nor INDEX_SLOW_LOGS hides expensive queries, blinding performance tuning and abuse detection. Publish slow logs. (Audit-specific coverage: AEGIS-AWS-618; any-log coverage: AEGIS-AWS-623.)",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "log_publishing_options = no SEARCH_SLOW_LOGS / INDEX_SLOW_LOGS option",
+      "expected": "log_publishing_options with log_type SEARCH_SLOW_LOGS",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-811",
+      "severity": "high",
+      "title": "OpenSearch domain without advanced security options",
+      "description": "An OpenSearch domain whose advanced_security_options block is absent or disabled runs without fine-grained access control, leaving index data exposed to any caller with network access. Enable advanced security with internal user database or IAM/SAML auth.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "advanced_security_options.enabled = absent (provider default: disabled)",
+      "expected": "advanced_security_options { enabled = true }",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-812",
+      "severity": "medium",
+      "title": "OpenSearch domain without log publishing options",
+      "description": "An OpenSearch domain with no log_publishing_options block sends no audit, slow-query or error logs to CloudWatch, blinding incident response. Publish AUDIT_LOGS (and slow logs) to CloudWatch Logs.",
+      "resource": "aws_opensearch_domain.logs",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+      "line": 1,
+      "evidence": "log_publishing_options = absent (no logs published)",
+      "expected": "log_publishing_options { log_type = \"AUDIT_LOGS\" ... }",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "AU-2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

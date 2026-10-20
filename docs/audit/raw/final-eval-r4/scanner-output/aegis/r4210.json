@@ -1,0 +1,196 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 11,
+    "critical": 0,
+    "high": 0,
+    "medium": 9,
+    "low": 2
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-K8S-006",
+      "severity": "medium",
+      "title": "Container without resource limits",
+      "description": "A container without resources.limits for cpu and memory can exhaust node resources (noisy neighbor / DoS). Set cpu and memory limits on every container.",
+      "resource": "k8s_Deployment.job-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 2,
+      "evidence": "resources = absent (container \"job\")",
+      "expected": "resources.limits.cpu and resources.limits.memory set",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-010",
+      "severity": "medium",
+      "title": "Service account token automounted",
+      "description": "A pod that mounts its service account token (explicitly via automountServiceAccountToken: true, or implicitly with a custom service account) hands every container credentials for the API server. Set automountServiceAccountToken: false unless the pod needs the API.",
+      "resource": "k8s_Deployment.job-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 2,
+      "evidence": "spec.automountServiceAccountToken = [REDACTED]",
+      "expected": "automountServiceAccountToken: false",
+      "remediation": "Remove the hardcoded secret immediately and rotate it. Store secrets in an external secrets manager (not plaintext in etcd); mount via Secrets Store CSI / External Secrets Operator. Never commit secrets to version control.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/configuration/secret/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-014",
+      "severity": "low",
+      "title": "Container without liveness probe",
+      "description": "A container without a livenessProbe is never restarted when it deadlocks, leaving a broken pod serving traffic. Define a liveness probe.",
+      "resource": "k8s_Deployment.job-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 2,
+      "evidence": "livenessProbe = absent (container \"job\")",
+      "expected": "livenessProbe configured",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-015",
+      "severity": "low",
+      "title": "Container without readiness probe",
+      "description": "A container without a readinessProbe receives traffic before it is ready, causing failed requests during startup. Define a readiness probe.",
+      "resource": "k8s_Deployment.job-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 2,
+      "evidence": "readinessProbe = absent (container \"job\")",
+      "expected": "readinessProbe configured",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-028",
+      "severity": "medium",
+      "title": "Container without read-only root filesystem",
+      "description": "The container's effective readOnlyRootFilesystem is not true: either it is explicitly false, or it is unset at both the container and pod level, leaving the root filesystem writable at runtime and aiding persistence after compromise. Set readOnlyRootFilesystem: true and use volumes for writable paths. (AEGIS-K8S-005 covers the explicit-false case alone.)",
+      "resource": "k8s_Deployment.job-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 2,
+      "evidence": "securityContext.readOnlyRootFilesystem = absent (container \"job\")",
+      "expected": "readOnlyRootFilesystem: true",
+      "remediation": "Require MFA / SSO for cluster access; never use the cluster-admin kubeconfig for daily operations. Bind users to least-privilege RBAC.",
+      "references": [
+        "https://kubernetes.io/docs/reference/access-authn-authz/authentication/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-029",
+      "severity": "medium",
+      "title": "Container without seccomp profile",
+      "description": "Neither the container nor the pod sets a seccompProfile with type RuntimeDefault or Localhost, so the container runs without seccomp syscall filtering. Set seccompProfile.type to RuntimeDefault. (AEGIS-K8S-017 covers the explicit Unconfined case alone.)",
+      "resource": "k8s_Deployment.job-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 2,
+      "evidence": "securityContext.seccompProfile.type = absent (container \"job\")",
+      "expected": "type: RuntimeDefault",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-030",
+      "severity": "medium",
+      "title": "Container does not drop ALL capabilities",
+      "description": "The container does not drop ALL Linux capabilities, so it keeps the runtime's default capability set. Drop ALL and add back only the specific capabilities required. (AEGIS-K8S-016 covers the explicit capabilities.add: ALL case.)",
+      "resource": "k8s_Deployment.job-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 2,
+      "evidence": "securityContext.capabilities.drop = absent (container \"job\")",
+      "expected": "drop: [ALL]",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-031",
+      "severity": "medium",
+      "title": "Workload without a NetworkPolicy",
+      "description": "No NetworkPolicy in the workload's namespace selects its pods, so the pods accept traffic from anywhere in the cluster. Add a NetworkPolicy with a podSelector matching the workload's pod labels (default-deny ingress and egress, then allow what the workload needs).",
+      "resource": "k8s_Deployment.api-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 1,
+      "evidence": "metadata.labels = no NetworkPolicy selects pods (namespace \"default\", labels app=api-e66986)",
+      "expected": "NetworkPolicy with podSelector matching this workload's pods",
+      "remediation": "Apply least privilege. Bind minimal RBAC roles (no cluster-admin), scope ServiceAccounts per workload, and enable audit logging.",
+      "references": [
+        "https://kubernetes.io/docs/reference/access-authn-authz/rbac/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-031",
+      "severity": "medium",
+      "title": "Workload without a NetworkPolicy",
+      "description": "No NetworkPolicy in the workload's namespace selects its pods, so the pods accept traffic from anywhere in the cluster. Add a NetworkPolicy with a podSelector matching the workload's pod labels (default-deny ingress and egress, then allow what the workload needs).",
+      "resource": "k8s_Deployment.job-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 2,
+      "evidence": "metadata.labels = no NetworkPolicy selects pods (namespace \"default\", labels app=job-e66986)",
+      "expected": "NetworkPolicy with podSelector matching this workload's pods",
+      "remediation": "Apply least privilege. Bind minimal RBAC roles (no cluster-admin), scope ServiceAccounts per workload, and enable audit logging.",
+      "references": [
+        "https://kubernetes.io/docs/reference/access-authn-authz/rbac/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-032",
+      "severity": "medium",
+      "title": "Container image without digest pin",
+      "description": "A container image without an @digest pin (e.g. image@sha256:...) can change under its tag: the tag may be moved to a different image. Pin images by digest for reproducible, verifiable deployments.",
+      "resource": "k8s_Deployment.api-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 1,
+      "evidence": "image = \"registry.example.com/api:3.2.0\" (container \"api\")",
+      "expected": "pin image by digest (image@sha256:...)",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-032",
+      "severity": "medium",
+      "title": "Container image without digest pin",
+      "description": "A container image without an @digest pin (e.g. image@sha256:...) can change under its tag: the tag may be moved to a different image. Pin images by digest for reproducible, verifiable deployments.",
+      "resource": "k8s_Deployment.job-e66986",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+      "line": 2,
+      "evidence": "image = \"registry.example.com/job:1.0.0\" (container \"job\")",
+      "expected": "pin image by digest (image@sha256:...)",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4210/deployment.yaml",
+        "status": "parsed",
+        "format": "manifests"
+      }
+    ]
+  }
+}

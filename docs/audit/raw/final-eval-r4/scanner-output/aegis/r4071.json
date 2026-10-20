@@ -1,0 +1,151 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 8,
+    "critical": 0,
+    "high": 1,
+    "medium": 5,
+    "low": 2
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-013",
+      "severity": "medium",
+      "title": "CosmosDB account without explicit backup policy",
+      "description": "azurerm_cosmosdb_account with no backup block relies on the implicit periodic default. Declare an explicit backup policy (preferably continuous) so retention is a conscious choice.",
+      "resource": "azurerm_cosmosdb_account.cosmos-1c66bc",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071/azuredeploy.json",
+      "line": 1,
+      "evidence": "backup = absent",
+      "expected": "backup { type = \"Continuous\" }",
+      "remediation": "Apply least privilege. Replace wildcard permissions with the minimum scoped Azure RBAC roles the workload needs. Use Entra ID groups, managed identities, and Privileged Identity Management for privileged roles.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/role-based-access-control/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-081",
+      "severity": "high",
+      "title": "CosmosDB account without IP range filter",
+      "description": "azurerm_cosmosdb_account without ip_range_filter accepts connections from anywhere. Restrict with an IP range filter.",
+      "resource": "azurerm_cosmosdb_account.cosmos-1c66bc",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071/azuredeploy.json",
+      "line": 1,
+      "evidence": "ip_range_filter = absent",
+      "expected": "ip_range_filter = \"203.0.113.0/24\"",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-082",
+      "severity": "medium",
+      "title": "CosmosDB account without backup configuration",
+      "description": "azurerm_cosmosdb_account without backup block uses defaults that may not meet RPO. Configure periodic backup with retention.",
+      "resource": "azurerm_cosmosdb_account.cosmos-1c66bc",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071/azuredeploy.json",
+      "line": 1,
+      "evidence": "backup = absent",
+      "expected": "backup { type = \"Periodic\" interval_in_minutes = 240 retention_in_hours = 720 }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time restore / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/backup/backup-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-085",
+      "severity": "low",
+      "title": "CosmosDB account without customer-managed key",
+      "description": "azurerm_cosmosdb_account without key_vault_key_id uses Microsoft-managed keys. Use a customer-managed key for sensitive data.",
+      "resource": "azurerm_cosmosdb_account.cosmos-1c66bc",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071/azuredeploy.json",
+      "line": 1,
+      "evidence": "key_vault_key_id = [REDACTED]",
+      "expected": "key_vault_key_id = azurerm_key_vault_key.example.id",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-184",
+      "severity": "medium",
+      "title": "Cosmos DB account without managed identity",
+      "description": "azurerm_cosmosdb_account without an identity block cannot use customer-managed keys from Key Vault. Enable a system-assigned identity when CMK encryption is required.",
+      "resource": "azurerm_cosmosdb_account.cosmos-1c66bc",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071/azuredeploy.json",
+      "line": 1,
+      "evidence": "identity = absent (no managed identity)",
+      "expected": "identity { type = \"SystemAssigned\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-262",
+      "severity": "medium",
+      "title": "Cosmos DB account without continuous backup",
+      "description": "azurerm_cosmosdb_account without backup { type = \"Continuous\" } only takes periodic snapshots, losing point-in-time restore for ransomware recovery. Enable continuous backup mode.",
+      "resource": "azurerm_cosmosdb_account.cosmos-1c66bc",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071/azuredeploy.json",
+      "line": 1,
+      "evidence": "backup = absent or not continuous",
+      "expected": "backup { type = \"Continuous\" }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time restore / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/backup/backup-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-265",
+      "severity": "medium",
+      "title": "Cosmos DB account with local authentication enabled",
+      "description": "azurerm_cosmosdb_account without local_authentication_disabled = true permits key-based authentication. Disable local auth and use Entra ID.",
+      "resource": "azurerm_cosmosdb_account.cosmos-1c66bc",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071/azuredeploy.json",
+      "line": 1,
+      "evidence": "local_authentication_disabled = absent (provider default: false)",
+      "expected": "local_authentication_disabled = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-276",
+      "severity": "low",
+      "title": "Cosmos DB account with key metadata writes enabled",
+      "description": "azurerm_cosmosdb_account with access_key_metadata_writes_enabled (the provider default) allows key-based metadata writes. Disable it and manage keys through Entra ID.",
+      "resource": "azurerm_cosmosdb_account.cosmos-1c66bc",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071/azuredeploy.json",
+      "line": 1,
+      "evidence": "access_key_metadata_writes_enabled = [REDACTED]",
+      "expected": "access_key_metadata_writes_enabled = false",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4071/azuredeploy.json",
+        "status": "parsed",
+        "format": "arm"
+      }
+    ]
+  }
+}

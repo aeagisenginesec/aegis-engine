@@ -1,0 +1,61 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 2,
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-COMPOSE-008",
+      "severity": "medium",
+      "title": "Service image uses :latest tag",
+      "description": "Pinning :latest (or omitting the tag) makes deploys non-reproducible and can silently pull a new, vulnerable image. Pin an explicit version tag or digest.",
+      "resource": "compose_service.web",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159/docker-compose.yml",
+      "line": 4,
+      "evidence": "image = registry.example.com/web:latest (tag :latest)",
+      "expected": "pinned version tag (e.g. nginx:1.25.3) or digest",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-COMPOSE-008",
+      "severity": "medium",
+      "title": "Service image uses :latest tag",
+      "description": "Pinning :latest (or omitting the tag) makes deploys non-reproducible and can silently pull a new, vulnerable image. Pin an explicit version tag or digest.",
+      "resource": "compose_service.worker",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159/docker-compose.yml",
+      "line": 7,
+      "evidence": "image = registry.example.com/worker:latest (tag :latest)",
+      "expected": "pinned version tag (e.g. nginx:1.25.3) or digest",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159/docker-compose.yml",
+        "status": "parsed",
+        "format": "compose"
+      }
+    ]
+  }
+}

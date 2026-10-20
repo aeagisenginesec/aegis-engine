@@ -1,0 +1,67 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4012",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-054",
+      "title": "NSG rule allows SSH from the internet",
+      "description": "azurerm_network_security_rule allowing TCP 22 from * or 0.0.0.0/0 exposes SSH. Restrict source addresses or use Azure Bastion.",
+      "severity": "high",
+      "resource": "azurerm_network_security_group.web",
+      "evidence": {
+        "attribute": "security_rule",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4012/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 16,
+          "end_col": 2
+        },
+        "actual": "SSH open to *",
+        "expected": "restrict source_address_prefix"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-244",
+      "title": "NSG inline security rule open to the internet",
+      "description": "azurerm_network_security_group security_rule blocks with inbound Allow and a source of *, 0.0.0.0/0 or Internet expose the subnet to the world. Restrict inline rule sources.",
+      "severity": "high",
+      "resource": "azurerm_network_security_group.web",
+      "evidence": {
+        "attribute": "security_rule",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4012/main.tf",
+          "start_line": 5,
+          "start_col": 3,
+          "end_line": 15,
+          "end_col": 4
+        },
+        "actual": "inline rule source *",
+        "expected": "restricted source address prefix"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4012/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

@@ -1,0 +1,274 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136",
+  "resources_scanned": 2,
+  "findings": [
+    {
+      "rule_id": "AEGIS-DOCKER-005",
+      "title": "No HEALTHCHECK directive",
+      "description": "Without a HEALTHCHECK the orchestrator cannot tell a wedged container from a healthy one, delaying restarts and hiding compromise-induced hangs.",
+      "severity": "low",
+      "resource": "docker_stage.build",
+      "evidence": {
+        "attribute": "HEALTHCHECK",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 2,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 1
+        },
+        "actual": "absent",
+        "expected": "HEALTHCHECK instruction"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-007",
+      "title": "apt-get install without --no-install-recommends",
+      "description": "Installing recommended packages bloats the image with unneeded software, enlarging the attack surface. Pass --no-install-recommends to apt-get install.",
+      "severity": "low",
+      "resource": "docker_stage.stage1",
+      "evidence": {
+        "attribute": "RUN",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 7,
+          "start_col": 1,
+          "end_line": 7,
+          "end_col": 1
+        },
+        "actual": "apt-get install without --no-install-recommends",
+        "expected": "apt-get install --no-install-recommends"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-008",
+      "title": "apt-get update without cache cleanup",
+      "description": "apt-get update leaves package lists in the image layer. Remove /var/lib/apt/lists/* in the same RUN to keep layers lean.",
+      "severity": "low",
+      "resource": "docker_stage.stage1",
+      "evidence": {
+        "attribute": "RUN",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 7,
+          "start_col": 1,
+          "end_line": 7,
+          "end_col": 1
+        },
+        "actual": "apt-get update without rm -rf /var/lib/apt/lists/*",
+        "expected": "clean package lists in the same RUN layer"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-015",
+      "title": "No WORKDIR directive",
+      "description": "Without WORKDIR the build and the container run from /, so relative paths and stray files land in the filesystem root. Set an explicit WORKDIR for the application.",
+      "severity": "low",
+      "resource": "docker_stage.stage1",
+      "evidence": {
+        "attribute": "WORKDIR",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        },
+        "actual": "absent (defaults to /)",
+        "expected": "WORKDIR /app (or similar)"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-017",
+      "title": "No maintainer label",
+      "description": "Images without ownership metadata are harder to triage when a vulnerability is found. Add LABEL maintainer= or org.opencontainers.image.authors.",
+      "severity": "low",
+      "resource": "docker_stage.build",
+      "evidence": {
+        "attribute": "LABEL",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 2,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 1
+        },
+        "actual": "no maintainer/authors label",
+        "expected": "LABEL maintainer=... or org.opencontainers.image.authors=..."
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-017",
+      "title": "No maintainer label",
+      "description": "Images without ownership metadata are harder to triage when a vulnerability is found. Add LABEL maintainer= or org.opencontainers.image.authors.",
+      "severity": "low",
+      "resource": "docker_stage.stage1",
+      "evidence": {
+        "attribute": "LABEL",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        },
+        "actual": "no maintainer/authors label",
+        "expected": "LABEL maintainer=... or org.opencontainers.image.authors=..."
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-018",
+      "title": "No STOPSIGNAL directive",
+      "description": "Without STOPSIGNAL the container gets SIGTERM, which apps that only handle SIGINT (or expect another signal) ignore until the orchestrator SIGKILLs them, risking data loss. Declare the signal your app handles for graceful shutdown.",
+      "severity": "low",
+      "resource": "docker_stage.build",
+      "evidence": {
+        "attribute": "STOPSIGNAL",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 2,
+          "start_col": 1,
+          "end_line": 5,
+          "end_col": 1
+        },
+        "actual": "absent",
+        "expected": "STOPSIGNAL \u003csignal your app handles\u003e"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-018",
+      "title": "No STOPSIGNAL directive",
+      "description": "Without STOPSIGNAL the container gets SIGTERM, which apps that only handle SIGINT (or expect another signal) ignore until the orchestrator SIGKILLs them, risking data loss. Declare the signal your app handles for graceful shutdown.",
+      "severity": "low",
+      "resource": "docker_stage.stage1",
+      "evidence": {
+        "attribute": "STOPSIGNAL",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        },
+        "actual": "absent",
+        "expected": "STOPSIGNAL \u003csignal your app handles\u003e"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-022",
+      "title": "COPY of entire build context",
+      "description": "COPY . ships the whole build context into the image, often including credentials, VCS history, and dev tooling. Copy only what the app needs and gate the context with .dockerignore.",
+      "severity": "low",
+      "resource": "docker_stage.build",
+      "evidence": {
+        "attribute": "COPY",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 4,
+          "start_col": 1,
+          "end_line": 4,
+          "end_col": 1
+        },
+        "actual": "COPY . (entire context)",
+        "expected": "COPY only required paths; maintain .dockerignore"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-029",
+      "title": "apt-get install without pinned versions",
+      "description": "Unpinned apt packages float across rebuilds, making images non-reproducible and silently pulling new versions. Pin versions: apt-get install pkg=1.2.3.",
+      "severity": "low",
+      "resource": "docker_stage.stage1",
+      "evidence": {
+        "attribute": "RUN",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 7,
+          "start_col": 1,
+          "end_line": 7,
+          "end_col": 1
+        },
+        "actual": "unpinned packages: gcc, git, curl, strace, vim",
+        "expected": "apt-get install pkg=\u003cversion\u003e"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-036",
+      "title": "Build tools installed in final image",
+      "description": "Compilers, debuggers, and version-control clients installed in the final (shipped) image let an attacker who gains code execution compile exploits, inspect memory, or exfiltrate through tooling the application never needs. Install build tools in a build stage only and COPY the artifact into a minimal runtime image. Only the final stage is judged: build stages legitimately install toolchains.",
+      "severity": "high",
+      "resource": "docker_stage.stage1",
+      "evidence": {
+        "attribute": "RUN",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+          "start_line": 7,
+          "start_col": 1,
+          "end_line": 7,
+          "end_col": 1
+        },
+        "actual": "build/debugging tools installed: gcc, git, strace, vim",
+        "expected": "install build tools in a build stage only; ship a minimal runtime image"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4136/Dockerfile",
+        "status": "parsed",
+        "format": "dockerfile"
+      }
+    ]
+  }
+}

@@ -1,0 +1,757 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005",
+  "resources_scanned": 2,
+  "findings": [
+    {
+      "rule_id": "AEGIS-GCP-003",
+      "title": "Cloud SQL instance without automated backups",
+      "description": "Cloud SQL instances should enable automated backups via settings.backup_configuration.enabled for point-in-time recovery.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.backup_configuration.enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 6,
+          "start_col": 38,
+          "end_line": 6,
+          "end_col": 43
+        },
+        "actual": "false",
+        "expected": "settings { backup_configuration { enabled = true } }"
+      },
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-007",
+      "title": "Cloud SQL instance with public IP",
+      "description": "google_sql_database_instance with settings.ip_configuration.ipv4_enabled = true exposes the database to the internet. Use private IP with VPC peering instead.",
+      "severity": "high",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.ip_configuration.ipv4_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 18,
+          "start_col": 22,
+          "end_line": 18,
+          "end_col": 26
+        },
+        "actual": "true",
+        "expected": "ipv4_enabled = false (private IP only)"
+      },
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-019",
+      "title": "Cloud SQL instance without deletion protection",
+      "description": "google_sql_database_instance with deletion_protection = false (the provider default) can be destroyed accidentally. Enable deletion protection for production databases.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "deletion_protection",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "deletion_protection = true"
+      },
+      "remediation": "Enable deletion protection to prevent accidental destruction:\nresource \"aws_db_instance\" \"this\" {\n  deletion_protection = true\n}\nFor S3, remove `force_destroy = true`. For EC2, set `disable_api_termination = true`.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-019",
+      "title": "Cloud SQL instance without deletion protection",
+      "description": "google_sql_database_instance with deletion_protection = false (the provider default) can be destroyed accidentally. Enable deletion protection for production databases.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "deletion_protection",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "deletion_protection = true"
+      },
+      "remediation": "Enable deletion protection to prevent accidental destruction:\nresource \"aws_db_instance\" \"this\" {\n  deletion_protection = true\n}\nFor S3, remove `force_destroy = true`. For EC2, set `disable_api_termination = true`.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-040",
+      "title": "Cloud SQL instance allows connections from the internet",
+      "description": "google_sql_database_instance ip_configuration authorized_networks with 0.0.0.0/0 exposes the database to the internet.",
+      "severity": "critical",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "authorized_networks.value",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 21,
+          "start_col": 9,
+          "end_line": 21,
+          "end_col": 20
+        },
+        "actual": "0.0.0.0/0",
+        "expected": "restricted CIDR ranges"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-042",
+      "title": "Cloud SQL instance without maintenance window",
+      "description": "google_sql_database_instance with no maintenance_window lets GCP apply disruptive maintenance at any time; hygiene finding.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.maintenance_window",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "maintenance_window { day = 7 hour = 3 }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-042",
+      "title": "Cloud SQL instance without maintenance window",
+      "description": "google_sql_database_instance with no maintenance_window lets GCP apply disruptive maintenance at any time; hygiene finding.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.maintenance_window",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "maintenance_window { day = 7 hour = 3 }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-044",
+      "title": "Cloud SQL instance without IAM database authentication",
+      "description": "google_sql_database_instance without database flag cloudsql.iam_authentication=on forces password-only auth.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "cloudsql.iam_authentication not enabled",
+        "expected": "database_flags { name = \"cloudsql.iam_authentication\" value = \"on\" }"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-044",
+      "title": "Cloud SQL instance without IAM database authentication",
+      "description": "google_sql_database_instance without database flag cloudsql.iam_authentication=on forces password-only auth.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "cloudsql.iam_authentication not enabled",
+        "expected": "database_flags { name = \"cloudsql.iam_authentication\" value = \"on\" }"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-046",
+      "title": "Cloud SQL instance without log_disconnections",
+      "description": "google_sql_database_instance without database flag log_disconnections=on misses session audit data; hygiene finding.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "log_disconnections not enabled",
+        "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-046",
+      "title": "Cloud SQL instance without log_disconnections",
+      "description": "google_sql_database_instance without database flag log_disconnections=on misses session audit data; hygiene finding.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "log_disconnections not enabled",
+        "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-101",
+      "title": "Cloud SQL PostgreSQL without log_checkpoints",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_checkpoints=on misses checkpoint timing and buffer-write audit data.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "log_checkpoints not set",
+        "expected": "database_flags { name = \"log_checkpoints\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-101",
+      "title": "Cloud SQL PostgreSQL without log_checkpoints",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_checkpoints=on misses checkpoint timing and buffer-write audit data.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "log_checkpoints not set",
+        "expected": "database_flags { name = \"log_checkpoints\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-102",
+      "title": "Cloud SQL PostgreSQL without log_connections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_connections=on misses connection-attempt audit data.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "log_connections not set",
+        "expected": "database_flags { name = \"log_connections\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-102",
+      "title": "Cloud SQL PostgreSQL without log_connections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_connections=on misses connection-attempt audit data.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "log_connections not set",
+        "expected": "database_flags { name = \"log_connections\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-103",
+      "title": "Cloud SQL PostgreSQL without log_disconnections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_disconnections=on misses session-termination audit data.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "log_disconnections not set",
+        "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-103",
+      "title": "Cloud SQL PostgreSQL without log_disconnections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_disconnections=on misses session-termination audit data.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "log_disconnections not set",
+        "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-104",
+      "title": "Cloud SQL PostgreSQL without log_lock_waits",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_lock_waits=on misses deadlock-risk visibility into sessions waiting longer than deadlock_timeout.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "log_lock_waits not set",
+        "expected": "database_flags { name = \"log_lock_waits\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-104",
+      "title": "Cloud SQL PostgreSQL without log_lock_waits",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_lock_waits=on misses deadlock-risk visibility into sessions waiting longer than deadlock_timeout.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "log_lock_waits not set",
+        "expected": "database_flags { name = \"log_lock_waits\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-105",
+      "title": "Cloud SQL PostgreSQL without log_duration",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_duration=on misses per-statement duration logging needed to detect anomalous query timing.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "log_duration not set",
+        "expected": "database_flags { name = \"log_duration\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-105",
+      "title": "Cloud SQL PostgreSQL without log_duration",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_duration=on misses per-statement duration logging needed to detect anomalous query timing.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "log_duration not set",
+        "expected": "database_flags { name = \"log_duration\" value = \"on\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-106",
+      "title": "Cloud SQL PostgreSQL without pgAudit logging",
+      "description": "google_sql_database_instance (PostgreSQL) without pgAudit (pgaudit.log with READ,WRITE or shared_preload_libraries containing pgaudit) misses detailed session/object audit logging.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "pgAudit not enabled",
+        "expected": "database_flags { name = \"pgaudit.log\" value = \"READ,WRITE\" } and database_flags { name = \"shared_preload_libraries\" value = \"pgaudit\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-106",
+      "title": "Cloud SQL PostgreSQL without pgAudit logging",
+      "description": "google_sql_database_instance (PostgreSQL) without pgAudit (pgaudit.log with READ,WRITE or shared_preload_libraries containing pgaudit) misses detailed session/object audit logging.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "pgAudit not enabled",
+        "expected": "database_flags { name = \"pgaudit.log\" value = \"READ,WRITE\" } and database_flags { name = \"shared_preload_libraries\" value = \"pgaudit\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-107",
+      "title": "Cloud SQL PostgreSQL log_min_messages not set appropriately",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_min_messages set to WARNING or more severe emits overly verbose logs (or none at all), burying security-relevant messages.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "log_min_messages not set",
+        "expected": "database_flags { name = \"log_min_messages\" value = \"WARNING\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-107",
+      "title": "Cloud SQL PostgreSQL log_min_messages not set appropriately",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_min_messages set to WARNING or more severe emits overly verbose logs (or none at all), burying security-relevant messages.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.database_flags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "log_min_messages not set",
+        "expected": "database_flags { name = \"log_min_messages\" value = \"WARNING\" }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-153",
+      "title": "Cloud SQL instance without Query Insights",
+      "description": "google_sql_database_instance with no settings.insights_config block has no Query Insights: slow or abusive queries go undetected, hiding both performance and security anomalies. Enable Query Insights.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.insights_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "settings { insights_config { query_insights_enabled = true } }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-153",
+      "title": "Cloud SQL instance without Query Insights",
+      "description": "google_sql_database_instance with no settings.insights_config block has no Query Insights: slow or abusive queries go undetected, hiding both performance and security anomalies. Enable Query Insights.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.insights_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "settings { insights_config { query_insights_enabled = true } }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-154",
+      "title": "Cloud SQL instance not highly available",
+      "description": "google_sql_database_instance with settings.availability_type other than REGIONAL (the default is ZONAL) has no standby in another zone: a zonal outage takes the database offline. Use availability_type = \"REGIONAL\" for production.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.availability_type",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: ZONAL)",
+        "expected": "settings { availability_type = \"REGIONAL\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-154",
+      "title": "Cloud SQL instance not highly available",
+      "description": "google_sql_database_instance with settings.availability_type other than REGIONAL (the default is ZONAL) has no standby in another zone: a zonal outage takes the database offline. Use availability_type = \"REGIONAL\" for production.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.availability_type",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: ZONAL)",
+        "expected": "settings { availability_type = \"REGIONAL\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-157",
+      "title": "Cloud SQL instance without password validation policy",
+      "description": "google_sql_database_instance with no settings.password_validation_policy block accepts weak database passwords (short, no complexity requirements). Enforce a password validation policy.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.password_validation_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "settings { password_validation_policy { min_length = 12 ... } }"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-157",
+      "title": "Cloud SQL instance without password validation policy",
+      "description": "google_sql_database_instance with no settings.password_validation_policy block accepts weak database passwords (short, no complexity requirements). Enforce a password validation policy.",
+      "severity": "low",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.password_validation_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "settings { password_validation_policy { min_length = 12 ... } }"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-160",
+      "title": "Cloud SQL MySQL instance without binary logging",
+      "description": "google_sql_database_instance with a backup_configuration block but binary_log_enabled not true keeps no binary logs: MySQL point-in-time recovery and change auditing are impossible. Enable binary logging.",
+      "severity": "medium",
+      "resource": "google_sql_database_instance.main",
+      "evidence": {
+        "attribute": "settings.backup_configuration.binary_log_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 9,
+          "end_col": 2
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "binary_log_enabled = true"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

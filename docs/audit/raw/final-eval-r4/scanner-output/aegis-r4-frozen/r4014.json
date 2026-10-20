@@ -1,0 +1,234 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014",
+  "resources_scanned": 4,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-308",
+      "title": "Lambda without active X-Ray tracing",
+      "description": "Without tracing_config { mode = \"Active\" }, Lambda invocations are not traced in X-Ray, reducing observability of failures and latency.",
+      "severity": "medium",
+      "resource": "aws_lambda_function.hook",
+      "evidence": {
+        "attribute": "tracing_config.mode",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 2
+        },
+        "actual": "block absent (tracing not active)",
+        "expected": "tracing_config { mode = \"Active\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-407",
+      "title": "Lambda function URL without authorization",
+      "description": "A function URL with authorization_type NONE exposes the function as a public HTTPS endpoint. Require AWS_IAM.",
+      "severity": "high",
+      "resource": "aws_lambda_function_url.hook",
+      "evidence": {
+        "attribute": "authorization_type",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+          "start_line": 28,
+          "start_col": 24,
+          "end_line": 28,
+          "end_col": 30
+        },
+        "actual": "NONE",
+        "expected": "AWS_IAM"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-2"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-542",
+      "title": "Lambda function not deployed in a VPC",
+      "description": "Lambda functions without a vpc_config block run outside your VPC, with no security-group or network-ACL control over their network access. Functions accessing VPC resources (RDS, ElastiCache) should declare vpc_config with subnet_ids and security_group_ids.",
+      "severity": "low",
+      "resource": "aws_lambda_function.hook",
+      "evidence": {
+        "attribute": "vpc_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "vpc_config block with subnet_ids and security_group_ids"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-547",
+      "title": "Lambda function without X-Ray active tracing",
+      "description": "Hygiene: Lambda functions should enable X-Ray active tracing for distributed request observability. Add a tracing_config block with mode = \"Active\".",
+      "severity": "low",
+      "resource": "aws_lambda_function.hook",
+      "evidence": {
+        "attribute": "tracing_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "tracing_config block with mode = \"Active\""
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-548",
+      "title": "Lambda function without reserved concurrent executions",
+      "description": "Hygiene: Lambda functions should set reserved_concurrent_executions to cap concurrency, preventing runaway scaling and unexpected cost. Set the attribute explicitly.",
+      "severity": "low",
+      "resource": "aws_lambda_function.hook",
+      "evidence": {
+        "attribute": "reserved_concurrent_executions",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "reserved_concurrent_executions set to an explicit value"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-645",
+      "title": "Lambda function without code signing",
+      "description": "An aws_lambda_function without a code_signing_config block deploys code without signature validation, so tampered deployment packages run unchecked. Enforce code signing with AWS Signer.",
+      "severity": "low",
+      "resource": "aws_lambda_function.hook",
+      "evidence": {
+        "attribute": "code_signing_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "code_signing_config { ... } with AWS Signer"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-647",
+      "title": "Lambda function without dead-letter queue",
+      "description": "Hygiene: an aws_lambda_function without a dead_letter_config block silently drops asynchronously-invoked events that fail all retries. Route failed events to an SQS queue or SNS topic.",
+      "severity": "low",
+      "resource": "aws_lambda_function.hook",
+      "evidence": {
+        "attribute": "dead_letter_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "dead_letter_config { target_arn = aws_sqs_queue.dlq.arn }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-659",
+      "title": "IAM user uses an inline policy",
+      "description": "The user embeds an inline policy document instead of attaching a managed policy. Inline policies cannot be reused, versioned, or reviewed centrally. Prefer aws_iam_policy with aws_iam_user_policy_attachment.",
+      "severity": "medium",
+      "resource": "aws_iam_user_policy.reader",
+      "evidence": {
+        "attribute": "policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+          "start_line": 5,
+          "start_col": 1,
+          "end_line": 16,
+          "end_col": 2
+        },
+        "actual": "inline policy document",
+        "expected": "managed policy + attachment"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-672",
+      "title": "IAM user has no tags",
+      "description": "The IAM user carries no tags, making ownership, purpose, and lifecycle untraceable in audits and complicating attribute-based access control. Tag identities with at least owner and purpose.",
+      "severity": "low",
+      "resource": "aws_iam_user.reader",
+      "evidence": {
+        "attribute": "tags",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 3,
+          "end_col": 2
+        },
+        "actual": "absent (AWS default: no tags)",
+        "expected": "tags set (owner, purpose)"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4014/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

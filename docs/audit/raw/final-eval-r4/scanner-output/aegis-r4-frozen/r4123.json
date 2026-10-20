@@ -1,0 +1,90 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4123",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-DOCKER-017",
+      "title": "No maintainer label",
+      "description": "Images without ownership metadata are harder to triage when a vulnerability is found. Add LABEL maintainer= or org.opencontainers.image.authors.",
+      "severity": "low",
+      "resource": "docker_stage.stage0",
+      "evidence": {
+        "attribute": "LABEL",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4123/Dockerfile",
+          "start_line": 2,
+          "start_col": 1,
+          "end_line": 11,
+          "end_col": 1
+        },
+        "actual": "no maintainer/authors label",
+        "expected": "LABEL maintainer=... or org.opencontainers.image.authors=..."
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-018",
+      "title": "No STOPSIGNAL directive",
+      "description": "Without STOPSIGNAL the container gets SIGTERM, which apps that only handle SIGINT (or expect another signal) ignore until the orchestrator SIGKILLs them, risking data loss. Declare the signal your app handles for graceful shutdown.",
+      "severity": "low",
+      "resource": "docker_stage.stage0",
+      "evidence": {
+        "attribute": "STOPSIGNAL",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4123/Dockerfile",
+          "start_line": 2,
+          "start_col": 1,
+          "end_line": 11,
+          "end_col": 1
+        },
+        "actual": "absent",
+        "expected": "STOPSIGNAL \u003csignal your app handles\u003e"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-022",
+      "title": "COPY of entire build context",
+      "description": "COPY . ships the whole build context into the image, often including credentials, VCS history, and dev tooling. Copy only what the app needs and gate the context with .dockerignore.",
+      "severity": "low",
+      "resource": "docker_stage.stage0",
+      "evidence": {
+        "attribute": "COPY",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4123/Dockerfile",
+          "start_line": 6,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 1
+        },
+        "actual": "COPY . (entire context)",
+        "expected": "COPY only required paths; maintain .dockerignore"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4123/Dockerfile",
+        "status": "parsed",
+        "format": "dockerfile"
+      }
+    ]
+  }
+}

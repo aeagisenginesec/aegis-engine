@@ -1,0 +1,121 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4129",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 6,
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 5
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-DOCKER-004",
+      "severity": "low",
+      "title": "ADD used instead of COPY",
+      "description": "ADD fetches remote URLs and auto-extracts archives, which can pull untrusted content into the image. Prefer COPY for local files.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4129/Dockerfile",
+      "line": 4,
+      "evidence": "ADD = ADD instruction present",
+      "expected": "COPY for local files",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-013",
+      "severity": "low",
+      "title": "chown in RUN instead of COPY --chown",
+      "description": "Running chown in a separate RUN duplicates every affected file into a new layer, bloating the image. Use COPY --chown to set ownership at copy time.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4129/Dockerfile",
+      "line": 7,
+      "evidence": "RUN = chown in RUN layer",
+      "expected": "COPY --chown=\u003cuser\u003e:\u003cgroup\u003e",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-017",
+      "severity": "low",
+      "title": "No maintainer label",
+      "description": "Images without ownership metadata are harder to triage when a vulnerability is found. Add LABEL maintainer= or org.opencontainers.image.authors.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4129/Dockerfile",
+      "line": 2,
+      "evidence": "LABEL = no maintainer/authors label",
+      "expected": "LABEL maintainer=... or org.opencontainers.image.authors=...",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-018",
+      "severity": "low",
+      "title": "No STOPSIGNAL directive",
+      "description": "Without STOPSIGNAL the container gets SIGTERM, which apps that only handle SIGINT (or expect another signal) ignore until the orchestrator SIGKILLs them, risking data loss. Declare the signal your app handles for graceful shutdown.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4129/Dockerfile",
+      "line": 2,
+      "evidence": "STOPSIGNAL = absent",
+      "expected": "STOPSIGNAL \u003csignal your app handles\u003e",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-022",
+      "severity": "low",
+      "title": "COPY of entire build context",
+      "description": "COPY . ships the whole build context into the image, often including credentials, VCS history, and dev tooling. Copy only what the app needs and gate the context with .dockerignore.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4129/Dockerfile",
+      "line": 6,
+      "evidence": "COPY = COPY . (entire context)",
+      "expected": "COPY only required paths; maintain .dockerignore",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-035",
+      "severity": "medium",
+      "title": "ADD fetches remote URL",
+      "description": "ADD with a remote URL downloads at build time with no integrity verification, and the layer is never invalidated properly. Use curl/wget with a checksum verification followed by COPY instead.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4129/Dockerfile",
+      "line": 4,
+      "evidence": "ADD = ADD fetches remote URL",
+      "expected": "curl/wget + checksum verification, then COPY",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4129/Dockerfile",
+        "status": "parsed",
+        "format": "dockerfile"
+      }
+    ]
+  }
+}

@@ -1,0 +1,244 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037",
+  "summary": {
+    "resources": 3,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 9,
+    "critical": 2,
+    "high": 1,
+    "medium": 3,
+    "low": 3
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-003",
+      "severity": "critical",
+      "title": "S3 bucket policy allows public principal",
+      "description": "An Allow statement with Principal \"*\" grants anonymous access to the bucket, bypassing ACL controls.",
+      "resource": "aws_s3_bucket_policy.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+      "line": 7,
+      "evidence": "policy = Allow statement with Principal \"*\"",
+      "expected": "no Allow statement with Principal \"*\"",
+      "remediation": "Remove the public principal from the bucket policy. Replace\n`\"Principal\": \"*\"` with specific IAM ARNs, or delete the policy statement entirely if public access was unintentional. Then enable all four\npublic-access-block settings:\nresource \"aws_s3_bucket_public_access_block\" \"this\" {\n  bucket                  = aws_s3_bucket.this.id\n  block_public_acls       = true\n  block_public_policy     = true\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "2.1.1"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-3"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-012",
+      "severity": "medium",
+      "title": "S3 bucket without versioning",
+      "description": "Versioning protects against accidental deletion and overwrites and is required for reliable recovery. Provider default is disabled.",
+      "resource": "aws_s3_bucket.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+      "line": 1,
+      "evidence": "versioning = absent (provider default: disabled)",
+      "expected": "versioning { enabled = true }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-104",
+      "severity": "critical",
+      "title": "Public S3 exfiltration path",
+      "description": "An S3 bucket is readable by the public internet through a bucket policy granting s3:GetObject to everyone, or a public ACL: a complete path exists from the internet to the bucket's data.",
+      "resource": "aws_s3_bucket.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+      "line": 7,
+      "evidence": "policy = bucket policy allows s3:GetObject for Principal \"*\"",
+      "expected": "no public s3:GetObject grant in the bucket policy",
+      "remediation": "Break the public exfiltration path. Make the S3 bucket private (see AEGIS-AWS-003\nfix), remove the overly permissive IAM policy (see AEGIS-AWS-006 fix), and\nensure the compute role cannot reach public buckets. Treat this as an active\nincident path: audit CloudTrail for `s3:GetObject` calls from the affected role.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html",
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "2.1.1"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-4"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ],
+      "path": [
+        {
+          "resource": "internet",
+          "detail": "anonymous requests from the public internet",
+          "span": {
+            "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+            "start_line": 7,
+            "start_col": 12,
+            "end_line": 15,
+            "end_col": 5
+          }
+        },
+        {
+          "resource": "aws_s3_bucket_policy.data",
+          "detail": "bucket policy grants s3:GetObject to everyone",
+          "span": {
+            "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+            "start_line": 7,
+            "start_col": 12,
+            "end_line": 15,
+            "end_col": 5
+          }
+        },
+        {
+          "resource": "aws_s3_bucket.data",
+          "detail": "bucket data is readable under the public grant",
+          "span": {
+            "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+            "start_line": 1,
+            "start_col": 1,
+            "end_line": 3,
+            "end_col": 2
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-310",
+      "severity": "medium",
+      "title": "EC2 instance without detailed monitoring",
+      "description": "With monitoring absent or false (the provider default), the instance ships only basic 5-minute CloudWatch metrics, delaying detection of performance and availability issues.",
+      "resource": "aws_instance.web",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+      "line": 18,
+      "evidence": "monitoring = absent (provider default: disabled)",
+      "expected": "monitoring = true",
+      "remediation": "Enable detailed monitoring on the EC2 instance (1-minute CloudWatch metrics):\nresource \"aws_instance\" \"this\" {\n  # ...\n  monitoring = true\n}",
+      "references": [
+        "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-cloudwatch-new.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-443",
+      "severity": "high",
+      "title": "S3 bucket policy does not enforce TLS (SecureTransport)",
+      "description": "Without an explicit Deny on aws:SecureTransport=false, bucket objects can be fetched over plaintext HTTP. Add a bucket policy statement denying s3:* when SecureTransport is false.",
+      "resource": "aws_s3_bucket.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+      "line": 1,
+      "evidence": "policy = no Deny on aws:SecureTransport=false",
+      "expected": "bucket policy denying s3:* when SecureTransport is false",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "2.1.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-8"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "4.2.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-445",
+      "severity": "medium",
+      "title": "S3 bucket without server access logging",
+      "description": "Server access logging records requests against the bucket, which is essential for audit and incident response.",
+      "resource": "aws_s3_bucket.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+      "line": 1,
+      "evidence": "logging = absent",
+      "expected": "logging { target_bucket = ... }",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-601",
+      "severity": "low",
+      "title": "S3 bucket without lifecycle configuration",
+      "description": "Hygiene: S3 buckets should define lifecycle rules to transition or expire objects, controlling long-term storage costs. Add a lifecycle_rule block or an aws_s3_bucket_lifecycle_configuration resource.",
+      "resource": "aws_s3_bucket.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+      "line": 1,
+      "evidence": "lifecycle_rule = absent",
+      "expected": "lifecycle_rule block or aws_s3_bucket_lifecycle_configuration",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-683",
+      "severity": "low",
+      "title": "EC2 instance without termination protection",
+      "description": "disable_api_termination is absent or false, so the instance can be terminated by an accidental or malicious API call. Enable it for instances that must not be deleted casually.",
+      "resource": "aws_instance.web",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+      "line": 18,
+      "evidence": "disable_api_termination = absent (provider default: false)",
+      "expected": "disable_api_termination = true",
+      "remediation": "Enable deletion protection to prevent accidental destruction:\nresource \"aws_db_instance\" \"this\" {\n  deletion_protection = true\n}\nFor S3, remove `force_destroy = true`. For EC2, set `disable_api_termination = true`.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-699",
+      "severity": "low",
+      "title": "EC2 instance without Nitro Enclaves enabled",
+      "description": "enclave_options is absent, so Nitro Enclaves are unavailable on this instance. Workloads that process sensitive data should enable enclave_options { enabled = true } to isolate it.",
+      "resource": "aws_instance.web",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+      "line": 18,
+      "evidence": "enclave_options = absent (provider default: enclaves unavailable)",
+      "expected": "enclave_options { enabled = true }",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4037/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

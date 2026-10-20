@@ -1,0 +1,366 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-015",
+      "title": "AKS cluster without network policy",
+      "description": "azurerm_kubernetes_cluster with no network_policy in network_profile allows unrestricted pod-to-pod traffic. Enable a network policy engine (azure or calico).",
+      "severity": "high",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "network_profile",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "network_profile { network_policy = \"azure\" }"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-075",
+      "title": "AKS API server without authorized IP ranges",
+      "description": "azurerm_kubernetes_cluster with public API access but no api_server_access_profile authorized_ip_ranges accepts connections from anywhere. Restrict authorized ranges.",
+      "severity": "medium",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "api_server_access_profile",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "api_server_access_profile { authorized_ip_ranges = [...] }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-127",
+      "title": "AKS cluster with local admin accounts enabled",
+      "description": "azurerm_kubernetes_cluster without local_account_disabled = true keeps the built-in cluster-admin Kubernetes account active, bypassing Azure AD authentication. Disable local accounts and use Azure AD / Microsoft Entra ID RBAC.",
+      "severity": "high",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "local_account_disabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (default false)",
+        "expected": "local_account_disabled = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-128",
+      "title": "AKS cluster without Azure AD RBAC integration",
+      "description": "azurerm_kubernetes_cluster without an azure_active_directory_role_based_access_control block cannot map Kubernetes RBAC to Microsoft Entra ID identities, leaving cluster access to local accounts. Enable Azure AD RBAC integration.",
+      "severity": "medium",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "azure_active_directory_role_based_access_control",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "azure_active_directory_role_based_access_control { managed = true ... }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-129",
+      "title": "AKS cluster without Key Vault secrets provider",
+      "description": "azurerm_kubernetes_cluster without a key_vault_secrets_provider block cannot mount secrets from Azure Key Vault as CSI volumes, pushing workloads toward Kubernetes Secrets or environment variables. Enable the Key Vault secrets provider addon.",
+      "severity": "medium",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "key_vault_secrets_provider",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "[REDACTED]",
+        "expected": "key_vault_secrets_provider { secret_rotation_enabled = true }"
+      },
+      "remediation": "Remove the hardcoded secret immediately and rotate it. Store secrets in AWS Secrets Manager or SSM Parameter Store (SecureString) and reference them via data sources. Never commit secrets to version control — scan history with gitleaks if the value was ever committed.",
+      "references": [
+        "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-130",
+      "title": "AKS cluster without Microsoft Defender for Containers",
+      "description": "azurerm_kubernetes_cluster without a microsoft_defender block misses Defender for Containers threat detection on the cluster and its images. Enable Microsoft Defender for Containers.",
+      "severity": "medium",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "microsoft_defender",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "microsoft_defender { log_analytics_workspace_id = ... }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-131",
+      "title": "AKS cluster without image cleaner",
+      "description": "azurerm_kubernetes_cluster without image_cleaner_enabled = true never evicts stale, potentially vulnerable container images from node caches. Enable the AKS image cleaner.",
+      "severity": "low",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "image_cleaner_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (default false)",
+        "expected": "image_cleaner_enabled = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-134",
+      "title": "AKS cluster without cost analysis",
+      "description": "Hygiene: azurerm_kubernetes_cluster without cost_analysis_enabled = true has no cost visibility into cluster spend. Enable the cost analysis addon.",
+      "severity": "low",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "cost_analysis_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (default false)",
+        "expected": "cost_analysis_enabled = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-135",
+      "title": "AKS cluster without automatic upgrade channel",
+      "description": "azurerm_kubernetes_cluster without automatic_upgrade_channel defaults to no automatic upgrades, missing Kubernetes security patches. Set an upgrade channel (patch, stable, rapid, node-image). (Strict complement of AEGIS-AZURE-073, which covers an explicit \"none\" value.)",
+      "severity": "low",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "automatic_upgrade_channel",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (default none)",
+        "expected": "automatic_upgrade_channel = \"patch\""
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-136",
+      "title": "AKS cluster without OIDC issuer",
+      "description": "azurerm_kubernetes_cluster without oidc_issuer_enabled defaults the OIDC issuer to off, blocking workload identity federation for pod-level Azure credentials. Enable the OIDC issuer. (Strict complement of AEGIS-AZURE-076, which covers an explicit false value.)",
+      "severity": "low",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "oidc_issuer_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (default false)",
+        "expected": "oidc_issuer_enabled = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-228",
+      "title": "AKS cluster without node OS auto-upgrade",
+      "description": "azurerm_kubernetes_cluster with node_os_upgrade_channel other than \"SecurityPatch\" or \"NodeImage\" (or absent) leaves node OS patching manual, so kernel CVEs linger. Set node_os_upgrade_channel = \"SecurityPatch\".",
+      "severity": "medium",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "node_os_upgrade_channel",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (no auto-upgrade)",
+        "expected": "node_os_upgrade_channel = \"SecurityPatch\""
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-229",
+      "title": "AKS API server exposed without authorized IP ranges",
+      "description": "azurerm_kubernetes_cluster that is not private (private_cluster_enabled) and has no api_server_access_profile.authorized_ip_ranges exposes the Kubernetes API to the internet. Use a private cluster or restrict API access to known ranges.",
+      "severity": "high",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "api_server_access_profile",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "no authorized_ip_ranges",
+        "expected": "api_server_access_profile { authorized_ip_ranges = [...] }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-230",
+      "title": "AKS cluster without Entra ID RBAC",
+      "description": "azurerm_kubernetes_cluster without an azure_active_directory_role_based_access_control block manages cluster access with local accounts. Integrate Entra ID for centralized identity, MFA and conditional access.",
+      "severity": "medium",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "azure_active_directory_role_based_access_control",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (local accounts only)",
+        "expected": "azure_active_directory_role_based_access_control { ... }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-231",
+      "title": "AKS cluster with run command enabled",
+      "description": "azurerm_kubernetes_cluster with run_command_enabled (the provider default) allows command execution on nodes via the Azure API, bypassing kubectl RBAC. Disable it unless break-glass node access is required.",
+      "severity": "medium",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "run_command_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (provider default: enabled)",
+        "expected": "run_command_enabled = false"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-245",
+      "title": "AKS cluster with local accounts enabled",
+      "description": "azurerm_kubernetes_cluster without local_account_disabled = true keeps the static cluster-admin kubeconfig credential active, bypassing Entra ID controls. Disable local accounts once Entra ID RBAC is configured.",
+      "severity": "medium",
+      "resource": "azurerm_kubernetes_cluster.aks-240006",
+      "evidence": {
+        "attribute": "local_account_disabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (provider default: false)",
+        "expected": "local_account_disabled = true"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4096/main.bicep",
+        "status": "parsed",
+        "format": "bicep"
+      }
+    ]
+  }
+}

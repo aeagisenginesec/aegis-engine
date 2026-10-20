@@ -163,10 +163,16 @@ def load_aegis():
             if f.get('rule_id') in HYGIENE_RULE_IDS:
                 continue
             ev = f.get('evidence', {}) or {}
+            # Evidence shape changed in the 4582801 output redesign
+            # (object with span -> flat string, file hoisted to top
+            # level). Accept both so old and new sweeps score.
+            if isinstance(ev, dict):
+                file = (ev.get('span', {}) or {}).get('file', '')
+            else:
+                file = f.get('file', '')
             out.append({'project': pid, 'resource': f.get('resource', ''),
                         'rule': f.get('rule_id', ''), 'title': f.get('title', ''),
-                        'severity': f.get('severity', ''),
-                        'file': (ev.get('span', {}) or {}).get('file', '')})
+                        'severity': f.get('severity', ''), 'file': file})
     return out
 
 def load_checkov():
