@@ -367,6 +367,13 @@ func (noMaintainerLabel) AppliesTo(resType string) bool { return appliesToDocker
 
 func (noMaintainerLabel) Check(r ir.Resource) []ir.Finding {
 	rule := noMaintainerLabel{}
+	// Image metadata exists only on the image that ships. A build
+	// stage's labels are discarded with the stage, so flagging them
+	// is a false positive (Sprint 2). Same gate as noNonRootUser /
+	// buildToolsInFinal; absent is_final_stage still judges.
+	if fin, _, present, known := getBool(r, "is_final_stage"); present && known && !fin {
+		return nil
+	}
 	labels, _, present, known := getStrings(r, "labels")
 	if present && !known {
 		return nil
@@ -405,6 +412,13 @@ func (noStopsignal) AppliesTo(resType string) bool { return appliesToDocker(resT
 
 func (noStopsignal) Check(r ir.Resource) []ir.Finding {
 	rule := noStopsignal{}
+	// STOPSIGNAL is image config: only the final stage's value reaches
+	// the shipped image. A build stage without one cannot affect how
+	// the container is stopped (Sprint 2). Absent is_final_stage
+	// still judges.
+	if fin, _, present, known := getBool(r, "is_final_stage"); present && known && !fin {
+		return nil
+	}
 	set, _, present, known := getBool(r, "has_stopsignal")
 	if present && !known {
 		return nil

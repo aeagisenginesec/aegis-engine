@@ -68,6 +68,21 @@ func Test018_NoStopsignal(t *testing.T) {
 	expectFinding(t, noStopsignal{}, stage(t, "FROM ubuntu:22.04\nSTOPSIGNAL SIGTERM\n"), 0)
 }
 
+// Sprint 2: image-metadata rules judge only the stage that ships.
+// A build stage's missing LABEL/STOPSIGNAL cannot affect the final
+// image, so both rules must stay silent on non-final stages and keep
+// firing on the final one.
+func Test017_018_FinalStageOnly(t *testing.T) {
+	stages := multiStage(t, "FROM golang:1.22 AS build\nWORKDIR /src\nRUN go build -o /app .\nFROM ubuntu:22.04\nCOPY --from=build /app /app\n")
+	if len(stages) != 2 {
+		t.Fatalf("expected 2 stages, got %d", len(stages))
+	}
+	expectFinding(t, noMaintainerLabel{}, stages[0], 0) // build stage: silent
+	expectFinding(t, noMaintainerLabel{}, stages[1], 1) // final stage: fires
+	expectFinding(t, noStopsignal{}, stages[0], 0)
+	expectFinding(t, noStopsignal{}, stages[1], 1)
+}
+
 func Test019_OnbuildUsed(t *testing.T) {
 	expectFinding(t, onbuildUsed{}, stage(t, "FROM ubuntu:22.04\nONBUILD COPY . /app\n"), 1)
 	expectFinding(t, onbuildUsed{}, stage(t, "FROM ubuntu:22.04\nCOPY . /app\n"), 0)
