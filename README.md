@@ -6,7 +6,7 @@
   <a href="https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.1.0"><img src="https://img.shields.io/badge/release-v2.1.0-a855f7" alt="Release v2.1.0"></a>
   <a href="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml"><img src="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml/badge.svg" alt="Aegis Release CI"></a>
   <img src="https://img.shields.io/badge/rules-1140%20active-7c3aed" alt="1,140 active rules">
-  <img src="https://img.shields.io/badge/go-1.25-00ADD8" alt="Go 1.25">
+  <img src="https://img.shields.io/badge/go-1.26-00ADD8" alt="Go 1.26">
   <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macOS%20%7C%20windows-lightgrey" alt="Platforms">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license">
 </p>
@@ -59,7 +59,7 @@ chmod +x aegis-linux-amd64
 ./aegis-linux-amd64 doctor        # aegis 2.1.0 — 1,140 rules loaded
 ```
 
-**Or build from source** (Go 1.25+):
+**Or build from source** (Go 1.26+):
 
 ```bash
 go build -o aegis ./cmd/aegis
