@@ -2,6 +2,8 @@ module aegis
 
 go 1.26.0
 
+toolchain go1.26.10
+
 require (
 	github.com/hashicorp/hcl/v2 v2.25.0
 	github.com/zclconf/go-cty v1.19.0

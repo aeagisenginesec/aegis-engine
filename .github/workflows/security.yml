@@ -31,6 +31,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # The analyze action reads the workflow run via the Actions API;
+      # declaring any permissions block zeroes the others, so without
+      # this the step fails with "Resource not accessible by
+      # integration" even with upload disabled (observed run #7).
+      actions: read
       security-events: write
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +54,7 @@ jobs:
           output: codeql-results
 
       - name: Archive CodeQL SARIF
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: codeql-sarif
@@ -68,8 +74,11 @@ jobs:
           # NOT go-version-file: go.mod's bare "go 1.26.0" would pin the
           # .0 release, which predates the go1.26.1+ stdlib security
           # fixes (run #1 failed with 23 reachable stdlib vulns that a
-          # patched toolchain does not have). Always take the newest
-          # 1.26 patch release.
+          # patched toolchain does not have). "1.26.x" takes the newest
+          # patch the runner manifest knows, and go.mod's
+          # `toolchain go1.26.10` line then pins exactly 1.26.10 for
+          # every go command in the module (the runner manifest lagged
+          # at 1.26.9 in run #7 — one vuln short).
           go-version: "1.26.x"
           cache: true
 
