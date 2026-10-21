@@ -7,7 +7,7 @@
 package version
 
 // Version is the current Aegis release.
-const Version = "2.1.0"
+const Version = "2.1.1"
 
 // BuildDate is stamped at build time (YYYY-MM-DD). Defaults to unknown.
 var BuildDate = "unknown"

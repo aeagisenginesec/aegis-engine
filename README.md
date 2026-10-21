@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.1.0"><img src="https://img.shields.io/badge/release-v2.1.0-a855f7" alt="Release v2.1.0"></a>
+  <a href="https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.1.1"><img src="https://img.shields.io/badge/release-v2.1.1-a855f7" alt="Release v2.1.1"></a>
   <a href="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml"><img src="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml/badge.svg" alt="Aegis Release CI"></a>
   <img src="https://img.shields.io/badge/rules-1140%20active-7c3aed" alt="1,140 active rules">
   <img src="https://img.shields.io/badge/go-1.26-00ADD8" alt="Go 1.26">
@@ -39,7 +39,7 @@ from the internet to your data stores.
 
 ## Install
 
-**Download a release binary** (v2.1.0 — Linux, macOS, Windows):
+**Download a release binary** (v2.1.1 — Linux, macOS, Windows):
 
 | OS | Asset |
 |----|-------|
@@ -49,12 +49,12 @@ from the internet to your data stores.
 | macOS Apple Silicon | `aegis-darwin-arm64` |
 | Windows x86-64 | `aegis-windows-amd64.exe` |
 
-Grab them from the [**v2.1.0 release page**](https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.1.0)
+Grab them from the [**v2.1.1 release page**](https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.1.1)
 and verify against `SHA256SUMS.txt`:
 
 ```bash
 # Linux / macOS example
-curl -LO https://github.com/aeagisenginesec/aegis-engine/releases/download/v2.1.0/aegis-linux-amd64
+curl -LO https://github.com/aeagisenginesec/aegis-engine/releases/download/v2.1.1/aegis-linux-amd64
 chmod +x aegis-linux-amd64
 ./aegis-linux-amd64 doctor        # aegis 2.1.0 — 1,140 rules loaded
 ```

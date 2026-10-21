@@ -3,6 +3,42 @@
 All notable changes to Aegis are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.1.1] — 2026-10-21
+
+Security-maintenance and CI/CD release. No rule changes: the detection
+engine is byte-for-byte the v2.1.0 closeout build (full test suite and
+the R4 regression locks green on the new toolchain).
+
+### Security
+
+- **Go 1.25 → 1.26**: govulncheck against the old toolchain reported
+  25 reachable vulnerabilities (24 in the standard library — the
+  `aegis serve` HTTP surface reaches crypto/x509 and net/http — plus
+  golang.org/x/text v0.31.0). On Go 1.26.10 with the bumped module
+  graph (x/text v0.43.0 et al.): **no vulnerabilities found**.
+- **Pulumi adapter**: malformed `!!int`/`!!float` scalars now yield
+  Unknown values instead of a silent known-zero.
+
+### CI/CD (the full suite)
+
+- **Lint gate** (golangci-lint): errcheck/govet/ineffassign/
+  staticcheck/unused at zero findings, reached by fixing the code —
+  19 dead functions removed, dead initializers and De Morgan cleanups,
+  and one placeholder test assertion made real. Remaining exceptions
+  are named and justified in `.golangci.yml`.
+- **Security workflow**: CodeQL analysis + govulncheck as a hard gate
+  (tracking the newest Go patch — a bare `go 1.26.0` pin fails with
+  the stdlib vulns fixed in 1.26.1+). Weekly scheduled re-scans.
+- **Aegis self-gate** now actually fires (its push trigger pointed at
+  a `main` branch this repo never had) and judges new findings only,
+  via `.aegis/baseline.json` generated from the tracked tree.
+- **Container image**: multi-arch (amd64/arm64) GHCR image published
+  on every release (`ghcr.io/aeagisenginesec/aegis-engine`).
+- **Dependabot**: weekly Go-module and Actions updates.
+- Private-repo adaptation: GitHub code scanning requires Advanced
+  Security on private repos, so CodeQL/gate SARIF is archived as run
+  artifacts (documented in both workflows, one-line restore).
+
 ## [2.1.0] — 2026-10-21
 
 Accuracy closeout release: the R4 ground truth is fully solved (zero
