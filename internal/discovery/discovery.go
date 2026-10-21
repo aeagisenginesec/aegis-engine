@@ -188,6 +188,23 @@ func DiscoverWithReport(root string) ([]File, []Skipped, error) {
 			})
 			return nil
 		}
+		if info.Mode().IsRegular() {
+			// Probe readability: a file discovery cannot open would
+			// otherwise be reported as discovered and only fail later
+			// at read time. Skip it here and record why — mid-walk
+			// leniency: one unreadable file below the root must not
+			// fail the scan, but it must never vanish silently either.
+			fh, err := os.Open(path)
+			if err != nil {
+				skipped = append(skipped, Skipped{
+					Path:   path,
+					Size:   info.Size(),
+					Reason: fmt.Sprintf("file is not readable: %v", err),
+				})
+				return nil
+			}
+			fh.Close()
+		}
 		total += info.Size()
 		if total > MaxTotalBytes || len(out) >= MaxFiles {
 			if total > MaxTotalBytes {
