@@ -130,3 +130,61 @@ jobs:
           path: semgrep.sarif
           retention-days: 30
           if-no-files-found: warn
+
+  snyk:
+    name: Snyk (deps + code)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          # Snyk's gomod support shells out to the go tool (a missing
+          # go binary is a hard CLI error, observed locally).
+          go-version: "1.26.x"
+          cache: true
+
+      # Pinned CLI — the same version as the owner's authenticated
+      # sandbox install — from Snyk's official static host.
+      - name: Install Snyk CLI
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/snyk" https://static.snyk.io/cli/v1.1307.4/snyk-linux
+          chmod +x "$RUNNER_TEMP/snyk"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          snyk --version
+
+      # REPORT-ONLY by design (v1): the Snyk org's free plan exhausted
+      # its monthly private-test quota in Oct 2026, and a quota wall
+      # must never turn a good build red. govulncheck (above) is the
+      # hard gate for Go vulnerabilities; Snyk is the second opinion,
+      # the dashboard (via monitor), and the image scanner (docker.yml).
+      - name: Snyk dependency test (report-only)
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --sarif-file-output=snyk-deps.sarif
+
+      - name: Snyk monitor (track the project in Snyk)
+        if: github.event_name == 'push'
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk monitor
+
+      - name: Snyk Code test (report-only)
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk code test --sarif-file-output=snyk-code.sarif
+
+      - name: Archive Snyk SARIF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-sarif
+          path: |
+            snyk-deps.sarif
+            snyk-code.sarif
+          retention-days: 30
+          if-no-files-found: warn
