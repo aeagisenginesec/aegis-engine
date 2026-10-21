@@ -42,8 +42,8 @@ func TestCLIAuditVersionStamped(t *testing.T) {
 	if code := run([]string{"--version"}, &stdout, &stderr); code != 0 {
 		t.Fatalf("--version exited %d, want 0; stderr: %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "2.0.0") {
-		t.Errorf("--version output %q does not contain stamped version 2.0.0", stdout.String())
+	if !strings.Contains(stdout.String(), "2.1.0") {
+		t.Errorf("--version output %q does not contain stamped version 2.1.0", stdout.String())
 	}
 }
 
@@ -191,8 +191,8 @@ func TestCLIAuditJSONFormat(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil {
 		t.Fatalf("--format=json output is not valid JSON: %v", err)
 	}
-	if doc.Version != "2.0.0" {
-		t.Errorf("aegis_version = %q, want 2.0.0", doc.Version)
+	if doc.Version != "2.1.0" {
+		t.Errorf("aegis_version = %q, want 2.1.0", doc.Version)
 	}
 	if len(doc.Findings) == 0 {
 		t.Fatal("JSON report carries no findings for a vulnerable fixture")

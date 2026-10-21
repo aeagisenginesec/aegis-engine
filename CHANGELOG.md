@@ -3,6 +3,54 @@
 All notable changes to Aegis are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.1.0] — 2026-10-21
+
+Accuracy closeout release: the R4 ground truth is fully solved (zero
+false negatives, zero false positives), the false-positive families
+found by a 2,227-candidate adjudication are eliminated, and a blind
+210-project evaluation (R5) is published with an honest verdict. Rule
+registry: 1,140 active rules. Full record: `docs/audit/24_FP_FN_ELIMINATION_PLAN.md`,
+`docs/audit/25_FP_FAMILY_KILL.md`, `docs/audit/26_AEGIS_FINAL_STATE.md`.
+
+### Added
+
+- **AEGIS-AWS-858**: security group open to the world on database ports
+  (1433/1521/3306/5432/5984/6379/9200/27017), across all SG resource forms.
+- **AEGIS-COMPOSE-009**: Docker Compose `network_mode: host`.
+
+### Fixed — accuracy
+
+- **R4 false negatives 8 → 0** (TP 136/136, recall 1.000): the two rules
+  above, an ARM template-map casing bug that hid AKS `enableRBAC: false`
+  (AZURE-014), and regression locks for Cosmos public network access.
+- **False-positive families killed**: 15 duplicate rules deprecated
+  (each mapped to its surviving canonical rule), DOCKER-017/018 gated to
+  final build stages (20 false positives on discarded stages), AWS-311
+  scoped to known database engines.
+- **ARM/Bicep correctness**: storage-account rule translations that were
+  unreachable are now wired; a VNet DDoS attribute collision that made
+  scans nondeterministic (~1 in 5 runs) is merged deterministically.
+
+### Fixed — engine
+
+- **Discovery readability probe**: files discovery cannot open are now
+  skipped during the walk and recorded in the Skipped report with a
+  reason, instead of surfacing later as parse failures. Caught by the
+  first GitHub CI run of the closeout branch; verified as a non-root user.
+
+### Performance
+
+- S3 correlation pass is O(1) per bucket (was O(R²)): the 100k-line
+  fixture scans in ~5.4s (was 38.2s); 1,003,677 findings on the
+  1.7M-line fixture in ~2 minutes.
+
+### Known limitations (measured, R5 blind set)
+
+- Recall on the blind R5 corpus is coverage-bound (auto-scored 0.555):
+  the dominant gap is hardcoded secrets in template parameter defaults
+  and config files. AWS-001 (S3 SSE) can false-fire on buckets relying
+  on SSE-S3 defaults. See `docs/audit/raw/final-eval-r5/`.
+
 ## [2.0.0] — 2026-10-14
 
 Second stable release. 1,153 detection rules (1,152 active) across AWS,
