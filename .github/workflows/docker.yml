@@ -1,6 +1,14 @@
 # Publish the Aegis container image to GHCR whenever a GitHub Release is
-# published (the release workflow owns the binaries; this owns the image).
-# Also runnable manually against any ref via workflow_dispatch.
+# published or a version tag is pushed (the release workflow owns the
+# binaries; this owns the image). Also runnable manually against any ref
+# via workflow_dispatch.
+#
+# Why BOTH triggers: releases created by a workflow's GITHUB_TOKEN (ours
+# are, via release.yml) do not emit events that trigger other workflows
+# (GitHub's anti-recursion rule) — v2.1.1's release never fired the
+# release:published trigger. Tag pushes are real events, so the push
+# trigger below is the one that actually carries releases; the release
+# trigger remains for releases published manually in the UI.
 #
 # Tags pushed: the release tag (e.g. v2.1.1), the bare version (2.1.1),
 # and `latest`. Architectures: linux/amd64 + linux/arm64.
@@ -10,6 +18,8 @@ name: Docker
 on:
   release:
     types: [published]
+  push:
+    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
