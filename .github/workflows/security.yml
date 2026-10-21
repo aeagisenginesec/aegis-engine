@@ -1,7 +1,8 @@
 # Aegis security scanning — CodeQL static analysis of the engine's own Go
-# code, plus govulncheck over the module graph (reachable-vulnerability
-# gate: this job is what caught the Go 1.25 stdlib findings that forced
-# the 1.26 toolchain upgrade in v2.1.1).
+# code, govulncheck over the module graph (reachable-vulnerability gate:
+# this job is what caught the Go 1.25 stdlib findings that forced the
+# 1.26 toolchain upgrade in v2.1.1), and Semgrep pattern/taint SAST
+# (the fast pattern layer next to CodeQL's semantic analysis).
 #
 # Private-repo note: GitHub's code-scanning API (where CodeQL results
 # normally land) requires GitHub Advanced Security on private repos —
@@ -85,3 +86,47 @@ jobs:
       - name: Run govulncheck
         run: |
           go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Pinned to the version calibrated locally against this tree
+      # (1.182.0: zero findings on product code). Installed via pip —
+      # the same method used for the local calibration — rather than
+      # the container image, so CI reproduces the verified setup.
+      - name: Install Semgrep
+        run: pip install "semgrep==1.182.0"
+
+      # Exclusions: benchmark/ and docs/audit/raw/ hold deliberately
+      # vulnerable fixtures and adjudicated evaluation corpora — data
+      # whose purpose is to contain findings. Every Semgrep hit in the
+      # calibration run lived in those trees; product code was clean,
+      # so --error gates on any real finding from here on.
+      - name: Run Semgrep (gate on findings)
+        run: |
+          semgrep scan \
+            --config p/golang \
+            --config p/security-audit \
+            --metrics off \
+            --exclude benchmark/ \
+            --exclude docs/audit/raw/ \
+            --error \
+            --sarif --output semgrep.sarif \
+            .
+
+      - name: Archive Semgrep SARIF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+          retention-days: 30
+          if-no-files-found: warn
