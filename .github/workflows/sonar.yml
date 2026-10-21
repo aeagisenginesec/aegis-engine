@@ -85,17 +85,25 @@ jobs:
           SONAR_TOKEN: ${{ steps.sonar-auth.outputs.token }}
         run: |
           mkdir -p sonar-results
-          # Wait for the Compute Engine task the scanner queued.
-          CE_URL=$(grep -o 'ceTaskUrl=[^ ]*' .scannerwork/report-task.txt | cut -d= -f2-)
-          echo "CE task: $CE_URL"
+          # Ask the server for this project's latest Compute Engine
+          # task. (Run #1 failed here: it read the CE task URL from
+          # .scannerwork/report-task.txt, but that file lives in the
+          # scanner CONTAINER's filesystem view, not the runner's.
+          # The ephemeral server holds exactly one analysis — this
+          # run's — so the newest CE task is unambiguous.)
+          TASK=""
           for i in $(seq 1 30); do
-            CE_STATUS=$(curl -sf -u "$SONAR_TOKEN:" "$CE_URL" | jq -r .task.status)
-            echo "  [$i] CE: $CE_STATUS"
+            TASK=$(curl -sf -u "$SONAR_TOKEN:" \
+              "http://localhost:9000/api/ce/activity?component=aegis-engine&ps=1" \
+              | jq -c '.tasks[0] // empty')
+            CE_STATUS=$(echo "$TASK" | jq -r .status 2>/dev/null || true)
+            echo "  [$i] CE: ${CE_STATUS:-none yet}"
             [ "$CE_STATUS" = "SUCCESS" ] && break
             [ "$CE_STATUS" = "FAILED" ] && { echo "analysis failed on the server"; exit 1; }
             sleep 10
           done
-          ANALYSIS_ID=$(curl -sf -u "$SONAR_TOKEN:" "$CE_URL" | jq -r .task.analysisId)
+          [ "$CE_STATUS" = "SUCCESS" ] || { echo "CE task never reached SUCCESS"; exit 1; }
+          ANALYSIS_ID=$(echo "$TASK" | jq -r .analysisId)
           curl -sf -u "$SONAR_TOKEN:" \
             "http://localhost:9000/api/qualitygates/project_status?analysisId=$ANALYSIS_ID" \
             > sonar-results/qualitygate.json
@@ -106,7 +114,6 @@ jobs:
           TOTAL=$(jq -r .total sonar-results/issues-page1.json)
           echo "Quality gate: $GATE | Issues exported: $TOTAL (page 1 of the export)"
           jq -r '.projectStatus.conditions[]? | "  \(.status) \(.metricKey): \(.actualValue) vs \(.comparator) \(.errorThreshold)"' sonar-results/qualitygate.json || true
-          cp .scannerwork/report-task.txt sonar-results/ 2>/dev/null || true
           [ "$GATE" = "OK" ] || { echo "QUALITY GATE: $GATE"; exit 1; }
 
       - name: Archive Sonar results
