@@ -46,6 +46,9 @@ jobs:
         with:
           languages: go
           build-mode: autobuild
+          # paths-ignore for the deliberately vulnerable fixture
+          # trees (benchmark corpora, eval data, demos, testdata).
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4
@@ -105,19 +108,19 @@ jobs:
       - name: Install Semgrep
         run: 'pip install --only-binary=:all: "semgrep==1.182.0"'
 
-      # Exclusions: benchmark/ and docs/audit/raw/ hold deliberately
-      # vulnerable fixtures and adjudicated evaluation corpora — data
-      # whose purpose is to contain findings. Every Semgrep hit in the
-      # calibration run lived in those trees; product code was clean,
-      # so --error gates on any real finding from here on.
+      # Exclusions live in .semgrepignore at the repo root (single
+      # source of truth, shared with local runs): benchmark/ and
+      # docs/audit/ hold deliberately vulnerable fixtures and
+      # adjudicated evaluation corpora — data whose purpose is to
+      # contain findings — alongside the demo stacks and testdata.
+      # Product code was clean in every calibration run, so --error
+      # gates on any real finding from here on.
       - name: Run Semgrep (gate on findings)
         run: |
           semgrep scan \
             --config p/golang \
             --config p/security-audit \
             --metrics off \
-            --exclude benchmark/ \
-            --exclude docs/audit/raw/ \
             --error \
             --sarif --output semgrep.sarif \
             .
