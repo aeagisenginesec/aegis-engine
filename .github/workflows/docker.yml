@@ -32,6 +32,12 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      # The tags this run actually published (semver tags on release
+      # refs, just :latest on branch dispatches) — the Snyk scan job
+      # consumes this so it always scans the image THIS run built,
+      # whatever ref triggered it.
+      image_tags: ${{ steps.meta.outputs.tags }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -89,12 +95,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # The ref name is the release tag on every real trigger (tag
-      # push, release published, dispatch against a tag). Dispatching
-      # this workflow from a BRANCH makes this pull fail — by design:
-      # there is no branch-tagged image to scan.
-      - name: Pull the amd64 image just published
-        run: docker pull --platform linux/amd64 ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+      # Scan the image this run just published: the first tag from
+      # the build job's metadata (a version tag on release refs,
+      # :latest on branch dispatches).
+      - name: Pull the image just published
+        env:
+          IMAGE_TAGS: ${{ needs.image.outputs.image_tags }}
+        run: |
+          IMAGE_REF="$(printf '%s\n' "$IMAGE_TAGS" | head -n1)"
+          echo "IMAGE_REF=$IMAGE_REF" >> "$GITHUB_ENV"
+          docker pull --platform linux/amd64 "$IMAGE_REF"
 
       - name: Install Snyk CLI
         run: |
@@ -109,7 +119,7 @@ jobs:
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk container test ghcr.io/${{ github.repository }}:${{ github.ref_name }} --file=Dockerfile --json-file-output=snyk-container.json
+        run: snyk container test "$IMAGE_REF" --file=Dockerfile --json-file-output=snyk-container.json
 
       - name: Archive Snyk container report
         if: always()
