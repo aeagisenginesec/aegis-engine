@@ -391,15 +391,25 @@ jobs:
           if-no-files-found: warn
 
   upload-sarif:
-    name: Upload SARIF to code scanning
+    name: Archive SARIF chunks
     needs: scan
-    # Runs even when the gate fails (findings must still land in code
-    # scanning); skipped only if the scan job produced no SARIF at all.
+    # Runs even when the gate fails (findings must still be preserved);
+    # skipped only if the scan job produced no SARIF at all.
+    #
+    # Why artifacts instead of code scanning: this repository is
+    # private, and GitHub's code-scanning API rejects SARIF uploads on
+    # private repos without GitHub Advanced Security ("Resource not
+    # accessible by integration" — observed on run #1, 2026-10-21,
+    # despite security-events: write being granted). The chunks are
+    # therefore archived as run artifacts. If the repo goes public or
+    # GHAS is enabled, restore the upload by replacing the archive step
+    # with github/codeql-action/upload-sarif@v4 using sarif_file =
+    # matrix.chunk.file and category = matrix.chunk.category (one
+    # category per chunk, as the split already provides).
     if: always() && needs.scan.outputs.sarif_exists == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
     strategy:
       fail-fast: false
       matrix:
@@ -410,13 +420,13 @@ jobs:
         with:
           name: aegis-results
 
-      - name: Upload SARIF chunk
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Archive SARIF chunk
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: ${{ matrix.chunk.file }}
-          # One category per chunk: re-using a category would make each
-          # upload overwrite the previous chunk's alerts.
-          category: ${{ matrix.chunk.category }}
+          name: sarif-${{ matrix.chunk.category }}
+          path: ${{ matrix.chunk.file }}
+          retention-days: 30
+          if-no-files-found: error
 
   pr-comment:
     name: PR summary comment
