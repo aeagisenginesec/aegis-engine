@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Dev jump box the team spins up for troubleshooting sessions.
+
+Parameters:
+  KeyPairName:
+    Type: String
+  AmiId:
+    Type: String
+    Default: ami-0c55b159cbfafe1f0
+
+Resources:
+  JumpSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Jump box access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: 0.0.0.0/0
+
+  JumpBox:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AmiId
+      InstanceType: t3.micro
+      KeyName: !Ref KeyPairName
+      SecurityGroupIds:
+        - !Ref JumpSecurityGroup
+      Tags:
+        - Key: Name
+          Value: dev-jumpbox
+
+Outputs:
+  PublicIp:
+    Value: !GetAtt JumpBox.PublicIp

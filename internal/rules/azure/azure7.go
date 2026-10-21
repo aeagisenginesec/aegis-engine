@@ -44,12 +44,14 @@ func (mssqlNoExtAuditPolicy) Title() string {
 func (mssqlNoExtAuditPolicy) Description() string {
 	return "azurerm_mssql_server with no azurerm_mssql_server_extended_auditing_policy " +
 		"referencing it loses the database activity audit trail. Attach an " +
-		"extended auditing policy with a storage endpoint."
+		"extended auditing policy with a storage endpoint. The legacy " +
+		"azurerm_sql_server type is covered the same way via its inline " +
+		"extended_auditing_policy block (it has no standalone policy resource)."
 }
 func (mssqlNoExtAuditPolicy) Severity() ir.Severity { return ir.SeverityMedium }
 
 func (mssqlNoExtAuditPolicy) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
+	return resType == "azurerm_mssql_server" || resType == "azurerm_sql_server"
 }
 
 // Check cannot correlate on one resource; CheckAll performs the analysis.
@@ -72,10 +74,10 @@ func (mssqlNoExtAuditPolicy) CheckAll(resources []ir.Resource) []ir.Finding {
 	})
 	var out []ir.Finding
 	for _, r := range sorted {
-		if r.Type != "azurerm_mssql_server" {
+		if r.Type != "azurerm_mssql_server" && r.Type != "azurerm_sql_server" {
 			continue
 		}
-		// Legacy inline block (AEGIS-AZURE-045) also counts as auditing.
+		// Inline block also counts as auditing.
 		if _, _, present, _ := getBlocks(r, "extended_auditing_policy"); present {
 			continue
 		}
@@ -385,7 +387,7 @@ func (mssqlNoADAdminResource) CheckAll(resources []ir.Resource) []ir.Finding {
 		if r.Type != "azurerm_mssql_server" {
 			continue
 		}
-		// Legacy inline block (AEGIS-AZURE-047) also counts as an AD admin.
+		// Inline block also counts as an AD admin.
 		if _, _, present, _ := getBlocks(r, "azuread_administrator"); present {
 			continue
 		}
@@ -453,6 +455,13 @@ func (mssqlNoPrivateEndpoint) CheckAll(resources []ir.Resource) []ir.Finding {
 			continue
 		}
 		if withPE[r.Address()] {
+			continue
+		}
+		// A server with public network access explicitly disabled has
+		// no public exposure for a private endpoint to mitigate; the
+		// finding's implied exposure is factually wrong there (R5
+		// blind eval: r5104/r5105, publicNetworkAccess='Disabled').
+		if pna, _, pPresent, pKnown := getBool(r, "public_network_access_enabled"); pPresent && pKnown && !pna {
 			continue
 		}
 		out = append(out, mkFinding(s, r, "private_endpoint",

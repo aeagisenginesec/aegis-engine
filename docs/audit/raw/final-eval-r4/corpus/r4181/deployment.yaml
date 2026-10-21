@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-84336b
+  labels:
+    app: web-84336b
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-84336b
+  template:
+    metadata:
+      labels:
+        app: web-84336b
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: web
+          image: registry.example.com/web:2.1.0
+          ports: [{containerPort: 8080}]
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+            initialDelaySeconds: 10
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-84336b
+  labels:
+    app: api-84336b
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-84336b
+  template:
+    metadata:
+      labels:
+        app: api-84336b
+    spec:
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          securityContext:
+            privileged: true
+            capabilities:
+              add: [SYS_ADMIN, NET_ADMIN]

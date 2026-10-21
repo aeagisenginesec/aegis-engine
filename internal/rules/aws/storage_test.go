@@ -7,9 +7,12 @@ import (
 )
 
 // --- AEGIS-AWS-311: RDS without IAM database authentication ---
+// Engine-scoped since Sprint 2 (scoping ported from removed
+// AEGIS-AWS-540): fires only on mysql/postgres/mariadb instances.
 
 func Test311_AbsentFires(t *testing.T) {
-	fs := runRule(rdsNoIAMAuth{}, res("aws_db_instance", "db", map[string]ir.Value{}))
+	fs := runRule(rdsNoIAMAuth{}, res("aws_db_instance", "db",
+		map[string]ir.Value{"engine": ks("postgres", 2)}))
 	if len(fs) != 1 {
 		t.Fatalf("got %d findings, want 1", len(fs))
 	}
@@ -20,7 +23,8 @@ func Test311_AbsentFires(t *testing.T) {
 
 func Test311_FalseFires(t *testing.T) {
 	fs := runRule(rdsNoIAMAuth{}, res("aws_db_instance", "db",
-		map[string]ir.Value{"iam_database_authentication_enabled": kv(false, 3)}))
+		map[string]ir.Value{"engine": ks("mysql", 2),
+			"iam_database_authentication_enabled": kv(false, 3)}))
 	if len(fs) != 1 {
 		t.Fatalf("got %d findings, want 1", len(fs))
 	}
@@ -28,7 +32,8 @@ func Test311_FalseFires(t *testing.T) {
 
 func Test311_TrueQuiet(t *testing.T) {
 	fs := runRule(rdsNoIAMAuth{}, res("aws_db_instance", "db",
-		map[string]ir.Value{"iam_database_authentication_enabled": kv(true, 3)}))
+		map[string]ir.Value{"engine": ks("postgres", 2),
+			"iam_database_authentication_enabled": kv(true, 3)}))
 	if len(fs) != 0 {
 		t.Fatalf("got %d findings, want 0", len(fs))
 	}
@@ -36,9 +41,41 @@ func Test311_TrueQuiet(t *testing.T) {
 
 func Test311_UnknownQuiet(t *testing.T) {
 	fs := runRule(rdsNoIAMAuth{}, res("aws_db_instance", "db",
-		map[string]ir.Value{"iam_database_authentication_enabled": ku(3)}))
+		map[string]ir.Value{"engine": ks("postgres", 2),
+			"iam_database_authentication_enabled": ku(3)}))
 	if len(fs) != 0 {
 		t.Fatalf("got %d findings, want 0", len(fs))
+	}
+}
+
+func Test311_EngineScope(t *testing.T) {
+	// Engines without IAM database authentication must stay quiet:
+	// the recommended setting does not exist for them.
+	for _, eng := range []string{"oracle-ee", "sqlserver-ex", "docdb", "custom-oracle-ee"} {
+		fs := runRule(rdsNoIAMAuth{}, res("aws_db_instance", "db",
+			map[string]ir.Value{"engine": ks(eng, 2)}))
+		if len(fs) != 0 {
+			t.Fatalf("engine %s: got %d findings, want 0", eng, len(fs))
+		}
+	}
+	// Aurora engines are covered by the aws_rds_cluster rules.
+	for _, eng := range []string{"aurora-mysql", "aurora-postgresql"} {
+		fs := runRule(rdsNoIAMAuth{}, res("aws_db_instance", "db",
+			map[string]ir.Value{"engine": ks(eng, 2)}))
+		if len(fs) != 0 {
+			t.Fatalf("engine %s: got %d findings, want 0", eng, len(fs))
+		}
+	}
+	// Unknown or absent engine: cannot decide.
+	fs := runRule(rdsNoIAMAuth{}, res("aws_db_instance", "db", map[string]ir.Value{}))
+	if len(fs) != 0 {
+		t.Fatalf("absent engine: got %d findings, want 0", len(fs))
+	}
+	// MariaDB supports IAM database authentication: fires.
+	fs = runRule(rdsNoIAMAuth{}, res("aws_db_instance", "db",
+		map[string]ir.Value{"engine": ks("mariadb", 2)}))
+	if len(fs) != 1 {
+		t.Fatalf("mariadb: got %d findings, want 1", len(fs))
 	}
 }
 

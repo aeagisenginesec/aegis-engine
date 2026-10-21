@@ -121,8 +121,20 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	// + 144 Azure expansion (AEGIS-AZURE-170..313) + concurrent AWS/GCP deep packs.
 	// + 200 AWS deep expansion (AEGIS-AWS-650..849).
 	// - 39 duplicate rules removed by post-audit dedup (46 pairs consolidated).
-	if len(all) != 1146 {
-		t.Fatalf("default registry should wire 1146 rules, got %d", len(all))
+	// + 5 accuracy-100 rules (AEGIS-AZURE-314, AEGIS-AWS-850,
+	//   AEGIS-DOCKER-036, AEGIS-K8S-026, AEGIS-K8S-027).
+	// + 6 outperform-mission rules (AEGIS-AWS-851..855, AEGIS-DOCKER-037).
+	// − 3 removed as factually wrong / duplicates (684, 692, 702).
+	// + 5 K8s hardening gap-closure (AEGIS-K8S-028..032).
+	// − 9 duplicate / FP-prone rules removed by the multi-cloud quality
+	//   audit (AZR-004, AZURE-008/009/025/045/047/048/225, GCP-063).
+	// + 2 multi-cloud quality audit rules (AEGIS-GCP-293, AEGIS-GCP-294).
+	// + 1 AWS-856 EC2 EOL image (concurrent addition, kept after audit review).
+	// + 1 AWS-857 CFN parameter secret default (R4 recall gap closure).
+	// + 2 R4 Sprint-1 FN closures (AEGIS-AWS-858 SG database-port exposure,
+	//   AEGIS-COMPOSE-009 host network split out of COMPOSE-003).
+	if len(all) != 1140 {
+		t.Fatalf("default registry should wire 1140 rules, got %d", len(all))
 	}
 	ids := map[string]bool{}
 	for _, r := range all {
@@ -154,6 +166,9 @@ func TestDefaultRegistry_EndToEndSmoke(t *testing.T) {
 		{Type: "aws_s3_bucket", Name: "pub", Attributes: map[string]ir.Value{
 			"acl": ir.Value{Raw: "public-read", Known: true, Span: span},
 		}, Span: span},
+		// bare: private, no SSE -> 001 fires here (pub is
+		// intentionally public, so 001 is suppressed on it).
+		{Type: "aws_s3_bucket", Name: "bare", Attributes: map[string]ir.Value{}, Span: span},
 		{Type: "aws_s3_bucket", Name: "priv", Attributes: map[string]ir.Value{
 			"acl": ir.Value{Raw: "private", Known: true, Span: span},
 			"logging": ir.Value{Raw: []ir.Value{
@@ -172,7 +187,10 @@ func TestDefaultRegistry_EndToEndSmoke(t *testing.T) {
 						{Raw: map[string]ir.Value{
 							"apply_server_side_encryption_by_default": ir.Value{Raw: []ir.Value{
 								{Raw: map[string]ir.Value{
-									"sse_algorithm": ir.Value{Raw: "AES256", Known: true, Span: span},
+									// CMK (not AES256): the smoke bucket is fully
+									// compliant, so 852 must stay quiet on it.
+									"sse_algorithm":     ir.Value{Raw: "aws:kms", Known: true, Span: span},
+									"kms_master_key_id": ir.Value{Raw: "arn:aws:kms:us-east-1:123456789012:key/abc-123", Known: true, Span: span},
 								}, Known: true, Span: span},
 							}, Known: true, Span: span},
 						}, Known: true, Span: span},
@@ -213,9 +231,11 @@ func TestDefaultRegistry_EndToEndSmoke(t *testing.T) {
 	for _, f := range out {
 		ids[f.RuleID+":"+f.Resource]++
 	}
-	// pub bucket: no SSE (001), public ACL (002), no versioning (012)
+	// pub bucket: public ACL (002), no versioning (012). 001 (no SSE)
+	// is suppressed on it: the bucket is intentionally public.
+	// bare bucket: private, no SSE -> 001 fires.
 	for _, want := range []string{
-		"AEGIS-AWS-001:aws_s3_bucket.pub",
+		"AEGIS-AWS-001:aws_s3_bucket.bare",
 		"AEGIS-AWS-002:aws_s3_bucket.pub",
 		"AEGIS-AWS-012:aws_s3_bucket.pub",
 	} {

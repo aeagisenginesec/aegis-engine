@@ -62,9 +62,9 @@ func (s3NoSecureTransport) CheckAll(resources []ir.Resource) []ir.Finding {
 	logTargets := logDeliveryBuckets(resources)
 	var out []ir.Finding
 	for _, b := range buckets {
-		pols := byBucket[b.Address()]
+		pols := byBucket[scopeKey(b)]
 		if len(pols) == 0 {
-			if uncertain || logTargets[b.Address()] {
+			if uncertain || logTargets[scopeKey(b)] {
 				continue // might be covered by the unresolvable policy, or is a log target
 			}
 			// No policy at all: definitely no SecureTransport enforcement.
@@ -84,7 +84,7 @@ func (s3NoSecureTransport) CheckAll(resources []ir.Resource) []ir.Finding {
 				break
 			}
 		}
-		if enforced || undecidable || logTargets[b.Address()] {
+		if enforced || undecidable || logTargets[scopeKey(b)] {
 			continue
 		}
 		out = append(out, s3NoSecureTransportFinding(b))
@@ -253,7 +253,7 @@ func (s3NoAccessLogging) CheckAll(resources []ir.Resource) []ir.Finding {
 			continue
 		}
 		for _, f := range (s3NoAccessLogging{}).Check(r) {
-			if !logged[r.Address()] && !logTargets[r.Address()] && !uncertain {
+			if !logged[scopeKey(r)] && !logTargets[scopeKey(r)] && !uncertain {
 				out = append(out, f)
 			}
 		}

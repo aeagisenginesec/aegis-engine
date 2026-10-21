@@ -1,0 +1,401 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1329b-f1ff-7c06-98c0-36f7b936bba4",
+  "CreatedAt": "2026-10-13T00:14:03.263792842Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t033",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 52,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 4
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0013",
+          "Title": "Key vault should have the network acl block specified",
+          "Description": "Network ACLs allow you to reduce your exposure to risk by limiting what can access your key vault.\n\nThe default action of the Network ACL should be set to deny for when IPs are not matched. Azure services can be allowed to bypass.\n",
+          "Message": "Vault network ACL does not block access by default.",
+          "Namespace": "builtin.azure.keyvault.azure0013",
+          "Query": "data.builtin.azure.keyvault.azure0013.deny",
+          "Resolution": "Set a network ACL for the key vault",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0013",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/key-vault/general/network-security",
+            "https://avd.aquasec.com/misconfig/azu-0013"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_key_vault.app",
+            "Provider": "Azure",
+            "Service": "keyvault",
+            "StartLine": 20,
+            "EndLine": 33,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 20,
+                  "Content": "resource \"azurerm_key_vault\" \"app\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_key_vault\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "  name                        = \"acme-app-kv-01\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m                        = \u001b[38;5;37m\"acme-app-kv-01\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "  location                    = azurerm_resource_group.main.location",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mlocation\u001b[0m                    = azurerm_resource_group.main.location",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  resource_group_name         = azurerm_resource_group.main.name",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mresource_group_name\u001b[0m         = azurerm_resource_group.main.name",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  tenant_id                   = data.azurerm_client_config.current.tenant_id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mtenant_id\u001b[0m                   = \u001b[38;5;33mdata\u001b[0m.azurerm_client_config.current.tenant_id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "  sku_name                    = \"standard\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245msku_name\u001b[0m                    = \u001b[38;5;37m\"standard\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "  soft_delete_retention_days  = 7",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245msoft_delete_retention_days\u001b[0m  = \u001b[38;5;37m7",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  purge_protection_enabled    = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mpurge_protection_enabled\u001b[0m    = \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  enabled_for_disk_encryption = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245menabled_for_disk_encryption\u001b[0m = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 29,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0015",
+          "Title": "Key vault Secret should have a content type set",
+          "Description": "Content Type is an optional Key Vault Secret behavior and is not enabled by default.\n\nClients may specify the content type of a secret to assist in interpreting the secret data when it's retrieved. The maximum length of this field is 255 characters. There are no pre-defined values. The suggested usage is as a hint for interpreting the secret data.\n",
+          "Message": "Secret does not have a content-type specified.",
+          "Namespace": "builtin.azure.keyvault.azure0015",
+          "Query": "data.builtin.azure.keyvault.azure0015.deny",
+          "Resolution": "Provide content type for secrets to aid interpretation on retrieval",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0015",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/key-vault/secrets/about-secrets",
+            "https://avd.aquasec.com/misconfig/azu-0015"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_key_vault_secret.db_password",
+            "Provider": "Azure",
+            "Service": "keyvault",
+            "StartLine": 50,
+            "EndLine": 54,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 50,
+                  "Content": "resource \"azurerm_key_vault_secret\" \"db_password\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_key_vault_secret\"\u001b[0m \u001b[38;5;37m\"db_password\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 51,
+                  "Content": "  name         = \"db-password\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m         = \u001b[38;5;37m\"db-password\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 52,
+                  "Content": "  value        = \"Sup3rSecret123!\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mvalue\u001b[0m        = \u001b[38;5;37m\"Sup3rSecret123!\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 53,
+                  "Content": "  key_vault_id = azurerm_key_vault.app.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mkey_vault_id\u001b[0m = azurerm_key_vault.app.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 54,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0016",
+          "Title": "Key vault should have purge protection enabled",
+          "Description": "Purge protection is an optional Key Vault behavior and is not enabled by default.\n\nPurge protection can only be enabled once soft-delete is enabled. It can be turned on via CLI or PowerShell.\n",
+          "Message": "Vault does not have purge protection enabled.",
+          "Namespace": "builtin.azure.keyvault.azure0016",
+          "Query": "data.builtin.azure.keyvault.azure0016.deny",
+          "Resolution": "Enable purge protection for key vaults",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0016",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/key-vault/general/soft-delete-overview#purge-protection",
+            "https://avd.aquasec.com/misconfig/azu-0016"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_key_vault.app",
+            "Provider": "Azure",
+            "Service": "keyvault",
+            "StartLine": 27,
+            "EndLine": 27,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 20,
+                  "Content": "resource \"azurerm_key_vault\" \"app\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_key_vault\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  purge_protection_enabled    = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mpurge_protection_enabled\u001b[0m    = \u001b[38;5;166mfalse",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 32,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "azurerm_key_vault.app",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 20,
+                  "EndLine": 33
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0017",
+          "Title": "Key Vault Secret should have an expiration date set",
+          "Description": "Expiration Date is an optional Key Vault Secret behavior and is not set by default.\n\nSet when the resource will be become inactive.\n",
+          "Message": "Secret should have an expiry date specified.",
+          "Namespace": "builtin.azure.keyvault.azure0017",
+          "Query": "data.builtin.azure.keyvault.azure0017.deny",
+          "Resolution": "Set an expiry for secrets",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0017",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/key-vault/secrets/about-secrets",
+            "https://avd.aquasec.com/misconfig/azu-0017"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_key_vault_secret.db_password",
+            "Provider": "Azure",
+            "Service": "keyvault",
+            "StartLine": 50,
+            "EndLine": 54,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 50,
+                  "Content": "resource \"azurerm_key_vault_secret\" \"db_password\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_key_vault_secret\"\u001b[0m \u001b[38;5;37m\"db_password\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 51,
+                  "Content": "  name         = \"db-password\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m         = \u001b[38;5;37m\"db-password\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 52,
+                  "Content": "  value        = \"Sup3rSecret123!\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mvalue\u001b[0m        = \u001b[38;5;37m\"Sup3rSecret123!\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 53,
+                  "Content": "  key_vault_id = azurerm_key_vault.app.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mkey_vault_id\u001b[0m = azurerm_key_vault.app.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 54,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

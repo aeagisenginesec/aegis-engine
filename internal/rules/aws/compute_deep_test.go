@@ -88,24 +88,6 @@ func TestEC2NoTerminationProtection(t *testing.T) {
 	}
 }
 
-func TestEC2EBSOptimizedAbsent(t *testing.T) {
-	absent := res("aws_instance", "web", map[string]ir.Value{})
-	presentFalse := res("aws_instance", "web", map[string]ir.Value{
-		"ebs_optimized": kv(false, 2), // AEGIS-AWS-565's job, not this rule's
-	})
-	presentTrue := res("aws_instance", "web", map[string]ir.Value{
-		"ebs_optimized": kv(true, 2),
-	})
-	if got := runRule(ec2EBSOptimizedAbsent{}, absent); len(got) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(got))
-	}
-	for _, r := range []ir.Resource{presentFalse, presentTrue} {
-		if got := runRule(ec2EBSOptimizedAbsent{}, r); len(got) != 0 {
-			t.Fatalf("expected quiet, got %d", len(got))
-		}
-	}
-}
-
 func TestEC2PasswordDataExposed(t *testing.T) {
 	fire := res("aws_instance", "win", map[string]ir.Value{
 		"get_password_data": kv(true, 2),
@@ -228,19 +210,6 @@ func TestLTEBSOptimizedAbsent(t *testing.T) {
 	}
 }
 
-func TestEC2NoInstanceProfile(t *testing.T) {
-	absent := res("aws_instance", "web", map[string]ir.Value{})
-	quiet := res("aws_instance", "web", map[string]ir.Value{
-		"iam_instance_profile": ks("web-profile", 2),
-	})
-	if got := runRule(ec2NoInstanceProfile{}, absent); len(got) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(got))
-	}
-	if got := runRule(ec2NoInstanceProfile{}, quiet); len(got) != 0 {
-		t.Fatalf("expected quiet, got %d", len(got))
-	}
-}
-
 func TestEC2UnlimitedCPUCredits(t *testing.T) {
 	fire := res("aws_instance", "web", map[string]ir.Value{
 		"credit_specification": blks(2, blk("cpu_credits", ks("unlimited", 3))),
@@ -288,20 +257,27 @@ func TestEBSSnapshotCopyUnencrypted(t *testing.T) {
 }
 
 func TestEC2RootVolumeUnencrypted(t *testing.T) {
-	absent := res("aws_instance", "web", map[string]ir.Value{})
+	// Absent root_block_device: encryption follows the AMI snapshot +
+	// account EBS-encryption-by-default, NOT a provider default of
+	// unencrypted. Absent block and absent encrypted both stay quiet;
+	// only explicit encrypted = false fires.
+	absentBlock := res("aws_instance", "web", map[string]ir.Value{})
+	absentEncrypted := res("aws_instance", "web", map[string]ir.Value{
+		"root_block_device": blks(2, blk()),
+	})
 	explicit := res("aws_instance", "web", map[string]ir.Value{
 		"root_block_device": blks(2, blk("encrypted", kv(false, 3))),
 	})
 	quiet := res("aws_instance", "web", map[string]ir.Value{
 		"root_block_device": blks(2, blk("encrypted", kv(true, 3))),
 	})
-	for _, r := range []ir.Resource{absent, explicit} {
-		if got := runRule(ec2RootVolumeUnencrypted{}, r); len(got) != 1 {
-			t.Fatalf("expected 1 finding, got %d", len(got))
-		}
+	if got := runRule(ec2RootVolumeUnencrypted{}, explicit); len(got) != 1 {
+		t.Fatalf("expected 1 finding on explicit encrypted=false, got %d", len(got))
 	}
-	if got := runRule(ec2RootVolumeUnencrypted{}, quiet); len(got) != 0 {
-		t.Fatalf("expected quiet, got %d", len(got))
+	for _, r := range []ir.Resource{absentBlock, absentEncrypted, quiet} {
+		if got := runRule(ec2RootVolumeUnencrypted{}, r); len(got) != 0 {
+			t.Fatalf("expected quiet, got %d", len(got))
+		}
 	}
 }
 
@@ -365,16 +341,23 @@ func TestEC2NoNitroEnclaves(t *testing.T) {
 	}
 }
 
-// TestComputeDeepRuleIDs asserts the 680-699 ID range is fully covered.
+// TestComputeDeepRuleIDs asserts the 680-699 ID range is covered
+// (minus 684 removed as factually wrong, 692 removed as inverted).
 func TestComputeDeepRuleIDs(t *testing.T) {
 	rules := ComputeDeepRules()
-	if len(rules) != 20 {
-		t.Fatalf("expected 20 rules, got %d", len(rules))
+	wantIDs := []string{
+		"AEGIS-AWS-680", "AEGIS-AWS-681", "AEGIS-AWS-682", "AEGIS-AWS-683",
+		"AEGIS-AWS-685", "AEGIS-AWS-686", "AEGIS-AWS-687", "AEGIS-AWS-688",
+		"AEGIS-AWS-689", "AEGIS-AWS-690", "AEGIS-AWS-691",
+		"AEGIS-AWS-693", "AEGIS-AWS-694", "AEGIS-AWS-695", "AEGIS-AWS-696",
+		"AEGIS-AWS-697", "AEGIS-AWS-698", "AEGIS-AWS-699",
+	}
+	if len(rules) != len(wantIDs) {
+		t.Fatalf("expected %d rules, got %d", len(wantIDs), len(rules))
 	}
 	for i, r := range rules {
-		want := "AEGIS-AWS-" + itoa(680+i)
-		if r.ID() != want {
-			t.Fatalf("rule %d has ID %q, want %q", i, r.ID(), want)
+		if r.ID() != wantIDs[i] {
+			t.Fatalf("rule %d has ID %q, want %q", i, r.ID(), wantIDs[i])
 		}
 		if r.Title() == "" || r.Description() == "" {
 			t.Fatalf("rule %s has empty metadata", r.ID())

@@ -1,0 +1,113 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159",
+  "resources_scanned": 2,
+  "findings": [
+    {
+      "rule_id": "AEGIS-COMPOSE-007",
+      "title": "Service runs as root",
+      "description": "Without a user: directive the service runs as root; a container breakout then yields host root. Run as a non-root UID/GID.",
+      "severity": "medium",
+      "resource": "compose_service.web",
+      "evidence": {
+        "attribute": "user",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159/docker-compose.yml",
+          "start_line": 4,
+          "start_col": 1,
+          "end_line": 4,
+          "end_col": 1
+        },
+        "actual": "no user directive (defaults to root)",
+        "expected": "user: \"\u003cuid\u003e\" (non-root)"
+      },
+      "remediation": "Enable MFA on the account and restrict root usage. Create individual IAM users or federate via SSO, attach least-privilege policies, and never use root for daily operations.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-COMPOSE-007",
+      "title": "Service runs as root",
+      "description": "Without a user: directive the service runs as root; a container breakout then yields host root. Run as a non-root UID/GID.",
+      "severity": "medium",
+      "resource": "compose_service.worker",
+      "evidence": {
+        "attribute": "user",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159/docker-compose.yml",
+          "start_line": 7,
+          "start_col": 1,
+          "end_line": 7,
+          "end_col": 1
+        },
+        "actual": "no user directive (defaults to root)",
+        "expected": "user: \"\u003cuid\u003e\" (non-root)"
+      },
+      "remediation": "Enable MFA on the account and restrict root usage. Create individual IAM users or federate via SSO, attach least-privilege policies, and never use root for daily operations.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-COMPOSE-008",
+      "title": "Service image uses :latest tag",
+      "description": "Pinning :latest (or omitting the tag) makes deploys non-reproducible and can silently pull a new, vulnerable image. Pin an explicit version tag or digest.",
+      "severity": "medium",
+      "resource": "compose_service.web",
+      "evidence": {
+        "attribute": "image",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159/docker-compose.yml",
+          "start_line": 4,
+          "start_col": 1,
+          "end_line": 4,
+          "end_col": 1
+        },
+        "actual": "registry.example.com/web:latest (tag :latest)",
+        "expected": "pinned version tag (e.g. nginx:1.25.3) or digest"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-COMPOSE-008",
+      "title": "Service image uses :latest tag",
+      "description": "Pinning :latest (or omitting the tag) makes deploys non-reproducible and can silently pull a new, vulnerable image. Pin an explicit version tag or digest.",
+      "severity": "medium",
+      "resource": "compose_service.worker",
+      "evidence": {
+        "attribute": "image",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159/docker-compose.yml",
+          "start_line": 7,
+          "start_col": 1,
+          "end_line": 7,
+          "end_col": 1
+        },
+        "actual": "registry.example.com/worker:latest (tag :latest)",
+        "expected": "pinned version tag (e.g. nginx:1.25.3) or digest"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4159/docker-compose.yml",
+        "status": "parsed",
+        "format": "compose"
+      }
+    ]
+  }
+}

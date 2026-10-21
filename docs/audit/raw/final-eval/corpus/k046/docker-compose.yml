@@ -1,0 +1,42 @@
+services:
+  api:
+    image: example/api:2.4.0
+    user: "10001"
+    read_only: true
+    secrets:
+      - db_password
+    networks:
+      - backend
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    secrets:
+      - db_password
+    networks:
+      - backend
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+  proxy:
+    image: example/proxy:1.1.0
+    ports:
+      - "80:80"
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - api
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+
+networks:
+  frontend:
+  backend:
+    internal: true
+
+volumes:
+  dbdata:

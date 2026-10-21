@@ -19,19 +19,18 @@ import (
 // Azure15Rules returns Key Vault & Storage hardening rules in ID order.
 func Azure15Rules() []ir.Rule {
 	return []ir.Rule{
-		kvSoftDeleteRetention{},   // AEGIS-AZURE-186
-		kvNetworkAclsOpen{},       // AEGIS-AZURE-187
-		kvKeyNotHSM{},             // AEGIS-AZURE-189
-		storageSharedKeyEnabled{}, // AEGIS-AZURE-191
-		storageNoOAuthDefault{},   // AEGIS-AZURE-192
-		storageSasNotBlocked{},    // AEGIS-AZURE-194
-		storageNestedPublic{},     // AEGIS-AZURE-195
-		storageContainerPublic{},  // AEGIS-AZURE-197
-		storageNetRulesOpen{},     // AEGIS-AZURE-199
-		kvKeyNearExpiry{},         // AEGIS-AZURE-200
-		storageStaticWebsite{},    // AEGIS-AZURE-201
-		storageSFTPEnabled{},      // AEGIS-AZURE-204
-		kvNoFirewallRules{},       // AEGIS-AZURE-205
+		kvSoftDeleteRetention{},  // AEGIS-AZURE-186
+		kvNetworkAclsOpen{},      // AEGIS-AZURE-187
+		kvKeyNotHSM{},            // AEGIS-AZURE-189
+		storageNoOAuthDefault{},  // AEGIS-AZURE-192
+		storageSasNotBlocked{},   // AEGIS-AZURE-194
+		storageNestedPublic{},    // AEGIS-AZURE-195
+		storageContainerPublic{}, // AEGIS-AZURE-197
+		storageNetRulesOpen{},    // AEGIS-AZURE-199
+		kvKeyNearExpiry{},        // AEGIS-AZURE-200
+		storageStaticWebsite{},   // AEGIS-AZURE-201
+		storageSFTPEnabled{},     // AEGIS-AZURE-204
+		kvNoFirewallRules{},      // AEGIS-AZURE-205
 	}
 }
 
@@ -173,42 +172,6 @@ func (s kvKeyNotHSM) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-191: Storage account with shared key access enabled
-// ---------------------------------------------------------------------------
-
-type storageSharedKeyEnabled struct{}
-
-func (storageSharedKeyEnabled) ID() string { return "AEGIS-AZURE-191" }
-func (storageSharedKeyEnabled) Title() string {
-	return "Storage account with shared key access enabled"
-}
-func (storageSharedKeyEnabled) Description() string {
-	return "azurerm_storage_account with shared_access_key_enabled " +
-		"(the provider default) permits Shared Key authorization, which " +
-		"bypasses Entra ID and cannot be scoped. Disable it and use " +
-		"Entra ID with default_to_oauth_authentication."
-}
-func (storageSharedKeyEnabled) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (storageSharedKeyEnabled) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageSharedKeyEnabled) Check(r ir.Resource) []ir.Finding {
-	en, span, present, known := getBool(r, "shared_access_key_enabled")
-	if present && !known {
-		return nil
-	}
-	if present && !en {
-		return nil
-	}
-	actual := "true"
-	if !present {
-		actual = "absent (provider default: enabled)"
-	}
-	return []ir.Finding{mkFinding(s, r, "shared_access_key_enabled",
-		evidenceSpan(span, r.Span), actual,
-		"shared_access_key_enabled = false")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-192: Storage account not defaulting to OAuth authentication
@@ -239,24 +202,6 @@ func (s storageNoOAuthDefault) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-193: Storage account without blob soft delete
-
-// blockDays extracts a numeric day count from a block map; -1 when absent
-// or undecidable.
-func blockDays(m map[string]ir.Value, name string) float64 {
-	v, ok := m[name]
-	if !ok || !v.Known {
-		return -1
-	}
-	switch n := v.Raw.(type) {
-	case float64:
-		return n
-	case int:
-		return float64(n)
-	case int64:
-		return float64(n)
-	}
-	return -1
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-194: Storage SAS policy not blocking on expiry
@@ -315,9 +260,9 @@ func (storageNestedPublic) Title() string {
 }
 func (storageNestedPublic) Description() string {
 	return "azurerm_storage_account with allow_nested_items_to_be_public " +
-		"(the provider default) lets containers and blobs be marked " +
-		"public even when account-level public access is off. Disable it " +
-		"to enforce private-by-default."
+		"lets containers and blobs be marked public while account-level " +
+		"blob public access is enabled. Disable it to enforce " +
+		"private-by-default."
 }
 func (storageNestedPublic) Severity() ir.Severity { return ir.SeverityMedium }
 
@@ -326,6 +271,14 @@ func (storageNestedPublic) AppliesTo(resType string) bool {
 }
 
 func (s storageNestedPublic) Check(r ir.Resource) []ir.Finding {
+	// When account-level blob public access is explicitly disabled,
+	// nested items cannot be public no matter what this flag says:
+	// there is no exposure to report. Firing anyway produced 13
+	// false positives in the R5 blind eval (every firing had
+	// allowBlobPublicAccess=false).
+	if bpa, _, bPresent, bKnown := getBool(r, "allow_blob_public_access"); bPresent && bKnown && !bpa {
+		return nil
+	}
 	en, span, present, known := getBool(r, "allow_nested_items_to_be_public")
 	if present && !known {
 		return nil
@@ -410,8 +363,14 @@ func (s storageNetRulesOpen) Check(r ir.Resource) []ir.Finding {
 	if strings.EqualFold(strings.TrimSpace(act), "Deny") {
 		return nil
 	}
+	// An empty value is not an explicit Deny: keep firing, but report
+	// a non-empty Actual so the evidence is meaningful.
+	actual := act
+	if actual == "" {
+		actual = "(empty — provider default is Allow)"
+	}
 	return []ir.Finding{mkFinding(s, r, "default_action", span,
-		act, "default_action = \"Deny\"")}
+		actual, "default_action = \"Deny\"")}
 }
 
 // ---------------------------------------------------------------------------

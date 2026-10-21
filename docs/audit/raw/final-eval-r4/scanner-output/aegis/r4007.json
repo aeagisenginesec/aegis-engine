@@ -1,0 +1,148 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4007",
+  "summary": {
+    "resources": 3,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 7,
+    "critical": 0,
+    "high": 2,
+    "medium": 3,
+    "low": 2
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-208",
+      "severity": "medium",
+      "title": "ElastiCache replication group without snapshots",
+      "description": "With snapshot_retention_limit absent or 0, automated snapshots are disabled and cache data cannot be restored after loss.",
+      "resource": "aws_elasticache_replication_group.cache",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4007/main.tf",
+      "line": 1,
+      "evidence": "snapshot_retention_limit = absent (provider default: no snapshots)",
+      "expected": "snapshot_retention_limit \u003e 0 (e.g. 7)",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-320",
+      "severity": "high",
+      "title": "ElastiCache replication group without transit encryption",
+      "description": "With transit_encryption_enabled absent or false, data in transit between the application and the cache is unencrypted.",
+      "resource": "aws_elasticache_replication_group.cache",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4007/main.tf",
+      "line": 5,
+      "evidence": "transit_encryption_enabled = false",
+      "expected": "transit_encryption_enabled = true",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-321",
+      "severity": "high",
+      "title": "ElastiCache replication group without at-rest encryption",
+      "description": "With at_rest_encryption_enabled absent or false, cached data and snapshots are stored unencrypted.",
+      "resource": "aws_elasticache_replication_group.cache",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4007/main.tf",
+      "line": 6,
+      "evidence": "at_rest_encryption_enabled = false",
+      "expected": "at_rest_encryption_enabled = true",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-12"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-551",
+      "severity": "low",
+      "title": "ElastiCache replication group without Multi-AZ / failover",
+      "description": "Hygiene: ElastiCache replication groups should enable Multi-AZ with automatic failover for high availability. Set multi_az_enabled = true and automatic_failover_enabled = true.",
+      "resource": "aws_elasticache_replication_group.cache",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4007/main.tf",
+      "line": 1,
+      "evidence": "multi_az_enabled/automatic_failover_enabled = both absent or false",
+      "expected": "multi_az_enabled = true and automatic_failover_enabled = true",
+      "remediation": "Enable Multi-AZ for high availability and automatic failover:\nresource \"aws_db_instance\" \"this\" {\n  multi_az = true\n}",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-659",
+      "severity": "medium",
+      "title": "IAM user uses an inline policy",
+      "description": "The user embeds an inline policy document instead of attaching a managed policy. Inline policies cannot be reused, versioned, or reviewed centrally. Prefer aws_iam_policy with aws_iam_user_policy_attachment.",
+      "resource": "aws_iam_user_policy.reader",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4007/main.tf",
+      "line": 13,
+      "evidence": "policy = inline policy document",
+      "expected": "managed policy + attachment",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-672",
+      "severity": "low",
+      "title": "IAM user has no tags",
+      "description": "The IAM user carries no tags, making ownership, purpose, and lifecycle untraceable in audits and complicating attribute-based access control. Tag identities with at least owner and purpose.",
+      "resource": "aws_iam_user.reader",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4007/main.tf",
+      "line": 9,
+      "evidence": "tags = absent (AWS default: no tags)",
+      "expected": "tags set (owner, purpose)",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-717",
+      "severity": "medium",
+      "title": "ElastiCache replication group without snapshot retention",
+      "description": "snapshot_retention_limit is absent or 0 on the replication group, so no automated snapshots are kept and the dataset cannot be restored after corruption or accidental flush.",
+      "resource": "aws_elasticache_replication_group.cache",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4007/main.tf",
+      "line": 1,
+      "evidence": "snapshot_retention_limit = absent (provider default: no snapshots)",
+      "expected": "snapshot_retention_limit \u003e 0",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "CP-9"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4007/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

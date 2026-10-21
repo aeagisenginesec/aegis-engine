@@ -43,76 +43,6 @@ func TestAZURE006_UnknownQuiet(t *testing.T) {
 	}
 }
 
-func TestAZURE007_NoFirewallFires(t *testing.T) {
-	r := res("azurerm_key_vault", "v", map[string]ir.Value{})
-	mustFinding(t, runRule(keyVaultNoFirewall{}, r), "AEGIS-AZURE-007")
-}
-
-func TestAZURE007_AllowDefaultFires(t *testing.T) {
-	r := res("azurerm_key_vault", "v", map[string]ir.Value{
-		"network_acls": blks(3, blk("default_action", ks("Allow", 4))),
-	})
-	mustFinding(t, runRule(keyVaultNoFirewall{}, r), "AEGIS-AZURE-007")
-}
-
-func TestAZURE007_DenyQuiet(t *testing.T) {
-	r := res("azurerm_key_vault", "v", map[string]ir.Value{
-		"network_acls": blks(3, blk("default_action", ks("Deny", 4))),
-	})
-	if len(runRule(keyVaultNoFirewall{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
-	}
-}
-
-func TestAZURE007_UnknownQuiet(t *testing.T) {
-	r := res("azurerm_key_vault", "v", map[string]ir.Value{"network_acls": ku(3)})
-	if len(runRule(keyVaultNoFirewall{}, r)) != 0 {
-		t.Fatal("expected 0 findings for unknown")
-	}
-}
-
-func TestAZURE008_NoAADFires(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{})
-	mustFinding(t, runRule(sqlNoAADAuth{}, r), "AEGIS-AZURE-008")
-}
-
-func TestAZURE008_AADQuiet(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{
-		"azuread_administrator": blks(3, blk("login_username", ks("admin", 4))),
-	})
-	if len(runRule(sqlNoAADAuth{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
-	}
-}
-
-func TestAZURE008_UnknownQuiet(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"azuread_administrator": ku(3)})
-	if len(runRule(sqlNoAADAuth{}, r)) != 0 {
-		t.Fatal("expected 0 findings for unknown")
-	}
-}
-
-func TestAZURE009_NoAuditingFires(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{})
-	mustFinding(t, runRule(sqlNoAuditing{}, r), "AEGIS-AZURE-009")
-}
-
-func TestAZURE009_AuditingQuiet(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{
-		"extended_auditing_policy": blks(3, blk("storage_endpoint", ks("https://x", 4))),
-	})
-	if len(runRule(sqlNoAuditing{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
-	}
-}
-
-func TestAZURE009_UnknownQuiet(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"extended_auditing_policy": ku(3)})
-	if len(runRule(sqlNoAuditing{}, r)) != 0 {
-		t.Fatal("expected 0 findings for unknown")
-	}
-}
-
 func TestAZURE010_OpenSSHFromInternetFires(t *testing.T) {
 	r := res("azurerm_network_security_rule", "r", map[string]ir.Value{
 		"direction":              ks("Inbound", 3),
@@ -435,37 +365,19 @@ func TestAZURE024_UnknownQuiet(t *testing.T) {
 	}
 }
 
-func TestAZURE025_WeakTLSFires(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"minimum_tls_version": ks("1.0", 3)})
-	mustFinding(t, runRule(sqlServerWeakTLS{}, r), "AEGIS-AZURE-025")
-}
-
-func TestAZURE025_TLS12Quiet(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"minimum_tls_version": ks("1.2", 3)})
-	if len(runRule(sqlServerWeakTLS{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
-	}
-}
-
-func TestAZURE025_UnknownQuiet(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"minimum_tls_version": ku(3)})
-	if len(runRule(sqlServerWeakTLS{}, r)) != 0 {
-		t.Fatal("expected 0 findings for unknown")
-	}
-}
-
 func TestAzure2Rules_IDOrder(t *testing.T) {
 	rules := Azure2Rules()
-	if len(rules) != 20 {
-		t.Fatalf("expected 20 rules, got %d", len(rules))
+	if len(rules) != 16 {
+		t.Fatalf("expected 16 rules, got %d", len(rules))
 	}
-	// Explicit ID sequence check.
+	// Explicit ID sequence check. (007 removed in Sprint 2: strict
+	// subset of AEGIS-AZURE-187.)
 	want := []string{
-		"AEGIS-AZURE-006", "AEGIS-AZURE-007", "AEGIS-AZURE-008", "AEGIS-AZURE-009",
+		"AEGIS-AZURE-006",
 		"AEGIS-AZURE-010", "AEGIS-AZURE-011", "AEGIS-AZURE-012", "AEGIS-AZURE-013",
 		"AEGIS-AZURE-014", "AEGIS-AZURE-015", "AEGIS-AZURE-016", "AEGIS-AZURE-017",
 		"AEGIS-AZURE-018", "AEGIS-AZURE-019", "AEGIS-AZURE-020", "AEGIS-AZURE-021",
-		"AEGIS-AZURE-022", "AEGIS-AZURE-023", "AEGIS-AZURE-024", "AEGIS-AZURE-025",
+		"AEGIS-AZURE-022", "AEGIS-AZURE-023", "AEGIS-AZURE-024",
 	}
 	for i, w := range want {
 		if rules[i].ID() != w {

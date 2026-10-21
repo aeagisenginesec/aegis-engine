@@ -1,0 +1,495 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025",
+  "resources_scanned": 2,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-004",
+      "title": "Security group ingress open to the world",
+      "description": "Ingress rules allowing 0.0.0.0/0 expose the workload to the entire internet. Restrict source CIDRs to known ranges.",
+      "severity": "high",
+      "resource": "aws_security_group.bastion",
+      "evidence": {
+        "attribute": "ingress.cidr_blocks",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 14,
+          "start_col": 19,
+          "end_line": 14,
+          "end_col": 32
+        },
+        "actual": "0.0.0.0/0",
+        "expected": "restricted source CIDR ranges"
+      },
+      "remediation": "Restrict the ingress CIDR to trusted ranges. Replace `0.0.0.0/0` with your\noffice/VPN CIDRs, or remove the rule and use SSM Session Manager (no inbound\nSSH needed):\ningress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"203.0.113.0/24\"]  # your trusted range\n}",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "5.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "severity": "low",
+      "resource": "aws_security_group.bastion",
+      "evidence": {
+        "attribute": "description",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "absent or empty",
+        "expected": "description attribute documenting the group or rule"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "severity": "low",
+      "resource": "aws_security_group.bastion",
+      "evidence": {
+        "attribute": "egress[0].description",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "description on each inline egress rule"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "severity": "low",
+      "resource": "aws_security_group.bastion",
+      "evidence": {
+        "attribute": "ingress[0].description",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "description on each inline ingress rule"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-010",
+      "title": "GKE cluster without network policy",
+      "description": "google_container_cluster with no network_policy block, or with network_policy disabled, allows unrestricted pod-to-pod traffic.",
+      "severity": "high",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "network_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent (disabled by default)",
+        "expected": "network_policy { enabled = true }"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-011",
+      "title": "GKE cluster not private",
+      "description": "google_container_cluster with no private_cluster_config block assigns public IPs to nodes. Use private clusters so nodes have internal IPs only.",
+      "severity": "high",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "private_cluster_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "private_cluster_config { enable_private_nodes = true }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-047",
+      "title": "GKE cluster without workload identity",
+      "description": "google_container_cluster with no workload_identity_config forces pods to use node service account credentials.",
+      "severity": "high",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "workload_identity_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "workload_identity_config { workload_pool = \"...svc.id.goog\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-048",
+      "title": "GKE cluster without binary authorization",
+      "description": "google_container_cluster with no binary_authorization block deploys container images without signature verification.",
+      "severity": "medium",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "binary_authorization",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "binary_authorization { evaluation_mode = \"PROJECT_SINGLETON_POLICY_ENFORCE\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-055",
+      "title": "GKE cluster without shielded nodes",
+      "description": "google_container_cluster with no shielded_nodes block misses secure boot and integrity monitoring on nodes.",
+      "severity": "medium",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "shielded_nodes",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "shielded_nodes { enabled = true }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-108",
+      "title": "GKE cluster without metadata server v2",
+      "description": "google_container_cluster with no workload_identity_config and no node_config.workload_metadata_config.mode = GKE_METADATA exposes the legacy metadata server to workloads.",
+      "severity": "medium",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "workload_identity_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent (metadata server v2 not enforced)",
+        "expected": "workload_identity_config { workload_pool = \"...svc.id.goog\" } or node_config { workload_metadata_config { mode = \"GKE_METADATA\" } }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-109",
+      "title": "GKE cluster with binary authorization disabled",
+      "description": "google_container_cluster with binary_authorization.enabled not true deploys container images without admission-time verification.",
+      "severity": "medium",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "binary_authorization",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "binary_authorization { enabled = true }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-111",
+      "title": "GKE cluster without network policy enforcement",
+      "description": "google_container_cluster with network_policy.enabled not true cannot enforce pod-level network segmentation.",
+      "severity": "medium",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "network_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "network_policy { enabled = true }"
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-113",
+      "title": "GKE control plane publicly reachable",
+      "description": "google_container_cluster with no private endpoint and master_authorized_networks_config absent or allowing 0.0.0.0/0 exposes the Kubernetes API to the internet.",
+      "severity": "high",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "master_authorized_networks_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "no restricted cidr_blocks",
+        "expected": "private_cluster_config { enable_private_endpoint = true } or master_authorized_networks_config with restricted cidr_blocks"
+      },
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-114",
+      "title": "GKE cluster without a release channel",
+      "description": "google_container_cluster with no release_channel.channel misses managed automatic upgrades to supported Kubernetes versions; hygiene finding.",
+      "severity": "low",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "release_channel",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "release_channel { channel = \"REGULAR\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-163",
+      "title": "GKE cluster without security posture management",
+      "description": "google_container_cluster with no security_posture_config block (or vulnerability_mode = \"DISABLED\") gets no workload vulnerability scanning: known CVEs in running workloads go unreported. Enable security posture management.",
+      "severity": "low",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "security_posture_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "security_posture_config { vulnerability_mode = \"BASIC\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-164",
+      "title": "GKE cluster nodes with legacy metadata endpoints enabled",
+      "description": "google_container_cluster node_config.metadata without disable-legacy-endpoints = \"true\" exposes the legacy GCE metadata endpoints (v0.1/v1beta1) on nodes, widening SSRF and credential-theft impact. Disable legacy endpoints.",
+      "severity": "medium",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "google_container_cluster.node_config.metadata",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent (legacy endpoints enabled)",
+        "expected": "metadata = { disable-legacy-endpoints = \"true\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-165",
+      "title": "GKE cluster without application-layer secrets encryption",
+      "description": "google_container_cluster with no database_encryption block stores Kubernetes secrets in etcd encrypted only at the storage layer with Google-managed keys. Enable application-layer secrets encryption with a customer-managed Cloud KMS key.",
+      "severity": "medium",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "database_encryption",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "database_encryption { state = \"ENCRYPTED\" key_name = \"\u003ckms-key\u003e\" }"
+      },
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-166",
+      "title": "GKE cluster without Google Groups for RBAC",
+      "description": "google_container_cluster with no authenticator_groups_config block cannot bind Kubernetes RBAC to Google Groups: access is managed per-user instead of through group membership, which drifts during onboarding and offboarding. Configure authenticator_groups_config.",
+      "severity": "low",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "authenticator_groups_config",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent",
+        "expected": "authenticator_groups_config { security_group = \"gke-security-groups@\u003cdomain\u003e\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-168",
+      "title": "GKE cluster without VPC-native networking",
+      "description": "google_container_cluster with no ip_allocation_policy block uses routes-based networking, which lacks alias IPs for pods: network policies and VPC flow logs cannot distinguish pod traffic. Use VPC-native clusters with ip_allocation_policy.",
+      "severity": "medium",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "ip_allocation_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "absent (routes-based networking)",
+        "expected": "ip_allocation_policy { cluster_ipv4_cidr_block = \"...\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-172",
+      "title": "GKE node boot disks without customer-managed encryption",
+      "description": "google_container_cluster / google_container_node_pool node_config without boot_disk_kms_key encrypts node boot disks with Google-managed keys only. Assign a customer-managed Cloud KMS key for control over rotation and revocation.",
+      "severity": "medium",
+      "resource": "google_container_cluster.main",
+      "evidence": {
+        "attribute": "node_config.boot_disk_kms_key",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 6,
+          "end_col": 2
+        },
+        "actual": "[REDACTED]",
+        "expected": "node_config { boot_disk_kms_key = \"\u003ckms-key\u003e\" }"
+      },
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4025/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

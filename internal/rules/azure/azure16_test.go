@@ -14,8 +14,8 @@ func TestAzure16RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	// 206,213 removed as post-audit duplicates.
-	want := []int{207, 208, 209, 210, 211, 212, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225}
+	// 206,213 removed as post-audit duplicates; 225 removed as duplicate of 107.
+	want := []int{207, 208, 209, 210, 211, 212, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224}
 	for i, n := range want {
 		id := "AEGIS-AZURE-" + strconv.Itoa(n)
 		pos, ok := idx[id]
@@ -33,19 +33,6 @@ func TestAzure16RegisteredInIDOrder(t *testing.T) {
 
 func siteCfg(pairs ...any) map[string]ir.Value {
 	return map[string]ir.Value{"site_config": blks(2, blk(pairs...))}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZURE-206: SQL server below TLS 1.2
-// ---------------------------------------------------------------------------
-
-func TestAZURE025(t *testing.T) {
-	id := "AEGIS-AZURE-025"
-	mustFinding(t, runRule(sqlServerWeakTLS{}, res("azurerm_mssql_server", "s", map[string]ir.Value{"minimum_tls_version": ks("1.0", 3)})), id)
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"minimum_tls_version": ks("1.2", 3)})
-	if f := runRule(sqlServerWeakTLS{}, r); len(f) != 0 {
-		t.Fatalf("TLS 1.2 must not fire, got %d", len(f))
-	}
 }
 
 // ---------------------------------------------------------------------------
@@ -229,20 +216,5 @@ func TestAZURE223(t *testing.T) {
 		if f := runRule(appServiceNoVNet{}, r); len(f) != 0 {
 			t.Fatalf("%s: integrated must not fire", typ)
 		}
-	}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZURE-225: SQL server without Entra ID administrator
-// ---------------------------------------------------------------------------
-
-func TestAZURE225(t *testing.T) {
-	id := "AEGIS-AZURE-225"
-	mustFinding(t, runRule(mssqlNoAADAdmin{}, res("azurerm_mssql_server", "s", nil)), id)
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{
-		"azuread_administrator": blks(3, blk("login_username", ks("admin", 4))),
-	})
-	if f := runRule(mssqlNoAADAdmin{}, r); len(f) != 0 {
-		t.Fatalf("aad admin present must not fire, got %d", len(f))
 	}
 }

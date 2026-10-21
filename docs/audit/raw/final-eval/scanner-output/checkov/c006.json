@@ -1,0 +1,108 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security groups rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "  BastionSecurityGroup:\n"
+                    ],
+                    [
+                        23,
+                        "    Type: AWS::EC2::SecurityGroup\n"
+                    ],
+                    [
+                        24,
+                        "    Properties:\n"
+                    ],
+                    [
+                        25,
+                        "      GroupDescription: Bastion ingress, office only\n"
+                    ],
+                    [
+                        26,
+                        "      SecurityGroupIngress:\n"
+                    ],
+                    [
+                        27,
+                        "        - IpProtocol: tcp\n"
+                    ],
+                    [
+                        28,
+                        "          FromPort: 22\n"
+                    ],
+                    [
+                        29,
+                        "          ToPort: 22\n"
+                    ],
+                    [
+                        30,
+                        "          CidrIp: !Ref OfficeCidr\n"
+                    ]
+                ],
+                "file_path": "/bastion.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c006/bastion.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c006/bastion.yaml",
+                "file_line_range": [
+                    22,
+                    30
+                ],
+                "resource": "AWS::EC2::SecurityGroup.BastionSecurityGroup",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "SecurityGroupIngress.0.CidrIp": [
+                        {
+                            "type": "parameters",
+                            "name": "OfficeCidr",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c006/bastion.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "SecurityGroupIngress.0": [
+                        {
+                            "type": "parameters",
+                            "name": "OfficeCidr",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c006/bastion.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

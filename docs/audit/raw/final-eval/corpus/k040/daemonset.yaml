@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: sysconf-agent
+  labels:
+    app: sysconf-agent
+spec:
+  selector:
+    matchLabels:
+      app: sysconf-agent
+  template:
+    metadata:
+      labels:
+        app: sysconf-agent
+    spec:
+      hostPID: true
+      containers:
+        - name: agent
+          image: example/sysconf-agent:1.0
+          securityContext:
+            runAsUser: 0
+            capabilities:
+              add: ["SYS_ADMIN", "SYS_PTRACE", "NET_ADMIN"]
+          volumeMounts:
+            - name: etc
+              mountPath: /host/etc
+          command: ["/agent", "--manage-host"]
+      volumes:
+        - name: etc
+          hostPath:
+            path: /etc

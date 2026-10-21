@@ -1,0 +1,136 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4148",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 7,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 6
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-DOCKER-007",
+      "severity": "low",
+      "title": "apt-get install without --no-install-recommends",
+      "description": "Installing recommended packages bloats the image with unneeded software, enlarging the attack surface. Pass --no-install-recommends to apt-get install.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4148/Dockerfile",
+      "line": 3,
+      "evidence": "RUN = apt-get install without --no-install-recommends",
+      "expected": "apt-get install --no-install-recommends",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-008",
+      "severity": "low",
+      "title": "apt-get update without cache cleanup",
+      "description": "apt-get update leaves package lists in the image layer. Remove /var/lib/apt/lists/* in the same RUN to keep layers lean.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4148/Dockerfile",
+      "line": 3,
+      "evidence": "RUN = apt-get update without rm -rf /var/lib/apt/lists/*",
+      "expected": "clean package lists in the same RUN layer",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-017",
+      "severity": "low",
+      "title": "No maintainer label",
+      "description": "Images without ownership metadata are harder to triage when a vulnerability is found. Add LABEL maintainer= or org.opencontainers.image.authors.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4148/Dockerfile",
+      "line": 2,
+      "evidence": "LABEL = no maintainer/authors label",
+      "expected": "LABEL maintainer=... or org.opencontainers.image.authors=...",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-018",
+      "severity": "low",
+      "title": "No STOPSIGNAL directive",
+      "description": "Without STOPSIGNAL the container gets SIGTERM, which apps that only handle SIGINT (or expect another signal) ignore until the orchestrator SIGKILLs them, risking data loss. Declare the signal your app handles for graceful shutdown.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4148/Dockerfile",
+      "line": 2,
+      "evidence": "STOPSIGNAL = absent",
+      "expected": "STOPSIGNAL \u003csignal your app handles\u003e",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-022",
+      "severity": "low",
+      "title": "COPY of entire build context",
+      "description": "COPY . ships the whole build context into the image, often including credentials, VCS history, and dev tooling. Copy only what the app needs and gate the context with .dockerignore.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4148/Dockerfile",
+      "line": 5,
+      "evidence": "COPY = COPY . (entire context)",
+      "expected": "COPY only required paths; maintain .dockerignore",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-029",
+      "severity": "low",
+      "title": "apt-get install without pinned versions",
+      "description": "Unpinned apt packages float across rebuilds, making images non-reproducible and silently pulling new versions. Pin versions: apt-get install pkg=1.2.3.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4148/Dockerfile",
+      "line": 3,
+      "evidence": "RUN = unpinned packages: curl, git, strace",
+      "expected": "apt-get install pkg=\u003cversion\u003e",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-036",
+      "severity": "high",
+      "title": "Build tools installed in final image",
+      "description": "Compilers, debuggers, and version-control clients installed in the final (shipped) image let an attacker who gains code execution compile exploits, inspect memory, or exfiltrate through tooling the application never needs. Install build tools in a build stage only and COPY the artifact into a minimal runtime image. Only the final stage is judged: build stages legitimately install toolchains.",
+      "resource": "docker_stage.stage0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4148/Dockerfile",
+      "line": 3,
+      "evidence": "RUN = build/debugging tools installed: git, strace",
+      "expected": "install build tools in a build stage only; ship a minimal runtime image",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4148/Dockerfile",
+        "status": "parsed",
+        "format": "dockerfile"
+      }
+    ]
+  }
+}

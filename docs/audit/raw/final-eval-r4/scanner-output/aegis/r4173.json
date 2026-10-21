@@ -1,0 +1,76 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4173",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 3,
+    "critical": 0,
+    "high": 2,
+    "medium": 1,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-COMPOSE-001",
+      "severity": "high",
+      "title": "Service runs privileged",
+      "description": "privileged: true disables all container isolation: the service gets every capability and full device access, so a compromise is a host compromise. Grant only the capabilities the service needs via cap_add.",
+      "resource": "compose_service.monitor",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4173/docker-compose.yml",
+      "line": 4,
+      "evidence": "privileged = privileged: true",
+      "expected": "least-privilege cap_add instead of privileged",
+      "remediation": "Apply least privilege. Run containers as non-root, drop unneeded capabilities, and scope registry / runtime permissions.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-COMPOSE-003",
+      "severity": "medium",
+      "title": "Service shares host namespaces",
+      "description": "pid: host (or ipc: host) drops process/IPC isolation: the service sees and can signal host processes and shares IPC with the host. Keep the default PID and IPC namespaces. (Host networking via network_mode: host is AEGIS-COMPOSE-009.)",
+      "resource": "compose_service.monitor",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4173/docker-compose.yml",
+      "line": 4,
+      "evidence": "pid = host",
+      "expected": "default PID namespace",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-COMPOSE-005",
+      "severity": "high",
+      "title": "Sensitive host path mounted",
+      "description": "Mounting host system paths exposes host configuration, credentials, or the whole filesystem to the service. Mount only dedicated data directories, read-only where possible.",
+      "resource": "compose_service.monitor",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4173/docker-compose.yml",
+      "line": 4,
+      "evidence": "volumes = mounts /",
+      "expected": "dedicated data directory, read-only where possible",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4173/docker-compose.yml",
+        "status": "parsed",
+        "format": "compose"
+      }
+    ]
+  }
+}

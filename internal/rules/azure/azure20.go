@@ -175,7 +175,10 @@ func (fdNoHTTPSRedirect) AppliesTo(resType string) bool {
 
 func (s fdNoHTTPSRedirect) Check(r ir.Resource) []ir.Finding {
 	rules, span, present, known := getBlocks(r, "routing_rule")
-	if !present || !known {
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if !present {
 		return []ir.Finding{mkFinding(s, r, "routing_rule",
 			evidenceSpan(span, r.Span), "absent",
 			"routing_rule { redirect_configuration { ... } }")}
@@ -360,7 +363,7 @@ func (s backupNoImmutability) Check(r ir.Resource) []ir.Finding {
 	if present && strings.EqualFold(strings.TrimSpace(v), "Locked") {
 		return nil
 	}
-	actual := "Disabled"
+	var actual string
 	if !present {
 		actual = "absent (provider default: Disabled)"
 	} else {

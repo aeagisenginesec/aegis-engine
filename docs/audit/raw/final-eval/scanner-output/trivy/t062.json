@@ -1,0 +1,160 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1329e-7d9c-791b-a3d6-6c4969901d6c",
+  "CreatedAt": "2026-10-13T00:16:50.076600083Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t062",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 50,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 1
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0073",
+          "Title": "Disable Default Firewall Rules",
+          "Description": "Ensures that Google Cloud's default firewall rules are disabled, as they may be overly permissive and pose security risks.\nThe default network comes with pre-populated firewall rules that allow broad access and should be replaced with more restrictive custom rules.\n",
+          "Message": "Default firewall rule should be disabled and replaced with more restrictive rules.",
+          "Namespace": "builtin.google.compute.google0073",
+          "Query": "data.builtin.google.compute.google0073.deny",
+          "Resolution": "Replace default firewall rules with custom, more restrictive rules appropriate for your security requirements",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0073",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall",
+            "https://cloud.google.com/firewall/docs/firewalls#more_rules_default_vpc",
+            "https://avd.aquasec.com/misconfig/gcp-0073"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_compute_firewall.legacy_alt_http",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 41,
+            "EndLine": 54,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 41,
+                  "Content": "resource \"google_compute_firewall\" \"legacy_alt_http\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_firewall\"\u001b[0m \u001b[38;5;37m\"legacy_alt_http\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 42,
+                  "Content": "  name        = \"legacy-allow-alt-http\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m        = \u001b[38;5;37m\"legacy-allow-alt-http\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 43,
+                  "Content": "  network     = google_compute_network.main.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mnetwork\u001b[0m     = google_compute_network.main.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 44,
+                  "Content": "  description = \"Legacy rule retained for the old monitoring agent\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mdescription\u001b[0m = \u001b[38;5;37m\"Legacy rule retained for the old monitoring agent\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 45,
+                  "Content": "  direction   = \"INGRESS\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdirection\u001b[0m   = \u001b[38;5;37m\"INGRESS\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 46,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 47,
+                  "Content": "  allow {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  allow {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 48,
+                  "Content": "    protocol = \"tcp\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mprotocol\u001b[0m = \u001b[38;5;37m\"tcp\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 49,
+                  "Content": "    ports    = [\"8080\"]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245mports\u001b[0m    = [\u001b[38;5;37m\"8080\"\u001b[0m]",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 50,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

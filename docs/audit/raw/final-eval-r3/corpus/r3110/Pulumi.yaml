@@ -1,0 +1,31 @@
+name: r3110-stack
+runtime: yaml
+description: Pulumi stack (template layout)
+template:
+  resources:
+    webServer:
+      type: aws:ec2:Instance
+      properties:
+        ami: ami-0c55b159cbfafe1f0
+        instanceType: t3.micro
+        tags:
+          Name: web-cedf83
+
+    siteBucket:
+      type: aws:s3:Bucket
+      properties:
+        bucket: site-cedf83
+        acl: private
+
+    dataAccount:
+      type: azure-native:storage:StorageAccount
+      properties:
+        accountName: datacedf83
+        resourceGroupName: rg-data
+        location: westeurope
+        kind: StorageV2
+        sku:
+          name: Standard_LRS
+        allowBlobPublicAccess: false
+        minimumTlsVersion: TLS1_2
+        supportsHttpsTrafficOnly: true

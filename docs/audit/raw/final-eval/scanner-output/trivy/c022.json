@@ -1,0 +1,111 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1328a-cf57-7c58-9a5e-d8c46a531cd9",
+  "CreatedAt": "2026-10-12T23:55:20.279813658Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c022",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "template.json",
+      "Class": "config",
+      "Type": "cloudformation",
+      "MisconfSummary": {
+        "Successes": 23,
+        "Failures": 1
+      },
+      "Misconfigurations": [
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0123",
+          "Title": "IAM groups should have MFA enforcement activated.",
+          "Description": "IAM groups should be protected with multi factor authentication to add safe guards to password compromise.\n",
+          "Message": "Multi-Factor authentication is not enforced for group",
+          "Namespace": "builtin.aws.iam.aws0123",
+          "Query": "data.builtin.aws.iam.aws0123.deny",
+          "Resolution": "Use terraform-module/enforce-mfa/aws to ensure that MFA is enforced",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0123",
+          "References": [
+            "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_account-policy.html#password-policy-details",
+            "https://avd.aquasec.com/misconfig/aws-0123"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.json:11-16",
+            "Provider": "AWS",
+            "Service": "iam",
+            "StartLine": 11,
+            "EndLine": 16,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 11,
+                  "Content": "    \"SupportGroup\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;37m\"SupportGroup\"\u001b[0m: {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 12,
+                  "Content": "      \"Type\": \"AWS::IAM::Group\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"Type\"\u001b[0m: \u001b[38;5;37m\"AWS::IAM::Group\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "      \"Properties\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"Properties\"\u001b[0m: {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 14,
+                  "Content": "        \"GroupName\": { \"Fn::Sub\": \"${TeamName}-admins\" }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"GroupName\"\u001b[0m: { \u001b[38;5;33m\"Fn::Sub\"\u001b[0m: \u001b[38;5;37m\"${TeamName}-admins\"\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 15,
+                  "Content": "      }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "    },",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    },",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

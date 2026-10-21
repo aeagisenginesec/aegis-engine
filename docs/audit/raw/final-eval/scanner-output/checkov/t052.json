@@ -1,0 +1,205 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_GCP_82",
+                "bc_check_id": "BC_GCP_GENERAL_34",
+                "check_name": "Ensure KMS keys are protected from deletion",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "lifecycle/[0]/prevent_destroy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        20,
+                        "resource \"google_kms_crypto_key\" \"bucket\" {\n"
+                    ],
+                    [
+                        21,
+                        "  name            = \"bucket-key\"\n"
+                    ],
+                    [
+                        22,
+                        "  key_ring        = google_kms_key_ring.data.id\n"
+                    ],
+                    [
+                        23,
+                        "  rotation_period = \"7776000s\"\n"
+                    ],
+                    [
+                        24,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t052/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t052/main.tf",
+                "file_line_range": [
+                    20,
+                    24
+                ],
+                "resource": "google_kms_crypto_key.bucket",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleKMSPreventDestroy",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/ensure-gcp-kms-keys-are-protected-from-deletion",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t052/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_62",
+                "bc_check_id": "BC_GCP_GCS_3",
+                "check_name": "Bucket should log access",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "logging/[0]/log_bucket"
+                    ]
+                },
+                "code_block": [
+                    [
+                        26,
+                        "resource \"google_storage_bucket\" \"finance\" {\n"
+                    ],
+                    [
+                        27,
+                        "  name                        = \"acme-finance-docs\"\n"
+                    ],
+                    [
+                        28,
+                        "  location                    = \"US\"\n"
+                    ],
+                    [
+                        29,
+                        "  uniform_bucket_level_access = true\n"
+                    ],
+                    [
+                        30,
+                        "  public_access_prevention    = \"enforced\"\n"
+                    ],
+                    [
+                        31,
+                        "\n"
+                    ],
+                    [
+                        32,
+                        "  versioning {\n"
+                    ],
+                    [
+                        33,
+                        "    enabled = true\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  encryption {\n"
+                    ],
+                    [
+                        37,
+                        "    default_kms_key_name = google_kms_crypto_key.bucket.id\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  lifecycle_rule {\n"
+                    ],
+                    [
+                        41,
+                        "    condition {\n"
+                    ],
+                    [
+                        42,
+                        "      num_newer_versions = 3\n"
+                    ],
+                    [
+                        43,
+                        "    }\n"
+                    ],
+                    [
+                        44,
+                        "    action {\n"
+                    ],
+                    [
+                        45,
+                        "      type = \"Delete\"\n"
+                    ],
+                    [
+                        46,
+                        "    }\n"
+                    ],
+                    [
+                        47,
+                        "  }\n"
+                    ],
+                    [
+                        48,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t052/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t052/main.tf",
+                "file_line_range": [
+                    26,
+                    48
+                ],
+                "resource": "google_storage_bucket.finance",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.CloudStorageLogging",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-storage-gcs-policies/bc-gcp-logging-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t052/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 6,
+        "failed": 2,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 3,
+        "checkov_version": "3.3.26"
+    }
+}

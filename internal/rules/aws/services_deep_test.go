@@ -274,47 +274,9 @@ func TestMSKFewBrokers_PassesAtThree(t *testing.T) {
 // AEGIS-AWS-811
 // ---------------------------------------------------------------------------
 
-func TestOpensearchNoAdvSecurity_FiresWhenAbsent(t *testing.T) {
-	r := res("aws_opensearch_domain", "x", map[string]ir.Value{})
-	if f := runRule(opensearchNoAdvSecurity{}, r); len(f) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(f))
-	}
-}
-
-func TestOpensearchNoAdvSecurity_FiresWhenDisabled(t *testing.T) {
-	r := res("aws_opensearch_domain", "x",
-		map[string]ir.Value{"advanced_security_options": blks(2, blk("enabled", kv(false, 3)))})
-	if f := runRule(opensearchNoAdvSecurity{}, r); len(f) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(f))
-	}
-}
-
-func TestOpensearchNoAdvSecurity_PassesWhenEnabled(t *testing.T) {
-	r := res("aws_opensearch_domain", "x",
-		map[string]ir.Value{"advanced_security_options": blks(2, blk("enabled", kv(true, 3)))})
-	if f := runRule(opensearchNoAdvSecurity{}, r); len(f) != 0 {
-		t.Fatalf("expected no findings, got %d", len(f))
-	}
-}
-
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-812
 // ---------------------------------------------------------------------------
-
-func TestOpensearchNoLogPublishing_FiresWhenAbsent(t *testing.T) {
-	r := res("aws_opensearch_domain", "x", map[string]ir.Value{})
-	if f := runRule(opensearchNoLogPublishing{}, r); len(f) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(f))
-	}
-}
-
-func TestOpensearchNoLogPublishing_PassesWithOptions(t *testing.T) {
-	r := res("aws_opensearch_domain", "x",
-		map[string]ir.Value{"log_publishing_options": blks(2, blk("log_type", ks("AUDIT_LOGS", 3)))})
-	if f := runRule(opensearchNoLogPublishing{}, r); len(f) != 0 {
-		t.Fatalf("expected no findings, got %d", len(f))
-	}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-813
@@ -607,8 +569,8 @@ func TestTimestreamQueryReportNoKMS_PassesWithoutErrorReports(t *testing.T) {
 
 func TestServicesDeepRules_AllIDs(t *testing.T) {
 	rules := ServicesDeepRules()
-	if len(rules) != 24 {
-		t.Fatalf("expected 24 rules, got %d", len(rules))
+	if len(rules) != 22 {
+		t.Fatalf("expected 22 rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	prev := ""

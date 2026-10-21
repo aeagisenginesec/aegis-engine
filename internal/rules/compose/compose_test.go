@@ -61,9 +61,22 @@ func TestC002_DangerousCaps(t *testing.T) {
 }
 
 func TestC003_HostNamespaces(t *testing.T) {
-	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: host\n")), 1)
 	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    pid: host\n")), 1)
+	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    ipc: host\n")), 1)
+	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    pid: host\n    ipc: host\n")), 2)
+	// Host networking is AEGIS-COMPOSE-009's finding, no longer C003's.
+	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: host\n")), 0)
 	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: bridge\n")), 0)
+	expectFinding(t, hostNamespaces{}, service(t, svcBody("    image: nginx:1.25\n")), 0)
+}
+
+func TestC009_HostNetworkMode(t *testing.T) {
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: host\n")), 1)
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: bridge\n")), 0)
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n    network_mode: service:app\n")), 0)
+	// pid: host alone is C003's finding, not C009's.
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n    pid: host\n")), 0)
+	expectFinding(t, hostNetworkMode{}, service(t, svcBody("    image: nginx:1.25\n")), 0)
 }
 
 func TestC004_DockerSock(t *testing.T) {
@@ -88,7 +101,10 @@ func TestC006_EnvSecrets(t *testing.T) {
 }
 
 func TestC007_RootUser(t *testing.T) {
-	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n")), 1)
+	// Audit 2026-10-14: absent user: is quiet — the effective user depends
+	// on the image's USER directive, which the scanner cannot see. Only an
+	// explicit root/0 fires.
+	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n")), 0)
 	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: root\n")), 1)
 	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"0\"\n")), 1)
 	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"1000\"\n")), 0)
@@ -104,8 +120,8 @@ func TestC008_LatestTag(t *testing.T) {
 
 func TestCompose_IDOrder(t *testing.T) {
 	rules := Rules()
-	if len(rules) != 8 {
-		t.Fatalf("want 8 rules, got %d", len(rules))
+	if len(rules) != 9 {
+		t.Fatalf("want 9 rules, got %d", len(rules))
 	}
 	for i, r := range rules {
 		want := "AEGIS-COMPOSE-00" + string(rune('1'+i))
@@ -130,7 +146,7 @@ func TestCompose_Coverage(t *testing.T) {
 	ids := []string{
 		"AEGIS-COMPOSE-001", "AEGIS-COMPOSE-002", "AEGIS-COMPOSE-003",
 		"AEGIS-COMPOSE-004", "AEGIS-COMPOSE-005", "AEGIS-COMPOSE-006",
-		"AEGIS-COMPOSE-007", "AEGIS-COMPOSE-008",
+		"AEGIS-COMPOSE-007", "AEGIS-COMPOSE-008", "AEGIS-COMPOSE-009",
 	}
 	byID := map[string]ir.Rule{}
 	for _, r := range Rules() {
@@ -177,8 +193,10 @@ func TestCompose_FullStack(t *testing.T) {
 		"db:AEGIS-COMPOSE-006",     // env secret
 		"runner:AEGIS-COMPOSE-001", // privileged
 		"runner:AEGIS-COMPOSE-004", // docker.sock
-		"runner:AEGIS-COMPOSE-007", // root
 		"runner:AEGIS-COMPOSE-008", // latest
+		// NOTE (audit 2026-10-14): runner:AEGIS-COMPOSE-007 no longer fires —
+		// the runner service sets no user: directive, and without it the
+		// effective user depends on the image's USER (unknown to the scan).
 	} {
 		if !fired[want] {
 			t.Errorf("expected %s to fire", want)
@@ -187,4 +205,23 @@ func TestCompose_FullStack(t *testing.T) {
 	if fired["db:AEGIS-COMPOSE-001"] || fired["db:AEGIS-COMPOSE-007"] {
 		t.Error("db should not fire 001 or 007")
 	}
+}
+
+// Regression tests for the 2026-10-14 sampling audit: COMPOSE-007 must
+// not fire when the user is unknown (pack contract: missing or unknown
+// values never produce a finding).
+func TestC007_UnknownUserQuiet(t *testing.T) {
+	r := ir.Resource{
+		Type: "compose_service",
+		Name: "app",
+		Attributes: map[string]ir.Value{
+			"user": {Known: false},
+		},
+	}
+	expectFinding(t, composeRootUser{}, r, 0)
+}
+
+func TestC007_RootWithGroupFires(t *testing.T) {
+	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"0:1000\"\n")), 1)
+	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"1001:1001\"\n")), 0)
 }

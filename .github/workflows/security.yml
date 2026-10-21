@@ -1,0 +1,193 @@
+# Aegis security scanning — CodeQL static analysis of the engine's own Go
+# code, govulncheck over the module graph (reachable-vulnerability gate:
+# this job is what caught the Go 1.25 stdlib findings that forced the
+# 1.26 toolchain upgrade in v2.1.1), and Semgrep pattern/taint SAST
+# (the fast pattern layer next to CodeQL's semantic analysis).
+#
+# Private-repo note: GitHub's code-scanning API (where CodeQL results
+# normally land) requires GitHub Advanced Security on private repos —
+# uploads fail with "Resource not accessible by integration". CodeQL
+# therefore runs with upload: never and its SARIF is archived as a run
+# artifact instead. If the repo goes public or GHAS is enabled, drop
+# `upload: never` (and the artifact step) to restore Security-tab
+# integration. govulncheck is unaffected: it is a hard gate either way.
+
+name: Security
+
+on:
+  push:
+    branches: [main, master, mission/**]
+  pull_request:
+  schedule:
+    # Weekly re-scan: new advisories against unchanged code still surface.
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    name: CodeQL (go)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The analyze action reads the workflow run via the Actions API;
+      # declaring any permissions block zeroes the others, so without
+      # this the step fails with "Resource not accessible by
+      # integration" even with upload disabled (observed run #7).
+      actions: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4
+        with:
+          languages: go
+          build-mode: autobuild
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4
+        with:
+          category: "/language:go"
+          upload: never
+          output: codeql-results
+
+      - name: Archive CodeQL SARIF
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: codeql-sarif
+          path: codeql-results/**/*.sarif
+          retention-days: 30
+          if-no-files-found: warn
+
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          # NOT go-version-file: go.mod's bare "go 1.26.0" would pin the
+          # .0 release, which predates the go1.26.1+ stdlib security
+          # fixes (run #1 failed with 23 reachable stdlib vulns that a
+          # patched toolchain does not have). "1.26.x" takes the newest
+          # patch the runner manifest knows, and go.mod's
+          # `toolchain go1.26.10` line then pins exactly 1.26.10 for
+          # every go command in the module (the runner manifest lagged
+          # at 1.26.9 in run #7 — one vuln short).
+          go-version: "1.26.x"
+          cache: true
+
+      - name: Run govulncheck
+        run: |
+          go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      # Pinned to the version calibrated locally against this tree
+      # (1.182.0: zero findings on product code). Installed via pip —
+      # the same method used for the local calibration — rather than
+      # the container image, so CI reproduces the verified setup.
+      - name: Install Semgrep
+        run: 'pip install --only-binary=:all: "semgrep==1.182.0"'
+
+      # Exclusions: benchmark/ and docs/audit/raw/ hold deliberately
+      # vulnerable fixtures and adjudicated evaluation corpora — data
+      # whose purpose is to contain findings. Every Semgrep hit in the
+      # calibration run lived in those trees; product code was clean,
+      # so --error gates on any real finding from here on.
+      - name: Run Semgrep (gate on findings)
+        run: |
+          semgrep scan \
+            --config p/golang \
+            --config p/security-audit \
+            --metrics off \
+            --exclude benchmark/ \
+            --exclude docs/audit/raw/ \
+            --error \
+            --sarif --output semgrep.sarif \
+            .
+
+      - name: Archive Semgrep SARIF
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+          retention-days: 30
+          if-no-files-found: warn
+
+  snyk:
+    name: Snyk (deps + code)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          # Snyk's gomod support shells out to the go tool (a missing
+          # go binary is a hard CLI error, observed locally).
+          go-version: "1.26.x"
+          cache: true
+
+      # Pinned CLI — the same version as the owner's authenticated
+      # sandbox install — from Snyk's official static host. NOTE:
+      # $GITHUB_PATH additions apply to LATER steps only, so this
+      # step calls the binary by full path (run #20 failed with
+      # "snyk: command not found" for exactly that reason).
+      - name: Install Snyk CLI
+        run: |
+          curl -sSfL --proto "=https" --tlsv1.2 -o "$RUNNER_TEMP/snyk" https://static.snyk.io/cli/v1.1307.4/snyk-linux
+          chmod +x "$RUNNER_TEMP/snyk"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/snyk" --version
+
+      # REPORT-ONLY by design (v1): the Snyk org's free plan exhausted
+      # its monthly private-test quota in Oct 2026, and a quota wall
+      # must never turn a good build red. govulncheck (above) is the
+      # hard gate for Go vulnerabilities; Snyk is the second opinion,
+      # the dashboard (via monitor), and the image scanner (docker.yml).
+      - name: Snyk dependency test (report-only)
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --sarif-file-output=snyk-deps.sarif
+
+      - name: Snyk monitor (track the project in Snyk)
+        if: github.event_name == 'push'
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk monitor
+
+      - name: Snyk Code test (report-only)
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk code test --sarif-file-output=snyk-code.sarif
+
+      - name: Archive Snyk SARIF
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: snyk-sarif
+          path: |
+            snyk-deps.sarif
+            snyk-code.sarif
+          retention-days: 30
+          if-no-files-found: warn

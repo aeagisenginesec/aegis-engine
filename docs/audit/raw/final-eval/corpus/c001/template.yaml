@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Public marketing site hosting. The bucket serves the SPA directly through
+  the S3 website endpoint and CI uploads build artifacts on every merge to
+  main.
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: acme-marketing-site-prod
+    Description: Globally unique bucket name for the site.
+  IndexDocument:
+    Type: String
+    Default: index.html
+
+Resources:
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: !Ref IndexDocument
+        ErrorDocument: error.html
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${SiteBucket.Arn}/*'
+
+Outputs:
+  WebsiteURL:
+    Description: S3 website endpoint of the marketing site.
+    Value: !GetAtt SiteBucket.WebsiteURL

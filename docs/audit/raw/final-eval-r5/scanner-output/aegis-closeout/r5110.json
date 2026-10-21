@@ -1,0 +1,69 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5110",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 1,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-019",
+      "severity": "high",
+      "title": "Redis cache with non-SSL port enabled",
+      "description": "azurerm_redis_cache with enable_non_ssl_port = true accepts plaintext Redis connections, exposing credentials and data in transit.",
+      "resource": "azurerm_redis_cache.sessionsCache",
+      "file": "corpus/r5110/Pulumi.yaml",
+      "line": 24,
+      "evidence": "enable_non_ssl_port = true",
+      "expected": "enable_non_ssl_port = false",
+      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS1_2\"` / `minimum_tls_version = \"1.2\"`, replace HTTP listeners with HTTPS, and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/tls-best-practices"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "level": "info",
+      "message": "pulumi: corpus/r5110/Pulumi.yaml uses the template:-nested program layout",
+      "span": {
+        "file": "corpus/r5110/Pulumi.yaml",
+        "start_line": 0,
+        "start_col": 0,
+        "end_line": 0,
+        "end_col": 0
+      }
+    },
+    {
+      "level": "warning",
+      "message": "pulumi: resource \"ingestApp\" has unmapped type \"azure-native:web:WebApp\"; using fallback type \"pulumi_azure_native_web_webapp\" (some rules may not apply)",
+      "span": {
+        "file": "corpus/r5110/Pulumi.yaml",
+        "start_line": 7,
+        "start_col": 7,
+        "end_line": 0,
+        "end_col": 0
+      }
+    }
+  ],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5110/Pulumi.yaml",
+        "status": "parsed",
+        "format": "pulumi"
+      }
+    ]
+  }
+}

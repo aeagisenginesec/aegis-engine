@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-9f2d17
+  labels:
+    app: worker-9f2d17
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: worker-9f2d17
+  template:
+    metadata:
+      labels:
+        app: worker-9f2d17
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: worker
+          image: registry.example.com/worker:1.4.0
+          resources:
+            limits: {cpu: "500m", memory: 256Mi}
+            requests: {cpu: "250m", memory: 128Mi}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: deployer-9f2d17
+subjects:
+  - kind: ServiceAccount
+    name: deployer-9f2d17
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io

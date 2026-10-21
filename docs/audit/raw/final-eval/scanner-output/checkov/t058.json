@@ -1,0 +1,1604 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_GCP_82",
+                "bc_check_id": "BC_GCP_GENERAL_34",
+                "check_name": "Ensure KMS keys are protected from deletion",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "lifecycle/[0]/prevent_destroy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"google_kms_crypto_key\" \"sql\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name            = \"sql-key\"\n"
+                    ],
+                    [
+                        41,
+                        "  key_ring        = google_kms_key_ring.sql.id\n"
+                    ],
+                    [
+                        42,
+                        "  rotation_period = \"7776000s\"\n"
+                    ],
+                    [
+                        43,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    39,
+                    43
+                ],
+                "resource": "google_kms_crypto_key.sql",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleKMSPreventDestroy",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/ensure-gcp-kms-keys-are-protected-from-deletion",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_79",
+                "bc_check_id": "BC_GCP_GENERAL_13",
+                "check_name": "Ensure SQL database is using latest Major version",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.CloudSqlMajorVersion",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/ensure-gcp-sql-database-uses-the-latest-major-version",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_110",
+                "bc_check_id": "BC_GCP_LOGGING_13",
+                "check_name": "Ensure pgAudit is enabled for your GCP PostgreSQL database",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlEnablePgaudit",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-110",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_51",
+                "bc_check_id": "BC_GCP_SQL_2",
+                "check_name": "Ensure PostgreSQL database 'log_checkpoints' flag is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogCheckpoints",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_52",
+                "bc_check_id": "BC_GCP_SQL_3",
+                "check_name": "Ensure PostgreSQL database 'log_connections' flag is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogConnection",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-3",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_53",
+                "bc_check_id": "BC_GCP_SQL_4",
+                "check_name": "Ensure PostgreSQL database 'log_disconnections' flag is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogDisconnection",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_108",
+                "bc_check_id": "BC_GCP_LOGGING_11",
+                "check_name": "Ensure hostnames are logged for GCP PostgreSQL databases",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogHostname",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-108",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_54",
+                "bc_check_id": "BC_GCP_SQL_5",
+                "check_name": "Ensure PostgreSQL database 'log_lock_waits' flag is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogLockWaits",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-5",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_109",
+                "bc_check_id": "BC_GCP_LOGGING_12",
+                "check_name": "Ensure the GCP PostgreSQL database log levels are set to ERROR or lower",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogMinErrorStatement",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-109",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV_GCP_111",
+                "bc_check_id": "BC_GCP_LOGGING_14",
+                "check_name": "Ensure GCP PostgreSQL logs SQL statements",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogStatement",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-111",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV2_GCP_18",
+                "bc_check_id": "BC_GCP_NETWORKING_22",
+                "check_name": "Ensure GCP network defines a firewall and does not use the default firewall",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "google_compute_network": {
+                            "private": {
+                                "__end_line__": 18,
+                                "__start_line__": 15,
+                                "auto_create_subnetworks": [
+                                    false
+                                ],
+                                "name": [
+                                    "db-vpc"
+                                ],
+                                "__address__": "google_compute_network.private",
+                                "__provider_address__": "google.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        15,
+                        "resource \"google_compute_network\" \"private\" {\n"
+                    ],
+                    [
+                        16,
+                        "  name                    = \"db-vpc\"\n"
+                    ],
+                    [
+                        17,
+                        "  auto_create_subnetworks = false\n"
+                    ],
+                    [
+                        18,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    15,
+                    18
+                ],
+                "resource": "google_compute_network.private",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-2-18",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            },
+            {
+                "check_id": "CKV2_GCP_13",
+                "bc_check_id": "BC_GCP_LOGGING_6",
+                "check_name": "Ensure PostgreSQL database flag 'log_duration' is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "google_sql_database_instance": {
+                            "erp": {
+                                "__end_line__": 69,
+                                "__start_line__": 45,
+                                "database_version": [
+                                    "POSTGRES_15"
+                                ],
+                                "deletion_protection": [
+                                    true
+                                ],
+                                "depends_on": [
+                                    [
+                                        "google_service_networking_connection.psa"
+                                    ]
+                                ],
+                                "encryption_key_name": [
+                                    "google_kms_crypto_key.sql.id"
+                                ],
+                                "name": [
+                                    "erp-postgres"
+                                ],
+                                "region": [
+                                    "europe-west1"
+                                ],
+                                "settings": [
+                                    {
+                                        "backup_configuration": [
+                                            {
+                                                "enabled": [
+                                                    true
+                                                ],
+                                                "point_in_time_recovery_enabled": [
+                                                    true
+                                                ]
+                                            }
+                                        ],
+                                        "ip_configuration": [
+                                            {
+                                                "ipv4_enabled": [
+                                                    false
+                                                ],
+                                                "private_network": [
+                                                    "google_compute_network.private.id"
+                                                ],
+                                                "require_ssl": [
+                                                    true
+                                                ]
+                                            }
+                                        ],
+                                        "tier": [
+                                            "db-custom-4-15360"
+                                        ]
+                                    }
+                                ],
+                                "__address__": "google_sql_database_instance.erp",
+                                "__provider_address__": "google.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "database_version",
+                        "settings/database_flags[?(@/name == log_duration & @/value == on)]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        45,
+                        "resource \"google_sql_database_instance\" \"erp\" {\n"
+                    ],
+                    [
+                        46,
+                        "  name             = \"erp-postgres\"\n"
+                    ],
+                    [
+                        47,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        48,
+                        "  region           = \"europe-west1\"\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  settings {\n"
+                    ],
+                    [
+                        51,
+                        "    tier = \"db-custom-4-15360\"\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        54,
+                        "      ipv4_enabled    = false\n"
+                    ],
+                    [
+                        55,
+                        "      private_network = google_compute_network.private.id\n"
+                    ],
+                    [
+                        56,
+                        "      require_ssl     = true\n"
+                    ],
+                    [
+                        57,
+                        "    }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        60,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        61,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        62,
+                        "    }\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "\n"
+                    ],
+                    [
+                        65,
+                        "  encryption_key_name = google_kms_crypto_key.sql.id\n"
+                    ],
+                    [
+                        66,
+                        "  deletion_protection = true\n"
+                    ],
+                    [
+                        67,
+                        "\n"
+                    ],
+                    [
+                        68,
+                        "  depends_on = [google_service_networking_connection.psa]\n"
+                    ],
+                    [
+                        69,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf",
+                "file_line_range": [
+                    45,
+                    69
+                ],
+                "resource": "google_sql_database_instance.erp",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-gcp-2-13",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t058/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 16,
+        "failed": 12,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 6,
+        "checkov_version": "3.3.26"
+    }
+}

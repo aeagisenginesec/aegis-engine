@@ -1,0 +1,122 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5066",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 5,
+    "critical": 0,
+    "high": 1,
+    "medium": 2,
+    "low": 2
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-351",
+      "severity": "high",
+      "title": "DocumentDB cluster unencrypted",
+      "description": "DocumentDB clusters are unencrypted unless storage_encrypted = true; unencrypted clusters expose data at rest.",
+      "resource": "aws_docdb_cluster.CatalogCluster",
+      "file": "corpus/r5066/template.json",
+      "line": 11,
+      "evidence": "storage_encrypted = false",
+      "expected": "storage_encrypted = true",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.5.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-353",
+      "severity": "medium",
+      "title": "DocumentDB cluster without backup retention",
+      "description": "With backup_retention_period absent or 0, no automated backups are kept and point-in-time recovery is impossible.",
+      "resource": "aws_docdb_cluster.CatalogCluster",
+      "file": "corpus/r5066/template.json",
+      "line": 5,
+      "evidence": "backup_retention_period = absent (provider default: no backups)",
+      "expected": "backup_retention_period \u003e= 1",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-430",
+      "severity": "medium",
+      "title": "DocumentDB cluster without deletion protection",
+      "description": "A DocumentDB cluster without deletion protection can be destroyed by a single API call or Terraform change. Enable deletion_protection.",
+      "resource": "aws_docdb_cluster.CatalogCluster",
+      "file": "corpus/r5066/template.json",
+      "line": 5,
+      "evidence": "deletion_protection = absent (provider default: disabled) or false",
+      "expected": "deletion_protection = true",
+      "remediation": "Enable deletion protection to prevent accidental destruction:\nresource \"aws_db_instance\" \"this\" {\n  deletion_protection = true\n}\nFor S3, remove `force_destroy = true`. For EC2, set `disable_api_termination = true`.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "CP-9"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-624",
+      "severity": "low",
+      "title": "DocumentDB cluster without CloudWatch log exports",
+      "description": "Hygiene: DocumentDB clusters should export profiler and audit logs to CloudWatch. Set enabled_cloudwatch_logs_exports.",
+      "resource": "aws_docdb_cluster.CatalogCluster",
+      "file": "corpus/r5066/template.json",
+      "line": 5,
+      "evidence": "enabled_cloudwatch_logs_exports = absent",
+      "expected": "enabled_cloudwatch_logs_exports with profiler/audit",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-626",
+      "severity": "low",
+      "title": "DocumentDB cluster without adequate backup retention",
+      "description": "Hygiene: DocumentDB clusters should retain automated backups for at least 7 days. Set backup_retention_period \u003e= 7.",
+      "resource": "aws_docdb_cluster.CatalogCluster",
+      "file": "corpus/r5066/template.json",
+      "line": 5,
+      "evidence": "backup_retention_period = absent",
+      "expected": "backup_retention_period \u003e= 7",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5066/template.json",
+        "status": "parsed",
+        "format": "cloudformation"
+      }
+    ]
+  }
+}

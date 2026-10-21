@@ -1,0 +1,404 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1328b-79e6-7a8f-96f0-7f6ea30c92cf",
+  "CreatedAt": "2026-10-12T23:56:03.9426956Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c025",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "template.json",
+      "Class": "config",
+      "Type": "cloudformation",
+      "MisconfSummary": {
+        "Successes": 29,
+        "Failures": 3
+      },
+      "Misconfigurations": [
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0001",
+          "Title": "API Gateway stages for V1 and V2 should have access logging enabled",
+          "Description": "API Gateway stages should have access log settings block configured to track all access to a particular stage. This should be applied to both v1 and v2 gateway stages.\n",
+          "Message": "Access logging is not configured.",
+          "Namespace": "builtin.aws.apigateway.aws0001",
+          "Query": "data.builtin.aws.apigateway.aws0001.deny",
+          "Resolution": "Enable logging for API Gateway stages",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0001",
+          "References": [
+            "https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html",
+            "https://avd.aquasec.com/misconfig/aws-0001"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.json:97-113",
+            "Provider": "AWS",
+            "Service": "apigateway",
+            "StartLine": 97,
+            "EndLine": 113,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 97,
+                  "Content": "    \"ApiStage\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;37m\"ApiStage\"\u001b[0m: {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 98,
+                  "Content": "      \"Type\": \"AWS::ApiGateway::Stage\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"Type\"\u001b[0m: \u001b[38;5;37m\"AWS::ApiGateway::Stage\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 99,
+                  "Content": "      \"Properties\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"Properties\"\u001b[0m: {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 100,
+                  "Content": "        \"RestApiId\": { \"Ref\": \"PartnerApi\" },",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"RestApiId\"\u001b[0m: { \u001b[38;5;33m\"Ref\"\u001b[0m: \u001b[38;5;37m\"PartnerApi\"\u001b[0m },",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 101,
+                  "Content": "        \"DeploymentId\": { \"Ref\": \"ApiDeployment\" },",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"DeploymentId\"\u001b[0m: { \u001b[38;5;33m\"Ref\"\u001b[0m: \u001b[38;5;37m\"ApiDeployment\"\u001b[0m },",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 102,
+                  "Content": "        \"StageName\": { \"Ref\": \"StageName\" },",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"StageName\"\u001b[0m: { \u001b[38;5;33m\"Ref\"\u001b[0m: \u001b[38;5;37m\"StageName\"\u001b[0m },",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 103,
+                  "Content": "        \"MethodSettings\": [",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"MethodSettings\"\u001b[0m: [",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 104,
+                  "Content": "          {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 105,
+                  "Content": "            \"ResourcePath\": \"/*\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            \u001b[38;5;33m\"ResourcePath\"\u001b[0m: \u001b[38;5;37m\"/*\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 106,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0003",
+          "Title": "API Gateway must have X-Ray tracing enabled",
+          "Description": "X-Ray tracing enables end-to-end debugging and analysis of all API Gateway HTTP requests.\n",
+          "Message": "X-Ray tracing is not enabled.",
+          "Namespace": "builtin.aws.apigateway.aws0003",
+          "Query": "data.builtin.aws.apigateway.aws0003.deny",
+          "Resolution": "Enable tracing",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0003",
+          "References": [
+            "https://avd.aquasec.com/misconfig/aws-0003"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "template.json:97-113",
+            "Provider": "AWS",
+            "Service": "apigateway",
+            "StartLine": 97,
+            "EndLine": 113,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 97,
+                  "Content": "    \"ApiStage\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;37m\"ApiStage\"\u001b[0m: {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 98,
+                  "Content": "      \"Type\": \"AWS::ApiGateway::Stage\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"Type\"\u001b[0m: \u001b[38;5;37m\"AWS::ApiGateway::Stage\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 99,
+                  "Content": "      \"Properties\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"Properties\"\u001b[0m: {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 100,
+                  "Content": "        \"RestApiId\": { \"Ref\": \"PartnerApi\" },",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"RestApiId\"\u001b[0m: { \u001b[38;5;33m\"Ref\"\u001b[0m: \u001b[38;5;37m\"PartnerApi\"\u001b[0m },",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 101,
+                  "Content": "        \"DeploymentId\": { \"Ref\": \"ApiDeployment\" },",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"DeploymentId\"\u001b[0m: { \u001b[38;5;33m\"Ref\"\u001b[0m: \u001b[38;5;37m\"ApiDeployment\"\u001b[0m },",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 102,
+                  "Content": "        \"StageName\": { \"Ref\": \"StageName\" },",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"StageName\"\u001b[0m: { \u001b[38;5;33m\"Ref\"\u001b[0m: \u001b[38;5;37m\"StageName\"\u001b[0m },",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 103,
+                  "Content": "        \"MethodSettings\": [",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"MethodSettings\"\u001b[0m: [",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 104,
+                  "Content": "          {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 105,
+                  "Content": "            \"ResourcePath\": \"/*\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            \u001b[38;5;33m\"ResourcePath\"\u001b[0m: \u001b[38;5;37m\"/*\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 106,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0190",
+          "Title": "Ensure that response caching is enabled for your Amazon API Gateway REST APIs.",
+          "Description": "A REST API in API Gateway is a collection of resources and methods that are integrated with backend HTTP endpoints, Lambda functions, or other AWS services. You can enable API caching in Amazon API Gateway to cache your endpoint responses. With caching, you can reduce the number of calls made to your endpoint and also improve the latency of requests to your API.\n",
+          "Message": "Cache data is not enabled.",
+          "Namespace": "builtin.aws.apigateway.aws0190",
+          "Query": "data.builtin.aws.apigateway.aws0190.deny",
+          "Resolution": "Enable cache",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0190",
+          "References": [
+            "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-caching.html",
+            "https://avd.aquasec.com/misconfig/aws-0190"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "ApiStage",
+            "Provider": "AWS",
+            "Service": "apigateway",
+            "StartLine": 104,
+            "EndLine": 110,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 103,
+                  "Content": "        \"MethodSettings\": [",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;37m\"MethodSettings\"\u001b[0m: [",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 104,
+                  "Content": "          {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 105,
+                  "Content": "            \"ResourcePath\": \"/*\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            \u001b[38;5;33m\"ResourcePath\"\u001b[0m: \u001b[38;5;37m\"/*\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 106,
+                  "Content": "            \"HttpMethod\": \"*\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            \u001b[38;5;33m\"HttpMethod\"\u001b[0m: \u001b[38;5;37m\"*\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 107,
+                  "Content": "            \"LoggingLevel\": \"OFF\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            \u001b[38;5;33m\"LoggingLevel\"\u001b[0m: \u001b[38;5;37m\"OFF\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 108,
+                  "Content": "            \"DataTraceEnabled\": false,",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            \u001b[38;5;33m\"DataTraceEnabled\"\u001b[0m: \u001b[38;5;166mfalse\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 109,
+                  "Content": "            \"MetricsEnabled\": false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "            \u001b[38;5;33m\"MetricsEnabled\"\u001b[0m: \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 110,
+                  "Content": "          }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m          }",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 111,
+                  "Content": "        ]",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        ]",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "ApiStage",
+                "Filename": "template.json",
+                "Location": {
+                  "StartLine": 103,
+                  "EndLine": 111
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

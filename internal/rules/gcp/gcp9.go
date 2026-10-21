@@ -1,7 +1,8 @@
-// Package gcp — expansion round 9 (AEGIS-GCP-263..292).
+// Package gcp — expansion round 9 (AEGIS-GCP-263..294).
 //
 // Covers API Gateway / Apigee, Dataflow / Dataproc / Composer, Vertex AI,
-// DNS / CDN, Filestore, and project-level service/metadata hygiene.
+// DNS / CDN, Filestore, project-level service/metadata hygiene, instance
+// metadata secrets, and end-of-life boot-disk images.
 //
 // Absent-attribute policy for this file: an absent attribute yields a
 // finding only when the provider default is the insecure one (public IPs,
@@ -10,12 +11,13 @@
 package gcp
 
 import (
+	"regexp"
 	"strings"
 
 	"aegis/internal/ir"
 )
 
-// GCP9Rules returns GCP expansion rules 263..292 in ID order.
+// GCP9Rules returns GCP expansion rules 263..294 in ID order.
 func GCP9Rules() []ir.Rule {
 	return []ir.Rule{
 		apiGatewayNoManagedConfig{},        // AEGIS-GCP-263
@@ -42,6 +44,8 @@ func GCP9Rules() []ir.Rule {
 		projectMetadataOSLoginUnset{},      // AEGIS-GCP-290
 		metadataItemSerialPortEnabled{},    // AEGIS-GCP-291
 		metadataItemOSLoginDisabled{},      // AEGIS-GCP-292
+		instanceMetadataSecret{},           // AEGIS-GCP-293
+		instanceEOLImage{},                 // AEGIS-GCP-294
 	}
 }
 
@@ -929,4 +933,295 @@ func (s metadataItemOSLoginDisabled) Check(r ir.Resource) []ir.Finding {
 	}
 	return []ir.Finding{mkFinding(s, r, "value", span,
 		val, "value = \"TRUE\"")}
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-GCP-293: Secrets in instance metadata scripts
+// ---------------------------------------------------------------------------
+// Startup scripts and cloud-init user-data in instance metadata are
+// visible to anyone with compute.instances.get, and their output lands
+// in serial-console / logging. A literal secret there (the multi-cloud
+// fixture writes password=WeakPassword123! to /tmp/app.conf) is a
+// Critical exposure; a reference to a secret-like variable is a High
+// taint finding (same treatment as AEGIS-AWS-534).
+
+type instanceMetadataSecret struct{}
+
+func (instanceMetadataSecret) ID() string { return "AEGIS-GCP-293" }
+func (instanceMetadataSecret) Title() string {
+	return "Secret in instance metadata startup script"
+}
+func (instanceMetadataSecret) Description() string {
+	return "google_compute_instance metadata startup-script / user-data " +
+		"(or metadata_startup_script) containing a secret is visible via " +
+		"the compute API and serial console. Pass secrets via Secret " +
+		"Manager instead. The secret value is never included in findings. " +
+		"Interpolated references to secret-like variables " +
+		"(${var.db_password}) are also reported."
+}
+func (instanceMetadataSecret) Severity() ir.Severity { return ir.SeverityCritical }
+
+func (instanceMetadataSecret) AppliesTo(resType string) bool {
+	return resType == "google_compute_instance"
+}
+
+// gcpSecretPattern matches common secret assignments in scripts, mirroring
+// the AWS deep-secret pattern: password=..., secret=..., secret_key=...,
+// private_key=..., token=..., api_key=..., auth_token=... followed by a
+// non-empty value.
+var gcpSecretPattern = regexp.MustCompile(
+	`(?i)(password|passwd|pwd|secret|token|api[_-]?key|auth[_-]?token|secret[_-]?key|private[_-]?key)\s*[:=]\s*["']?([^\s"'\\]{4,})`)
+
+func (s instanceMetadataSecret) Check(r ir.Resource) []ir.Finding {
+	for _, src := range gcpMetadataScripts(r) {
+		text, ok := src.v.AsString()
+		if ok {
+			if gcpSecretPattern.MatchString(text) {
+				return []ir.Finding{mkFinding(s, r, src.attr,
+					evidenceSpan(src.v.Span, r.Span),
+					"[REDACTED: secret assignment in "+src.attr+"]",
+					"no secrets in metadata scripts; use Secret Manager")}
+			}
+			continue
+		}
+		// Unknown value with a preserved template: scan static parts for
+		// literal secrets, interpolations for secret-like references.
+		if src.v.Template == "" {
+			continue
+		}
+		if gcpSecretPattern.MatchString(gcpStripInterpolations(src.v.Template)) {
+			return []ir.Finding{mkFinding(s, r, src.attr,
+				evidenceSpan(src.v.Span, r.Span),
+				"[REDACTED: secret assignment in "+src.attr+" template]",
+				"no secrets in metadata scripts; use Secret Manager")}
+		}
+		if ref, found := gcpSecretInterpolation(src.v.Template); found {
+			f := mkFinding(s, r, src.attr,
+				evidenceSpan(src.v.Span, r.Span),
+				"[REDACTED via ${"+ref+"} in "+src.attr+"]",
+				"no secrets in metadata scripts; use Secret Manager")
+			f.Severity = ir.SeverityHigh // taint (unresolved ref), not confirmed literal
+			return []ir.Finding{f}
+		}
+	}
+	return nil
+}
+
+// gcpScriptSource is one script-bearing metadata value.
+type gcpScriptSource struct {
+	attr string
+	v    ir.Value
+}
+
+// gcpMetadataScripts collects startup-script / user-data content from all
+// three spellings: the metadata map attribute, metadata blocks, and the
+// top-level metadata_startup_script attribute. startup-script-url is a
+// reference, not content, and is deliberately excluded.
+func gcpMetadataScripts(r ir.Resource) []gcpScriptSource {
+	var out []gcpScriptSource
+	add := func(attr string, m map[string]ir.Value) {
+		for _, key := range []string{"startup-script", "user-data"} {
+			if v, ok := m[key]; ok {
+				out = append(out, gcpScriptSource{attr: attr + "." + key, v: v})
+			}
+		}
+	}
+	if v, ok := r.Attributes["metadata"]; ok {
+		if m, ok := v.AsMap(); ok {
+			add("metadata", m)
+		} else if blks, _, present, known := getBlocks(r, "metadata"); present && known {
+			for _, b := range blks {
+				add("metadata", b)
+			}
+		}
+	}
+	if v, ok := r.Attributes["metadata_startup_script"]; ok {
+		out = append(out, gcpScriptSource{attr: "metadata_startup_script", v: v})
+	}
+	return out
+}
+
+// gcpStripInterpolations replaces every ${...} span with a single space.
+func gcpStripInterpolations(s string) string {
+	var sb strings.Builder
+	for i := 0; i < len(s); {
+		if i+1 < len(s) && s[i] == '$' && s[i+1] == '{' {
+			depth := 0
+			j := i
+			for j < len(s) {
+				switch s[j] {
+				case '{':
+					depth++
+				case '}':
+					depth--
+					if depth == 0 {
+						j++
+						goto done
+					}
+				}
+				j++
+			}
+		done:
+			sb.WriteByte(' ')
+			i = j
+			continue
+		}
+		sb.WriteByte(s[i])
+		i++
+	}
+	return sb.String()
+}
+
+var gcpSecretNameHints = []string{"password", "passwd", "secret", "token", "apikey", "api_key"}
+
+// gcpSecretInterpolation reports the first bare ${var.<name>} /
+// ${local.<name>} interpolation in s whose name looks secret-like.
+func gcpSecretInterpolation(s string) (string, bool) {
+	for i := 0; i < len(s); {
+		if i+1 < len(s) && s[i] == '$' && s[i+1] == '{' {
+			depth := 0
+			j := i + 2
+			for j < len(s) {
+				switch s[j] {
+				case '{':
+					depth++
+				case '}':
+					if depth == 0 {
+						inner := strings.TrimSpace(s[i+2 : j])
+						if head, name, ok := gcpSplitTaintRef(inner); ok &&
+							(head == "var" || head == "local") && gcpSecretLikeName(name) {
+							return inner, true
+						}
+						i = j + 1
+						goto next
+					}
+					depth--
+				}
+				j++
+			}
+			return "", false
+		next:
+			continue
+		}
+		i++
+	}
+	return "", false
+}
+
+func gcpSecretLikeName(name string) bool {
+	lower := strings.ToLower(name)
+	for _, hint := range gcpSecretNameHints {
+		if strings.Contains(lower, hint) {
+			return true
+		}
+	}
+	return false
+}
+
+// gcpSplitTaintRef splits "var.db_password" into ("var", "db_password").
+func gcpSplitTaintRef(ref string) (head, name string, ok bool) {
+	i := strings.Index(ref, ".")
+	if i <= 0 || i == len(ref)-1 {
+		return "", "", false
+	}
+	head, rest := ref[:i], ref[i+1:]
+	if j := strings.Index(rest, "["); j >= 0 {
+		rest = rest[:j]
+	}
+	if j := strings.Index(rest, "."); j >= 0 {
+		rest = rest[:j]
+	}
+	if rest == "" {
+		return "", "", false
+	}
+	return head, rest, true
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-GCP-294: Compute instance on an end-of-life OS image
+// ---------------------------------------------------------------------------
+// Mirrors AEGIS-GCP-200 (end-of-life Cloud Functions runtimes): a boot
+// disk pinned to an OS image past end of life no longer receives
+// security patches. The list is a curated snapshot — update it as
+// vendors publish new EOL dates. Interpolated image values stay quiet
+// (the version cannot be determined without resolving the reference).
+
+type instanceEOLImage struct{}
+
+func (instanceEOLImage) ID() string { return "AEGIS-GCP-294" }
+func (instanceEOLImage) Title() string {
+	return "Compute instance on end-of-life OS image"
+}
+func (instanceEOLImage) Description() string {
+	return "google_compute_instance boot disk pinned to an end-of-life OS " +
+		"image (e.g. Debian 10, Ubuntu 18.04, CentOS 7) no longer receives " +
+		"security patches. Migrate to a supported image family."
+}
+func (instanceEOLImage) Severity() ir.Severity { return ir.SeverityHigh }
+
+func (instanceEOLImage) AppliesTo(resType string) bool {
+	return resType == "google_compute_instance"
+}
+
+// eolImageFamilies are OS image families past end of life (curated
+// snapshot, mirroring eolRuntimes for Cloud Functions).
+var eolImageFamilies = map[string]bool{
+	"debian-9": true, "debian-10": true,
+	"ubuntu-1604": true, "ubuntu-1804": true,
+	"centos-7": true, "centos-8": true,
+	"windows-2012": true, "windows-2012-r2": true, "windows-2016": true,
+	"windows-server-2012": true, "windows-server-2012-r2": true, "windows-server-2016": true,
+	"rhel-7": true,
+}
+
+func (s instanceEOLImage) Check(r ir.Resource) []ir.Finding {
+	disks, _, present, known := getBlocks(r, "boot_disk")
+	if !present || !known {
+		return nil
+	}
+	for _, d := range disks {
+		params, _, ppresent, pknown := getBlocks(mapRes(d), "initialize_params")
+		if !ppresent || !pknown {
+			continue
+		}
+		for _, p := range params {
+			// image and family both select the boot image; either may
+			// carry the EOL family (family = "debian-10" was missed
+			// because only image was read).
+			for _, attr := range []string{"image", "family"} {
+				img, span, ipresent, iknown := blockString(p, attr)
+				if !ipresent || !iknown {
+					continue // absent or unresolved: cannot decide
+				}
+				if fam, ok := eolImageFamily(img); ok {
+					return []ir.Finding{mkFinding(s, r, "boot_disk.initialize_params."+attr, span,
+						img, "migrate to a supported image family (not "+fam+")")}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// eolImageFamily extracts the OS family from an image reference (family
+// name, image name, or full self-link) and reports whether it is EOL.
+// The last path segment is normalized (lowercased, -v<build> suffix
+// stripped) and matched exactly or as a dash-delimited prefix, so
+// "debian-10-v20230101" and "ubuntu-1804-lts" match but "debian-101"
+// does not.
+func eolImageFamily(img string) (string, bool) {
+	seg := img
+	if i := strings.LastIndex(seg, "/"); i >= 0 {
+		seg = seg[i+1:]
+	}
+	seg = strings.ToLower(strings.TrimSpace(seg))
+	if i := strings.Index(seg, "-v"); i >= 0 && i+2 < len(seg) && seg[i+2] >= '0' && seg[i+2] <= '9' {
+		seg = seg[:i]
+	}
+	for fam := range eolImageFamilies {
+		if seg == fam || strings.HasPrefix(seg, fam+"-") {
+			return fam, true
+		}
+	}
+	return "", false
 }

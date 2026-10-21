@@ -183,9 +183,45 @@ func TestDeprecatedIDsNeverSilentlyMigrate(t *testing.T) {
 }
 
 // TestDeprecatedMapCoversDocCount guards against the map drifting out of
-// sync with docs/audit/DEPRECATED_RULE_IDS.md (39 entries).
+// sync with docs/audit/DEPRECATED_RULE_IDS.md (67 entries: 39 post-audit
+// + 3 outperform-mission + 9 multi-cloud quality audit + 1 follow-up
+// + 15 Sprint-2 R4 FP-family).
 func TestDeprecatedMapCoversDocCount(t *testing.T) {
-	if len(deprecatedRuleIDs) != 39 {
-		t.Fatalf("deprecated map has %d entries, doc lists 39", len(deprecatedRuleIDs))
+	if len(deprecatedRuleIDs) != 67 {
+		t.Fatalf("deprecated map has %d entries, doc lists 67", len(deprecatedRuleIDs))
+	}
+}
+
+// TestDeprecatedMap_MultiCloudAudit pins the 9 IDs removed by the
+// multi-cloud quality audit to their canonical replacements.
+func TestDeprecatedMap_MultiCloudAudit(t *testing.T) {
+	want := map[string]string{
+		"AEGIS-AZR-004":   "AEGIS-AZURE-106",
+		"AEGIS-AZURE-008": "AEGIS-AZURE-107",
+		"AEGIS-AZURE-009": "AEGIS-AZURE-101",
+		"AEGIS-AZURE-025": "AEGIS-AZURE-105",
+		"AEGIS-AZURE-045": "AEGIS-AZURE-101",
+		"AEGIS-AZURE-047": "AEGIS-AZURE-107",
+		"AEGIS-AZURE-048": "AEGIS-AZURE-106",
+		"AEGIS-AZURE-225": "AEGIS-AZURE-107",
+		"AEGIS-GCP-063":   "AEGIS-GCP-018",
+	}
+	for id, canon := range want {
+		if got := CanonicalReplacement(id); got != canon {
+			t.Fatalf("%s: canonical = %q, want %q", id, got, canon)
+		}
+	}
+	// Transitive pointer: 206's canonical (025) is itself deprecated now.
+	if got := CanonicalReplacement("AEGIS-AZURE-206"); got != "AEGIS-AZURE-105" {
+		t.Fatalf("206: canonical = %q, want AEGIS-AZURE-105", got)
+	}
+}
+
+// TestDeprecatedMap_GCP122 pins the GCP-122 deprecation (follow-up to the
+// multi-cloud quality audit: exact duplicate of GCP-032 with inconsistent
+// High vs Medium severity; 032 kept as canonical).
+func TestDeprecatedMap_GCP122(t *testing.T) {
+	if got := CanonicalReplacement("AEGIS-GCP-122"); got != "AEGIS-GCP-032" {
+		t.Fatalf("GCP-122: canonical = %q, want AEGIS-GCP-032", got)
 	}
 }

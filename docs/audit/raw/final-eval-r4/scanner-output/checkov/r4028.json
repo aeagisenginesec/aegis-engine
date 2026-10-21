@@ -1,0 +1,1261 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_70",
+                "bc_check_id": "BC_AWS_S3_23",
+                "check_name": "Ensure S3 bucket does not allow an action with any Principal",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        5,
+                        "resource \"aws_s3_bucket_policy\" \"data\" {\n"
+                    ],
+                    [
+                        6,
+                        "  bucket = aws_s3_bucket.data.id\n"
+                    ],
+                    [
+                        7,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        8,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        9,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        10,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        11,
+                        "      Principal = \"*\"\n"
+                    ],
+                    [
+                        12,
+                        "      Action = \"s3:GetObject\"\n"
+                    ],
+                    [
+                        13,
+                        "      Resource = \"arn:aws:s3:::data-lake-65c84c/*\"\n"
+                    ],
+                    [
+                        14,
+                        "    }]\n"
+                    ],
+                    [
+                        15,
+                        "  })\n"
+                    ],
+                    [
+                        16,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    5,
+                    16
+                ],
+                "resource": "aws_s3_bucket_policy.data",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.S3AllowsAnyPrincipal",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/bc-aws-s3-23",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_131",
+                "bc_check_id": "BC_AWS_NETWORKING_41",
+                "check_name": "Ensure that ALB drops HTTP headers",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "drop_invalid_header_fields"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name = \"web-65c84c\"\n"
+                    ],
+                    [
+                        20,
+                        "  internal = false\n"
+                    ],
+                    [
+                        21,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    18,
+                    22
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.ALBDropHttpHeaders",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-alb-drops-http-headers",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_91",
+                "bc_check_id": "BC_AWS_LOGGING_22",
+                "check_name": "Ensure the ELBv2 (Application/Network) has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "access_logs/0/enabled/0"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name = \"web-65c84c\"\n"
+                    ],
+                    [
+                        20,
+                        "  internal = false\n"
+                    ],
+                    [
+                        21,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    18,
+                    22
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.ELBv2AccessLogs",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-logging-22",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_150",
+                "bc_check_id": "BC_AWS_NETWORKING_62",
+                "check_name": "Ensure that Load Balancer has deletion protection enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "enable_deletion_protection"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name = \"web-65c84c\"\n"
+                    ],
+                    [
+                        20,
+                        "  internal = false\n"
+                    ],
+                    [
+                        21,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    18,
+                    22
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LBDeletionProtection",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-150",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_2",
+                "bc_check_id": "BC_AWS_NETWORKING_29",
+                "check_name": "Ensure ALB protocol is HTTPS",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "protocol"
+                    ]
+                },
+                "code_block": [
+                    [
+                        24,
+                        "resource \"aws_lb_listener\" \"http\" {\n"
+                    ],
+                    [
+                        25,
+                        "  load_balancer_arn = aws_lb.web.arn\n"
+                    ],
+                    [
+                        26,
+                        "  port = 80\n"
+                    ],
+                    [
+                        27,
+                        "  protocol = \"HTTP\"\n"
+                    ],
+                    [
+                        28,
+                        "  default_action { type = \"forward\" target_group_arn = aws_lb_target_group.web.arn }\n"
+                    ],
+                    [
+                        29,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    24,
+                    29
+                ],
+                "resource": "aws_lb_listener.http",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.ALBListenerHTTPS",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-29",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_261",
+                "bc_check_id": "BC_AWS_GENERAL_177",
+                "check_name": "Ensure HTTP HTTPS Target group defines Healthcheck",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "health_check"
+                    ]
+                },
+                "code_block": [
+                    [
+                        31,
+                        "resource \"aws_lb_target_group\" \"web\" {\n"
+                    ],
+                    [
+                        32,
+                        "  port = 8080\n"
+                    ],
+                    [
+                        33,
+                        "  protocol = \"HTTP\"\n"
+                    ],
+                    [
+                        34,
+                        "  vpc_id = \"vpc-12345678\"\n"
+                    ],
+                    [
+                        35,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    31,
+                    35
+                ],
+                "resource": "aws_lb_target_group.web",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LBTargetGroupsDefinesHealthcheck",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-aws-kendra-index-server-side-encryption-uses-customer-managed-keys-cmks",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_20",
+                "bc_check_id": "BC_AWS_NETWORKING_49",
+                "check_name": "Ensure that ALB redirects HTTP requests into HTTPS ones",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_lb": {
+                            "web": {
+                                "__end_line__": 22,
+                                "__start_line__": 18,
+                                "internal": [
+                                    false
+                                ],
+                                "load_balancer_type": [
+                                    "application"
+                                ],
+                                "name": [
+                                    "web-65c84c"
+                                ],
+                                "__address__": "aws_lb.web"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "default_action/redirect/*/protocol",
+                        "default_action/type",
+                        "port",
+                        "protocol",
+                        "default_action/redirect/*/port",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name = \"web-65c84c\"\n"
+                    ],
+                    [
+                        20,
+                        "  internal = false\n"
+                    ],
+                    [
+                        21,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    18,
+                    22
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": {
+                    "code_block": [
+                        [
+                            24,
+                            "resource \"aws_lb_listener\" \"http\" {\n"
+                        ],
+                        [
+                            25,
+                            "  load_balancer_arn = aws_lb.web.arn\n"
+                        ],
+                        [
+                            26,
+                            "  port = 80\n"
+                        ],
+                        [
+                            27,
+                            "  protocol = \"HTTP\"\n"
+                        ],
+                        [
+                            28,
+                            "  default_action { type = \"forward\" target_group_arn = aws_lb_target_group.web.arn }\n"
+                        ],
+                        [
+                            29,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_line_range": [
+                        24,
+                        29
+                    ],
+                    "resource": "aws_lb_listener.http",
+                    "entity_tags": {},
+                    "evaluations": null,
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                    "resource_address": null
+                },
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-alb-redirects-http-requests-into-https-ones",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_62",
+                "bc_check_id": "BC_AWS_LOGGING_36",
+                "check_name": "Ensure S3 buckets should have event notifications enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 3,
+                                "__start_line__": 1,
+                                "bucket": [
+                                    "data-lake-65c84c"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        2,
+                        "  bucket = \"data-lake-65c84c\"\n"
+                    ],
+                    [
+                        3,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    1,
+                    3
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-62",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_6",
+                "bc_check_id": "BC_AWS_NETWORKING_52",
+                "check_name": "Ensure that S3 bucket has a Public Access block",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 3,
+                                "__start_line__": 1,
+                                "bucket": [
+                                    "data-lake-65c84c"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "block_public_policy",
+                        "block_public_acls",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        2,
+                        "  bucket = \"data-lake-65c84c\"\n"
+                    ],
+                    [
+                        3,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    1,
+                    3
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/s3-bucket-should-have-public-access-blocks-defaults-to-false-if-the-public-access-block-is-not-attached",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_61",
+                "bc_check_id": "BC_AWS_LOGGING_35",
+                "check_name": "Ensure that an S3 bucket has a lifecycle configuration",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 3,
+                                "__start_line__": 1,
+                                "bucket": [
+                                    "data-lake-65c84c"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "lifecycle_rule",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        2,
+                        "  bucket = \"data-lake-65c84c\"\n"
+                    ],
+                    [
+                        3,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    1,
+                    3
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-61",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_18",
+                "bc_check_id": "BC_AWS_S3_13",
+                "check_name": "Ensure the S3 bucket has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 3,
+                                "__start_line__": 1,
+                                "bucket": [
+                                    "data-lake-65c84c"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type",
+                        "logging"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        2,
+                        "  bucket = \"data-lake-65c84c\"\n"
+                    ],
+                    [
+                        3,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    1,
+                    3
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_144",
+                "bc_check_id": "BC_AWS_GENERAL_72",
+                "check_name": "Ensure that S3 bucket has cross-region replication enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 3,
+                                "__start_line__": 1,
+                                "bucket": [
+                                    "data-lake-65c84c"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "replication_configuration/rules/*/status",
+                        "rule/*/status",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        2,
+                        "  bucket = \"data-lake-65c84c\"\n"
+                    ],
+                    [
+                        3,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    1,
+                    3
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-bucket-has-cross-region-replication-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_21",
+                "bc_check_id": "BC_AWS_S3_16",
+                "check_name": "Ensure all data stored in the S3 bucket have versioning enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 3,
+                                "__start_line__": 1,
+                                "bucket": [
+                                    "data-lake-65c84c"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "versioning/enabled",
+                        "versioning_configuration/status",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        2,
+                        "  bucket = \"data-lake-65c84c\"\n"
+                    ],
+                    [
+                        3,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    1,
+                    3
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-16-enable-versioning",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_145",
+                "bc_check_id": "BC_AWS_GENERAL_56",
+                "check_name": "Ensure that S3 buckets are encrypted with KMS by default",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_s3_bucket": {
+                            "data": {
+                                "__end_line__": 3,
+                                "__start_line__": 1,
+                                "bucket": [
+                                    "data-lake-65c84c"
+                                ],
+                                "__address__": "aws_s3_bucket.data"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "rule/apply_server_side_encryption_by_default/sse_algorithm",
+                        "resource_type",
+                        "server_side_encryption_configuration/rule/apply_server_side_encryption_by_default/sse_algorithm"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_s3_bucket\" \"data\" {\n"
+                    ],
+                    [
+                        2,
+                        "  bucket = \"data-lake-65c84c\"\n"
+                    ],
+                    [
+                        3,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    1,
+                    3
+                ],
+                "resource": "aws_s3_bucket.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-buckets-are-encrypted-with-kms-by-default",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_28",
+                "bc_check_id": "BC_AWS_NETWORKING_58",
+                "check_name": "Ensure public facing ALB are protected by WAF",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_lb": {
+                            "web": {
+                                "__end_line__": 22,
+                                "__start_line__": 18,
+                                "internal": [
+                                    false
+                                ],
+                                "load_balancer_type": [
+                                    "application"
+                                ],
+                                "name": [
+                                    "web-65c84c"
+                                ],
+                                "__address__": "aws_lb.web"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "load_balancer_type",
+                        "resource_type",
+                        "internal"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "resource \"aws_lb\" \"web\" {\n"
+                    ],
+                    [
+                        19,
+                        "  name = \"web-65c84c\"\n"
+                    ],
+                    [
+                        20,
+                        "  internal = false\n"
+                    ],
+                    [
+                        21,
+                        "  load_balancer_type = \"application\"\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    18,
+                    22
+                ],
+                "resource": "aws_lb.web",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-public-facing-alb-are-protected-by-waf",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_103",
+                "bc_check_id": "BC_AWS_GENERAL_43",
+                "check_name": "Ensure that load balancer is using at least TLS 1.2",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_lb_listener": {
+                            "http": {
+                                "__end_line__": 29,
+                                "__start_line__": 24,
+                                "default_action": [
+                                    {
+                                        "target_group_arn": [
+                                            "aws_lb_target_group.web.arn"
+                                        ],
+                                        "type": [
+                                            "forward"
+                                        ]
+                                    }
+                                ],
+                                "load_balancer_arn": [
+                                    "aws_lb.web.arn"
+                                ],
+                                "port": [
+                                    80
+                                ],
+                                "protocol": [
+                                    "HTTP"
+                                ],
+                                "__address__": "aws_lb_listener.http"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "ssl_policy",
+                        "load_balancer_type",
+                        "default_action/type",
+                        "default_action/redirect/protocol",
+                        "protocol",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        24,
+                        "resource \"aws_lb_listener\" \"http\" {\n"
+                    ],
+                    [
+                        25,
+                        "  load_balancer_arn = aws_lb.web.arn\n"
+                    ],
+                    [
+                        26,
+                        "  port = 80\n"
+                    ],
+                    [
+                        27,
+                        "  protocol = \"HTTP\"\n"
+                    ],
+                    [
+                        28,
+                        "  default_action { type = \"forward\" target_group_arn = aws_lb_target_group.web.arn }\n"
+                    ],
+                    [
+                        29,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    24,
+                    29
+                ],
+                "resource": "aws_lb_listener.http",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-43",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_378",
+                "bc_check_id": "BC_AWS_NETWORKING_103",
+                "check_name": "Ensure AWS Load Balancer doesn't use HTTP protocol",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_lb_target_group": {
+                            "web": {
+                                "__end_line__": 35,
+                                "__start_line__": 31,
+                                "port": [
+                                    8080
+                                ],
+                                "protocol": [
+                                    "HTTP"
+                                ],
+                                "vpc_id": [
+                                    "vpc-12345678"
+                                ],
+                                "__address__": "aws_lb_target_group.web"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "protocol",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        31,
+                        "resource \"aws_lb_target_group\" \"web\" {\n"
+                    ],
+                    [
+                        32,
+                        "  port = 8080\n"
+                    ],
+                    [
+                        33,
+                        "  protocol = \"HTTP\"\n"
+                    ],
+                    [
+                        34,
+                        "  vpc_id = \"vpc-12345678\"\n"
+                    ],
+                    [
+                        35,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                "repo_file_path": "/corpus/r4028/main.tf",
+                "file_line_range": [
+                    31,
+                    35
+                ],
+                "resource": "aws_lb_target_group.web",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": {
+                    "code_block": [
+                        [
+                            24,
+                            "resource \"aws_lb_listener\" \"http\" {\n"
+                        ],
+                        [
+                            25,
+                            "  load_balancer_arn = aws_lb.web.arn\n"
+                        ],
+                        [
+                            26,
+                            "  port = 80\n"
+                        ],
+                        [
+                            27,
+                            "  protocol = \"HTTP\"\n"
+                        ],
+                        [
+                            28,
+                            "  default_action { type = \"forward\" target_group_arn = aws_lb_target_group.web.arn }\n"
+                        ],
+                        [
+                            29,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_line_range": [
+                        24,
+                        29
+                    ],
+                    "resource": "aws_lb_listener.http",
+                    "entity_tags": {},
+                    "evaluations": null,
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf",
+                    "resource_address": null
+                },
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-378",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4028/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 8,
+        "failed": 17,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 5,
+        "checkov_version": "3.3.26"
+    }
+}

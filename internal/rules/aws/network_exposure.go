@@ -83,7 +83,7 @@ func (publicLBNoWAF) CheckAll(resources []ir.Resource) []ir.Finding {
 	})
 	var out []ir.Finding
 	for _, r := range sorted {
-		if !(r.Type == "aws_lb" || r.Type == "aws_alb") {
+		if r.Type != "aws_lb" && r.Type != "aws_alb" {
 			continue
 		}
 		internal, span, present, known := getBool(r, "internal")

@@ -1,0 +1,225 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008",
+  "summary": {
+    "resources": 3,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 12,
+    "critical": 1,
+    "high": 5,
+    "medium": 2,
+    "low": 4
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-004",
+      "severity": "high",
+      "title": "Security group ingress open to the world",
+      "description": "Ingress rules allowing 0.0.0.0/0 expose the workload to the entire internet. Restrict source CIDRs to known ranges.",
+      "resource": "aws_security_group.db",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 18,
+      "evidence": "ingress.cidr_blocks = 0.0.0.0/0",
+      "expected": "restricted source CIDR ranges",
+      "remediation": "Restrict the ingress CIDR to trusted ranges. Replace `0.0.0.0/0` with your\noffice/VPN CIDRs, or remove the rule and use SSM Session Manager (no inbound\nSSH needed):\ningress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"203.0.113.0/24\"]  # your trusted range\n}",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "5.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "severity": "low",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "resource": "aws_security_group.db",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 12,
+      "evidence": "description = absent or empty",
+      "expected": "description attribute documenting the group or rule",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "severity": "low",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "resource": "aws_security_group.db",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 12,
+      "evidence": "ingress[0].description = absent",
+      "expected": "description on each inline ingress rule",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-858",
+      "severity": "high",
+      "title": "Security group exposes database port 5432 to the internet",
+      "description": "Ingress allowing 0.0.0.0/0 or ::/0 to a database port (PostgreSQL 5432, MySQL/MariaDB 3306, SQL Server 1433, Redis 6379, MongoDB 27017, Oracle 1521, Elasticsearch 9200, CouchDB 5984) exposes the database to internet-wide scanning and credential attacks. Restrict source CIDRs to application tiers or bastions, or use private connectivity. (AEGIS-AWS-004 reports the world-open ingress itself; this rule fires additionally when the open range covers a database port.)",
+      "resource": "aws_security_group.db",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 18,
+      "evidence": "ingress.cidr_blocks = 0.0.0.0/0 to port 5432",
+      "expected": "database ports reachable only from restricted source CIDRs",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-001",
+      "severity": "critical",
+      "title": "GCS bucket publicly readable via IAM",
+      "description": "A bucket IAM binding/member granting objectViewer or admin to allUsers or allAuthenticatedUsers exposes bucket data to the internet.",
+      "resource": "google_storage_bucket_iam_member.public",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 9,
+      "evidence": "member = allUsers",
+      "expected": "remove allUsers/allAuthenticatedUsers from the member",
+      "remediation": "Remove `allUsers` / `allAuthenticatedUsers` from the bucket IAM policy. Grant\n`roles/storage.objectViewer` only to specific service accounts or groups:\nresource \"google_storage_bucket_iam_member\" \"viewer\" {\n  bucket = google_storage_bucket.this.name\n  role   = \"roles/storage.objectViewer\"\n  member = \"serviceAccount:app@project.iam.gserviceaccount.com\"\n}",
+      "references": [
+        "https://cloud.google.com/storage/docs/access-control/iam-roles"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-005",
+      "severity": "high",
+      "title": "GCS bucket without uniform bucket-level access",
+      "description": "google_storage_bucket with uniform_bucket_level_access = false allows per-object ACLs, which can silently expose individual objects. Enable uniform access to manage permissions via IAM only.",
+      "resource": "google_storage_bucket.assets",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 1,
+      "evidence": "uniform_bucket_level_access = absent",
+      "expected": "uniform_bucket_level_access = true",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-016",
+      "severity": "high",
+      "title": "GCS bucket without versioning",
+      "description": "google_storage_bucket with versioning disabled or absent loses protection against accidental overwrites and deletions.",
+      "resource": "google_storage_bucket.assets",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 1,
+      "evidence": "versioning = absent (disabled by default)",
+      "expected": "versioning { enabled = true }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://cloud.google.com/backup-disaster-recovery/docs"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-025",
+      "severity": "high",
+      "title": "GCS bucket without customer-managed encryption",
+      "description": "google_storage_bucket with no encryption block uses Google-managed keys. Customer-managed (CMEK) keys are required for regulated data.",
+      "resource": "google_storage_bucket.assets",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 1,
+      "evidence": "encryption = absent (Google-managed keys)",
+      "expected": "encryption { default_kms_key_name = ... }",
+      "remediation": "Enable encryption at rest. Google-managed keys apply by default; for regulated data use customer-managed keys (CMEK) via Cloud KMS with key rotation.",
+      "references": [
+        "https://cloud.google.com/security/encryption/default-encryption"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-027",
+      "severity": "medium",
+      "title": "GCS bucket without access logging",
+      "description": "google_storage_bucket with no logging block has no audit trail of object access.",
+      "resource": "google_storage_bucket.assets",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 1,
+      "evidence": "logging = absent",
+      "expected": "logging { log_bucket = ... log_object_prefix = ... }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-031",
+      "severity": "low",
+      "title": "GCS bucket without lifecycle rules",
+      "description": "google_storage_bucket with no lifecycle_rule accumulates objects indefinitely; hygiene finding.",
+      "resource": "google_storage_bucket.assets",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 1,
+      "evidence": "lifecycle_rule = absent",
+      "expected": "lifecycle_rule { ... }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-032",
+      "severity": "medium",
+      "title": "GCS bucket without public access prevention",
+      "description": "google_storage_bucket without public_access_prevention = \"enforced\" can be made public via ACLs or IAM.",
+      "resource": "google_storage_bucket.assets",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 1,
+      "evidence": "public_access_prevention = absent",
+      "expected": "public_access_prevention = \"enforced\"",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public IPs / public access, and use Private Service Connect / VPC Service Controls if external access is required. Verify with `gcloud compute firewall-rules list`.",
+      "references": [
+        "https://cloud.google.com/vpc/docs/firewalls"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-183",
+      "severity": "low",
+      "title": "GCS bucket without soft-delete protection",
+      "description": "google_storage_bucket with no soft_delete_policy block loses the safety net that retains deleted objects for recovery. Configure soft_delete_policy to guard against accidental or malicious deletion.",
+      "resource": "google_storage_bucket.assets",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+      "line": 1,
+      "evidence": "soft_delete_policy = absent",
+      "expected": "soft_delete_policy { retention_duration_seconds = 604800 }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4008/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

@@ -1,0 +1,705 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security groups rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "  ReportingDbSecurityGroup:\n"
+                    ],
+                    [
+                        14,
+                        "    Type: AWS::EC2::SecurityGroup\n"
+                    ],
+                    [
+                        15,
+                        "    Properties:\n"
+                    ],
+                    [
+                        16,
+                        "      GroupDescription: Reporting database access\n"
+                    ],
+                    [
+                        17,
+                        "      SecurityGroupIngress:\n"
+                    ],
+                    [
+                        18,
+                        "        - IpProtocol: tcp\n"
+                    ],
+                    [
+                        19,
+                        "          FromPort: 3306\n"
+                    ],
+                    [
+                        20,
+                        "          ToPort: 3306\n"
+                    ],
+                    [
+                        21,
+                        "          CidrIp: 0.0.0.0/0\n"
+                    ]
+                ],
+                "file_path": "/rds.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "file_line_range": [
+                    13,
+                    21
+                ],
+                "resource": "AWS::EC2::SecurityGroup.ReportingDbSecurityGroup",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_16",
+                "bc_check_id": "BC_AWS_GENERAL_4",
+                "check_name": "Ensure all data stored in the RDS is securely encrypted at rest",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/StorageEncrypted"
+                    ]
+                },
+                "code_block": [
+                    [
+                        23,
+                        "  ReportingDb:\n"
+                    ],
+                    [
+                        24,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        25,
+                        "    Properties:\n"
+                    ],
+                    [
+                        26,
+                        "      Engine: mysql\n"
+                    ],
+                    [
+                        27,
+                        "      EngineVersion: '8.0'\n"
+                    ],
+                    [
+                        28,
+                        "      DBInstanceClass: !Ref DBInstanceClass\n"
+                    ],
+                    [
+                        29,
+                        "      AllocatedStorage: 100\n"
+                    ],
+                    [
+                        30,
+                        "      DBName: reporting\n"
+                    ],
+                    [
+                        31,
+                        "      MasterUsername: admin\n"
+                    ],
+                    [
+                        32,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        33,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        34,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        35,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        36,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        37,
+                        "        - !Ref ReportingDbSecurityGroup\n"
+                    ],
+                    [
+                        38,
+                        "      Tags:\n"
+                    ],
+                    [
+                        39,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        40,
+                        "          Value: reporting-mysql\n"
+                    ]
+                ],
+                "file_path": "/rds.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "file_line_range": [
+                    23,
+                    40
+                ],
+                "resource": "AWS::RDS::DBInstance.ReportingDb",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSEncryption",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "reporting-mysql"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DBInstanceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "DBInstanceClass",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_118",
+                "bc_check_id": "BC_AWS_LOGGING_28",
+                "check_name": "Ensure that enhanced monitoring is enabled for Amazon RDS instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/MonitoringInterval"
+                    ]
+                },
+                "code_block": [
+                    [
+                        23,
+                        "  ReportingDb:\n"
+                    ],
+                    [
+                        24,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        25,
+                        "    Properties:\n"
+                    ],
+                    [
+                        26,
+                        "      Engine: mysql\n"
+                    ],
+                    [
+                        27,
+                        "      EngineVersion: '8.0'\n"
+                    ],
+                    [
+                        28,
+                        "      DBInstanceClass: !Ref DBInstanceClass\n"
+                    ],
+                    [
+                        29,
+                        "      AllocatedStorage: 100\n"
+                    ],
+                    [
+                        30,
+                        "      DBName: reporting\n"
+                    ],
+                    [
+                        31,
+                        "      MasterUsername: admin\n"
+                    ],
+                    [
+                        32,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        33,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        34,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        35,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        36,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        37,
+                        "        - !Ref ReportingDbSecurityGroup\n"
+                    ],
+                    [
+                        38,
+                        "      Tags:\n"
+                    ],
+                    [
+                        39,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        40,
+                        "          Value: reporting-mysql\n"
+                    ]
+                ],
+                "file_path": "/rds.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "file_line_range": [
+                    23,
+                    40
+                ],
+                "resource": "AWS::RDS::DBInstance.ReportingDb",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSEnhancedMonitorEnabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "reporting-mysql"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DBInstanceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "DBInstanceClass",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_161",
+                "bc_check_id": "BC_AWS_IAM_65",
+                "check_name": "Ensure RDS database has IAM authentication enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/EnableIAMDatabaseAuthentication"
+                    ]
+                },
+                "code_block": [
+                    [
+                        23,
+                        "  ReportingDb:\n"
+                    ],
+                    [
+                        24,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        25,
+                        "    Properties:\n"
+                    ],
+                    [
+                        26,
+                        "      Engine: mysql\n"
+                    ],
+                    [
+                        27,
+                        "      EngineVersion: '8.0'\n"
+                    ],
+                    [
+                        28,
+                        "      DBInstanceClass: !Ref DBInstanceClass\n"
+                    ],
+                    [
+                        29,
+                        "      AllocatedStorage: 100\n"
+                    ],
+                    [
+                        30,
+                        "      DBName: reporting\n"
+                    ],
+                    [
+                        31,
+                        "      MasterUsername: admin\n"
+                    ],
+                    [
+                        32,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        33,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        34,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        35,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        36,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        37,
+                        "        - !Ref ReportingDbSecurityGroup\n"
+                    ],
+                    [
+                        38,
+                        "      Tags:\n"
+                    ],
+                    [
+                        39,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        40,
+                        "          Value: reporting-mysql\n"
+                    ]
+                ],
+                "file_path": "/rds.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "file_line_range": [
+                    23,
+                    40
+                ],
+                "resource": "AWS::RDS::DBInstance.ReportingDb",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSIAMAuthentication",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "reporting-mysql"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-rds-database-has-iam-authentication-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DBInstanceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "DBInstanceClass",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_157",
+                "bc_check_id": "BC_AWS_GENERAL_73",
+                "check_name": "Ensure that RDS instances have Multi-AZ enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/MultiAZ"
+                    ]
+                },
+                "code_block": [
+                    [
+                        23,
+                        "  ReportingDb:\n"
+                    ],
+                    [
+                        24,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        25,
+                        "    Properties:\n"
+                    ],
+                    [
+                        26,
+                        "      Engine: mysql\n"
+                    ],
+                    [
+                        27,
+                        "      EngineVersion: '8.0'\n"
+                    ],
+                    [
+                        28,
+                        "      DBInstanceClass: !Ref DBInstanceClass\n"
+                    ],
+                    [
+                        29,
+                        "      AllocatedStorage: 100\n"
+                    ],
+                    [
+                        30,
+                        "      DBName: reporting\n"
+                    ],
+                    [
+                        31,
+                        "      MasterUsername: admin\n"
+                    ],
+                    [
+                        32,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        33,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        34,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        35,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        36,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        37,
+                        "        - !Ref ReportingDbSecurityGroup\n"
+                    ],
+                    [
+                        38,
+                        "      Tags:\n"
+                    ],
+                    [
+                        39,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        40,
+                        "          Value: reporting-mysql\n"
+                    ]
+                ],
+                "file_path": "/rds.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "file_line_range": [
+                    23,
+                    40
+                ],
+                "resource": "AWS::RDS::DBInstance.ReportingDb",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSMultiAZEnabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "reporting-mysql"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-73",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DBInstanceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "DBInstanceClass",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_17",
+                "bc_check_id": "BC_AWS_PUBLIC_2",
+                "check_name": "Ensure all data stored in RDS is not publicly accessible",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/PubliclyAccessible"
+                    ]
+                },
+                "code_block": [
+                    [
+                        23,
+                        "  ReportingDb:\n"
+                    ],
+                    [
+                        24,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        25,
+                        "    Properties:\n"
+                    ],
+                    [
+                        26,
+                        "      Engine: mysql\n"
+                    ],
+                    [
+                        27,
+                        "      EngineVersion: '8.0'\n"
+                    ],
+                    [
+                        28,
+                        "      DBInstanceClass: !Ref DBInstanceClass\n"
+                    ],
+                    [
+                        29,
+                        "      AllocatedStorage: 100\n"
+                    ],
+                    [
+                        30,
+                        "      DBName: reporting\n"
+                    ],
+                    [
+                        31,
+                        "      MasterUsername: admin\n"
+                    ],
+                    [
+                        32,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        33,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        34,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        35,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        36,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        37,
+                        "        - !Ref ReportingDbSecurityGroup\n"
+                    ],
+                    [
+                        38,
+                        "      Tags:\n"
+                    ],
+                    [
+                        39,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        40,
+                        "          Value: reporting-mysql\n"
+                    ]
+                ],
+                "file_path": "/rds.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                "file_line_range": [
+                    23,
+                    40
+                ],
+                "resource": "AWS::RDS::DBInstance.ReportingDb",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSPubliclyAccessible",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "reporting-mysql"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/public-policies/public-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DBInstanceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "DBInstanceClass",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c007/rds.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 4,
+        "failed": 6,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

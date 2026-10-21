@@ -1,0 +1,134 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_18",
+                "bc_check_id": "BC_AWS_S3_13",
+                "check_name": "Ensure the S3 bucket has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/LoggingConfiguration"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "  TrailBucket:\n"
+                    ],
+                    [
+                        15,
+                        "    Type: AWS::S3::Bucket\n"
+                    ],
+                    [
+                        16,
+                        "    Properties:\n"
+                    ],
+                    [
+                        17,
+                        "      BucketName: !Sub 'acme-cloudtrail-${AWS::AccountId}-${AWS::Region}'\n"
+                    ],
+                    [
+                        18,
+                        "      OwnershipControls:\n"
+                    ],
+                    [
+                        19,
+                        "        Rules:\n"
+                    ],
+                    [
+                        20,
+                        "          - ObjectOwnership: BucketOwnerEnforced\n"
+                    ],
+                    [
+                        21,
+                        "      PublicAccessBlockConfiguration:\n"
+                    ],
+                    [
+                        22,
+                        "        BlockPublicAcls: true\n"
+                    ],
+                    [
+                        23,
+                        "        BlockPublicPolicy: true\n"
+                    ],
+                    [
+                        24,
+                        "        IgnorePublicAcls: true\n"
+                    ],
+                    [
+                        25,
+                        "        RestrictPublicBuckets: true\n"
+                    ],
+                    [
+                        26,
+                        "      VersioningConfiguration:\n"
+                    ],
+                    [
+                        27,
+                        "        Status: Enabled\n"
+                    ],
+                    [
+                        28,
+                        "      BucketEncryption:\n"
+                    ],
+                    [
+                        29,
+                        "        ServerSideEncryptionConfiguration:\n"
+                    ],
+                    [
+                        30,
+                        "          - ServerSideEncryptionByDefault:\n"
+                    ],
+                    [
+                        31,
+                        "              SSEAlgorithm: aws:kms\n"
+                    ],
+                    [
+                        32,
+                        "              KMSMasterKeyID: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        33,
+                        "            BucketKeyEnabled: true\n"
+                    ]
+                ],
+                "file_path": "/cloudtrail.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c015/cloudtrail.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c015/cloudtrail.yaml",
+                "file_line_range": [
+                    14,
+                    33
+                ],
+                "resource": "AWS::S3::Bucket.TrailBucket",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.S3AccessLogs",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 22,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 5,
+        "checkov_version": "3.3.26"
+    }
+}

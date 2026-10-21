@@ -1,0 +1,483 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a13288-6de9-72a7-927a-640e36cbab1a",
+  "CreatedAt": "2026-10-12T23:52:44.265187683Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "s3-cloudfront.yaml",
+      "Class": "config",
+      "Type": "cloudformation",
+      "MisconfSummary": {
+        "Successes": 34,
+        "Failures": 4
+      },
+      "Misconfigurations": [
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0011",
+          "Title": "CloudFront distribution does not have a WAF in front.",
+          "Description": "You should configure a Web Application Firewall in front of your CloudFront distribution. This will mitigate many types of attacks on your web application.\n",
+          "Message": "Distribution does not utilize a WAF.",
+          "Namespace": "builtin.aws.cloudfront.aws0011",
+          "Query": "data.builtin.aws.cloudfront.aws0011.deny",
+          "Resolution": "Enable WAF for the CloudFront distribution",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0011",
+          "References": [
+            "https://docs.aws.amazon.com/waf/latest/developerguide/cloudfront-features.html",
+            "https://avd.aquasec.com/misconfig/aws-0011"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "s3-cloudfront.yaml:60-83",
+            "Provider": "AWS",
+            "Service": "cloudfront",
+            "StartLine": 60,
+            "EndLine": 83,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 60,
+                  "Content": "  DocsDistribution:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mDocsDistribution\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 61,
+                  "Content": "    Type: AWS::CloudFront::Distribution",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::CloudFront::Distribution",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 62,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 63,
+                  "Content": "      DistributionConfig:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mDistributionConfig\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 64,
+                  "Content": "        Enabled: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mEnabled\u001b[0m: \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 65,
+                  "Content": "        Comment: !Sub 'Docs portal (${Environment})'",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;33mComment\u001b[0m: !Sub 'Docs portal (${Environment})'",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 66,
+                  "Content": "        PriceClass: !FindInMap [PriceClassMap, !Ref Environment, Class]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mPriceClass\u001b[0m: !FindInMap [PriceClassMap, !Ref Environment, Class]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 67,
+                  "Content": "        DefaultRootObject: index.html",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mDefaultRootObject\u001b[0m: index.html",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 68,
+                  "Content": "        Origins:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mOrigins\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 69,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0012",
+          "Title": "CloudFront distribution allows unencrypted (HTTP) communications.",
+          "Description": "Plain HTTP is unencrypted and human-readable. This means that if a malicious actor was to eavesdrop on your connection, they would be able to see all of your data flowing back and forth.\nYou should use HTTPS, which is HTTP over an encrypted (TLS) connection, meaning eavesdroppers cannot read your traffic.\n",
+          "Message": "Distribution allows unencrypted communications.",
+          "Namespace": "builtin.aws.cloudfront.aws0012",
+          "Query": "data.builtin.aws.cloudfront.aws0012.deny",
+          "Resolution": "Only allow HTTPS for CloudFront distribution communication",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0012",
+          "References": [
+            "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-cloudfront-to-s3-origin.html",
+            "https://avd.aquasec.com/misconfig/aws-0012"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "DocsDistribution",
+            "Provider": "AWS",
+            "Service": "cloudfront",
+            "StartLine": 76,
+            "EndLine": 76,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 75,
+                  "Content": "          TargetOriginId: docs-s3-origin",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          \u001b[38;5;33mTargetOriginId\u001b[0m: docs-s3-origin",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 76,
+                  "Content": "          ViewerProtocolPolicy: allow-all",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          \u001b[38;5;33mViewerProtocolPolicy\u001b[0m: allow-all",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 77,
+                  "Content": "          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          \u001b[38;5;33mCachePolicyId\u001b[0m: 658327ea-f89d-4fab-a63d-7e88639e58f6",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 78,
+                  "Content": "          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          \u001b[38;5;33mOriginRequestPolicyId\u001b[0m: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "DocsDistribution",
+                "Filename": "s3-cloudfront.yaml",
+                "Location": {
+                  "StartLine": 75,
+                  "EndLine": 78
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0013",
+          "Title": "CloudFront distribution uses outdated SSL/TLS protocols.",
+          "Description": "You should not use outdated/insecure TLS versions for encryption. You should be using the latest TLS policies available.\nNote: that setting *minimum_protocol_version = \"TLSv1.X\"* is only possible when *cloudfront_default_certificate* is false (eg. you are not using the cloudfront.net domain name).\nIf *cloudfront_default_certificate* is true then the Cloudfront API will only allow setting *minimum_protocol_version = \"TLSv1\"*, and setting it to any other value will result in a perpetual diff in your *terraform plan*'s.\nThe only option when using the cloudfront.net domain name is to ignore this rule.\n",
+          "Message": "Distribution uses an insecure minimum TLS protocol version.",
+          "Namespace": "builtin.aws.cloudfront.aws0013",
+          "Query": "data.builtin.aws.cloudfront.aws0013.deny",
+          "Resolution": "Use the most modern TLS/SSL policies available",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0013",
+          "References": [
+            "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html",
+            "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesGeneral",
+            "https://avd.aquasec.com/misconfig/aws-0013"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "s3-cloudfront.yaml:60-83",
+            "Provider": "AWS",
+            "Service": "cloudfront",
+            "StartLine": 60,
+            "EndLine": 83,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 60,
+                  "Content": "  DocsDistribution:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mDocsDistribution\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 61,
+                  "Content": "    Type: AWS::CloudFront::Distribution",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::CloudFront::Distribution",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 62,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 63,
+                  "Content": "      DistributionConfig:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mDistributionConfig\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 64,
+                  "Content": "        Enabled: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mEnabled\u001b[0m: \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 65,
+                  "Content": "        Comment: !Sub 'Docs portal (${Environment})'",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;33mComment\u001b[0m: !Sub 'Docs portal (${Environment})'",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 66,
+                  "Content": "        PriceClass: !FindInMap [PriceClassMap, !Ref Environment, Class]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mPriceClass\u001b[0m: !FindInMap [PriceClassMap, !Ref Environment, Class]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 67,
+                  "Content": "        DefaultRootObject: index.html",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mDefaultRootObject\u001b[0m: index.html",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 68,
+                  "Content": "        Origins:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mOrigins\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 69,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0132",
+          "Title": "S3 encryption should use Customer Managed Keys",
+          "Description": "Encryption using AWS keys provides protection for your S3 buckets. To gain greater control over encryption, such as key rotation, access policies, and auditability, use customer managed keys (CMKs) with SSE-KMS.\nNote that SSE-KMS is not supported for S3 server access logging destination buckets; in such cases, use SSE-S3 instead.\n",
+          "Message": "Bucket does not encrypt data with a customer managed key.",
+          "Namespace": "builtin.aws.s3.aws0132",
+          "Query": "data.builtin.aws.s3.aws0132.deny",
+          "Resolution": "Use SSE-KMS with a customer managed key (CMK)",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0132",
+          "References": [
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-encryption.html",
+            "https://avd.aquasec.com/misconfig/aws-0132"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "s3-cloudfront.yaml:27-49",
+            "Provider": "AWS",
+            "Service": "s3",
+            "StartLine": 27,
+            "EndLine": 49,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 27,
+                  "Content": "  DocsBucket:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mDocsBucket\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "    Type: AWS::S3::Bucket",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::S3::Bucket",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "      BucketName: !Sub 'acme-docs-${Environment}-${AWS::AccountId}'",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mBucketName\u001b[0m: !Sub 'acme-docs-${Environment}-${AWS::AccountId}'",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "      OwnershipControls:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mOwnershipControls\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "        Rules:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mRules\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "          - ObjectOwnership: BucketOwnerEnforced",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "          - \u001b[38;5;33mObjectOwnership\u001b[0m: BucketOwnerEnforced",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "      PublicAccessBlockConfiguration:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mPublicAccessBlockConfiguration\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
+                  "Content": "        BlockPublicAcls: true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33mBlockPublicAcls\u001b[0m: \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 36,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

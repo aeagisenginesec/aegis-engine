@@ -1,6 +1,7 @@
 package arm
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -310,6 +311,71 @@ func TestSQLSecure(t *testing.T) {
 	}
 }
 
+// R4 FN idx 62/65 regression lock: a Cosmos DB account's
+// publicNetworkAccess enum must reach the IR as the boolean
+// public_network_access_enabled AEGIS-AZURE-263 reads. The enum->bool
+// conversion used to be mssql-only, which left DocumentDB accounts with
+// an unreadable string and zero findings.
+const armCosmosPublic = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2023-04-15",
+      "name": "vulncosmos",
+      "location": "westeurope",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "publicNetworkAccess": "Enabled",
+        "ipRules": []
+      }
+    }
+  ]
+}`
+
+const armCosmosPrivate = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2023-04-15",
+      "name": "securecosmos",
+      "location": "westeurope",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "publicNetworkAccess": "Disabled",
+        "ipRules": []
+      }
+    }
+  ]
+}`
+
+func TestCosmosPublicNetworkAccessEnabled(t *testing.T) {
+	res := parseARM(t, armCosmosPublic)
+	r := findResource(res, "azurerm_cosmosdb_account")
+	if r == nil {
+		t.Fatalf("no azurerm_cosmosdb_account")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != true {
+		t.Errorf("public_network_access_enabled = %v, want true", got)
+	}
+}
+
+func TestCosmosPublicNetworkAccessDisabled(t *testing.T) {
+	res := parseARM(t, armCosmosPrivate)
+	r := findResource(res, "azurerm_cosmosdb_account")
+	if r == nil {
+		t.Fatalf("no azurerm_cosmosdb_account")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != false {
+		t.Errorf("public_network_access_enabled = %v, want false", got)
+	}
+}
+
 const armAKSVuln = `{
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
@@ -368,6 +434,67 @@ func TestAKSSecure(t *testing.T) {
 	}
 	if !mustBool(t, r, "role_based_access_control_enabled") {
 		t.Errorf("role_based_access_control_enabled should be true")
+	}
+}
+
+// The real ARM property spelling is enableRBAC (all-caps RBAC). The
+// fixtures above use the historical enableRbac casing; these use the
+// spelling actual templates carry (R4 FN idx 76/81/84: AEGIS-AZURE-014
+// never fired because enableRBAC missed the rename table and landed as
+// enable_rbac, invisible to the rule).
+const armAKSVulnRBAC = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.ContainerService/managedClusters",
+      "apiVersion": "2024-01-01",
+      "name": "vulnaksrbac",
+      "location": "westeurope",
+      "properties": {
+        "enableRBAC": false,
+        "dnsPrefix": "vulnaksrbac"
+      }
+    }
+  ]
+}`
+
+const armAKSSecureRBAC = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.ContainerService/managedClusters",
+      "apiVersion": "2024-01-01",
+      "name": "secureaksrbac",
+      "location": "westeurope",
+      "properties": {
+        "enableRBAC": true,
+        "dnsPrefix": "secureaksrbac"
+      }
+    }
+  ]
+}`
+
+func TestAKSVulnerableRBACSpelling(t *testing.T) {
+	res := parseARM(t, armAKSVulnRBAC)
+	r := findResource(res, "azurerm_kubernetes_cluster")
+	if r == nil {
+		t.Fatalf("no azurerm_kubernetes_cluster")
+	}
+	if mustBool(t, r, "role_based_access_control_enabled") {
+		t.Errorf("role_based_access_control_enabled should be false for enableRBAC: false")
+	}
+}
+
+func TestAKSSecureRBACSpelling(t *testing.T) {
+	res := parseARM(t, armAKSSecureRBAC)
+	r := findResource(res, "azurerm_kubernetes_cluster")
+	if r == nil {
+		t.Fatalf("no azurerm_kubernetes_cluster")
+	}
+	if !mustBool(t, r, "role_based_access_control_enabled") {
+		t.Errorf("role_based_access_control_enabled should be true for enableRBAC: true")
 	}
 }
 
@@ -557,5 +684,267 @@ func TestAzureRulesFireOnARM(t *testing.T) {
 		if !ok || !v.Known {
 			t.Errorf("key vault attribute %q missing/unknown", attr)
 		}
+	}
+}
+
+// Parity (item 2): ARM Key Vault networkAcls ipRules [{value}] unwrap to a
+// plain string list, and virtualNetworkRules [{id}] become
+// virtual_network_subnet_ids, so AZURE-205 reads them like TF ip_rules
+// instead of false-positive firing on vaults with defined allowances.
+func TestKeyVaultNetworkAclsUnwrap(t *testing.T) {
+	const kv = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-07-01",
+      "name": "securekv",
+      "location": "westeurope",
+      "properties": {
+        "tenantId": "00000000-0000-0000-0000-000000000000",
+        "networkAcls": {
+          "bypass": "None",
+          "defaultAction": "Deny",
+          "ipRules": [{"value": "1.2.3.4/32"}],
+          "virtualNetworkRules": [{"id": "/subscriptions/x/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/v/subnets/s"}]
+        }
+      }
+    }
+  ]
+}`
+	res := parseARM(t, kv)
+	r := findResource(res, "azurerm_key_vault")
+	if r == nil {
+		t.Fatalf("no azurerm_key_vault")
+	}
+	nacls, ok := r.Attributes["network_acls"]
+	if !ok {
+		t.Fatalf("network_acls missing")
+	}
+	m, ok := nacls.AsMap()
+	if !ok {
+		t.Fatalf("network_acls is not a map")
+	}
+	ips, ok := m["ip_rules"]
+	if !ok {
+		t.Fatalf("ip_rules missing after unwrap")
+	}
+	lst, ok := ips.AsList()
+	if !ok || len(lst) != 1 {
+		t.Fatalf("ip_rules is not a 1-element list: %#v", ips.Raw)
+	}
+	if s, ok := lst[0].AsString(); !ok || s != "1.2.3.4/32" {
+		t.Errorf("ip_rules[0] = %v, want 1.2.3.4/32", lst[0].Raw)
+	}
+	subs, ok := m["virtual_network_subnet_ids"]
+	if !ok {
+		t.Fatalf("virtual_network_subnet_ids missing after unwrap")
+	}
+	slst, ok := subs.AsList()
+	if !ok || len(slst) != 1 {
+		t.Fatalf("virtual_network_subnet_ids is not a 1-element list")
+	}
+	if _, ok := m["virtual_network_rules"]; ok {
+		t.Errorf("unrenamed virtual_network_rules still present")
+	}
+}
+
+// Parity (item 2): an ARM expression calling a function outside the known
+// ARM set must produce a warning diagnostic (almost certainly a typo),
+// never fail silently as an Unknown value.
+func TestUnknownARMFunctionWarns(t *testing.T) {
+	const tmpl = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "probeacct",
+      "location": "westeurope",
+      "sku": {"name": "Standard_LRS"},
+      "kind": "StorageV2",
+      "properties": {
+        "allowBlobPublicAccess": "[nosuchfunction('x')]"
+      }
+    }
+  ]
+}`
+	p := writeTemp(t, "azuredeploy.json", tmpl)
+	src, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, diags, err := New().Parse(p, src)
+	if err != nil {
+		t.Fatalf("Parse error: %v", err)
+	}
+	found := false
+	for _, d := range diags {
+		if d.Level == "warning" && strings.Contains(d.Message, "nosuchfunction") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected warning diagnostic for unknown function nosuchfunction, got %v", diags)
+	}
+}
+
+// Parity (item 2): known-but-unresolvable ARM functions (resourceGroup,
+// reference, ...) stay silent Unknown — warning on them would flood
+// every real template.
+func TestKnownUnresolvableARMFunctionSilent(t *testing.T) {
+	const tmpl = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[concat('acct', uniqueString(resourceGroup().id))]",
+      "location": "[resourceGroup().location]",
+      "sku": {"name": "Standard_LRS"},
+      "kind": "StorageV2",
+      "properties": {}
+    }
+  ]
+}`
+	p := writeTemp(t, "azuredeploy.json", tmpl)
+	src, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, diags, err := New().Parse(p, src)
+	if err != nil {
+		t.Fatalf("Parse error: %v", err)
+	}
+	for _, d := range diags {
+		if strings.Contains(d.Message, "resourceGroup") || strings.Contains(d.Message, "uniqueString") {
+			t.Errorf("unexpected warning for known ARM function: %v", d)
+		}
+	}
+}
+
+func TestHandlesContent(t *testing.T) {
+	ad := New()
+	armJSON := []byte(`{"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#", "contentVersion": "1.0.0.0", "resources": []}`)
+	if !ad.HandlesContent("azuredeploy.json", armJSON) {
+		t.Errorf("HandlesContent should accept ARM JSON bytes")
+	}
+	plainJSON := []byte(`{"foo": "bar"}`)
+	if ad.HandlesContent("azuredeploy.json", plainJSON) {
+		t.Errorf("HandlesContent should reject non-ARM JSON bytes")
+	}
+	if ad.HandlesContent("azuredeploy.yaml", armJSON) {
+		t.Errorf("HandlesContent should reject non-json extensions")
+	}
+	if ad.HandlesContent("main.plan.json", armJSON) {
+		t.Errorf("HandlesContent should reject .plan.json")
+	}
+	var _ ir.ContentSniffer = ad
+}
+
+// R5 regression (AEGIS-AZURE-313/169): the publicNetworkAccess enum ->
+// boolean conversion used to run only for azurerm_mssql_server, so for
+// every other type the property stayed a string that bool rules read
+// as "unknown". A Redis cache with publicNetworkAccess "Enabled" must
+// surface public_network_access_enabled=true (bool), and "Disabled"
+// must surface false.
+const armRedisPublic = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Cache/Redis",
+      "apiVersion": "2023-08-01",
+      "name": "pubcache",
+      "location": "northeurope",
+      "properties": {
+        "enableNonSslPort": false,
+        "minimumTlsVersion": "1.2",
+        "publicNetworkAccess": "Enabled"
+      }
+    }
+  ]
+}`
+
+const armRedisPrivate = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Cache/Redis",
+      "apiVersion": "2023-08-01",
+      "name": "privcache",
+      "location": "northeurope",
+      "properties": {
+        "enableNonSslPort": false,
+        "minimumTlsVersion": "1.2",
+        "publicNetworkAccess": "Disabled"
+      }
+    }
+  ]
+}`
+
+func TestRedisPublicNetworkAccessEnumConverted(t *testing.T) {
+	res := parseARM(t, armRedisPublic)
+	r := findResource(res, "azurerm_redis_cache")
+	if r == nil {
+		t.Fatalf("no azurerm_redis_cache")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != true {
+		t.Errorf("public_network_access_enabled = %v, want true (bool)", got)
+	}
+	res = parseARM(t, armRedisPrivate)
+	r = findResource(res, "azurerm_redis_cache")
+	if r == nil {
+		t.Fatalf("no azurerm_redis_cache")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != false {
+		t.Errorf("public_network_access_enabled = %v, want false (bool)", got)
+	}
+}
+
+// R5 regression (AEGIS-AZURE-169): PostgreSQL flexible servers nest
+// publicNetworkAccess under properties.network. The adapter never
+// promoted it, so the rules saw the property as absent and AZURE-169
+// fired even when the template explicitly disabled public access
+// (17 of 18 R5 firings, e.g. r5071).
+const armFlexNet = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "apiVersion": "2023-06-01-preview",
+      "name": "shopdb",
+      "location": "northeurope",
+      "properties": {
+        "version": "15",
+        "network": {
+          "publicNetworkAccess": "%s"
+        }
+      }
+    }
+  ]
+}`
+
+func TestFlexServerNestedPublicNetworkAccess(t *testing.T) {
+	res := parseARM(t, fmt.Sprintf(armFlexNet, "Disabled"))
+	r := findResource(res, "azurerm_postgresql_flexible_server")
+	if r == nil {
+		t.Fatalf("no azurerm_postgresql_flexible_server")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != false {
+		t.Errorf("Disabled: public_network_access_enabled = %v, want false (bool)", got)
+	}
+	res = parseARM(t, fmt.Sprintf(armFlexNet, "Enabled"))
+	r = findResource(res, "azurerm_postgresql_flexible_server")
+	if r == nil {
+		t.Fatalf("no azurerm_postgresql_flexible_server")
+	}
+	if got := mustBool(t, r, "public_network_access_enabled"); got != true {
+		t.Errorf("Enabled: public_network_access_enabled = %v, want true (bool)", got)
 	}
 }

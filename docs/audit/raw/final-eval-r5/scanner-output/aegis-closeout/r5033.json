@@ -1,0 +1,150 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5033",
+  "summary": {
+    "resources": 6,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 7,
+    "critical": 0,
+    "high": 1,
+    "medium": 1,
+    "low": 5
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-443",
+      "severity": "high",
+      "title": "S3 bucket policy does not enforce TLS (SecureTransport)",
+      "description": "Without an explicit Deny on aws:SecureTransport=false, bucket objects can be fetched over plaintext HTTP. Add a bucket policy statement denying s3:* when SecureTransport is false.",
+      "resource": "aws_s3_bucket.backups",
+      "file": "corpus/r5033/main.tf",
+      "line": 6,
+      "evidence": "policy = no Deny on aws:SecureTransport=false",
+      "expected": "bucket policy denying s3:* when SecureTransport is false",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "2.1.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-8"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "4.2.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-601",
+      "severity": "low",
+      "title": "S3 bucket without lifecycle configuration",
+      "description": "Hygiene: S3 buckets should define lifecycle rules to transition or expire objects, controlling long-term storage costs. Add a lifecycle_rule block or an aws_s3_bucket_lifecycle_configuration resource.",
+      "resource": "aws_s3_bucket.backups",
+      "file": "corpus/r5033/main.tf",
+      "line": 6,
+      "evidence": "lifecycle_rule = absent",
+      "expected": "lifecycle_rule block or aws_s3_bucket_lifecycle_configuration",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-852",
+      "severity": "low",
+      "title": "S3 bucket encrypted with AWS-managed key, no customer-managed key",
+      "description": "This bucket encrypts objects with an AWS-managed key (SSE-S3 AES256, or SSE-KMS with the AWS-managed aws/s3 key) instead of a customer-managed KMS key. A CMK gives you key rotation control, grants, CloudTrail audit of key use, and the ability to disable or delete the key. Set kms_master_key_id to a customer-managed key. Unencrypted buckets are AEGIS-AWS-001's job and are not reported here.",
+      "resource": "aws_s3_bucket.backups",
+      "file": "corpus/r5033/main.tf",
+      "line": 6,
+      "evidence": "server_side_encryption_configuration.rule.apply_server_side_encryption_by_default.sse_algorithm = AWS-managed key (aws:kms)",
+      "expected": "kms_master_key_id set to a customer-managed KMS key",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-020",
+      "severity": "medium",
+      "title": "Pub/Sub topic without customer-managed encryption",
+      "description": "google_pubsub_topic with no kms_key_name relies on Google-managed keys. Set kms_key_name for key control.",
+      "resource": "google_pubsub_topic.events",
+      "file": "corpus/r5033/main.tf",
+      "line": 1,
+      "evidence": "kms_key_name = [REDACTED]",
+      "expected": "kms_key_name = google_kms_crypto_key.example.id",
+      "remediation": "Enable encryption at rest. Google-managed keys apply by default; for regulated data use customer-managed keys (CMEK) via Cloud KMS with key rotation.",
+      "references": [
+        "https://cloud.google.com/security/encryption/default-encryption"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-204",
+      "severity": "low",
+      "title": "Pub/Sub topic without message storage policy",
+      "description": "google_pubsub_topic with no message_storage_policy lets Google store message data in any region, which can violate data residency requirements. Pin allowed_persistence_regions.",
+      "resource": "google_pubsub_topic.events",
+      "file": "corpus/r5033/main.tf",
+      "line": 1,
+      "evidence": "message_storage_policy = absent (any region)",
+      "expected": "message_storage_policy { allowed_persistence_regions = [\"\u003cregion\u003e\"] }",
+      "remediation": "Apply least privilege. Replace broad roles with the minimum predefined or custom IAM roles the workload needs. Use Workload Identity Federation and service accounts with minimal scopes.",
+      "references": [
+        "https://cloud.google.com/iam/docs/using-iam-securely"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-207",
+      "severity": "low",
+      "title": "Pub/Sub topic message retention under 7 days",
+      "description": "google_pubsub_topic with message_retention_duration below 7 days limits the window for replaying messages during incident response. Keep at least 7 days of retention.",
+      "resource": "google_pubsub_topic.events",
+      "file": "corpus/r5033/main.tf",
+      "line": 3,
+      "evidence": "message_retention_duration = 86400s",
+      "expected": "message_retention_duration = \"604800s\"",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://cloud.google.com/backup-disaster-recovery/docs"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-208",
+      "severity": "low",
+      "title": "Pub/Sub topic without schema validation",
+      "description": "google_pubsub_topic with no schema_settings block accepts arbitrary message payloads, letting malformed or malicious messages reach subscribers. Attach a schema for validation.",
+      "resource": "google_pubsub_topic.events",
+      "file": "corpus/r5033/main.tf",
+      "line": 1,
+      "evidence": "schema_settings = absent",
+      "expected": "schema_settings { schema = \"...\" encoding = \"JSON\" }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5033/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

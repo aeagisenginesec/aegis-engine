@@ -8,8 +8,6 @@ package aws
 // 549, 550 are High severity: real encryption gaps.
 
 import (
-	"strings"
-
 	"aegis/internal/ir"
 )
 
@@ -55,51 +53,7 @@ func (rdsNoCopyTags) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-547: Lambda function without X-Ray tracing
-// ---------------------------------------------------------------------------
-
-type lambdaNoTracing struct{}
-
-func (lambdaNoTracing) ID() string { return "AEGIS-AWS-547" }
-func (lambdaNoTracing) Title() string {
-	return "Lambda function without X-Ray active tracing"
-}
-func (lambdaNoTracing) Description() string {
-	return "Hygiene: Lambda functions should enable X-Ray active tracing " +
-		"for distributed request observability. Add a tracing_config " +
-		"block with mode = \"Active\"."
-}
-func (lambdaNoTracing) Severity() ir.Severity { return ir.SeverityLow }
-func (lambdaNoTracing) AppliesTo(resType string) bool {
-	return resType == "aws_lambda_function"
-}
-func (lambdaNoTracing) Check(r ir.Resource) []ir.Finding {
-	blks, span, present, known := getBlocks(r, "tracing_config")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if !present || len(blks) == 0 {
-		return []ir.Finding{hygieneFinding("AEGIS-AWS-547",
-			(lambdaNoTracing{}).Title(), (lambdaNoTracing{}).Description(),
-			r, "tracing_config", span, "absent",
-			"tracing_config block with mode = \"Active\"")}
-	}
-	mode, _, mpresent, mknown := blockString(blks[0], "mode")
-	if mpresent && !mknown {
-		return nil // unresolved: cannot decide
-	}
-	if !mpresent || !strings.EqualFold(strings.TrimSpace(mode), "Active") {
-		actual := "absent"
-		if mpresent {
-			actual = mode
-		}
-		return []ir.Finding{hygieneFinding("AEGIS-AWS-547",
-			(lambdaNoTracing{}).Title(), (lambdaNoTracing{}).Description(),
-			r, "tracing_config.mode", span, actual,
-			"tracing_config block with mode = \"Active\"")}
-	}
-	return nil
-}
+// AEGIS-AWS-547: Lambda function without X-Ray active tracing
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-548: Lambda function without reserved concurrency
@@ -178,7 +132,6 @@ func (elasticacheNoMultiAZ) Check(r ir.Resource) []ir.Finding {
 func FinalGap2Rules() []ir.Rule {
 	return []ir.Rule{
 		rdsNoCopyTags{},               // AEGIS-AWS-546
-		lambdaNoTracing{},             // AEGIS-AWS-547
 		lambdaNoReservedConcurrency{}, // AEGIS-AWS-548
 		elasticacheNoMultiAZ{},        // AEGIS-AWS-551
 	}

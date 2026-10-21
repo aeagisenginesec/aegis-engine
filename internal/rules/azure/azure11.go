@@ -52,7 +52,10 @@ func (appSvcNoIPRestrictions) AppliesTo(resType string) bool { return appSvcType
 
 func (s appSvcNoIPRestrictions) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "site_config")
-	if !present || !known || len(blks) == 0 {
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if !present || len(blks) == 0 {
 		// No site_config: provider default is unrestricted access.
 		return []ir.Finding{mkFinding(s, r, "site_config.ip_restriction",
 			evidenceSpan(ir.Span{}, r.Span), "absent (default allow all)",
@@ -93,7 +96,10 @@ func (s appSvcNoSCMRestrictions) Check(r ir.Resource) []ir.Finding {
 			evidenceSpan(ir.Span{}, r.Span), actual,
 			"scm_ip_restriction { ip_address = \"203.0.113.0/24\" } or scm_use_main_ip_restriction = true")}
 	}
-	if !present || !known || len(blks) == 0 {
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if !present || len(blks) == 0 {
 		return mk("absent (default allow all)")
 	}
 	sc := blks[0]
@@ -200,6 +206,9 @@ func (appSvcNoAppLogs) AppliesTo(resType string) bool { return appSvcTypes(resTy
 
 func (s appSvcNoAppLogs) Check(r ir.Resource) []ir.Finding {
 	blks, _, present, known := getBlocks(r, "logs")
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
 	if present && known {
 		for _, b := range blks {
 			if len(blockList(b, "application_logs")) > 0 {

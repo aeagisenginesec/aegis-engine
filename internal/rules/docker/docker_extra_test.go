@@ -68,6 +68,21 @@ func Test018_NoStopsignal(t *testing.T) {
 	expectFinding(t, noStopsignal{}, stage(t, "FROM ubuntu:22.04\nSTOPSIGNAL SIGTERM\n"), 0)
 }
 
+// Sprint 2: image-metadata rules judge only the stage that ships.
+// A build stage's missing LABEL/STOPSIGNAL cannot affect the final
+// image, so both rules must stay silent on non-final stages and keep
+// firing on the final one.
+func Test017_018_FinalStageOnly(t *testing.T) {
+	stages := multiStage(t, "FROM golang:1.22 AS build\nWORKDIR /src\nRUN go build -o /app .\nFROM ubuntu:22.04\nCOPY --from=build /app /app\n")
+	if len(stages) != 2 {
+		t.Fatalf("expected 2 stages, got %d", len(stages))
+	}
+	expectFinding(t, noMaintainerLabel{}, stages[0], 0) // build stage: silent
+	expectFinding(t, noMaintainerLabel{}, stages[1], 1) // final stage: fires
+	expectFinding(t, noStopsignal{}, stages[0], 0)
+	expectFinding(t, noStopsignal{}, stages[1], 1)
+}
+
 func Test019_OnbuildUsed(t *testing.T) {
 	expectFinding(t, onbuildUsed{}, stage(t, "FROM ubuntu:22.04\nONBUILD COPY . /app\n"), 1)
 	expectFinding(t, onbuildUsed{}, stage(t, "FROM ubuntu:22.04\nCOPY . /app\n"), 0)
@@ -234,4 +249,42 @@ func itoa2(n int) string {
 		n /= 10
 	}
 	return string(b[p:])
+}
+
+func Test036_BuildToolsInFinal(t *testing.T) {
+	// Round-3 gap shape: final image reinstalls build/debug tools.
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM debian:bookworm-slim\nRUN apt-get update && apt-get install -y gcc git curl strace vim\n"), 1)
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM python:3.11.9-slim-bookworm\nRUN apt-get update && apt-get install -y curl git strace\n"), 1)
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM alpine:3.19\nRUN apk add --no-cache gdb make\n"), 1)
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM centos:8\nRUN yum install -y tcpdump\n"), 1)
+	// curl/wget alone are not build tools (curl-pipe is rule 012).
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y curl\n"), 0)
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y python3\n"), 0)
+	// Removal verbs are not installs.
+	expectFinding(t, buildToolsInFinal{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get purge -y gcc && apt-get autoremove -y\n"), 0)
+}
+
+func Test036_BuildStageQuiet(t *testing.T) {
+	// Tools in a build stage are legitimate; only the final stage fires.
+	rs := multiStage(t, "FROM golang:1.22-bookworm AS build\nRUN apt-get update && apt-get install -y gcc git\nFROM gcr.io/distroless/static-debian12:nonroot\nCOPY --from=build /app/server /app/server\n")
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 stages, got %d", len(rs))
+	}
+	expectFinding(t, buildToolsInFinal{}, rs[0], 0)
+	expectFinding(t, buildToolsInFinal{}, rs[1], 0)
+}
+
+func Test037_NopasswdSudoers(t *testing.T) {
+	// R4 r4122 shape: NOPASSWD appended to /etc/sudoers.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN apt-get update && apt-get install -y sudo && echo \"app ALL=(ALL) NOPASSWD: ALL\" >> /etc/sudoers\n"), 1)
+	// sudoers.d drop-in.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN echo \"app ALL=(ALL) NOPASSWD: ALL\" > /etc/sudoers.d/app\n"), 1)
+	// sed rewrite of sudoers.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN sed -i 's/^%sudo.*/& NOPASSWD: ALL/' /etc/sudoers\n"), 1)
+	// Reading sudoers does not configure anything.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN cat /etc/sudoers\n"), 0)
+	// NOPASSWD mentioned without a sudoers file configures nothing.
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN echo \"NOPASSWD is dangerous\" > /tmp/note.txt\n"), 0)
+	// Plain sudo use without a sudoers write (DOCKER-009's domain).
+	expectFinding(t, nopasswdSudoers{}, stage(t, "FROM ubuntu:22.04\nRUN sudo apt-get update\n"), 0)
 }

@@ -1,0 +1,130 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_9",
+                "bc_check_id": "BC_AZR_NETWORKING_2",
+                "check_name": "Ensure that RDP access is restricted from the internet",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "access",
+                        "direction",
+                        "protocol",
+                        "destination_port_range",
+                        "destination_port_ranges",
+                        "source_address_prefix",
+                        "source_address_prefixes"
+                    ]
+                },
+                "code_block": [
+                    [
+                        59,
+                        "resource \"azurerm_network_security_rule\" \"legacy_high_ports\" {\n"
+                    ],
+                    [
+                        60,
+                        "  name                        = \"legacy-allow-high-ports\"\n"
+                    ],
+                    [
+                        61,
+                        "  priority                    = 200\n"
+                    ],
+                    [
+                        62,
+                        "  direction                   = \"Inbound\"\n"
+                    ],
+                    [
+                        63,
+                        "  access                      = \"Allow\"\n"
+                    ],
+                    [
+                        64,
+                        "  protocol                    = \"Tcp\"\n"
+                    ],
+                    [
+                        65,
+                        "  source_port_range           = \"*\"\n"
+                    ],
+                    [
+                        66,
+                        "  destination_port_range      = \"1024-65535\"\n"
+                    ],
+                    [
+                        67,
+                        "  source_address_prefix       = \"Internet\"\n"
+                    ],
+                    [
+                        68,
+                        "  destination_address_prefix  = \"*\"\n"
+                    ],
+                    [
+                        69,
+                        "  resource_group_name         = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        70,
+                        "  network_security_group_name = azurerm_network_security_group.mgmt.name\n"
+                    ],
+                    [
+                        71,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t050/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t050/main.tf",
+                "file_line_range": [
+                    59,
+                    71
+                ],
+                "resource": "azurerm_network_security_rule.legacy_high_ports",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.NSGRuleRDPAccessRestricted",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t050/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t050/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "network_security_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_network_security_group.mgmt",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t050/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 15,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 8,
+        "checkov_version": "3.3.26"
+    }
+}

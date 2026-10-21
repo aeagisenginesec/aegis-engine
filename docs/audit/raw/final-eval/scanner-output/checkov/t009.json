@@ -1,0 +1,1771 @@
+[
+    {
+        "check_type": "secrets",
+        "results": {
+            "failed_checks": [
+                {
+                    "check_id": "CKV_SECRET_6",
+                    "bc_check_id": "BC_GIT_6",
+                    "check_name": "Base64 High Entropy String",
+                    "check_result": {
+                        "result": "FAILED"
+                    },
+                    "code_block": [
+                        [
+                            54,
+                            "      API_KEY = \"sk-liv**********\"\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        54,
+                        55
+                    ],
+                    "resource": "a6b10fd2da09343e4b3d8857457b63ff7cce1840",
+                    "evaluations": null,
+                    "check_class": "",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/secrets-policies/secrets-policy-index/git-secrets-6",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null,
+                    "validation_status": "Unavailable",
+                    "added_commit_hash": "",
+                    "removed_commit_hash": "",
+                    "added_by": "",
+                    "removed_date": "",
+                    "added_date": ""
+                }
+            ]
+        },
+        "summary": {
+            "passed": 0,
+            "failed": 1,
+            "skipped": 0,
+            "parsing_errors": 0,
+            "resource_count": 1,
+            "checkov_version": "3.3.26"
+        }
+    },
+    {
+        "check_type": "terraform",
+        "results": {
+            "failed_checks": [
+                {
+                    "check_id": "CKV_AWS_288",
+                    "bc_check_id": "BC_AWS_IAM_83",
+                    "check_name": "Ensure IAM policies does not allow data exfiltration",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "policy/Statement/[0]/Action"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            29,
+                            "resource \"aws_iam_role_policy\" \"resizer_wildcard\" {\n"
+                        ],
+                        [
+                            30,
+                            "  name = \"resizer-wildcard\"\n"
+                        ],
+                        [
+                            31,
+                            "  role = aws_iam_role.resizer.id\n"
+                        ],
+                        [
+                            32,
+                            "\n"
+                        ],
+                        [
+                            33,
+                            "  policy = jsonencode({\n"
+                        ],
+                        [
+                            34,
+                            "    Version = \"2012-10-17\"\n"
+                        ],
+                        [
+                            35,
+                            "    Statement = [\n"
+                        ],
+                        [
+                            36,
+                            "      {\n"
+                        ],
+                        [
+                            37,
+                            "        Effect   = \"Allow\"\n"
+                        ],
+                        [
+                            38,
+                            "        Action   = [\"s3:*\", \"dynamodb:*\", \"logs:*\"]\n"
+                        ],
+                        [
+                            39,
+                            "        Resource = \"*\"\n"
+                        ],
+                        [
+                            40,
+                            "      }\n"
+                        ],
+                        [
+                            41,
+                            "    ]\n"
+                        ],
+                        [
+                            42,
+                            "  })\n"
+                        ],
+                        [
+                            43,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        29,
+                        43
+                    ],
+                    "resource": "aws_iam_role_policy.resizer_wildcard",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.IAMDataExfiltration",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-288",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_289",
+                    "bc_check_id": "BC_AWS_IAM_84",
+                    "check_name": "Ensure IAM policies does not allow permissions management / resource exposure without constraints",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "policy/Statement/[0]/Action"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            29,
+                            "resource \"aws_iam_role_policy\" \"resizer_wildcard\" {\n"
+                        ],
+                        [
+                            30,
+                            "  name = \"resizer-wildcard\"\n"
+                        ],
+                        [
+                            31,
+                            "  role = aws_iam_role.resizer.id\n"
+                        ],
+                        [
+                            32,
+                            "\n"
+                        ],
+                        [
+                            33,
+                            "  policy = jsonencode({\n"
+                        ],
+                        [
+                            34,
+                            "    Version = \"2012-10-17\"\n"
+                        ],
+                        [
+                            35,
+                            "    Statement = [\n"
+                        ],
+                        [
+                            36,
+                            "      {\n"
+                        ],
+                        [
+                            37,
+                            "        Effect   = \"Allow\"\n"
+                        ],
+                        [
+                            38,
+                            "        Action   = [\"s3:*\", \"dynamodb:*\", \"logs:*\"]\n"
+                        ],
+                        [
+                            39,
+                            "        Resource = \"*\"\n"
+                        ],
+                        [
+                            40,
+                            "      }\n"
+                        ],
+                        [
+                            41,
+                            "    ]\n"
+                        ],
+                        [
+                            42,
+                            "  })\n"
+                        ],
+                        [
+                            43,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        29,
+                        43
+                    ],
+                    "resource": "aws_iam_role_policy.resizer_wildcard",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.IAMPermissionsManagement",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-289",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_355",
+                    "bc_check_id": "BC_AWS_IAM_88",
+                    "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's resource for restrictable actions",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "policy/Statement/[0]/Action"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            29,
+                            "resource \"aws_iam_role_policy\" \"resizer_wildcard\" {\n"
+                        ],
+                        [
+                            30,
+                            "  name = \"resizer-wildcard\"\n"
+                        ],
+                        [
+                            31,
+                            "  role = aws_iam_role.resizer.id\n"
+                        ],
+                        [
+                            32,
+                            "\n"
+                        ],
+                        [
+                            33,
+                            "  policy = jsonencode({\n"
+                        ],
+                        [
+                            34,
+                            "    Version = \"2012-10-17\"\n"
+                        ],
+                        [
+                            35,
+                            "    Statement = [\n"
+                        ],
+                        [
+                            36,
+                            "      {\n"
+                        ],
+                        [
+                            37,
+                            "        Effect   = \"Allow\"\n"
+                        ],
+                        [
+                            38,
+                            "        Action   = [\"s3:*\", \"dynamodb:*\", \"logs:*\"]\n"
+                        ],
+                        [
+                            39,
+                            "        Resource = \"*\"\n"
+                        ],
+                        [
+                            40,
+                            "      }\n"
+                        ],
+                        [
+                            41,
+                            "    ]\n"
+                        ],
+                        [
+                            42,
+                            "  })\n"
+                        ],
+                        [
+                            43,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        29,
+                        43
+                    ],
+                    "resource": "aws_iam_role_policy.resizer_wildcard",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.IAMStarResourcePolicyDocument",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-355",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_290",
+                    "bc_check_id": "BC_AWS_IAM_85",
+                    "check_name": "Ensure IAM policies does not allow write access without constraints",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "policy/Statement/[0]/Action"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            29,
+                            "resource \"aws_iam_role_policy\" \"resizer_wildcard\" {\n"
+                        ],
+                        [
+                            30,
+                            "  name = \"resizer-wildcard\"\n"
+                        ],
+                        [
+                            31,
+                            "  role = aws_iam_role.resizer.id\n"
+                        ],
+                        [
+                            32,
+                            "\n"
+                        ],
+                        [
+                            33,
+                            "  policy = jsonencode({\n"
+                        ],
+                        [
+                            34,
+                            "    Version = \"2012-10-17\"\n"
+                        ],
+                        [
+                            35,
+                            "    Statement = [\n"
+                        ],
+                        [
+                            36,
+                            "      {\n"
+                        ],
+                        [
+                            37,
+                            "        Effect   = \"Allow\"\n"
+                        ],
+                        [
+                            38,
+                            "        Action   = [\"s3:*\", \"dynamodb:*\", \"logs:*\"]\n"
+                        ],
+                        [
+                            39,
+                            "        Resource = \"*\"\n"
+                        ],
+                        [
+                            40,
+                            "      }\n"
+                        ],
+                        [
+                            41,
+                            "    ]\n"
+                        ],
+                        [
+                            42,
+                            "  })\n"
+                        ],
+                        [
+                            43,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        29,
+                        43
+                    ],
+                    "resource": "aws_iam_role_policy.resizer_wildcard",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.IAMWriteAccess",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-290",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_272",
+                    "bc_check_id": "BC_AWS_General_201",
+                    "check_name": "Ensure AWS Lambda function is configured to validate code-signing",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "code_signing_config_arn"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            45,
+                            "resource \"aws_lambda_function\" \"resizer\" {\n"
+                        ],
+                        [
+                            46,
+                            "  function_name = \"image-resizer\"\n"
+                        ],
+                        [
+                            47,
+                            "  role          = aws_iam_role.resizer.arn\n"
+                        ],
+                        [
+                            48,
+                            "  handler       = \"index.handler\"\n"
+                        ],
+                        [
+                            49,
+                            "  runtime       = \"nodejs20.x\"\n"
+                        ],
+                        [
+                            50,
+                            "  filename      = \"resizer.zip\"\n"
+                        ],
+                        [
+                            51,
+                            "\n"
+                        ],
+                        [
+                            52,
+                            "  environment {\n"
+                        ],
+                        [
+                            53,
+                            "    variables = {\n"
+                        ],
+                        [
+                            54,
+                            "      API_KEY = \"sk-live-9f8e7d6c5b4a3210\"\n"
+                        ],
+                        [
+                            55,
+                            "      BUCKET  = aws_s3_bucket.uploads.id\n"
+                        ],
+                        [
+                            56,
+                            "    }\n"
+                        ],
+                        [
+                            57,
+                            "  }\n"
+                        ],
+                        [
+                            58,
+                            "\n"
+                        ],
+                        [
+                            59,
+                            "  tags = {\n"
+                        ],
+                        [
+                            60,
+                            "    Name = \"image-resizer\"\n"
+                        ],
+                        [
+                            61,
+                            "  }\n"
+                        ],
+                        [
+                            62,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        45,
+                        62
+                    ],
+                    "resource": "aws_lambda_function.resizer",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.LambdaCodeSigningConfigured",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "image-resizer"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-272",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_116",
+                    "bc_check_id": "BC_AWS_GENERAL_64",
+                    "check_name": "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "dead_letter_config/[0]/target_arn"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            45,
+                            "resource \"aws_lambda_function\" \"resizer\" {\n"
+                        ],
+                        [
+                            46,
+                            "  function_name = \"image-resizer\"\n"
+                        ],
+                        [
+                            47,
+                            "  role          = aws_iam_role.resizer.arn\n"
+                        ],
+                        [
+                            48,
+                            "  handler       = \"index.handler\"\n"
+                        ],
+                        [
+                            49,
+                            "  runtime       = \"nodejs20.x\"\n"
+                        ],
+                        [
+                            50,
+                            "  filename      = \"resizer.zip\"\n"
+                        ],
+                        [
+                            51,
+                            "\n"
+                        ],
+                        [
+                            52,
+                            "  environment {\n"
+                        ],
+                        [
+                            53,
+                            "    variables = {\n"
+                        ],
+                        [
+                            54,
+                            "      API_KEY = \"sk-live-9f8e7d6c5b4a3210\"\n"
+                        ],
+                        [
+                            55,
+                            "      BUCKET  = aws_s3_bucket.uploads.id\n"
+                        ],
+                        [
+                            56,
+                            "    }\n"
+                        ],
+                        [
+                            57,
+                            "  }\n"
+                        ],
+                        [
+                            58,
+                            "\n"
+                        ],
+                        [
+                            59,
+                            "  tags = {\n"
+                        ],
+                        [
+                            60,
+                            "    Name = \"image-resizer\"\n"
+                        ],
+                        [
+                            61,
+                            "  }\n"
+                        ],
+                        [
+                            62,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        45,
+                        62
+                    ],
+                    "resource": "aws_lambda_function.resizer",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.LambdaDLQConfigured",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "image-resizer"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-a-dead-letter-queue-dlq",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_173",
+                    "bc_check_id": "BC_AWS_SERVERLESS_5",
+                    "check_name": "Check encryption settings for Lambda environmental variable",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "kms_key_arn"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            45,
+                            "resource \"aws_lambda_function\" \"resizer\" {\n"
+                        ],
+                        [
+                            46,
+                            "  function_name = \"image-resizer\"\n"
+                        ],
+                        [
+                            47,
+                            "  role          = aws_iam_role.resizer.arn\n"
+                        ],
+                        [
+                            48,
+                            "  handler       = \"index.handler\"\n"
+                        ],
+                        [
+                            49,
+                            "  runtime       = \"nodejs20.x\"\n"
+                        ],
+                        [
+                            50,
+                            "  filename      = \"resizer.zip\"\n"
+                        ],
+                        [
+                            51,
+                            "\n"
+                        ],
+                        [
+                            52,
+                            "  environment {\n"
+                        ],
+                        [
+                            53,
+                            "    variables = {\n"
+                        ],
+                        [
+                            54,
+                            "      API_KEY = \"sk-live-9f8e7d6c5b4a3210\"\n"
+                        ],
+                        [
+                            55,
+                            "      BUCKET  = aws_s3_bucket.uploads.id\n"
+                        ],
+                        [
+                            56,
+                            "    }\n"
+                        ],
+                        [
+                            57,
+                            "  }\n"
+                        ],
+                        [
+                            58,
+                            "\n"
+                        ],
+                        [
+                            59,
+                            "  tags = {\n"
+                        ],
+                        [
+                            60,
+                            "    Name = \"image-resizer\"\n"
+                        ],
+                        [
+                            61,
+                            "  }\n"
+                        ],
+                        [
+                            62,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        45,
+                        62
+                    ],
+                    "resource": "aws_lambda_function.resizer",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.LambdaEnvironmentEncryptionSettings",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "image-resizer"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-serverless-policies/bc-aws-serverless-5",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_115",
+                    "bc_check_id": "BC_AWS_GENERAL_63",
+                    "check_name": "Ensure that AWS Lambda function is configured for function-level concurrent execution limit",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "reserved_concurrent_executions/[0]"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            45,
+                            "resource \"aws_lambda_function\" \"resizer\" {\n"
+                        ],
+                        [
+                            46,
+                            "  function_name = \"image-resizer\"\n"
+                        ],
+                        [
+                            47,
+                            "  role          = aws_iam_role.resizer.arn\n"
+                        ],
+                        [
+                            48,
+                            "  handler       = \"index.handler\"\n"
+                        ],
+                        [
+                            49,
+                            "  runtime       = \"nodejs20.x\"\n"
+                        ],
+                        [
+                            50,
+                            "  filename      = \"resizer.zip\"\n"
+                        ],
+                        [
+                            51,
+                            "\n"
+                        ],
+                        [
+                            52,
+                            "  environment {\n"
+                        ],
+                        [
+                            53,
+                            "    variables = {\n"
+                        ],
+                        [
+                            54,
+                            "      API_KEY = \"sk-live-9f8e7d6c5b4a3210\"\n"
+                        ],
+                        [
+                            55,
+                            "      BUCKET  = aws_s3_bucket.uploads.id\n"
+                        ],
+                        [
+                            56,
+                            "    }\n"
+                        ],
+                        [
+                            57,
+                            "  }\n"
+                        ],
+                        [
+                            58,
+                            "\n"
+                        ],
+                        [
+                            59,
+                            "  tags = {\n"
+                        ],
+                        [
+                            60,
+                            "    Name = \"image-resizer\"\n"
+                        ],
+                        [
+                            61,
+                            "  }\n"
+                        ],
+                        [
+                            62,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        45,
+                        62
+                    ],
+                    "resource": "aws_lambda_function.resizer",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.LambdaFunctionLevelConcurrentExecutionLimit",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "image-resizer"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-function-level-concurrent-execution-limit",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_117",
+                    "bc_check_id": "BC_AWS_GENERAL_65",
+                    "check_name": "Ensure that AWS Lambda function is configured inside a VPC",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "vpc_config"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            45,
+                            "resource \"aws_lambda_function\" \"resizer\" {\n"
+                        ],
+                        [
+                            46,
+                            "  function_name = \"image-resizer\"\n"
+                        ],
+                        [
+                            47,
+                            "  role          = aws_iam_role.resizer.arn\n"
+                        ],
+                        [
+                            48,
+                            "  handler       = \"index.handler\"\n"
+                        ],
+                        [
+                            49,
+                            "  runtime       = \"nodejs20.x\"\n"
+                        ],
+                        [
+                            50,
+                            "  filename      = \"resizer.zip\"\n"
+                        ],
+                        [
+                            51,
+                            "\n"
+                        ],
+                        [
+                            52,
+                            "  environment {\n"
+                        ],
+                        [
+                            53,
+                            "    variables = {\n"
+                        ],
+                        [
+                            54,
+                            "      API_KEY = \"sk-live-9f8e7d6c5b4a3210\"\n"
+                        ],
+                        [
+                            55,
+                            "      BUCKET  = aws_s3_bucket.uploads.id\n"
+                        ],
+                        [
+                            56,
+                            "    }\n"
+                        ],
+                        [
+                            57,
+                            "  }\n"
+                        ],
+                        [
+                            58,
+                            "\n"
+                        ],
+                        [
+                            59,
+                            "  tags = {\n"
+                        ],
+                        [
+                            60,
+                            "    Name = \"image-resizer\"\n"
+                        ],
+                        [
+                            61,
+                            "  }\n"
+                        ],
+                        [
+                            62,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        45,
+                        62
+                    ],
+                    "resource": "aws_lambda_function.resizer",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.LambdaInVPC",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "image-resizer"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-inside-a-vpc-1",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_50",
+                    "bc_check_id": "BC_AWS_SERVERLESS_4",
+                    "check_name": "X-Ray tracing is enabled for Lambda",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "tracing_config/[0]/mode"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            45,
+                            "resource \"aws_lambda_function\" \"resizer\" {\n"
+                        ],
+                        [
+                            46,
+                            "  function_name = \"image-resizer\"\n"
+                        ],
+                        [
+                            47,
+                            "  role          = aws_iam_role.resizer.arn\n"
+                        ],
+                        [
+                            48,
+                            "  handler       = \"index.handler\"\n"
+                        ],
+                        [
+                            49,
+                            "  runtime       = \"nodejs20.x\"\n"
+                        ],
+                        [
+                            50,
+                            "  filename      = \"resizer.zip\"\n"
+                        ],
+                        [
+                            51,
+                            "\n"
+                        ],
+                        [
+                            52,
+                            "  environment {\n"
+                        ],
+                        [
+                            53,
+                            "    variables = {\n"
+                        ],
+                        [
+                            54,
+                            "      API_KEY = \"sk-live-9f8e7d6c5b4a3210\"\n"
+                        ],
+                        [
+                            55,
+                            "      BUCKET  = aws_s3_bucket.uploads.id\n"
+                        ],
+                        [
+                            56,
+                            "    }\n"
+                        ],
+                        [
+                            57,
+                            "  }\n"
+                        ],
+                        [
+                            58,
+                            "\n"
+                        ],
+                        [
+                            59,
+                            "  tags = {\n"
+                        ],
+                        [
+                            60,
+                            "    Name = \"image-resizer\"\n"
+                        ],
+                        [
+                            61,
+                            "  }\n"
+                        ],
+                        [
+                            62,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        45,
+                        62
+                    ],
+                    "resource": "aws_lambda_function.resizer",
+                    "evaluations": null,
+                    "check_class": "checkov.terraform.checks.resource.aws.LambdaXrayEnabled",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "image-resizer"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-serverless-policies/bc-aws-serverless-4",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_62",
+                    "bc_check_id": "BC_AWS_LOGGING_36",
+                    "check_name": "Ensure S3 buckets should have event notifications enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "uploads": {
+                                    "__end_line__": 70,
+                                    "__start_line__": 64,
+                                    "bucket": [
+                                        "acme-uploads-44aa"
+                                    ],
+                                    "tags": [
+                                        {
+                                            "Name": "uploads"
+                                        }
+                                    ],
+                                    "__address__": "aws_s3_bucket.uploads",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            64,
+                            "resource \"aws_s3_bucket\" \"uploads\" {\n"
+                        ],
+                        [
+                            65,
+                            "  bucket = \"acme-uploads-44aa\"\n"
+                        ],
+                        [
+                            66,
+                            "\n"
+                        ],
+                        [
+                            67,
+                            "  tags = {\n"
+                        ],
+                        [
+                            68,
+                            "    Name = \"uploads\"\n"
+                        ],
+                        [
+                            69,
+                            "  }\n"
+                        ],
+                        [
+                            70,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        64,
+                        70
+                    ],
+                    "resource": "aws_s3_bucket.uploads",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "uploads"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-62",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_6",
+                    "bc_check_id": "BC_AWS_NETWORKING_52",
+                    "check_name": "Ensure that S3 bucket has a Public Access block",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "uploads": {
+                                    "__end_line__": 70,
+                                    "__start_line__": 64,
+                                    "bucket": [
+                                        "acme-uploads-44aa"
+                                    ],
+                                    "tags": [
+                                        {
+                                            "Name": "uploads"
+                                        }
+                                    ],
+                                    "__address__": "aws_s3_bucket.uploads",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "block_public_acls",
+                            "resource_type",
+                            "block_public_policy"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            64,
+                            "resource \"aws_s3_bucket\" \"uploads\" {\n"
+                        ],
+                        [
+                            65,
+                            "  bucket = \"acme-uploads-44aa\"\n"
+                        ],
+                        [
+                            66,
+                            "\n"
+                        ],
+                        [
+                            67,
+                            "  tags = {\n"
+                        ],
+                        [
+                            68,
+                            "    Name = \"uploads\"\n"
+                        ],
+                        [
+                            69,
+                            "  }\n"
+                        ],
+                        [
+                            70,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        64,
+                        70
+                    ],
+                    "resource": "aws_s3_bucket.uploads",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "uploads"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/s3-bucket-should-have-public-access-blocks-defaults-to-false-if-the-public-access-block-is-not-attached",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_18",
+                    "bc_check_id": "BC_AWS_S3_13",
+                    "check_name": "Ensure the S3 bucket has access logging enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "uploads": {
+                                    "__end_line__": 70,
+                                    "__start_line__": 64,
+                                    "bucket": [
+                                        "acme-uploads-44aa"
+                                    ],
+                                    "tags": [
+                                        {
+                                            "Name": "uploads"
+                                        }
+                                    ],
+                                    "__address__": "aws_s3_bucket.uploads",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "resource_type",
+                            "logging"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            64,
+                            "resource \"aws_s3_bucket\" \"uploads\" {\n"
+                        ],
+                        [
+                            65,
+                            "  bucket = \"acme-uploads-44aa\"\n"
+                        ],
+                        [
+                            66,
+                            "\n"
+                        ],
+                        [
+                            67,
+                            "  tags = {\n"
+                        ],
+                        [
+                            68,
+                            "    Name = \"uploads\"\n"
+                        ],
+                        [
+                            69,
+                            "  }\n"
+                        ],
+                        [
+                            70,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        64,
+                        70
+                    ],
+                    "resource": "aws_s3_bucket.uploads",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "uploads"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_21",
+                    "bc_check_id": "BC_AWS_S3_16",
+                    "check_name": "Ensure all data stored in the S3 bucket have versioning enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "uploads": {
+                                    "__end_line__": 70,
+                                    "__start_line__": 64,
+                                    "bucket": [
+                                        "acme-uploads-44aa"
+                                    ],
+                                    "tags": [
+                                        {
+                                            "Name": "uploads"
+                                        }
+                                    ],
+                                    "__address__": "aws_s3_bucket.uploads",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "versioning/enabled",
+                            "resource_type",
+                            "versioning_configuration/status"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            64,
+                            "resource \"aws_s3_bucket\" \"uploads\" {\n"
+                        ],
+                        [
+                            65,
+                            "  bucket = \"acme-uploads-44aa\"\n"
+                        ],
+                        [
+                            66,
+                            "\n"
+                        ],
+                        [
+                            67,
+                            "  tags = {\n"
+                        ],
+                        [
+                            68,
+                            "    Name = \"uploads\"\n"
+                        ],
+                        [
+                            69,
+                            "  }\n"
+                        ],
+                        [
+                            70,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        64,
+                        70
+                    ],
+                    "resource": "aws_s3_bucket.uploads",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "uploads"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-16-enable-versioning",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_144",
+                    "bc_check_id": "BC_AWS_GENERAL_72",
+                    "check_name": "Ensure that S3 bucket has cross-region replication enabled",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "uploads": {
+                                    "__end_line__": 70,
+                                    "__start_line__": 64,
+                                    "bucket": [
+                                        "acme-uploads-44aa"
+                                    ],
+                                    "tags": [
+                                        {
+                                            "Name": "uploads"
+                                        }
+                                    ],
+                                    "__address__": "aws_s3_bucket.uploads",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "replication_configuration/rules/*/status",
+                            "rule/*/status",
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            64,
+                            "resource \"aws_s3_bucket\" \"uploads\" {\n"
+                        ],
+                        [
+                            65,
+                            "  bucket = \"acme-uploads-44aa\"\n"
+                        ],
+                        [
+                            66,
+                            "\n"
+                        ],
+                        [
+                            67,
+                            "  tags = {\n"
+                        ],
+                        [
+                            68,
+                            "    Name = \"uploads\"\n"
+                        ],
+                        [
+                            69,
+                            "  }\n"
+                        ],
+                        [
+                            70,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        64,
+                        70
+                    ],
+                    "resource": "aws_s3_bucket.uploads",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "uploads"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-bucket-has-cross-region-replication-enabled",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV2_AWS_61",
+                    "bc_check_id": "BC_AWS_LOGGING_35",
+                    "check_name": "Ensure that an S3 bucket has a lifecycle configuration",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "uploads": {
+                                    "__end_line__": 70,
+                                    "__start_line__": 64,
+                                    "bucket": [
+                                        "acme-uploads-44aa"
+                                    ],
+                                    "tags": [
+                                        {
+                                            "Name": "uploads"
+                                        }
+                                    ],
+                                    "__address__": "aws_s3_bucket.uploads",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "lifecycle_rule",
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            64,
+                            "resource \"aws_s3_bucket\" \"uploads\" {\n"
+                        ],
+                        [
+                            65,
+                            "  bucket = \"acme-uploads-44aa\"\n"
+                        ],
+                        [
+                            66,
+                            "\n"
+                        ],
+                        [
+                            67,
+                            "  tags = {\n"
+                        ],
+                        [
+                            68,
+                            "    Name = \"uploads\"\n"
+                        ],
+                        [
+                            69,
+                            "  }\n"
+                        ],
+                        [
+                            70,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        64,
+                        70
+                    ],
+                    "resource": "aws_s3_bucket.uploads",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "uploads"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-2-61",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                },
+                {
+                    "check_id": "CKV_AWS_145",
+                    "bc_check_id": "BC_AWS_GENERAL_56",
+                    "check_name": "Ensure that S3 buckets are encrypted with KMS by default",
+                    "check_result": {
+                        "result": "FAILED",
+                        "entity": {
+                            "aws_s3_bucket": {
+                                "uploads": {
+                                    "__end_line__": 70,
+                                    "__start_line__": 64,
+                                    "bucket": [
+                                        "acme-uploads-44aa"
+                                    ],
+                                    "tags": [
+                                        {
+                                            "Name": "uploads"
+                                        }
+                                    ],
+                                    "__address__": "aws_s3_bucket.uploads",
+                                    "__provider_address__": "aws.default"
+                                }
+                            }
+                        },
+                        "evaluated_keys": [
+                            "server_side_encryption_configuration/rule/apply_server_side_encryption_by_default/sse_algorithm",
+                            "rule/apply_server_side_encryption_by_default/sse_algorithm",
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            64,
+                            "resource \"aws_s3_bucket\" \"uploads\" {\n"
+                        ],
+                        [
+                            65,
+                            "  bucket = \"acme-uploads-44aa\"\n"
+                        ],
+                        [
+                            66,
+                            "\n"
+                        ],
+                        [
+                            67,
+                            "  tags = {\n"
+                        ],
+                        [
+                            68,
+                            "    Name = \"uploads\"\n"
+                        ],
+                        [
+                            69,
+                            "  }\n"
+                        ],
+                        [
+                            70,
+                            "}\n"
+                        ]
+                    ],
+                    "file_path": "/main.tf",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf",
+                    "file_line_range": [
+                        64,
+                        70
+                    ],
+                    "resource": "aws_s3_bucket.uploads",
+                    "evaluations": null,
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": {
+                        "Name": "uploads"
+                    },
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-s3-buckets-are-encrypted-with-kms-by-default",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t009/main.tf"
+                }
+            ]
+        },
+        "summary": {
+            "passed": 18,
+            "failed": 17,
+            "skipped": 0,
+            "parsing_errors": 0,
+            "resource_count": 4,
+            "checkov_version": "3.3.26"
+        }
+    }
+]

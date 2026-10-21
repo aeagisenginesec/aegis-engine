@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -698,8 +699,451 @@ func TestLenientMissingCommaRecovery(t *testing.T) {
 	}
 }
 
-// TestLenientUnrecoverableUnchanged: files with errors other than missing
-// separators are returned as-is (partial result, diagnostics preserved).
+// TestLenientSameLineRecovery: multiple attributes on one line inside a
+// block body (single-line blocks and multi-attribute lines in multi-line
+// blocks) are recovered by inserting newlines at the parser-reported
+// positions. Without recovery the parser keeps only the first attribute
+// per line, so rules would see e.g. an S3 bucket with no acl or an RDS
+// instance with no storage_encrypted.
+func TestLenientSameLineRecovery(t *testing.T) {
+	cases := []struct {
+		name  string
+		src   string
+		check func(t *testing.T, mod Module)
+	}{
+		{
+			name: "single-line resource block",
+			src: `resource "aws_s3_bucket" "pub" { bucket = "c1" acl = "public-read" }
+`,
+			check: func(t *testing.T, mod Module) {
+				if len(mod.Resources) != 1 {
+					t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+				}
+				acl, ok := mod.Resources[0].Attributes["acl"].AsString()
+				if !ok || acl != "public-read" {
+					t.Errorf("acl = %q, want public-read", acl)
+				}
+			},
+		},
+		{
+			name: "single-line block with three attributes",
+			src: `resource "aws_ebs_volume" "enc" { availability_zone = "us-east-1a" size = 10 encrypted = true }
+`,
+			check: func(t *testing.T, mod Module) {
+				enc, ok := mod.Resources[0].Attributes["encrypted"].AsBool()
+				if !ok || !enc {
+					t.Errorf("encrypted = %v (known=%v), want true", enc, ok)
+				}
+				size, _ := mod.Resources[0].Attributes["size"].AsString()
+				_ = size
+				if v, ok2 := mod.Resources[0].Attributes["size"]; !ok2 || !v.Known {
+					t.Errorf("size missing or unknown")
+				}
+			},
+		},
+		{
+			name: "multi-attribute lines in a multi-line block",
+			src: `resource "aws_db_instance" "privdb" {
+  engine = "postgres" instance_class = "db.t3.micro"
+  publicly_accessible = false storage_encrypted = true deletion_protection = true
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				for attr, want := range map[string]bool{
+					"storage_encrypted": true, "deletion_protection": true,
+				} {
+					got, ok := mod.Resources[0].Attributes[attr].AsBool()
+					if !ok || got != want {
+						t.Errorf("%s = %v (known=%v), want %v", attr, got, ok, want)
+					}
+				}
+				pub, ok := mod.Resources[0].Attributes["publicly_accessible"].AsBool()
+				if !ok || pub {
+					t.Errorf("publicly_accessible = %v, want false", pub)
+				}
+			},
+		},
+		{
+			name: "single-line nested block",
+			src: `resource "google_compute_firewall" "openfw" {
+  name = "fw1" network = "default"
+  allow { protocol = "tcp" ports = ["22"] }
+  source_ranges = ["0.0.0.0/0"]
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				allow, ok := mod.Resources[0].Attributes["allow"].AsList()
+				if !ok || len(allow) != 1 {
+					t.Fatalf("allow block missing: %v", mod.Resources[0].Attributes["allow"])
+				}
+				m, _ := allow[0].AsMap()
+				ports, ok := m["ports"].AsList()
+				if !ok || len(ports) != 1 {
+					t.Errorf("ports missing from nested single-line block: %+v", m)
+				}
+				network, ok := mod.Resources[0].Attributes["network"].AsString()
+				if !ok || network != "default" {
+					t.Errorf("network = %q, want default", network)
+				}
+			},
+		},
+		{
+			name: "same-line body plus comma-less jsonencode object",
+			src: `resource "aws_iam_policy" "admin" {
+  policy = jsonencode({ Statement = [{ Effect = "Allow" Action = "*" Resource = "*" }] })
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				pol, ok := mod.Resources[0].Attributes["policy"].AsString()
+				if !ok {
+					t.Fatalf("policy not a known string")
+				}
+				for _, want := range []string{`"Action":"*"`, `"Resource":"*"`} {
+					if !strings.Contains(pol, want) {
+						t.Errorf("policy missing %s: %s", want, pol)
+					}
+				}
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(tc.src))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(diags) != 0 {
+				t.Fatalf("recovered parse must be clean, got %+v", diags)
+			}
+			tc.check(t, mod)
+		})
+	}
+}
+
+// TestLenientCommaSeparatedSingleLineBlocks: comma-separated attributes in
+// a single-line block (`allow { protocol = "tcp", ports = ["0-65535"] }`)
+// are invalid HCL (commas are not block-body separators), but the lenient
+// parser must recover EVERY argument, not just the first. Before the fix,
+// recovery stalled on the leftover commas and fell back to the strict
+// partial parse, which silently dropped all but the first argument —
+// GCP-214 fired on "ports omitted" for a rule that listed ports, and
+// AWS-204 reported http_tokens as absent when it was "optional".
+func TestLenientCommaSeparatedSingleLineBlocks(t *testing.T) {
+	cases := []struct {
+		name  string
+		src   string
+		check func(t *testing.T, mod Module)
+	}{
+		{
+			name: "firewall allow with comma (multi-cloud fixture)",
+			src: `resource "google_compute_firewall" "allow_all" {
+  name = "x"
+  source_ranges = ["0.0.0.0/0"]
+  allow { protocol = "tcp", ports = ["0-65535"] }
+  allow { protocol = "udp", ports = ["0-65535"] }
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				allow, ok := mod.Resources[0].Attributes["allow"].AsList()
+				if !ok || len(allow) != 2 {
+					t.Fatalf("allow blocks = %v, want 2", mod.Resources[0].Attributes["allow"])
+				}
+				for i, want := range []string{"tcp", "udp"} {
+					m, _ := allow[i].AsMap()
+					proto, _ := m["protocol"].AsString()
+					if proto != want {
+						t.Errorf("allow[%d].protocol = %q, want %q", i, proto, want)
+					}
+					ports, ok := m["ports"].AsList()
+					if !ok || len(ports) != 1 {
+						t.Errorf("allow[%d].ports = %+v, want [0-65535]", i, m["ports"])
+						continue
+					}
+					p, _ := ports[0].AsString()
+					if p != "0-65535" {
+						t.Errorf("allow[%d].ports[0] = %q, want 0-65535", i, p)
+					}
+				}
+			},
+		},
+		{
+			name: "boot disk initialize_params with three args (Debian 10 fixture)",
+			src: `resource "google_compute_instance" "public_vm" {
+  boot_disk {
+    initialize_params { image = "debian-cloud/debian-10", size = 20, type = "pd-standard" }
+  }
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				disk, ok := mod.Resources[0].Attributes["boot_disk"].AsList()
+				if !ok || len(disk) != 1 {
+					t.Fatalf("boot_disk = %v, want 1 block", mod.Resources[0].Attributes["boot_disk"])
+				}
+				dm, _ := disk[0].AsMap()
+				params, ok := dm["initialize_params"].AsList()
+				if !ok || len(params) != 1 {
+					t.Fatalf("initialize_params = %+v, want 1 block", dm["initialize_params"])
+				}
+				pm, _ := params[0].AsMap()
+				img, _ := pm["image"].AsString()
+				if img != "debian-cloud/debian-10" {
+					t.Errorf("image = %q, want debian-cloud/debian-10", img)
+				}
+				if _, ok := pm["size"]; !ok {
+					t.Errorf("size dropped from initialize_params: %+v", pm)
+				}
+				if _, ok := pm["type"]; !ok {
+					t.Errorf("type dropped from initialize_params: %+v", pm)
+				}
+			},
+		},
+		{
+			name: "EC2 metadata_options with comma",
+			src: `resource "aws_instance" "legacy_web" {
+  metadata_options { http_endpoint = "enabled", http_tokens = "optional" }
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				opts, ok := mod.Resources[0].Attributes["metadata_options"].AsList()
+				if !ok || len(opts) != 1 {
+					t.Fatalf("metadata_options = %v, want 1 block", mod.Resources[0].Attributes["metadata_options"])
+				}
+				m, _ := opts[0].AsMap()
+				tokens, _ := m["http_tokens"].AsString()
+				if tokens != "optional" {
+					t.Errorf("http_tokens = %q, want optional", tokens)
+				}
+			},
+		},
+		{
+			name: "commas inside lists and strings must survive",
+			src: `resource "google_compute_firewall" "fw" {
+  allow { protocol = "tcp", ports = ["80", "443"], description = "web, api" }
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				allow, ok := mod.Resources[0].Attributes["allow"].AsList()
+				if !ok || len(allow) != 1 {
+					t.Fatalf("allow = %v, want 1 block", mod.Resources[0].Attributes["allow"])
+				}
+				m, _ := allow[0].AsMap()
+				ports, ok := m["ports"].AsList()
+				if !ok || len(ports) != 2 {
+					t.Errorf("ports = %+v, want [80 443] (list commas must survive)", m["ports"])
+				}
+				desc, _ := m["description"].AsString()
+				if desc != "web, api" {
+					t.Errorf("description = %q, want 'web, api' (string commas must survive)", desc)
+				}
+			},
+		},
+		{
+			name: "commas inside nested objects must survive",
+			src: `resource "aws_instance" "x" {
+  metadata_options { http_endpoint = "enabled", tags = { a = 1, b = 2 }, http_tokens = "required" }
+}
+`,
+			check: func(t *testing.T, mod Module) {
+				opts, ok := mod.Resources[0].Attributes["metadata_options"].AsList()
+				if !ok || len(opts) != 1 {
+					t.Fatalf("metadata_options = %v, want 1 block", mod.Resources[0].Attributes["metadata_options"])
+				}
+				m, _ := opts[0].AsMap()
+				tags, ok := m["tags"].AsMap()
+				if !ok || len(tags) != 2 {
+					t.Errorf("tags = %+v, want 2-key object (object commas must survive)", m["tags"])
+				}
+				tokens, _ := m["http_tokens"].AsString()
+				if tokens != "required" {
+					t.Errorf("http_tokens = %q, want required", tokens)
+				}
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(tc.src))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(diags) != 0 {
+				t.Fatalf("recovered parse must be clean, got %+v", diags)
+			}
+			tc.check(t, mod)
+		})
+	}
+}
+
+// TestTemplatePreservedForInterpolatedStrings: a heredoc / string with
+// ${...} interpolations stays Unknown (never guessed) but keeps its
+// source template text for pattern-scanning rules (534).
+func TestTemplatePreservedForInterpolatedStrings(t *testing.T) {
+	src := `resource "aws_instance" "web" {
+  user_data = <<-EOF
+#!/bin/bash
+echo "deployment password: ${var.database_password}" > /tmp/deploy-creds.txt
+  EOF
+  plain = "hello"
+}
+`
+	mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) != 0 {
+		t.Fatalf("expected clean parse, got %+v", diags)
+	}
+	ud := mod.Resources[0].Attributes["user_data"]
+	if ud.Known {
+		t.Fatal("interpolated user_data must stay Unknown")
+	}
+	if !strings.Contains(ud.Template, "deployment password:") ||
+		!strings.Contains(ud.Template, "${var.database_password}") {
+		t.Fatalf("template not preserved: %q", ud.Template)
+	}
+	if mod.Resources[0].Attributes["plain"].Template != "" {
+		t.Fatal("static string must not carry a template")
+	}
+}
+
+// TestLenientSingleVsMultiLineEquivalence: the same resource written
+// single-line and multi-line must yield identical attribute sets.
+func TestLenientSingleVsMultiLineEquivalence(t *testing.T) {
+	single := `resource "azurerm_storage_account" "s" { name = "st" resource_group_name = "rg" location = "westeurope" account_tier = "Standard" account_replication_type = "GRS" allow_blob_public_access = false min_tls_version = "TLS1_2" }
+`
+	multi := `resource "azurerm_storage_account" "s" {
+  name = "st"
+  resource_group_name = "rg"
+  location = "westeurope"
+  account_tier = "Standard"
+  account_replication_type = "GRS"
+  allow_blob_public_access = false
+  min_tls_version = "TLS1_2"
+}
+`
+	a, _, err := Adapter{}.ParseModule("a.tf", []byte(single))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _, err := Adapter{}.ParseModule("b.tf", []byte(multi))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(a.Resources) != 1 || len(b.Resources) != 1 {
+		t.Fatalf("expected 1 resource each, got %d / %d", len(a.Resources), len(b.Resources))
+	}
+	if len(a.Resources[0].Attributes) != len(b.Resources[0].Attributes) {
+		t.Fatalf("attribute count differs: single-line %d vs multi-line %d",
+			len(a.Resources[0].Attributes), len(b.Resources[0].Attributes))
+	}
+	for k, va := range a.Resources[0].Attributes {
+		vb, ok := b.Resources[0].Attributes[k]
+		if !ok {
+			t.Errorf("multi-line form missing attribute %q", k)
+			continue
+		}
+		if va.Known != vb.Known || fmt.Sprint(va.Raw) != fmt.Sprint(vb.Raw) {
+			t.Errorf("attribute %q differs: single-line %#v vs multi-line %#v", k, va.Raw, vb.Raw)
+		}
+	}
+}
+
+// TestLenientSameLineBraceInString: a '{' inside a string literal on the
+// block's line must not be mistaken for the block's opening brace.
+func TestLenientSameLineBraceInString(t *testing.T) {
+	src := `resource "a" "b" { x = "{" y = 2 }
+`
+	mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) != 0 {
+		t.Fatalf("recovered parse must be clean, got %+v", diags)
+	}
+	if len(mod.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+	}
+	x, ok := mod.Resources[0].Attributes["x"].AsString()
+	if !ok || x != "{" {
+		t.Errorf("x = %q, want \"{\"", x)
+	}
+	if y, ok := mod.Resources[0].Attributes["y"]; !ok || !y.Known {
+		t.Errorf("y missing after recovery")
+	}
+}
+
+// TestPureFunctionEvaluation: jsonencode/merge/concat over static
+// arguments evaluate to known values; calls over references or
+// non-whitelisted functions stay Unknown (never guessed).
+func TestPureFunctionEvaluation(t *testing.T) {
+	src := `resource "aws_iam_policy" "admin" {
+  policy = jsonencode(merge(
+    { Version = "2012-10-17" },
+    { Statement = [{ Effect = "Allow" Action = concat(["*"], []) Resource = "*" }] }
+  ))
+}
+resource "aws_iam_policy" "readonly" {
+  policy = jsonencode({
+    Statement = [{ Effect = "Allow" Action = concat(["s3:GetObject"], ["s3:ListBucket"]) Resource = "arn:aws:s3:::c2/*" }]
+  })
+}
+resource "aws_s3_bucket" "merged" {
+  tags = merge({ Env = "prod" }, { Owner = "team" })
+}
+resource "aws_s3_bucket" "concatlist" {
+  tags = concat(["a"], ["b"])
+}
+resource "aws_s3_bucket" "dynamic" {
+  tags = merge({ Env = "prod" }, var.extra)
+}
+resource "aws_s3_bucket" "impure" {
+  tags = uuid()
+}
+`
+	mod, diags, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(diags) != 0 {
+		t.Fatalf("parse must be clean, got %+v", diags)
+	}
+	res := map[string]ir.Resource{}
+	for _, r := range mod.Resources {
+		res[r.Address()] = r
+	}
+	admin, ok := res["aws_iam_policy.admin"].Attributes["policy"].AsString()
+	if !ok {
+		t.Fatalf("admin policy not a known string")
+	}
+	if !strings.Contains(admin, `"Action":["*"]`) || !strings.Contains(admin, `"Resource":"*"`) {
+		t.Errorf("jsonencode(merge(...)) policy lost admin statement: %s", admin)
+	}
+	if !strings.Contains(admin, `"Version":"2012-10-17"`) {
+		t.Errorf("jsonencode(merge(...)) policy lost Version: %s", admin)
+	}
+	ro, ok := res["aws_iam_policy.readonly"].Attributes["policy"].AsString()
+	if !ok {
+		t.Fatalf("readonly policy not a known string")
+	}
+	if !strings.Contains(ro, "s3:GetObject") || !strings.Contains(ro, "s3:ListBucket") {
+		t.Errorf("concat() inside jsonencode lost actions: %s", ro)
+	}
+	merged, ok := res["aws_s3_bucket.merged"].Attributes["tags"].AsMap()
+	if !ok || len(merged) != 2 {
+		t.Errorf("merge() tags = %+v, want 2 entries", merged)
+	}
+	conc, ok := res["aws_s3_bucket.concatlist"].Attributes["tags"].AsList()
+	if !ok || len(conc) != 2 {
+		t.Errorf("concat() tags = %+v, want 2 elements", conc)
+	}
+	if v := res["aws_s3_bucket.dynamic"].Attributes["tags"]; v.Known {
+		t.Errorf("merge() over a reference must stay Unknown, got %#v", v.Raw)
+	}
+	if v := res["aws_s3_bucket.impure"].Attributes["tags"]; v.Known {
+		t.Errorf("non-whitelisted call must stay Unknown, got %#v", v.Raw)
+	}
+}
+
 func TestLenientUnrecoverableUnchanged(t *testing.T) {
 	src := `resource "aws_instance" "web" {
   ami = "ami-123"
@@ -730,5 +1174,124 @@ func TestLenientCleanUntouched(t *testing.T) {
 	}
 	if len(mod.Resources) != 1 || mod.Resources[0].Address() != "aws_s3_bucket.b" {
 		t.Fatalf("unexpected resources: %+v", mod.Resources)
+	}
+}
+
+// TestRepairedLineMap: the repaired->original line map for a
+// comma-separated single-line block. The repair splits the original
+// line 2 into repaired lines 2..6; each fragment maps back to line 2
+// with the original column of its first byte (the space left behind by
+// the replaced comma / inserted newline).
+func TestRepairedLineMap(t *testing.T) {
+	src := []byte("resource \"aws_security_group\" \"x\" {\n" +
+		"  egress { from_port = 0, to_port = 0, protocol = \"-1\", cidr_blocks = [\"0.0.0.0/0\"] }\n" +
+		"}\n")
+	fixed := []byte("resource \"aws_security_group\" \"x\" {\n" +
+		"  egress {\n" +
+		" from_port = 0\n" +
+		" to_port = 0\n" +
+		" protocol = \"-1\"\n" +
+		" cidr_blocks = [\"0.0.0.0/0\"] }\n" +
+		"}\n")
+	m := repairedLineMap(src, fixed)
+	if m == nil {
+		t.Fatal("expected a line map, got nil")
+	}
+	wantLines := []int{1, 2, 2, 2, 2, 2, 3, 4}
+	wantCols := []int{1, 1, 11, 26, 39, 56, 1, 1}
+	if fmt.Sprint(m.origLine) != fmt.Sprint(wantLines) {
+		t.Fatalf("origLine = %v, want %v", m.origLine, wantLines)
+	}
+	if fmt.Sprint(m.colOff) != fmt.Sprint(wantCols) {
+		t.Fatalf("colOff = %v, want %v", m.colOff, wantCols)
+	}
+	// The cidr_blocks value sits at repaired (6,16)-(6,29): in the
+	// original it is (2,71)-(2,84).
+	got := m.remap(ir.Span{StartLine: 6, StartCol: 16, EndLine: 6, EndCol: 29})
+	if got.StartLine != 2 || got.StartCol != 71 || got.EndLine != 2 || got.EndCol != 84 {
+		t.Fatalf("remap = %+v, want (2,71)-(2,84)", got)
+	}
+}
+
+// TestRepairedLineMapInsertedComma: an inserted ',' shifts later columns
+// on the same line by one; the map must subtract it.
+func TestRepairedLineMapInsertedComma(t *testing.T) {
+	src := []byte("x = { a = 1 b = 2 }\n")
+	fixed := []byte("x = { a = 1, b = 2 }\n")
+	m := repairedLineMap(src, fixed)
+	if m == nil {
+		t.Fatal("expected a line map, got nil")
+	}
+	// 'b' sits at repaired col 14, original col 13.
+	if got := m.remapCol(1, 14); got != 13 {
+		t.Fatalf("remapCol(1,14) = %d, want 13", got)
+	}
+	// 'a' sits before the comma: unaffected.
+	if got := m.remapCol(1, 7); got != 7 {
+		t.Fatalf("remapCol(1,7) = %d, want 7", got)
+	}
+}
+
+// TestLenientSpansMapToOriginalLines: end-to-end, findings on attributes
+// inside repaired single-line blocks must point at the lines the user
+// wrote — not at the repaired text's lines. Regression test: without
+// remapping, the egress cidr_blocks reported line 6 and the ingress
+// reported line 11 (repaired coordinates).
+func TestLenientSpansMapToOriginalLines(t *testing.T) {
+	src := `resource "aws_security_group" "x" {
+  egress { from_port = 0, to_port = 0, protocol = "-1", cidr_blocks = ["0.0.0.0/0"] }
+  ingress { from_port = 22, to_port = 22, protocol = "tcp", cidr_blocks = ["0.0.0.0/0"] }
+}
+`
+	mod, _, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(mod.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+	}
+	attrs := mod.Resources[0].Attributes
+	check := func(block string, wantLine, wantCol int) {
+		t.Helper()
+		blks, ok := attrs[block].Raw.([]ir.Value)
+		if !ok || len(blks) != 1 {
+			t.Fatalf("%s: expected 1 block, got %#v", block, attrs[block].Raw)
+		}
+		cidr, ok := blks[0].Raw.(map[string]ir.Value)["cidr_blocks"]
+		if !ok {
+			t.Fatalf("%s: cidr_blocks missing", block)
+		}
+		if cidr.Span.StartLine != wantLine || cidr.Span.StartCol != wantCol {
+			t.Fatalf("%s cidr_blocks span = (%d,%d), want (%d,%d)",
+				block, cidr.Span.StartLine, cidr.Span.StartCol, wantLine, wantCol)
+		}
+	}
+	check("egress", 2, 71)
+	check("ingress", 3, 75)
+}
+
+// TestLenientObjectSeparatorSpan: an inserted ',' inside an object
+// constructor must not shift the columns of later attributes. The value
+// must contain a reference (pure objects share one parent span, so the
+// per-key span only exists for non-pure values).
+func TestLenientObjectSeparatorSpan(t *testing.T) {
+	src := `resource "aws_s3_bucket" "b" {
+  tags = { Name = "a" Env = var.env }
+}
+`
+	mod, _, err := Adapter{}.ParseModule("t.tf", []byte(src))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	tags, ok := mod.Resources[0].Attributes["tags"].Raw.(map[string]ir.Value)
+	if !ok {
+		t.Fatalf("tags not a map: %#v", mod.Resources[0].Attributes["tags"].Raw)
+	}
+	// In the original line, var.env (the Env value) starts at column 29;
+	// in repaired coordinates it sits at column 30 (after the inserted
+	// comma), so the remap must subtract the comma.
+	if tags["Env"].Span.StartCol != 29 || tags["Env"].Span.StartLine != 2 {
+		t.Fatalf("Env value span = (%d,%d), want (2,29)",
+			tags["Env"].Span.StartLine, tags["Env"].Span.StartCol)
 	}
 }

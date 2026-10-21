@@ -22,7 +22,7 @@ func TestGCP5RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	prev := idx["AEGIS-GCP-122"]
+	prev := idx["AEGIS-GCP-120"]
 	for n := 123; n <= 142; n++ {
 		id := "AEGIS-GCP-" + itoa(n)
 		i, ok := idx[id]

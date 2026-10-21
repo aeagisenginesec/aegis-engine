@@ -684,7 +684,7 @@ func (noSecurityHub) Description() string {
 	return "AWS Security Hub should be enabled for centralized security " +
 		"findings aggregation and CIS benchmark checks. Add an " +
 		"aws_securityhub_account resource. Only evaluated on modules with " +
-		"5+ resources to avoid noise on trivial configurations."
+		"15+ resources to avoid noise on trivial configurations."
 }
 func (noSecurityHub) Severity() ir.Severity { return ir.SeverityLow }
 func (noSecurityHub) AppliesTo(resType string) bool {
@@ -732,7 +732,7 @@ func (cloudtrailNoKMS) Description() string {
 		"KMS key so log integrity is under your control. Set kms_key_id on " +
 		"the aws_cloudtrail resource."
 }
-func (cloudtrailNoKMS) Severity() ir.Severity { return ir.SeverityMedium }
+func (cloudtrailNoKMS) Severity() ir.Severity { return ir.SeverityLow }
 func (cloudtrailNoKMS) AppliesTo(resType string) bool {
 	return resType == "aws_cloudtrail"
 }
@@ -746,7 +746,7 @@ func (cloudtrailNoKMS) Check(r ir.Resource) []ir.Finding {
 			RuleID:      "AEGIS-AWS-568",
 			Title:       (cloudtrailNoKMS{}).Title(),
 			Description: (cloudtrailNoKMS{}).Description(),
-			Severity:    ir.SeverityMedium,
+			Severity:    ir.SeverityLow,
 			Resource:    r.Address(),
 			Evidence: ir.Evidence{
 				Attribute: "kms_key_id",
@@ -773,7 +773,7 @@ func (noDetective) Description() string {
 	return "Amazon Detective should be enabled for ML-driven security " +
 		"investigation across CloudTrail, VPC flow logs, and GuardDuty " +
 		"findings. Add an aws_detective_graph resource. Only evaluated on " +
-		"modules with 5+ resources to avoid noise on trivial configurations."
+		"modules with 15+ resources to avoid noise on trivial configurations."
 }
 func (noDetective) Severity() ir.Severity { return ir.SeverityLow }
 func (noDetective) AppliesTo(resType string) bool {
@@ -826,19 +826,7 @@ func (trailBucketNoMFADelete) AppliesTo(resType string) bool {
 }
 func (trailBucketNoMFADelete) Check(ir.Resource) []ir.Finding { return nil }
 func (trailBucketNoMFADelete) CheckAll(resources []ir.Resource) []ir.Finding {
-	// Index buckets by address and by name.
-	byAddr := map[string]ir.Resource{}
-	byName := map[string]ir.Resource{}
-	for _, r := range resources {
-		if r.Type != "aws_s3_bucket" {
-			continue
-		}
-		byAddr[r.Address()] = r
-		if n, _, _, known := getString(r, "bucket"); known {
-			byName[strings.TrimSpace(n)] = r
-		}
-	}
-	// Index versioning configs by target bucket address.
+	// Index versioning configs by target bucket (directory-scoped) address.
 	mfaDelete := map[string]bool{}
 	for _, r := range resources {
 		if r.Type != "aws_s3_bucket_versioning" {
@@ -864,14 +852,20 @@ func (trailBucketNoMFADelete) CheckAll(resources []ir.Resource) []ir.Finding {
 		if t.Type != "aws_cloudtrail" {
 			continue
 		}
-		bktAddr := trailBucketAddr(t, byAddr, byName)
+		bktAddr := trailBucketAddr(t, resources)
 		if bktAddr == "" {
 			continue // cannot resolve: never flag
 		}
 		if mfaDelete[bktAddr] {
 			continue
 		}
-		bkt := byAddr[bktAddr]
+		bkt := ir.Resource{}
+		for _, b := range resources {
+			if b.Type == "aws_s3_bucket" && scopeKey(b) == bktAddr {
+				bkt = b
+				break
+			}
+		}
 		out = append(out, hygieneFinding("AEGIS-AWS-570",
 			(trailBucketNoMFADelete{}).Title(), (trailBucketNoMFADelete{}).Description(),
 			bkt, "mfa_delete", bkt.Span, "not enabled",
@@ -880,17 +874,21 @@ func (trailBucketNoMFADelete) CheckAll(resources []ir.Resource) []ir.Finding {
 	return out
 }
 
-// trailBucketAddr resolves an aws_cloudtrail's s3_bucket_name to a bucket
-// address, via reference or name lookup.
-func trailBucketAddr(t ir.Resource, byAddr, byName map[string]ir.Resource) string {
+// trailBucketAddr resolves an aws_cloudtrail's s3_bucket_name to the bucket's
+// scoped address, via reference or name lookup. Directory-scoped: only buckets
+// from the trail's own source directory are candidates, so same-named buckets
+// in different scanned projects never cross-contaminate.
+func trailBucketAddr(t ir.Resource, resources []ir.Resource) string {
 	v, ok := t.Attributes["s3_bucket_name"]
 	if !ok || !v.Known {
 		return ""
 	}
 	if v.IsRef() {
 		if addr, ok := refAddrOf(v.Ref); ok {
-			if _, exists := byAddr[addr]; exists {
-				return addr
+			for _, b := range resources {
+				if b.Type == "aws_s3_bucket" && b.Address() == addr && sameScope(t, b) {
+					return scopeKey(b)
+				}
 			}
 		}
 		return ""
@@ -899,8 +897,17 @@ func trailBucketAddr(t ir.Resource, byAddr, byName map[string]ir.Resource) strin
 	if !ok {
 		return ""
 	}
-	if b, ok := byName[strings.TrimSpace(name)]; ok {
-		return b.Address()
+	name = strings.TrimSpace(name)
+	for _, b := range resources {
+		if b.Type != "aws_s3_bucket" || !sameScope(t, b) {
+			continue
+		}
+		if b.Name == name {
+			return scopeKey(b)
+		}
+		if bn, _, _, known := getString(b, "bucket"); known && strings.TrimSpace(bn) == name {
+			return scopeKey(b)
+		}
 	}
 	return ""
 }

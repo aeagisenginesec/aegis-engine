@@ -1,0 +1,75 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5034",
+  "summary": {
+    "resources": 4,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 2,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 1
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-004",
+      "severity": "high",
+      "title": "Security group ingress open to the world",
+      "description": "Ingress rules allowing 0.0.0.0/0 expose the workload to the entire internet. Restrict source CIDRs to known ranges.",
+      "resource": "aws_security_group.portal",
+      "file": "corpus/r5034/main.tf",
+      "line": 32,
+      "evidence": "ingress.cidr_blocks = 0.0.0.0/0",
+      "expected": "restricted source CIDR ranges",
+      "remediation": "Restrict the ingress CIDR to trusted ranges. Replace `0.0.0.0/0` with your\noffice/VPN CIDRs, or remove the rule and use SSM Session Manager (no inbound\nSSH needed):\ningress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"203.0.113.0/24\"]  # your trusted range\n}",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "5.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-855",
+      "severity": "low",
+      "title": "EBS volume encrypted with AWS-managed key, no customer-managed key",
+      "description": "This EBS volume is encrypted (encrypted = true) with the AWS-managed key instead of a customer-managed KMS key: no kms_key_id is set, so the volume uses the account default EBS key. A CMK gives you key rotation control, grants, CloudTrail audit of key use, and the ability to disable or delete the key. Set kms_key_id to a customer-managed key. (If the account default EBS key is itself a CMK, this is a false positive — see AEGIS-AWS-786 for the account-default control.) Unencrypted volumes are AEGIS-AWS-009's job and are not reported here.",
+      "resource": "aws_ebs_volume.archive",
+      "file": "corpus/r5034/main.tf",
+      "line": 1,
+      "evidence": "kms_key_id = [REDACTED]",
+      "expected": "kms_key_id set to a customer-managed KMS key",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5034/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

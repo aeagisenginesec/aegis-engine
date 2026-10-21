@@ -1,0 +1,96 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4002",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 3,
+    "critical": 0,
+    "high": 2,
+    "medium": 1,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-304",
+      "severity": "high",
+      "title": "EKS cluster without secrets encryption",
+      "description": "Without an encryption_config block, Kubernetes secrets are stored in etcd encrypted only with an AWS-owned key instead of a customer-managed KMS key.",
+      "resource": "aws_eks_cluster.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4002/main.tf",
+      "line": 1,
+      "evidence": "encryption_config = absent (secrets use AWS-owned key)",
+      "expected": "encryption_config { provider { key_arn = ... } }",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.5.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-305",
+      "severity": "high",
+      "title": "EKS cluster with public endpoint",
+      "description": "vpc_config.endpoint_public_access = true exposes the Kubernetes API server to the public internet.",
+      "resource": "aws_eks_cluster.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4002/main.tf",
+      "line": 6,
+      "evidence": "vpc_config.endpoint_public_access = true",
+      "expected": "false (private endpoint)",
+      "remediation": "Make the EKS API endpoint private:\nresource \"aws_eks_cluster\" \"this\" {\n  vpc_config {\n    endpoint_private_access = true\n    endpoint_public_access  = false\n  }\n}",
+      "references": [
+        "https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-3"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-306",
+      "severity": "medium",
+      "title": "EKS cluster without control plane logging",
+      "description": "Without enabled_cluster_log_types, EKS control-plane audit and authenticator logs are not sent to CloudWatch, blinding incident response.",
+      "resource": "aws_eks_cluster.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4002/main.tf",
+      "line": 1,
+      "evidence": "enabled_cluster_log_types = absent (no control plane logs)",
+      "expected": "non-empty list of log types",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4002/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

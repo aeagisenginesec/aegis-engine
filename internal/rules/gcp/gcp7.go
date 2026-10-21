@@ -718,9 +718,8 @@ func (runImageLatestTag) AppliesTo(resType string) bool {
 // imageTagMutable reports whether an image reference uses :latest or no tag.
 func imageTagMutable(img string) bool {
 	ref := img
-	if i := strings.Index(ref, "@"); i >= 0 {
-		ref = ref[:i] // digest-pinned: tag irrelevant
-		return false
+	if strings.Contains(ref, "@") {
+		return false // digest-pinned: tag irrelevant
 	}
 	i := strings.LastIndex(ref, ":")
 	if i < 0 {

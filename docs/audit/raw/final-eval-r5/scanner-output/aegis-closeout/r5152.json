@@ -1,0 +1,46 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5152",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 1,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-COMPOSE-004",
+      "severity": "high",
+      "title": "Docker socket mounted into service",
+      "description": "Mounting the Docker socket gives the service full control of the daemon: it can start privileged containers and escape to the host trivially. Use the socket only in dedicated, audited tooling with a read-only proxy.",
+      "resource": "compose_service.ci-runner",
+      "file": "corpus/r5152/docker-compose.yml",
+      "line": 4,
+      "evidence": "volumes = mounts /var/run/docker.sock",
+      "expected": "no Docker socket mount; use a socket proxy if needed",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5152/docker-compose.yml",
+        "status": "parsed",
+        "format": "compose"
+      }
+    ]
+  }
+}

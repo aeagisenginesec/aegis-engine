@@ -1,0 +1,1029 @@
+{
+    "check_type": "kubernetes",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_K8S_43",
+                "bc_check_id": "BC_K8S_39",
+                "check_name": "Image should use digest",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/image"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: checkout\n"
+                    ],
+                    [
+                        5,
+                        "  namespace: shop\n"
+                    ],
+                    [
+                        6,
+                        "  labels:\n"
+                    ],
+                    [
+                        7,
+                        "    app: checkout\n"
+                    ],
+                    [
+                        8,
+                        "spec:\n"
+                    ],
+                    [
+                        9,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        10,
+                        "  selector:\n"
+                    ],
+                    [
+                        11,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        12,
+                        "      app: checkout\n"
+                    ],
+                    [
+                        13,
+                        "  template:\n"
+                    ],
+                    [
+                        14,
+                        "    metadata:\n"
+                    ],
+                    [
+                        15,
+                        "      labels:\n"
+                    ],
+                    [
+                        16,
+                        "        app: checkout\n"
+                    ],
+                    [
+                        17,
+                        "    spec:\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 10001\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 10001\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: checkout\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/checkout:2.2.0\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    41
+                ],
+                "resource": "Deployment.shop.checkout",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ImageDigest",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-39",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_15",
+                "bc_check_id": "BC_K8S_14",
+                "check_name": "Image Pull Policy should be Always",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/image",
+                        "spec/template/spec/containers/[0]/imagePullPolicy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: checkout\n"
+                    ],
+                    [
+                        5,
+                        "  namespace: shop\n"
+                    ],
+                    [
+                        6,
+                        "  labels:\n"
+                    ],
+                    [
+                        7,
+                        "    app: checkout\n"
+                    ],
+                    [
+                        8,
+                        "spec:\n"
+                    ],
+                    [
+                        9,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        10,
+                        "  selector:\n"
+                    ],
+                    [
+                        11,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        12,
+                        "      app: checkout\n"
+                    ],
+                    [
+                        13,
+                        "  template:\n"
+                    ],
+                    [
+                        14,
+                        "    metadata:\n"
+                    ],
+                    [
+                        15,
+                        "      labels:\n"
+                    ],
+                    [
+                        16,
+                        "        app: checkout\n"
+                    ],
+                    [
+                        17,
+                        "    spec:\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 10001\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 10001\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: checkout\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/checkout:2.2.0\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    41
+                ],
+                "resource": "Deployment.shop.checkout",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ImagePullPolicyAlways",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-14",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_8",
+                "bc_check_id": "BC_K8S_7",
+                "check_name": "Liveness Probe Should be Configured",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/livenessProbe"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: checkout\n"
+                    ],
+                    [
+                        5,
+                        "  namespace: shop\n"
+                    ],
+                    [
+                        6,
+                        "  labels:\n"
+                    ],
+                    [
+                        7,
+                        "    app: checkout\n"
+                    ],
+                    [
+                        8,
+                        "spec:\n"
+                    ],
+                    [
+                        9,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        10,
+                        "  selector:\n"
+                    ],
+                    [
+                        11,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        12,
+                        "      app: checkout\n"
+                    ],
+                    [
+                        13,
+                        "  template:\n"
+                    ],
+                    [
+                        14,
+                        "    metadata:\n"
+                    ],
+                    [
+                        15,
+                        "      labels:\n"
+                    ],
+                    [
+                        16,
+                        "        app: checkout\n"
+                    ],
+                    [
+                        17,
+                        "    spec:\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 10001\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 10001\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: checkout\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/checkout:2.2.0\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    41
+                ],
+                "resource": "Deployment.shop.checkout",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.LivenessProbe",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-7",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_9",
+                "bc_check_id": "BC_K8S_8",
+                "check_name": "Readiness Probe Should be Configured",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/readinessProbe"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: checkout\n"
+                    ],
+                    [
+                        5,
+                        "  namespace: shop\n"
+                    ],
+                    [
+                        6,
+                        "  labels:\n"
+                    ],
+                    [
+                        7,
+                        "    app: checkout\n"
+                    ],
+                    [
+                        8,
+                        "spec:\n"
+                    ],
+                    [
+                        9,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        10,
+                        "  selector:\n"
+                    ],
+                    [
+                        11,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        12,
+                        "      app: checkout\n"
+                    ],
+                    [
+                        13,
+                        "  template:\n"
+                    ],
+                    [
+                        14,
+                        "    metadata:\n"
+                    ],
+                    [
+                        15,
+                        "      labels:\n"
+                    ],
+                    [
+                        16,
+                        "        app: checkout\n"
+                    ],
+                    [
+                        17,
+                        "    spec:\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 10001\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 10001\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: checkout\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/checkout:2.2.0\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    41
+                ],
+                "resource": "Deployment.shop.checkout",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ReadinessProbe",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_38",
+                "bc_check_id": "BC_K8S_35",
+                "check_name": "Ensure that Service Account Tokens are only mounted where necessary",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: checkout\n"
+                    ],
+                    [
+                        5,
+                        "  namespace: shop\n"
+                    ],
+                    [
+                        6,
+                        "  labels:\n"
+                    ],
+                    [
+                        7,
+                        "    app: checkout\n"
+                    ],
+                    [
+                        8,
+                        "spec:\n"
+                    ],
+                    [
+                        9,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        10,
+                        "  selector:\n"
+                    ],
+                    [
+                        11,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        12,
+                        "      app: checkout\n"
+                    ],
+                    [
+                        13,
+                        "  template:\n"
+                    ],
+                    [
+                        14,
+                        "    metadata:\n"
+                    ],
+                    [
+                        15,
+                        "      labels:\n"
+                    ],
+                    [
+                        16,
+                        "        app: checkout\n"
+                    ],
+                    [
+                        17,
+                        "    spec:\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 10001\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 10001\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 10001\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: checkout\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/checkout:2.2.0\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8080\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k025/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    41
+                ],
+                "resource": "Deployment.shop.checkout",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ServiceAccountTokens",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-35",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 84,
+        "failed": 5,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 4,
+        "checkov_version": "3.3.26"
+    }
+}

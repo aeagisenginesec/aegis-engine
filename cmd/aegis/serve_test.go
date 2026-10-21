@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"aegis/internal/ir"
+	"aegis/internal/version"
 )
 
 const serveVulnTF = `
@@ -30,14 +32,14 @@ func postScan(t *testing.T, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/v1/scan", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	return rr
 }
 
 func TestHealth(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/health", nil)
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200", rr.Code)
 	}
@@ -45,15 +47,15 @@ func TestHealth(t *testing.T) {
 	if err := json.Unmarshal(rr.Body.Bytes(), &got); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if got["status"] != "ok" || got["version"] != "1.0.0" {
-		t.Errorf("health = %v, want status ok version 0.1.0", got)
+	if got["status"] != "ok" || got["version"] != version.Version {
+		t.Errorf("health = %v, want status ok version %s", got, version.Version)
 	}
 }
 
 func TestHealthMethodNotAllowed(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/v1/health", nil)
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	if rr.Code != http.StatusMethodNotAllowed {
 		t.Errorf("status = %d, want 405", rr.Code)
 	}
@@ -113,7 +115,7 @@ func TestScanInvalidJSON(t *testing.T) {
 func TestScanMethodNotAllowed(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/scan", nil)
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	if rr.Code != http.StatusMethodNotAllowed {
 		t.Errorf("status = %d, want 405", rr.Code)
 	}
@@ -122,7 +124,7 @@ func TestScanMethodNotAllowed(t *testing.T) {
 func TestScanUnknownPath(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/nope", nil)
 	rr := httptest.NewRecorder()
-	newServeMux().ServeHTTP(rr, req)
+	newServeMux("").ServeHTTP(rr, req)
 	if rr.Code != http.StatusNotFound {
 		t.Errorf("status = %d, want 404", rr.Code)
 	}
@@ -226,10 +228,182 @@ func jsonString(s string) string {
 	return string(b)
 }
 
+// --- Item 5: API security ---
+
+func TestScanAuthToken(t *testing.T) {
+	mux := newServeMux("s3cret-token")
+	do := func(auth string) int {
+		req := httptest.NewRequest(http.MethodPost, "/v1/scan", strings.NewReader(`{"files":[]}`))
+		if auth != "" {
+			req.Header.Set("Authorization", auth)
+		}
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+		return rr.Code
+	}
+	if code := do(""); code != http.StatusUnauthorized {
+		t.Errorf("no token: status = %d, want 401", code)
+	}
+	if code := do("Bearer wrong"); code != http.StatusUnauthorized {
+		t.Errorf("wrong token: status = %d, want 401", code)
+	}
+	if code := do("Bearer s3cret-token"); code != http.StatusOK {
+		t.Errorf("right token: status = %d, want 200", code)
+	}
+	// Health stays open for liveness probes even with a token set.
+	req := httptest.NewRequest(http.MethodGet, "/v1/health", nil)
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("health with token set: status = %d, want 200", rr.Code)
+	}
+}
+
+func TestScanRejectsTrailingData(t *testing.T) {
+	if rr := postScan(t, `{"files":[]} trailing garbage`); rr.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400 for trailing data", rr.Code)
+	}
+	// Trailing whitespace/newline is fine.
+	if rr := postScan(t, "{\"files\":[]}\n"); rr.Code != http.StatusOK {
+		t.Errorf("trailing newline: status = %d, want 200", rr.Code)
+	}
+}
+
+func TestScanUnknownPathJSON(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/v1/nope", nil)
+	rr := httptest.NewRecorder()
+	newServeMux("").ServeHTTP(rr, req)
+	if rr.Code != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", rr.Code)
+	}
+	if ct := rr.Header().Get("Content-Type"); ct != "application/json" {
+		t.Errorf("Content-Type = %q, want application/json", ct)
+	}
+	var body map[string]string
+	if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+		t.Errorf("404 body is not JSON: %v", err)
+	}
+}
+
+func TestTruncateServeDiag(t *testing.T) {
+	short := "small problem"
+	if got := truncateServeDiag(short); got != short {
+		t.Errorf("short message changed: %q", got)
+	}
+	long := strings.Repeat("x", maxServeDiagChars+500)
+	got := truncateServeDiag(long)
+	if len(got) > maxServeDiagChars+64 {
+		t.Errorf("long message not truncated: %d bytes", len(got))
+	}
+	if !strings.HasSuffix(got, "[truncated]") {
+		t.Errorf("missing truncation marker: %q", got[len(got)-20:])
+	}
+}
+
+func TestServeSanitizesPanicText(t *testing.T) {
+	panicErr := fmt.Errorf("adapter bicep panicked: runtime error: slice bounds out of range [:18] with length 15")
+	if got := sanitizeServeParseErr(panicErr); !strings.Contains(got, "withheld") || strings.Contains(got, "slice bounds") {
+		t.Errorf("panic text not sanitized: %q", got)
+	}
+	plainErr := fmt.Errorf("terraform: main.tf: unbalanced braces: 3 open, 1 close")
+	if got := sanitizeServeParseErr(plainErr); !strings.Contains(got, "unbalanced braces") {
+		t.Errorf("ordinary error changed: %q", got)
+	}
+	if got := sanitizeServeParseErr(nil); got != "" {
+		t.Errorf("nil error: got %q", got)
+	}
+}
+
 func keys(m map[string]bool) []string {
 	var out []string
 	for k := range m {
 		out = append(out, k)
 	}
 	return out
+}
+
+const serveVulnCFN = `
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+Resources:
+  OpenSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: open
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+`
+
+const serveVulnARM = `{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "teststore",
+      "location": "westeurope",
+      "sku": {"name": "Standard_LRS"},
+      "kind": "StorageV2",
+      "properties": {"allowBlobPublicAccess": true}
+    }
+  ]
+}`
+
+// TestScanInMemoryCFNParity guards the HandlesContent fix: in-memory API
+// scans must route CFN/ARM bytes to their adapters (not manifests), or
+// their findings are silently lost (CFN 11/14, ARM 0/35 in the old code).
+func TestScanInMemoryCFNParity(t *testing.T) {
+	body := `{"files": [{"path": "template.yaml", "content": ` + jsonString(serveVulnCFN) + `}], "rules": "aws"}`
+	rr := postScan(t, body)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200: %s", rr.Code, rr.Body.String())
+	}
+	var resp scanResponse
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if resp.Resources == 0 {
+		t.Fatalf("expected CFN resources parsed in-memory, got 0")
+	}
+	seen := map[string]bool{}
+	for _, f := range resp.Findings {
+		seen[f.RuleID] = true
+	}
+	if !seen["AEGIS-AWS-004"] {
+		t.Errorf("missing AEGIS-AWS-004 on in-memory CFN scan; got %v", keys(seen))
+	}
+	// AEGIS-AWS-857 needs the real CFN adapter's synthetic cfn_parameter
+	// resources; the manifests fallback path cannot produce it.
+	if !seen["AEGIS-AWS-857"] {
+		t.Errorf("missing AEGIS-AWS-857 on in-memory CFN scan; got %v", keys(seen))
+	}
+}
+
+func TestScanInMemoryARMParity(t *testing.T) {
+	body := `{"files": [{"path": "azuredeploy.json", "content": ` + jsonString(serveVulnARM) + `}], "rules": "azure"}`
+	rr := postScan(t, body)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200: %s", rr.Code, rr.Body.String())
+	}
+	var resp scanResponse
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if resp.Resources == 0 {
+		t.Fatalf("expected ARM resources parsed in-memory, got 0")
+	}
+	seen := map[string]bool{}
+	for _, f := range resp.Findings {
+		seen[f.RuleID] = true
+	}
+	if !seen["AEGIS-AZR-001"] {
+		t.Errorf("missing AEGIS-AZR-001 on in-memory ARM scan; got %v", keys(seen))
+	}
 }

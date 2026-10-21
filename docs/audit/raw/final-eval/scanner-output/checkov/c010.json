@@ -1,0 +1,156 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_117",
+                "bc_check_id": "BC_AWS_GENERAL_65",
+                "check_name": "Ensure that AWS Lambda function is configured inside a VPC",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/VpcConfig"
+                    ]
+                },
+                "code_block": [
+                    [
+                        59,
+                        "  ProcessorFunction:\n"
+                    ],
+                    [
+                        60,
+                        "    Type: AWS::Lambda::Function\n"
+                    ],
+                    [
+                        61,
+                        "    Properties:\n"
+                    ],
+                    [
+                        62,
+                        "      FunctionName: invoice-processor\n"
+                    ],
+                    [
+                        63,
+                        "      Runtime: python3.12\n"
+                    ],
+                    [
+                        64,
+                        "      Handler: processor.handler\n"
+                    ],
+                    [
+                        65,
+                        "      Role: !GetAtt ProcessorRole.Arn\n"
+                    ],
+                    [
+                        66,
+                        "      Code:\n"
+                    ],
+                    [
+                        67,
+                        "        S3Bucket: !Ref CodeBucket\n"
+                    ],
+                    [
+                        68,
+                        "        S3Key: !Ref CodeKey\n"
+                    ],
+                    [
+                        69,
+                        "      KmsKeyArn: !Ref KmsKeyArn\n"
+                    ],
+                    [
+                        70,
+                        "      Environment:\n"
+                    ],
+                    [
+                        71,
+                        "        Variables:\n"
+                    ],
+                    [
+                        72,
+                        "          INVOICE_TABLE: !Sub 'invoices-${AWS::Region}'\n"
+                    ],
+                    [
+                        73,
+                        "      TracingConfig:\n"
+                    ],
+                    [
+                        74,
+                        "        Mode: Active\n"
+                    ],
+                    [
+                        75,
+                        "      DeadLetterConfig:\n"
+                    ],
+                    [
+                        76,
+                        "        TargetArn: !Ref DlqArn\n"
+                    ],
+                    [
+                        77,
+                        "      ReservedConcurrentExecutions: 25\n"
+                    ],
+                    [
+                        78,
+                        "      Timeout: 120\n"
+                    ],
+                    [
+                        79,
+                        "      MemorySize: 1024\n"
+                    ],
+                    [
+                        80,
+                        "      EphemeralStorage:\n"
+                    ],
+                    [
+                        81,
+                        "        Size: 1024\n"
+                    ]
+                ],
+                "file_path": "/lambda.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c010/lambda.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c010/lambda.yaml",
+                "file_line_range": [
+                    59,
+                    81
+                ],
+                "resource": "AWS::Lambda::Function.ProcessorFunction",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.LambdaInVPC",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-inside-a-vpc-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "Code.S3Key": [
+                        {
+                            "type": "parameters",
+                            "name": "CodeKey",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c010/lambda.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 15,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

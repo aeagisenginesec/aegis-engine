@@ -1,0 +1,251 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5037",
+  "summary": {
+    "resources": 4,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 10,
+    "critical": 0,
+    "high": 1,
+    "medium": 6,
+    "low": 3
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-334",
+      "severity": "medium",
+      "title": "Weak or absent account password policy",
+      "description": "The IAM account password policy is the baseline for human credentials. A short minimum length, missing character-class requirements, or disabled password-reuse prevention weakens every console login in the account.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5037/main.tf",
+      "line": 2,
+      "evidence": "minimum_password_length = [REDACTED]",
+      "expected": "\u003e= 14",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-650",
+      "severity": "high",
+      "title": "IAM password policy minimum length below 14",
+      "description": "The account password policy allows passwords shorter than 14 characters. Short minimum lengths make console passwords far easier to brute-force. Set minimum_password_length to 14 or more.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5037/main.tf",
+      "line": 2,
+      "evidence": "minimum_password_length = [REDACTED]",
+      "expected": "\u003e= 14",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-651",
+      "severity": "medium",
+      "title": "IAM password policy does not require uppercase characters",
+      "description": "The account password policy does not require uppercase letters, shrinking the password search space. Set require_uppercase_characters to true.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5037/main.tf",
+      "line": 5,
+      "evidence": "require_uppercase_characters = false",
+      "expected": "true",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-653",
+      "severity": "medium",
+      "title": "IAM password policy does not require numbers",
+      "description": "The account password policy does not require numeric characters, shrinking the password search space. Set require_numbers to true.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5037/main.tf",
+      "line": 4,
+      "evidence": "require_numbers = false",
+      "expected": "true",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-654",
+      "severity": "medium",
+      "title": "IAM password policy does not require symbols",
+      "description": "The account password policy does not require symbol characters, shrinking the password search space. Set require_symbols to true.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5037/main.tf",
+      "line": 6,
+      "evidence": "require_symbols = false",
+      "expected": "true",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-655",
+      "severity": "medium",
+      "title": "IAM password policy allows password reuse",
+      "description": "The account password policy does not prevent password reuse (absent or 0), so users can cycle back to old (possibly compromised) passwords. Set password_reuse_prevention to a positive value (24 recommended by CIS AWS Foundations Benchmark).",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5037/main.tf",
+      "line": 9,
+      "evidence": "password_reuse_prevention = [REDACTED]",
+      "expected": "\u003e 0",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-656",
+      "severity": "medium",
+      "title": "IAM password maximum age too long or disabled",
+      "description": "The account password policy lets passwords live longer than 90 days (or never expire when set to 0), widening the window in which a compromised password stays useful. Set max_password_age between 1 and 90.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5037/main.tf",
+      "line": 8,
+      "evidence": "max_password_age = [REDACTED]",
+      "expected": "1-90",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-662",
+      "severity": "low",
+      "title": "IAM account has no alias",
+      "description": "No aws_iam_account_alias is defined, so the account is only identifiable by its numeric ID in the console sign-in URL and in audit trails. A memorable alias reduces the risk of operating in the wrong account.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5037/main.tf",
+      "line": 1,
+      "evidence": "account_alias = absent (AWS default: numeric account ID only)",
+      "expected": "aws_iam_account_alias defined",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-675",
+      "severity": "low",
+      "title": "IAM password policy allows reset after expiry",
+      "description": "hard_expiry is disabled, so users can set a new password after their password has expired instead of being forced through the administrative reset flow. Enable hard_expiry for stricter expired-password handling.",
+      "resource": "aws_iam_account_password_policy.legacy",
+      "file": "corpus/r5037/main.tf",
+      "line": 1,
+      "evidence": "hard_expiry = absent (AWS default: false)",
+      "expected": "true",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-855",
+      "severity": "low",
+      "title": "EBS volume encrypted with AWS-managed key, no customer-managed key",
+      "description": "This EBS volume is encrypted (encrypted = true) with the AWS-managed key instead of a customer-managed KMS key: no kms_key_id is set, so the volume uses the account default EBS key. A CMK gives you key rotation control, grants, CloudTrail audit of key use, and the ability to disable or delete the key. Set kms_key_id to a customer-managed key. (If the account default EBS key is itself a CMK, this is a false positive — see AEGIS-AWS-786 for the account-default control.) Unencrypted volumes are AEGIS-AWS-009's job and are not reported here.",
+      "resource": "aws_ebs_volume.archive",
+      "file": "corpus/r5037/main.tf",
+      "line": 12,
+      "evidence": "kms_key_id = [REDACTED]",
+      "expected": "kms_key_id set to a customer-managed KMS key",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5037/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

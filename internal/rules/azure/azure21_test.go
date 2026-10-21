@@ -180,7 +180,14 @@ func TestAZURE020_313(t *testing.T) {
 		t.Fatalf("020: 1.2 must not fire")
 	}
 
-	f := mustFinding(t, runRule(redisPublicNet{}, res("azurerm_redis_cache", "r", nil)), "AEGIS-AZURE-313")
+	// R5 regression: absence of the property must NOT fire. The old
+	// absence-based firing (provider default) produced false
+	// positives on Redis caches with no public-exposure evidence
+	// (r5107/r5113/r5114 in the R5 blind eval).
+	if f := runRule(redisPublicNet{}, res("azurerm_redis_cache", "r", nil)); len(f) != 0 {
+		t.Fatalf("313: absent property must not fire, got %v", f)
+	}
+	f := mustFinding(t, runRule(redisPublicNet{}, res("azurerm_redis_cache", "r", map[string]ir.Value{"public_network_access_enabled": kv(true, 3)})), "AEGIS-AZURE-313")
 	if f.Severity != ir.SeverityHigh {
 		t.Fatalf("313: wrong severity %s", f.Severity)
 	}

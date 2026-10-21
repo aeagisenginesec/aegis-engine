@@ -1,0 +1,205 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006",
+  "summary": {
+    "resources": 3,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 9,
+    "critical": 1,
+    "high": 1,
+    "medium": 1,
+    "low": 6
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-101",
+      "severity": "critical",
+      "title": "IAM role assumable by anyone",
+      "description": "An Allow statement in the trust policy with Principal \"*\" lets any AWS identity assume this role. Restrict the principal to specific accounts, roles, or services.",
+      "resource": "aws_iam_role.partner",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+      "line": 3,
+      "evidence": "assume_role_policy = Allow statement with Principal \"*\"",
+      "expected": "Principal restricted to specific AWS identities",
+      "remediation": "Lock down the role trust policy. Replace the wildcard principal with the\nspecific IAM ARNs or federated providers allowed to assume the role, and add\na condition such as `aws:PrincipalOrgID` or `sts:ExternalId`:\nassume_role_policy = jsonencode({\n  Version = \"2012-10-17\"\n  Statement = [{\n    Effect    = \"Allow\"\n    Principal = { AWS = \"arn:aws:iam::123456789012:role/DeployRole\" }\n    Action    = \"sts:AssumeRole\"\n    Condition = { StringEquals = { \"sts:ExternalId\" = \"unique-value\" } }\n  }]\n})",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_terms-and-concepts.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.16"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-3"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "7.2.1"
+        }
+      ],
+      "path": [
+        {
+          "resource": "aws_iam_role.partner",
+          "detail": "any AWS identity can assume this role via the open trust policy",
+          "span": {
+            "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+            "start_line": 3,
+            "start_col": 24,
+            "end_line": 10,
+            "end_col": 5
+          }
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-308",
+      "severity": "medium",
+      "title": "Lambda without active X-Ray tracing",
+      "description": "Without tracing_config { mode = \"Active\" }, Lambda invocations are not traced in X-Ray, reducing observability of failures and latency.",
+      "resource": "aws_lambda_function.hook",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+      "line": 13,
+      "evidence": "tracing_config.mode = block absent (tracing not active)",
+      "expected": "tracing_config { mode = \"Active\" }",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-407",
+      "severity": "high",
+      "title": "Lambda function URL without authorization",
+      "description": "A function URL with authorization_type NONE exposes the function as a public HTTPS endpoint. Require AWS_IAM.",
+      "resource": "aws_lambda_function_url.hook",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+      "line": 23,
+      "evidence": "authorization_type = NONE",
+      "expected": "AWS_IAM",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-2"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-542",
+      "severity": "low",
+      "title": "Lambda function not deployed in a VPC",
+      "description": "Lambda functions without a vpc_config block run outside your VPC, with no security-group or network-ACL control over their network access. Functions accessing VPC resources (RDS, ElastiCache) should declare vpc_config with subnet_ids and security_group_ids.",
+      "resource": "aws_lambda_function.hook",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+      "line": 13,
+      "evidence": "vpc_config = absent",
+      "expected": "vpc_config block with subnet_ids and security_group_ids",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-548",
+      "severity": "low",
+      "title": "Lambda function without reserved concurrent executions",
+      "description": "Hygiene: Lambda functions should set reserved_concurrent_executions to cap concurrency, preventing runaway scaling and unexpected cost. Set the attribute explicitly.",
+      "resource": "aws_lambda_function.hook",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+      "line": 13,
+      "evidence": "reserved_concurrent_executions = absent",
+      "expected": "reserved_concurrent_executions set to an explicit value",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-645",
+      "severity": "low",
+      "title": "Lambda function without code signing",
+      "description": "An aws_lambda_function without a code_signing_config block deploys code without signature validation, so tampered deployment packages run unchecked. Enforce code signing with AWS Signer.",
+      "resource": "aws_lambda_function.hook",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+      "line": 13,
+      "evidence": "code_signing_config = absent",
+      "expected": "code_signing_config { ... } with AWS Signer",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-647",
+      "severity": "low",
+      "title": "Lambda function without dead-letter queue",
+      "description": "Hygiene: an aws_lambda_function without a dead_letter_config block silently drops asynchronously-invoked events that fail all retries. Route failed events to an SQS queue or SNS topic.",
+      "resource": "aws_lambda_function.hook",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+      "line": 13,
+      "evidence": "dead_letter_config = absent",
+      "expected": "dead_letter_config { target_arn = aws_sqs_queue.dlq.arn }",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-667",
+      "severity": "low",
+      "title": "IAM role has no permissions boundary",
+      "description": "The role sets no permissions_boundary, so nothing caps the maximum permissions its policies can grant — a single overly broad policy attachment becomes fully effective. Set a permissions boundary as a guardrail.",
+      "resource": "aws_iam_role.partner",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+      "line": 1,
+      "evidence": "permissions_boundary = absent (AWS default: no boundary)",
+      "expected": "permissions_boundary set",
+      "remediation": "Attach a permissions boundary to the IAM role so its effective permissions\ncan never exceed the boundary policy, even if broader policies are attached later:\nresource \"aws_iam_role\" \"this\" {\n  # ...\n  permissions_boundary = \"arn:aws:iam::aws:policy/YourBoundaryPolicy\"\n}",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-673",
+      "severity": "low",
+      "title": "IAM role has no description",
+      "description": "The IAM role has no description, so reviewers cannot tell what the role is for or who owns it. Document the role's purpose in the description field.",
+      "resource": "aws_iam_role.partner",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+      "line": 1,
+      "evidence": "description = absent (AWS default: none)",
+      "expected": "description set",
+      "remediation": "Add a description to the IAM role documenting its purpose and owner:\nresource \"aws_iam_role\" \"this\" {\n  # ...\n  description = \"Application role for \u003cworkload\u003e; owner: \u003cteam\u003e\"\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role#description"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4006/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

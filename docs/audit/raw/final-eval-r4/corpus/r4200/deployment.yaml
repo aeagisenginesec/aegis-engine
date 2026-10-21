@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-0d5c4f
+  labels:
+    app: web-0d5c4f
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-0d5c4f
+  template:
+    metadata:
+      labels:
+        app: web-0d5c4f
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: web
+          image: registry.example.com/web:2.1.0
+          ports: [{containerPort: 8080}]
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+            initialDelaySeconds: 10
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-0d5c4f
+  labels:
+    app: api-0d5c4f
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-0d5c4f
+  template:
+    metadata:
+      labels:
+        app: api-0d5c4f
+    spec:
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          securityContext:
+            privileged: true
+            capabilities:
+              add: [SYS_ADMIN, NET_ADMIN]

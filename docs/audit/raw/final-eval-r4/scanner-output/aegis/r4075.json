@@ -1,0 +1,106 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4075",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 5,
+    "critical": 0,
+    "high": 4,
+    "medium": 1,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZR-005",
+      "severity": "high",
+      "title": "Key Vault without purge protection",
+      "description": "purge_protection_enabled guards against permanent, irrecoverable deletion of keys and secrets. It should be enabled on every vault.",
+      "resource": "azurerm_key_vault.kv-6e2ff0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4075/azuredeploy.json",
+      "line": 1,
+      "evidence": "purge_protection_enabled = false",
+      "expected": "purge_protection_enabled = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-038",
+      "severity": "medium",
+      "title": "Key Vault not using RBAC authorization",
+      "description": "azurerm_key_vault with enable_rbac_authorization = false uses legacy access policies. Prefer Azure RBAC for centralized access control.",
+      "resource": "azurerm_key_vault.kv-6e2ff0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4075/azuredeploy.json",
+      "line": 1,
+      "evidence": "enable_rbac_authorization = absent",
+      "expected": "enable_rbac_authorization = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-054",
+      "severity": "high",
+      "title": "NSG rule allows SSH from the internet",
+      "description": "azurerm_network_security_rule allowing TCP 22 from * or 0.0.0.0/0 exposes SSH. Restrict source addresses or use Azure Bastion.",
+      "resource": "azurerm_network_security_group.web-6e2ff0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4075/azuredeploy.json",
+      "line": 1,
+      "evidence": "security_rule = SSH open to *",
+      "expected": "restrict source_address_prefix",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-187",
+      "severity": "high",
+      "title": "Key Vault network ACLs allow public traffic",
+      "description": "azurerm_key_vault without a network_acls block (default allow) or with default_action other than \"Deny\" accepts secret/key operations from any network. Set default_action = \"Deny\" with explicit allowances.",
+      "resource": "azurerm_key_vault.kv-6e2ff0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4075/azuredeploy.json",
+      "line": 1,
+      "evidence": "network_acls = absent (default: allow all)",
+      "expected": "network_acls { default_action = \"Deny\" }",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-244",
+      "severity": "high",
+      "title": "NSG inline security rule open to the internet",
+      "description": "azurerm_network_security_group security_rule blocks with inbound Allow and a source of *, 0.0.0.0/0 or Internet expose the subnet to the world. Restrict inline rule sources.",
+      "resource": "azurerm_network_security_group.web-6e2ff0",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4075/azuredeploy.json",
+      "line": 1,
+      "evidence": "security_rule = inline rule source *",
+      "expected": "restricted source address prefix",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4075/azuredeploy.json",
+        "status": "parsed",
+        "format": "arm"
+      }
+    ]
+  }
+}

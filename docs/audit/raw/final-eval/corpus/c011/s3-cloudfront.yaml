@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Docs portal behind CloudFront. Origin access is locked down with OAC, but
+  the distribution still answers plain HTTP and has no WAF attached.
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [staging, prod]
+    Default: prod
+  EnableAccessLogging:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+
+Mappings:
+  PriceClassMap:
+    staging:
+      Class: PriceClass_100
+    prod:
+      Class: PriceClass_All
+
+Conditions:
+  LoggingOn: !Equals [!Ref EnableAccessLogging, 'true']
+
+Resources:
+  DocsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'acme-docs-${Environment}-${AWS::AccountId}'
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LoggingConfiguration: !If
+        - LoggingOn
+        - DestinationBucketName: !Ref DocsBucket
+          LogFilePrefix: !Sub 'access-logs/${Environment}/'
+        - !Ref 'AWS::NoValue'
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub 'docs-oac-${Environment}'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  DocsDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub 'Docs portal (${Environment})'
+        PriceClass: !FindInMap [PriceClassMap, !Ref Environment, Class]
+        DefaultRootObject: index.html
+        Origins:
+          - Id: docs-s3-origin
+            DomainName: !GetAtt DocsBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+            OriginAccessControlId: !Ref OriginAccessControl
+        DefaultCacheBehavior:
+          TargetOriginId: docs-s3-origin
+          ViewerProtocolPolicy: allow-all
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf
+        Logging: !If
+          - LoggingOn
+          - Bucket: !GetAtt DocsBucket.RegionalDomainName
+            Prefix: !Sub 'cdn-logs/${Environment}/'
+          - !Ref 'AWS::NoValue'
+
+  DocsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DocsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontOAC
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${DocsBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${DocsDistribution}'
+
+Outputs:
+  DistributionDomain:
+    Value: !GetAtt DocsDistribution.DomainName

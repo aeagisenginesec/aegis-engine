@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: logshipper
+  labels:
+    app: logshipper
+spec:
+  selector:
+    matchLabels:
+      app: logshipper
+  template:
+    metadata:
+      labels:
+        app: logshipper
+    spec:
+      containers:
+        - name: shipper
+          image: example/logshipper:4.2
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: rootfs
+              mountPath: /host
+          command: ["/shipper", "--root", "/host"]
+      volumes:
+        - name: rootfs
+          hostPath:
+            path: /

@@ -1,0 +1,645 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_51",
+                "bc_check_id": "BC_AWS_GENERAL_24",
+                "check_name": "Ensure ECR Image Tags are immutable",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "image_tag_mutability"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_ecr_repository\" \"api\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name                 = \"payments-api\"\n"
+                    ],
+                    [
+                        16,
+                        "  image_tag_mutability = \"MUTABLE\"\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "  image_scanning_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "    scan_on_push = true\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  tags = {\n"
+                    ],
+                    [
+                        23,
+                        "    Name = \"payments-api\"\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "file_line_range": [
+                    14,
+                    25
+                ],
+                "resource": "aws_ecr_repository.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.ECRImmutableTags",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "payments-api"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-24",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_136",
+                "bc_check_id": "BC_AWS_GENERAL_53",
+                "check_name": "Ensure that ECR repositories are encrypted using KMS",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "encryption_configuration/[0]/encryption_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_ecr_repository\" \"api\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name                 = \"payments-api\"\n"
+                    ],
+                    [
+                        16,
+                        "  image_tag_mutability = \"MUTABLE\"\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "  image_scanning_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "    scan_on_push = true\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  tags = {\n"
+                    ],
+                    [
+                        23,
+                        "    Name = \"payments-api\"\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "file_line_range": [
+                    14,
+                    25
+                ],
+                "resource": "aws_ecr_repository.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.ECRRepositoryEncrypted",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "payments-api"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-ecr-repositories-are-encrypted",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_37",
+                "bc_check_id": "BC_AWS_KUBERNETES_4",
+                "check_name": "Ensure Amazon EKS control plane logging is enabled for all log types",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "enabled_cluster_log_types"
+                    ]
+                },
+                "code_block": [
+                    [
+                        47,
+                        "resource \"aws_eks_cluster\" \"staging\" {\n"
+                    ],
+                    [
+                        48,
+                        "  name     = \"staging\"\n"
+                    ],
+                    [
+                        49,
+                        "  role_arn = aws_iam_role.staging_cluster.arn\n"
+                    ],
+                    [
+                        50,
+                        "  version  = \"1.29\"\n"
+                    ],
+                    [
+                        51,
+                        "\n"
+                    ],
+                    [
+                        52,
+                        "  vpc_config {\n"
+                    ],
+                    [
+                        53,
+                        "    subnet_ids              = [\"subnet-s1\", \"subnet-s2\"]\n"
+                    ],
+                    [
+                        54,
+                        "    endpoint_public_access  = true\n"
+                    ],
+                    [
+                        55,
+                        "    endpoint_private_access = false\n"
+                    ],
+                    [
+                        56,
+                        "    public_access_cidrs     = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "  enabled_cluster_log_types = [\"api\", \"audit\"]\n"
+                    ],
+                    [
+                        60,
+                        "\n"
+                    ],
+                    [
+                        61,
+                        "  tags = {\n"
+                    ],
+                    [
+                        62,
+                        "    Name = \"staging\"\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "file_line_range": [
+                    47,
+                    64
+                ],
+                "resource": "aws_eks_cluster.staging",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EKSControlPlaneLogging",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "staging"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-kubernetes-policies/bc-aws-kubernetes-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_39",
+                "bc_check_id": "BC_AWS_KUBERNETES_2",
+                "check_name": "Ensure Amazon EKS public endpoint disabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "vpc_config/[0]/endpoint_public_access"
+                    ]
+                },
+                "code_block": [
+                    [
+                        47,
+                        "resource \"aws_eks_cluster\" \"staging\" {\n"
+                    ],
+                    [
+                        48,
+                        "  name     = \"staging\"\n"
+                    ],
+                    [
+                        49,
+                        "  role_arn = aws_iam_role.staging_cluster.arn\n"
+                    ],
+                    [
+                        50,
+                        "  version  = \"1.29\"\n"
+                    ],
+                    [
+                        51,
+                        "\n"
+                    ],
+                    [
+                        52,
+                        "  vpc_config {\n"
+                    ],
+                    [
+                        53,
+                        "    subnet_ids              = [\"subnet-s1\", \"subnet-s2\"]\n"
+                    ],
+                    [
+                        54,
+                        "    endpoint_public_access  = true\n"
+                    ],
+                    [
+                        55,
+                        "    endpoint_private_access = false\n"
+                    ],
+                    [
+                        56,
+                        "    public_access_cidrs     = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "  enabled_cluster_log_types = [\"api\", \"audit\"]\n"
+                    ],
+                    [
+                        60,
+                        "\n"
+                    ],
+                    [
+                        61,
+                        "  tags = {\n"
+                    ],
+                    [
+                        62,
+                        "    Name = \"staging\"\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "file_line_range": [
+                    47,
+                    64
+                ],
+                "resource": "aws_eks_cluster.staging",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EKSPublicAccess",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "staging"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-kubernetes-policies/bc-aws-kubernetes-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_38",
+                "bc_check_id": "BC_AWS_KUBERNETES_1",
+                "check_name": "Ensure Amazon EKS public endpoint not accessible to 0.0.0.0/0",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "vpc_config/[0]/public_access_cidrs"
+                    ]
+                },
+                "code_block": [
+                    [
+                        47,
+                        "resource \"aws_eks_cluster\" \"staging\" {\n"
+                    ],
+                    [
+                        48,
+                        "  name     = \"staging\"\n"
+                    ],
+                    [
+                        49,
+                        "  role_arn = aws_iam_role.staging_cluster.arn\n"
+                    ],
+                    [
+                        50,
+                        "  version  = \"1.29\"\n"
+                    ],
+                    [
+                        51,
+                        "\n"
+                    ],
+                    [
+                        52,
+                        "  vpc_config {\n"
+                    ],
+                    [
+                        53,
+                        "    subnet_ids              = [\"subnet-s1\", \"subnet-s2\"]\n"
+                    ],
+                    [
+                        54,
+                        "    endpoint_public_access  = true\n"
+                    ],
+                    [
+                        55,
+                        "    endpoint_private_access = false\n"
+                    ],
+                    [
+                        56,
+                        "    public_access_cidrs     = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "  enabled_cluster_log_types = [\"api\", \"audit\"]\n"
+                    ],
+                    [
+                        60,
+                        "\n"
+                    ],
+                    [
+                        61,
+                        "  tags = {\n"
+                    ],
+                    [
+                        62,
+                        "    Name = \"staging\"\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "file_line_range": [
+                    47,
+                    64
+                ],
+                "resource": "aws_eks_cluster.staging",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EKSPublicAccessCIDR",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "staging"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-kubernetes-policies/bc-aws-kubernetes-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_58",
+                "bc_check_id": "BC_AWS_KUBERNETES_3",
+                "check_name": "Ensure EKS Cluster has Secrets Encryption Enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "encryption_config/[0]/resources"
+                    ]
+                },
+                "code_block": [
+                    [
+                        47,
+                        "resource \"aws_eks_cluster\" \"staging\" {\n"
+                    ],
+                    [
+                        48,
+                        "  name     = \"staging\"\n"
+                    ],
+                    [
+                        49,
+                        "  role_arn = aws_iam_role.staging_cluster.arn\n"
+                    ],
+                    [
+                        50,
+                        "  version  = \"1.29\"\n"
+                    ],
+                    [
+                        51,
+                        "\n"
+                    ],
+                    [
+                        52,
+                        "  vpc_config {\n"
+                    ],
+                    [
+                        53,
+                        "    subnet_ids              = [\"subnet-s1\", \"subnet-s2\"]\n"
+                    ],
+                    [
+                        54,
+                        "    endpoint_public_access  = true\n"
+                    ],
+                    [
+                        55,
+                        "    endpoint_private_access = false\n"
+                    ],
+                    [
+                        56,
+                        "    public_access_cidrs     = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "\n"
+                    ],
+                    [
+                        59,
+                        "  enabled_cluster_log_types = [\"api\", \"audit\"]\n"
+                    ],
+                    [
+                        60,
+                        "\n"
+                    ],
+                    [
+                        61,
+                        "  tags = {\n"
+                    ],
+                    [
+                        62,
+                        "    Name = \"staging\"\n"
+                    ],
+                    [
+                        63,
+                        "  }\n"
+                    ],
+                    [
+                        64,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf",
+                "file_line_range": [
+                    47,
+                    64
+                ],
+                "resource": "aws_eks_cluster.staging",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EKSSecretsEncryption",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "staging"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-kubernetes-policies/bc-aws-kubernetes-3",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t029/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 10,
+        "failed": 6,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 4,
+        "checkov_version": "3.3.26"
+    }
+}

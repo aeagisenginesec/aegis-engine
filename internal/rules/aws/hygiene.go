@@ -121,7 +121,7 @@ func (s3NoLifecycle) CheckAll(resources []ir.Resource) []ir.Finding {
 			continue
 		}
 		for _, f := range (s3NoLifecycle{}).Check(r) {
-			if !configured[r.Address()] && !logTargets[r.Address()] {
+			if !configured[scopeKey(r)] && !logTargets[scopeKey(r)] {
 				out = append(out, f)
 			}
 		}
@@ -246,7 +246,7 @@ func (rdsNoQueryLogging) Title() string {
 func (rdsNoQueryLogging) Description() string {
 	return "Hygiene: RDS Postgres instances should export postgresql " +
 		"logs to CloudWatch for query auditing. Add \"postgresql\" to " +
-		"enabled_cloudwatch_logs_log_exports."
+		"enabled_cloudwatch_logs_exports."
 }
 func (rdsNoQueryLogging) Severity() ir.Severity { return ir.SeverityLow }
 func (rdsNoQueryLogging) AppliesTo(resType string) bool {
@@ -260,12 +260,12 @@ func (rdsNoQueryLogging) Check(r ir.Resource) []ir.Finding {
 	if !strings.HasPrefix(strings.ToLower(engine), "postgres") {
 		return nil
 	}
-	v, ok := r.Attr("enabled_cloudwatch_logs_log_exports")
+	v, ok := r.Attr("enabled_cloudwatch_logs_exports")
 	if !ok {
 		return []ir.Finding{hygieneFinding("AEGIS-AWS-607",
 			(rdsNoQueryLogging{}).Title(), (rdsNoQueryLogging{}).Description(),
-			r, "enabled_cloudwatch_logs_log_exports", r.Span, "absent",
-			"enabled_cloudwatch_logs_log_exports including \"postgresql\"")}
+			r, "enabled_cloudwatch_logs_exports", r.Span, "absent",
+			"enabled_cloudwatch_logs_exports including \"postgresql\"")}
 	}
 	has, known := stringListHas(v, "postgresql")
 	if !known {
@@ -274,9 +274,9 @@ func (rdsNoQueryLogging) Check(r ir.Resource) []ir.Finding {
 	if !has {
 		return []ir.Finding{hygieneFinding("AEGIS-AWS-607",
 			(rdsNoQueryLogging{}).Title(), (rdsNoQueryLogging{}).Description(),
-			r, "enabled_cloudwatch_logs_log_exports", v.Span,
+			r, "enabled_cloudwatch_logs_exports", v.Span,
 			"postgresql log export missing",
-			"enabled_cloudwatch_logs_log_exports including \"postgresql\"")}
+			"enabled_cloudwatch_logs_exports including \"postgresql\"")}
 	}
 	return nil
 }
@@ -506,7 +506,13 @@ func (wafv2NoLogging) CheckAll(resources []ir.Resource) []ir.Finding {
 		}
 		parts := strings.Split(v.Ref, ".")
 		if len(parts) >= 2 {
-			logged[parts[0]+"."+parts[1]] = true
+			addr := parts[0] + "." + parts[1]
+			for _, w := range resources {
+				if w.Address() == addr && sameScope(r, w) {
+					logged[scopeKey(w)] = true
+					break
+				}
+			}
 		}
 	}
 	// A logging configuration whose resource_arn is unresolvable might log
@@ -517,7 +523,7 @@ func (wafv2NoLogging) CheckAll(resources []ir.Resource) []ir.Finding {
 		if r.Type != "aws_wafv2_web_acl" {
 			continue
 		}
-		if !logged[r.Address()] && !uncertain {
+		if !logged[scopeKey(r)] && !uncertain {
 			out = append(out, hygieneFinding("AEGIS-AWS-613",
 				(wafv2NoLogging{}).Title(), (wafv2NoLogging{}).Description(),
 				r, "logging_configuration", r.Span, "absent",

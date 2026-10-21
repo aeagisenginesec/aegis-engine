@@ -1,0 +1,23 @@
+name: r3115-stack
+runtime: yaml
+description: Pulumi stack (toplevel layout)
+resources:
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: kv-cfa194
+        resourceGroupName: rg-kv
+        location: westeurope
+        properties:
+          sku:
+            family: A
+            name: standard
+          tenantId: 00000000-0000-0000-0000-000000000000
+          enablePurgeProtection: false
+          enableSoftDelete: true
+
+    siteBucket:
+      type: aws:s3:Bucket
+      properties:
+        bucket: site-cfa194
+        acl: private

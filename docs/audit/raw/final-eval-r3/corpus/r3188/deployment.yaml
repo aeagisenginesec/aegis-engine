@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-99caec
+  labels:
+    app: web-99caec
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-99caec
+  template:
+    metadata:
+      labels:
+        app: web-99caec
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: web
+          image: registry.example.com/web:2.1.0
+          ports: [{containerPort: 8080}]
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+            initialDelaySeconds: 10

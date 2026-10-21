@@ -241,9 +241,34 @@ func ExpandModules(rootDir string, mods []terraform.Module, adapter *terraform.A
 	copy(sorted, mods)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Path < sorted[j].Path })
 
+	// Only expand module calls from modules located directly in the
+	// scan root. Calls in nested modules are expanded by recursion from
+	// the root call (expandCall passes the child's own directory as the
+	// base for its nested calls), with correct relative resolution.
+	//
+	// Expanding every discovered module's calls against the scan root
+	// was a scan-boundary escape: a nested module's `source = "../x"`
+	// resolved to <parent-of-target>/x, so scanning target/ could
+	// ingest resources from a sibling directory the user never asked
+	// to scan (verified: target/sub/m calling "../secret" pulled in
+	// ../secret/main.tf as module.s.*), and every nested call that
+	// did not happen to resolve produced a spurious "cannot read
+	// directory" warning naming the wrong path.
+	//
+	// Limit (documented, not silent): an independent stack in a
+	// subdirectory of the target (no .tf files at the target root
+	// calling into it) has its module calls left unexpanded — its
+	// resources are still scanned as files, but without module-input
+	// binding. Scan the stack directory itself to expand its modules.
+	// Root-level relative sources (e.g. the root module calling
+	// "../shared") are still honored: they are part of the scanned
+	// stack by definition.
 	var out []ir.Resource
 	var diags []ir.Diagnostic
 	for _, m := range sorted {
+		if dirAbs, err := filepath.Abs(filepath.Dir(m.Path)); err != nil || dirAbs != absRoot {
+			continue // nested module: handled by recursion from the root call
+		}
 		calls := make([]terraform.ModuleCall, len(m.ModuleCalls))
 		copy(calls, m.ModuleCalls)
 		sort.Slice(calls, func(i, j int) bool { return calls[i].Name < calls[j].Name })

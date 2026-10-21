@@ -34,9 +34,12 @@ func (rdsPublicPath) Check(ir.Resource) []ir.Finding { return nil }
 
 func (rdsPublicPath) CheckAll(resources []ir.Resource) []ir.Finding {
 	g := graph.Build(resources)
+	// Hoisted out of the per-RDS closure: the open-SG set does not depend
+	// on the RDS, so recomputing it per public RDS was O(n) per RDS.
+	open := openSGs(resources)
 	return findRDSPaths(resources,
 		func(addr string) bool { return g.PubliclyExposed(addr) },
-		func(rds ir.Resource) *ir.Resource { return pickPathSG(rds, g, openSGs(resources)) },
+		func(rds ir.Resource) *ir.Resource { return pickPathSG(rds, g, open) },
 	)
 }
 
@@ -291,7 +294,6 @@ func refAddrOf(ref string) (string, bool) {
 					j += 2
 				} else {
 					addr += "." + parts[j]
-					j++
 					break
 				}
 			}
@@ -350,7 +352,7 @@ func (s3ExfiltrationPath) CheckAll(resources []ir.Resource) []ir.Finding {
 		if b.Type != "aws_s3_bucket" {
 			continue
 		}
-		if f := checkBucketExfiltration(b, policies[b.Address()], acls[b.Address()]); f != nil {
+		if f := checkBucketExfiltration(b, policies[scopeKey(b)], acls[scopeKey(b)]); f != nil {
 			out = append(out, *f)
 		}
 	}
@@ -361,14 +363,40 @@ var _ ir.CrossResourceRule = s3ExfiltrationPath{}
 
 // policyBucketAddr resolves which bucket a policy/ACL resource targets via
 // its `bucket` attribute: a reference ("aws_s3_bucket.assets.id") or a
-// known name matched against the bucket set. Unresolvable -> false.
+// known name matched against the bucket set. A CloudFormation !Ref to a
+// resource logical ID ("cfn.resource.X") matches by the bucket's Name
+// (its CFN logical ID), mirroring linkedBucketAddr in helpers.go.
+// Unresolvable -> false.
 func policyBucketAddr(r ir.Resource, buckets []ir.Resource) (string, bool) {
 	v, ok := r.Attributes["bucket"]
 	if !ok {
 		return "", false
 	}
 	if v.IsRef() {
-		return refAddrOf(v.Ref)
+		// CloudFormation !Ref to a resource logical ID: "cfn.resource.X".
+		// Match by the bucket's Name (its CFN logical ID) in scope.
+		if strings.HasPrefix(v.Ref, "cfn.resource.") {
+			lid := strings.TrimPrefix(v.Ref, "cfn.resource.")
+			for _, b := range buckets {
+				if b.Type != "aws_s3_bucket" || !sameScope(r, b) {
+					continue
+				}
+				if b.Name == lid {
+					return scopeKey(b), true
+				}
+			}
+			return "", false
+		}
+		addr, ok := refAddrOf(v.Ref)
+		if !ok {
+			return "", false
+		}
+		for _, b := range buckets {
+			if b.Address() == addr && sameScope(r, b) {
+				return scopeKey(b), true
+			}
+		}
+		return "", false
 	}
 	name, ok := v.AsString()
 	if !ok {
@@ -379,11 +407,14 @@ func policyBucketAddr(r ir.Resource, buckets []ir.Resource) (string, bool) {
 		if b.Type != "aws_s3_bucket" {
 			continue
 		}
+		if !sameScope(r, b) {
+			continue
+		}
 		if b.Name == name {
-			return b.Address(), true
+			return scopeKey(b), true
 		}
 		if bn, _, _, known := getString(b, "bucket"); known && strings.TrimSpace(bn) == name {
-			return b.Address(), true
+			return scopeKey(b), true
 		}
 	}
 	return "", false
@@ -475,18 +506,25 @@ func checkBucketExfiltration(b ir.Resource, policies, acls []ir.Resource) *ir.Fi
 // policyGrantsPublicRead reports whether any Allow statement grants
 // s3:GetObject (or s3:*) to Principal "*". Malformed JSON or unexpected
 // shapes yield false (cannot decide -> no finding).
+// policyGrantsPublicRead reports whether a policy document grants
+// s3:GetObject (or s3:*) to everyone. Statement keys are matched
+// case-insensitively: some adapters snake_case document keys
+// (Statement -> statement, Effect -> effect), and the public-read
+// conclusion must not depend on the producer's casing (same rationale
+// as policyAllowsPublicPrincipal in s3.go).
 func policyGrantsPublicRead(doc string) bool {
 	for _, s := range policyStatements(doc) {
-		if s["Effect"] != "Allow" {
+		eff, _ := lookupMapFold(s, "Effect").(string)
+		if eff != "Allow" {
 			continue
 		}
-		if _, hasNotPrincipal := s["NotPrincipal"]; hasNotPrincipal {
+		if lookupMapFold(s, "NotPrincipal") != nil {
 			continue
 		}
-		if !principalAllowsAnyone(s["Principal"]) {
+		if !principalAllowsAnyone(lookupMapFold(s, "Principal")) {
 			continue
 		}
-		if actionMatches(s["Action"], "s3:GetObject", "s3:*") {
+		if actionMatches(lookupMapFold(s, "Action"), "s3:GetObject", "s3:*") {
 			return true
 		}
 	}

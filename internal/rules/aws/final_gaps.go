@@ -6,14 +6,14 @@ import (
 	"aegis/internal/ir"
 )
 
-// Final gap-closure rules (AEGIS-AWS-540–544): Checkov-parity checks to close
+// Final gap-closure rules (AEGIS-AWS-541–544): Checkov-parity checks to close
 // the remaining detection gap.
 //
-// OVERLAP NOTES (for parent review):
-//   - 540 overlaps AEGIS-AWS-311 (rdsNoIAMAuth), which fires for ALL
-//     aws_db_instance engines at Medium. 540 is the engine-scoped High
-//     variant (mysql/postgres only, per CKV_AWS_161). Recommend narrowing
-//     311 to non-mysql/postgres engines to avoid double-counting.
+// OVERLAP NOTES:
+//   - 540 (engine-scoped RDS IAM-auth variant) was removed in Sprint 2
+//     as an exact duplicate of AEGIS-AWS-311 on mysql/postgres
+//     instances; 540's engine scoping was ported into 311, which now
+//     fires only on engines that support IAM database authentication.
 //   - 541 targets aws_launch_configuration, which AEGIS-AWS-204
 //     (ec2NoIMDSv2) does NOT cover (204 handles aws_instance and
 //     aws_launch_template). Implementing 541 on aws_instance would
@@ -21,64 +21,6 @@ import (
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-540: RDS without IAM authentication (mysql/postgres) (CKV_AWS_161)
-// ---------------------------------------------------------------------------
-
-type rdsNoIAMAuthScoped struct{}
-
-func (rdsNoIAMAuthScoped) ID() string { return "AEGIS-AWS-540" }
-func (rdsNoIAMAuthScoped) Title() string {
-	return "RDS MySQL/Postgres instance without IAM database authentication"
-}
-func (rdsNoIAMAuthScoped) Description() string {
-	return "MySQL and Postgres RDS instances support IAM database authentication, " +
-		"which replaces long-lived passwords with short-lived IAM credentials. " +
-		"With iam_database_authentication_enabled absent or false, access relies " +
-		"on static passwords. Engine-scoped: only fires for mysql/postgres " +
-		"engines; aurora and unknown engines are out of scope."
-}
-func (rdsNoIAMAuthScoped) Severity() ir.Severity { return ir.SeverityHigh }
-func (rdsNoIAMAuthScoped) AppliesTo(resType string) bool {
-	return resType == "aws_db_instance"
-}
-
-func (rdsNoIAMAuthScoped) Check(r ir.Resource) []ir.Finding {
-	// Engine scoping: only mysql/postgres support IAM auth on db_instance.
-	engine, _, epresent, eknown := getString(r, "engine")
-	if !epresent || !eknown {
-		return nil // unknown engine: cannot decide
-	}
-	el := strings.ToLower(strings.TrimSpace(engine))
-	if strings.HasPrefix(el, "aurora") {
-		return nil // aurora clusters are covered separately
-	}
-	if !strings.HasPrefix(el, "mysql") && !strings.HasPrefix(el, "postgres") {
-		return nil // engine does not support IAM auth
-	}
-	en, span, present, known := getBool(r, "iam_database_authentication_enabled")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present && en {
-		return nil
-	}
-	actual := "absent (provider default: disabled)"
-	if present {
-		actual = "false"
-	}
-	return []ir.Finding{{
-		RuleID:      "AEGIS-AWS-540",
-		Title:       (rdsNoIAMAuthScoped{}).Title(),
-		Description: (rdsNoIAMAuthScoped{}).Description(),
-		Severity:    ir.SeverityHigh,
-		Resource:    r.Address(),
-		Evidence: ir.Evidence{
-			Attribute: "iam_database_authentication_enabled",
-			Span:      evidenceSpan(span, r.Span),
-			Actual:    actual,
-			Expected:  "iam_database_authentication_enabled = true",
-		},
-	}}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-541: Launch configuration allows IMDSv1 (CKV_AWS_79)
@@ -248,23 +190,23 @@ func (rdsNoAutoMinorUpgrade) Check(r ir.Resource) []ir.Finding {
 	if present && !known {
 		return nil
 	}
-	if present && val {
+	if !present {
+		// Absent: the AWS API and Terraform provider default is TRUE,
+		// so absent means upgrades ARE applied. Only explicit false fires.
 		return nil
 	}
-	actual := "absent"
-	if present {
-		actual = "false"
+	if val {
+		return nil
 	}
 	return []ir.Finding{hygieneFinding("AEGIS-AWS-544",
 		(rdsNoAutoMinorUpgrade{}).Title(), (rdsNoAutoMinorUpgrade{}).Description(),
-		r, "auto_minor_version_upgrade", evidenceSpan(span, r.Span), actual,
+		r, "auto_minor_version_upgrade", evidenceSpan(span, r.Span), "false",
 		"auto_minor_version_upgrade = true")}
 }
 
 // FinalGapRules returns the gap-closure rules in ID order.
 func FinalGapRules() []ir.Rule {
 	return []ir.Rule{
-		rdsNoIAMAuthScoped{},    // AEGIS-AWS-540
 		launchConfigNoIMDSv2{},  // AEGIS-AWS-541
 		lambdaNoVPC{},           // AEGIS-AWS-542
 		rdsNoLogExports{},       // AEGIS-AWS-543

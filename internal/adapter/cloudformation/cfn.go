@@ -37,6 +37,9 @@ type Adapter struct{}
 // Compile-time check that Adapter satisfies ir.Adapter.
 var _ ir.Adapter = Adapter{}
 
+// Compile-time check that Adapter satisfies ir.ContentSniffer.
+var _ ir.ContentSniffer = Adapter{}
+
 // New constructs the adapter.
 func New() *Adapter { return &Adapter{} }
 
@@ -49,6 +52,17 @@ const planJSONSuffix = ".plan.json"
 // Handles reports whether the file looks like a CloudFormation template.
 // Extension gate first (cheap), then content sniffing for CFN markers.
 func (Adapter) Handles(path string) bool {
+	src, err := readBounded(path, 1<<20) // 1 MiB is plenty for a marker scan
+	if err != nil {
+		return false
+	}
+	return Adapter{}.HandlesContent(path, src)
+}
+
+// HandlesContent is the content-aware form of Handles for pipelines that
+// already hold the file bytes (in-memory API scans): same extension gate,
+// sniffing the provided bytes instead of reading from disk.
+func (Adapter) HandlesContent(path string, src []byte) bool {
 	lower := strings.ToLower(path)
 	if strings.HasSuffix(lower, planJSONSuffix) {
 		return false
@@ -60,16 +74,11 @@ func (Adapter) Handles(path string) bool {
 	default:
 		return false
 	}
-	return looksLikeCFN(path)
+	return looksLikeCFNContent(src)
 }
 
-// looksLikeCFN reads the file and checks for CloudFormation markers.
-// Bounded: discovery already caps file size; we additionally cap the sniff.
-func looksLikeCFN(path string) bool {
-	src, err := readBounded(path, 1<<20) // 1 MiB is plenty for a marker scan
-	if err != nil {
-		return false
-	}
+// looksLikeCFNContent checks bytes for CloudFormation markers.
+func looksLikeCFNContent(src []byte) bool {
 	// Fast path: textual markers.
 	if bytes.Contains(src, []byte("AWSTemplateFormatVersion")) {
 		return true
@@ -110,7 +119,24 @@ type template struct {
 	diags      []ir.Diagnostic
 	converted  map[string]ir.Resource // logicalID -> converted resource (for cross-refs)
 	companions []ir.Resource          // synthesized companion resources
+	// aliasActive tracks alias targets currently being resolved (cycle
+	// guard). YAML anchors can be self-referential (&a [*a]); without
+	// this, resolveValue recurses until the goroutine stack overflows
+	// and the whole scanner process dies. Unlike decoding into `any`,
+	// decoding into yaml.Node does NOT get yaml.v3's alias safeguards.
+	aliasActive map[*yaml.Node]bool
+	// aliasBudget bounds total alias expansions per template (billion-
+	// laughs protection): each alias follow re-walks its target subtree,
+	// so nested aliases amplify exponentially. Exhaustion yields Unknown
+	// plus a single warning diagnostic, never a hang or OOM.
+	aliasBudget int
+	// budgetWarned records that the alias-budget warning was emitted.
+	budgetWarned bool
 }
+
+// maxAliasExpansions bounds alias follows per template. Legitimate
+// templates reuse a handful of anchors; 100k is generous headroom.
+const maxAliasExpansions = 100000
 
 type paramDef struct {
 	def     ir.Value // Default value, or UnknownValue if none
@@ -121,11 +147,12 @@ type paramDef struct {
 // Parse converts a CloudFormation template into IR resources.
 func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, error) {
 	t := &template{
-		path:      path,
-		params:    map[string]paramDef{},
-		resources: map[string]*yaml.Node{},
-		outputs:   map[string]*yaml.Node{},
-		converted: map[string]ir.Resource{},
+		path:        path,
+		params:      map[string]paramDef{},
+		resources:   map[string]*yaml.Node{},
+		outputs:     map[string]*yaml.Node{},
+		converted:   map[string]ir.Resource{},
+		aliasBudget: maxAliasExpansions,
 	}
 	var doc yaml.Node
 	if err := yaml.Unmarshal(src, &doc); err != nil {
@@ -186,6 +213,34 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			}
 			out = append(out, ir.Resource{
 				Type:       "cfn_output",
+				Name:       name,
+				Provider:   "cfn",
+				Attributes: attrs,
+				Span:       nodeSpan(path, def),
+			})
+		}
+	}
+	// Synthetic parameter resources for secret-detection parity with
+	// terraform_variable: parameters WITH known defaults become
+	// cfn_parameter resources so rules can flag hardcoded secret defaults.
+	// Parameters without defaults (or with unresolved defaults) are
+	// skipped: there is nothing baked into the template to flag.
+	if paramsNode := mappingGet(root, "Parameters"); paramsNode != nil {
+		for i := 0; i+1 < len(paramsNode.Content); i += 2 {
+			name := paramsNode.Content[i].Value
+			def := paramsNode.Content[i+1]
+			pd, ok := t.params[name]
+			if !ok || !pd.def.Known {
+				continue
+			}
+			attrs := map[string]ir.Value{"default": pd.def}
+			if def.Kind == yaml.MappingNode {
+				if typ := mappingGet(def, "Type"); typ != nil {
+					attrs["type"] = scalarValue(path, typ)
+				}
+			}
+			out = append(out, ir.Resource{
+				Type:       "cfn_parameter",
 				Name:       name,
 				Provider:   "cfn",
 				Attributes: attrs,
@@ -340,43 +395,23 @@ func nodeSpan(path string, n *yaml.Node) ir.Span {
 }
 
 // mappingGet returns the value node for key in a mapping node, or nil.
+//
+// Duplicate keys: LAST occurrence wins, matching YAML-to-map decoders
+// (e.g. Python yaml.safe_load) and JSON semantics. This matters because
+// some generated templates repeat a top-level section (e.g. an empty
+// "Resources:" followed later by the real one); first-wins silently
+// dropped every resource in such templates.
 func mappingGet(m *yaml.Node, key string) *yaml.Node {
 	if m == nil || m.Kind != yaml.MappingNode {
 		return nil
 	}
+	var found *yaml.Node
 	for i := 0; i+1 < len(m.Content); i += 2 {
 		if m.Content[i].Kind == yaml.ScalarNode && m.Content[i].Value == key {
-			return m.Content[i+1]
+			found = m.Content[i+1]
 		}
 	}
-	return nil
-}
-
-// mappingKeys returns the scalar keys of a mapping node.
-func mappingKeys(m *yaml.Node) []string {
-	var out []string
-	if m == nil || m.Kind != yaml.MappingNode {
-		return out
-	}
-	for i := 0; i+1 < len(m.Content); i += 2 {
-		if m.Content[i].Kind == yaml.ScalarNode {
-			out = append(out, m.Content[i].Value)
-		}
-	}
-	return out
-}
-
-// keyNode returns the key node for key in a mapping node (for spans).
-func keyNode(m *yaml.Node, key string) *yaml.Node {
-	if m == nil || m.Kind != yaml.MappingNode {
-		return nil
-	}
-	for i := 0; i+1 < len(m.Content); i += 2 {
-		if m.Content[i].Kind == yaml.ScalarNode && m.Content[i].Value == key {
-			return m.Content[i]
-		}
-	}
-	return nil
+	return found
 }
 
 // scalarValue converts a YAML scalar node to an ir.Value.

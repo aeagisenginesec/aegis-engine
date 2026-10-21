@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Bastion security group
+Resources:
+  BastionSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: bastion-29d634
+      GroupDescription: bastion access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: site-29d634
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html

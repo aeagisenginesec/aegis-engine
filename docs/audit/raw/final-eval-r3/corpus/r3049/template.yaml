@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: EKS cluster
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+    Description: Database password
+Resources:
+  MainCluster:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: main-e9df5b
+      RoleArn: arn:aws:iam::123456789012:role/eks-cluster
+      ResourcesVpcConfig:
+        SubnetIds: [subnet-aaa, subnet-bbb]
+        EndpointPublicAccess: true
+
+  AppDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: app-e9df5b
+      AllocatedStorage: "20"
+      StorageEncrypted: true
+      MasterUsername: appadmin
+      MasterUserPassword: !Ref DbPassword

@@ -1,0 +1,69 @@
+name: orders-db
+runtime: yaml
+description: Production Postgres for the orders service. Encrypted, Multi-AZ, private, deletion protected.
+template:
+  configuration:
+    kmsKeyArn:
+      type: String
+    vpcId:
+      type: String
+    privateSubnetIds:
+      type: String
+    appSecurityGroupId:
+      type: String
+    environment:
+      type: String
+      default: prod
+  variables:
+    dbName: orders-db
+  resources:
+    dbSubnetGroup:
+      type: aws:rds:SubnetGroup
+      properties:
+        name: ${dbName}-subnets
+        description: Private subnets for orders DB
+        subnetIds:
+          fn::split:
+            - ","
+            - ${privateSubnetIds}
+    dbSg:
+      type: aws:ec2:SecurityGroup
+      properties:
+        name: ${dbName}-sg
+        description: Orders database, app tier only
+        vpcId: ${vpcId}
+        ingress:
+          - protocol: tcp
+            fromPort: 5432
+            toPort: 5432
+            securityGroups: ["${appSecurityGroupId}"]
+    ordersDb:
+      type: aws:rds:Instance
+      properties:
+        identifier: ${dbName}
+        engine: postgres
+        engineVersion: "15.4"
+        instanceClass: db.r6g.large
+        allocatedStorage: 200
+        storageType: gp3
+        storageEncrypted: true
+        kmsKeyId: ${kmsKeyArn}
+        dbName: orders
+        username: orders_admin
+        manageMasterUserPassword: true
+        masterUserSecretKmsKeyId: ${kmsKeyArn}
+        multiAz: true
+        publiclyAccessible: false
+        dbSubnetGroupName: ${dbSubnetGroup.name}
+        vpcSecurityGroupIds: ["${dbSg.id}"]
+        backupRetentionPeriod: 7
+        deleteAutomatedBackups: false
+        deletionProtection: true
+        performanceInsightsEnabled: true
+        performanceInsightsKmsKeyId: ${kmsKeyArn}
+        performanceInsightsRetentionPeriod: 731
+        copyTagsToSnapshot: true
+        tags:
+          Environment: ${environment}
+  outputs:
+    endpoint: ${ordersDb.endpoint}

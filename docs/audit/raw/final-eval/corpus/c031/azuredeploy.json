@@ -1,0 +1,83 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Hardened SQL Server for the billing database. AAD-only auth path, auditing and TDE enabled."
+  },
+  "parameters": {
+    "serverName": {
+      "type": "string",
+      "defaultValue": "[concat('billingsql', uniqueString(resourceGroup().id))]"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "aadAdminObjectId": { "type": "string" },
+    "aadAdminLogin": { "type": "string", "defaultValue": "sql-admins" },
+    "auditStorageAccountId": { "type": "string" }
+  },
+  "variables": {
+    "databaseName": "billing"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[parameters('serverName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "administrators": {
+          "administratorType": "ActiveDirectory",
+          "principalType": "Group",
+          "login": "[parameters('aadAdminLogin')]",
+          "sid": "[parameters('aadAdminObjectId')]",
+          "tenantId": "[subscription().tenantId]",
+          "azureADOnlyAuthentication": true
+        },
+        "publicNetworkAccess": "Disabled",
+        "minimalTlsVersion": "1.2"
+      }
+    },
+    {
+      "type": "Microsoft.Sql/servers/auditingSettings",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[concat(parameters('serverName'), '/default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]"
+      ],
+      "properties": {
+        "state": "Enabled",
+        "isAzureMonitorTargetEnabled": true,
+        "storageAccountSubscriptionId": "[subscription().subscriptionId]",
+        "retentionDays": 90
+      }
+    },
+    {
+      "type": "Microsoft.Sql/servers/databases",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[concat(parameters('serverName'), '/', variables('databaseName'))]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]"
+      ],
+      "sku": { "name": "S2", "tier": "Standard" },
+      "properties": { "collation": "SQL_Latin1_General_CP1_CI_AS" }
+    },
+    {
+      "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+      "apiVersion": "2023-05-01-preview",
+      "name": "[concat(parameters('serverName'), '/', variables('databaseName'), '/current')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers/databases', parameters('serverName'), variables('databaseName'))]"
+      ],
+      "properties": { "state": "Enabled" }
+    }
+  ],
+  "outputs": {
+    "serverFqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Sql/servers', parameters('serverName'))).fullyQualifiedDomainName]"
+    }
+  }
+}

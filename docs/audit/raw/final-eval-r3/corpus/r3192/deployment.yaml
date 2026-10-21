@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-250653
+  labels:
+    app: worker-250653
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: worker-250653
+  template:
+    metadata:
+      labels:
+        app: worker-250653
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: worker
+          image: registry.example.com/worker:1.4.0
+          resources:
+            limits: {cpu: "500m", memory: 256Mi}
+            requests: {cpu: "250m", memory: 128Mi}
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: monitor-250653
+  labels:
+    app: monitor-250653
+spec:
+  selector:
+    matchLabels:
+      app: monitor-250653
+  template:
+    metadata:
+      labels:
+        app: monitor-250653
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+        - name: monitor
+          image: registry.example.com/monitor:1.9.0
+          volumeMounts:
+            - name: hostroot
+              mountPath: /host
+      volumes:
+        - name: hostroot
+          hostPath:
+            path: /

@@ -3,34 +3,174 @@
 All notable changes to Aegis are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [2.1.1] — 2026-10-21
+
+Security-maintenance and CI/CD release. No rule changes: the detection
+engine is byte-for-byte the v2.1.0 closeout build (full test suite and
+the R4 regression locks green on the new toolchain).
+
+### Security
+
+- **Go 1.25 → 1.26**: govulncheck against the old toolchain reported
+  25 reachable vulnerabilities (24 in the standard library — the
+  `aegis serve` HTTP surface reaches crypto/x509 and net/http — plus
+  golang.org/x/text v0.31.0). On Go 1.26.10 with the bumped module
+  graph (x/text v0.43.0 et al.): **no vulnerabilities found**.
+- **Pulumi adapter**: malformed `!!int`/`!!float` scalars now yield
+  Unknown values instead of a silent known-zero.
+
+### CI/CD (the full suite)
+
+- **Lint gate** (golangci-lint): errcheck/govet/ineffassign/
+  staticcheck/unused at zero findings, reached by fixing the code —
+  19 dead functions removed, dead initializers and De Morgan cleanups,
+  and one placeholder test assertion made real. Remaining exceptions
+  are named and justified in `.golangci.yml`.
+- **Security workflow**: CodeQL analysis + govulncheck as a hard gate
+  (tracking the newest Go patch — a bare `go 1.26.0` pin fails with
+  the stdlib vulns fixed in 1.26.1+). Weekly scheduled re-scans.
+- **Aegis self-gate** now actually fires (its push trigger pointed at
+  a `main` branch this repo never had) and judges new findings only,
+  via `.aegis/baseline.json` generated from the tracked tree.
+- **Container image**: multi-arch (amd64/arm64) GHCR image published
+  on every release (`ghcr.io/aeagisenginesec/aegis-engine`).
+- **Dependabot**: weekly Go-module and Actions updates.
+- Private-repo adaptation: GitHub code scanning requires Advanced
+  Security on private repos, so CodeQL/gate SARIF is archived as run
+  artifacts (documented in both workflows, one-line restore).
+
+## [2.1.0] — 2026-10-21
+
+Accuracy closeout release: the R4 ground truth is fully solved (zero
+false negatives, zero false positives), the false-positive families
+found by a 2,227-candidate adjudication are eliminated, and a blind
+210-project evaluation (R5) is published with an honest verdict. Rule
+registry: 1,140 active rules. Full record: `docs/audit/24_FP_FN_ELIMINATION_PLAN.md`,
+`docs/audit/25_FP_FAMILY_KILL.md`, `docs/audit/26_AEGIS_FINAL_STATE.md`.
+
+### Added
+
+- **AEGIS-AWS-858**: security group open to the world on database ports
+  (1433/1521/3306/5432/5984/6379/9200/27017), across all SG resource forms.
+- **AEGIS-COMPOSE-009**: Docker Compose `network_mode: host`.
+
+### Fixed — accuracy
+
+- **R4 false negatives 8 → 0** (TP 136/136, recall 1.000): the two rules
+  above, an ARM template-map casing bug that hid AKS `enableRBAC: false`
+  (AZURE-014), and regression locks for Cosmos public network access.
+- **False-positive families killed**: 15 duplicate rules deprecated
+  (each mapped to its surviving canonical rule), DOCKER-017/018 gated to
+  final build stages (20 false positives on discarded stages), AWS-311
+  scoped to known database engines.
+- **ARM/Bicep correctness**: storage-account rule translations that were
+  unreachable are now wired; a VNet DDoS attribute collision that made
+  scans nondeterministic (~1 in 5 runs) is merged deterministically.
+
+### Fixed — engine
+
+- **Discovery readability probe**: files discovery cannot open are now
+  skipped during the walk and recorded in the Skipped report with a
+  reason, instead of surfacing later as parse failures. Caught by the
+  first GitHub CI run of the closeout branch; verified as a non-root user.
+
+### Performance
+
+- S3 correlation pass is O(1) per bucket (was O(R²)): the 100k-line
+  fixture scans in ~5.4s (was 38.2s); 1,003,677 findings on the
+  1.7M-line fixture in ~2 minutes.
+
+### Known limitations (measured, R5 blind set)
+
+- Recall on the blind R5 corpus is coverage-bound (auto-scored 0.555):
+  the dominant gap is hardcoded secrets in template parameter defaults
+  and config files. AWS-001 (S3 SSE) can false-fire on buckets relying
+  on SSE-S3 defaults. See `docs/audit/raw/final-eval-r5/`.
+
+## [2.0.0] — 2026-10-14
+
+Second stable release. 1,153 detection rules (1,152 active) across AWS,
+Azure, GCP, Alibaba, OCI, Kubernetes, Docker, Compose, supply-chain and
+Terraform packs. Top-tier validation complete: R4 blind evaluation
+(F1 0.950 vs Checkov 0.331, KICS 0.371, Trivy 0.279 on a frozen 136-concept
+ground truth), multi-cloud finding quality audit, and a Pulumi
+honest-reporting guarantee. See `docs/audit/16_RELEASE_NOTES_v2.0.0.md`.
+
+### Added
+
+- **K8s hardening rules K8S-028..032**: read-only root filesystem, seccomp
+  profile, drop ALL capabilities, NetworkPolicy coverage, image digest pin.
+- **AWS-856**: EC2 end-of-life OS image (mirrors GCP-294), with 22
+  positive/negative tests.
+- **GCP-293/GCP-294**: startup-script secret detection and Debian/Ubuntu
+  EOL boot-disk image detection.
+- **AWS-534**: secret exposure in EC2 `user_data` (literal secrets →
+  Critical, `${var.<secret-like>}` taint → High).
+- **AWS-005** (SG egress), **AWS-538** (plaintext variable default),
+  **AWS-710** (RDS Secrets Manager), **GCP-040** (SQL authorized_networks),
+  **GCP-068** (firewall all-ports): true-positive gaps found by the
+  multi-cloud audit, now covered.
+- **Pulumi honest warnings**: TypeScript/JavaScript, Python, Go, .NET and
+  Java programs are detected (via `runtime:` or language markers) and emit
+  a warning naming the unparsed program files — no Pulumi language ever
+  scans silently as "0 findings".
+- **Unknown/deprecated rule-ID diagnostics** for baselines and inline
+  suppressions.
+- **CI/CD workflows**: GitHub Actions PR gate + GitLab CI (`aegis-scan.yml`,
+  `aegis.yml`); release build/test/quality-gate workflow (`ci.yml`).
+- **Azure SQL coverage**: weak admin password (314), legacy auditing.
+- **Round-3 gap-closure rules**: AWS-850, CloudFormation Lambda URL,
+  DOCKER-036, K8S-026/027.
+
+### Changed
+
+- **Rule count 346 → 1,153** (registry-verified; 1,152 active + 1 deprecated).
+- **R4 F1 0.921 → 0.950** (precision 1.000, recall 0.904): CloudFormation
+  duplicate-key parser fix, 6 new rules (AWS-851..855, DOCKER-037),
+  compliant-lab factual fixes.
+- **Held-out benchmark F1 0.824 → 1.000**: 60 false positives on hardened
+  clean projects eliminated, recall held at 100%.
+- **GCP-122 deprecated** in favor of canonical GCP-032 (identical
+  public-access-prevention condition).
+- **Span exactness**: parser repair now remaps repaired→original lines so
+  findings cite exact file/line.
+- **Cloud-aware remediation**: non-AWS findings no longer served AWS-specific
+  fix text; 15 remediation mismatches corrected.
+- **HCL parser leniency** (`internal/adapter/terraform`): single-line object
+  constructors without comma separators no longer silently mangle
+  `jsonencode()` policy documents; commas inserted at exact diagnostic
+  positions with iterative re-parse.
+- **AWS-209 scoped to VPCs with subnets**; **AWS-005 egress gated on
+  attachment evidence**; **DOCKER-002 scoped to final stages**,
+  first-party registries trusted in DOCKER-010; S3 SSE/PAB suppressed on
+  intentionally-public buckets; log-delivery buckets exempt from S3
+  hardening findings.
+- **Scale/reliability**: per-parser fuzz hardening, alias-cycle protection,
+  memoization, multi-document manifests, Terraform recovery.
 
 ### Fixed
 
-- **Held-out benchmark F1 0.824 → 1.000** (beats Checkov 0.824): 60 false
-  positives on hardened clean projects eliminated, recall held at 100%.
-- **HCL parser leniency** (`internal/adapter/terraform`): single-line object
-  constructors without comma separators (`{ Effect = "Allow" Action = ... }`)
-  no longer silently mangle `jsonencode()` policy documents. On "Missing
-  attribute separator" diagnostics, commas are inserted at the exact diagnostic
-  positions and the source is re-parsed (iterative); falls back to the original
-  partial result if recovery fails. This un-breaks AEGIS-AWS-502 (and other
-  policy rules) on such inputs — 8 held-out `iam-escalation` projects are now
-  genuinely detected instead of incidentally via the dummy VPC.
-- **Log-delivery bucket exemption** (AEGIS-AWS-001/012/206/443/601, shared
-  `logDeliveryBuckets` helper): buckets that are `target_bucket` of an
-  `aws_s3_bucket_logging` resource are logging infrastructure and no longer
-  flagged for missing hardening. Extends the AEGIS-AWS-445 precedent.
-- **AEGIS-AWS-209 scoped to VPCs with subnets**: a VPC with no subnets carries
-  no traffic; flow logs would capture nothing. Fail-safe: unresolvable subnet
-  `vpc_id` still flags.
+- **9 duplicate rules removed** (8 Azure SQL + 1 GCP scope); **1
+  parser-artifact false firing removed** (GCP-214, fired only because the
+  parser dropped the `ports` attribute).
+- **7 false positives**: GCP-101..107 (PostgreSQL flags firing on MySQL)
+  now engine-gated via `sqlIsPostgres()`.
+- **AZR-002 TLS FP**: now accepts TLS1_2/TLS1_3 like sibling rules.
+- **Terraform parser dropping attributes after the first on a line**;
+  `jsonencode`/`merge`/`concat` evaluated over static arguments.
+- **Pulumi adapter**: template:-nested layout, Azure storage property
+  normalization, typemap entries, nested-properties gaps.
+- **Module duplicate findings** (bare twins).
+- **GCP-017**: forwarding appliances exempt from public-IP findings.
+- **AWS-607** attribute-name bug; **AZURE-033** dead rule revived.
 
 ### Removed
 
-- **4 S3 hygiene rules** (AEGIS-AWS-558 Object Lock, 559 inventory, 602 event
-  notifications, 603 cross-region replication): flagged every bucket including
-  fully-hardened ones — operational recommendations, not vulnerabilities.
-  240 false positives on the held-out set, zero unique true positives.
+- **4 S3 hygiene rules** (AEGIS-AWS-558 Object Lock, 559 inventory, 602
+  event notifications, 603 cross-region replication): flagged every bucket
+  including fully-hardened ones — operational recommendations, not
+  vulnerabilities. 240 false positives on the held-out set, zero unique
+  true positives.
 
 ## [1.0.0] — 2026-10-11
 

@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Hardened invoice-processor Lambda. KMS-encrypted environment, scoped role,
+  active tracing, DLQ and reserved concurrency.
+
+Parameters:
+  KmsKeyArn:
+    Type: String
+  CodeBucket:
+    Type: String
+  CodeKey:
+    Type: String
+    Default: invoice-processor.zip
+  DlqArn:
+    Type: String
+    Description: SQS DLQ for failed invocations.
+
+Resources:
+  ProcessorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref 'AWS::AccountId'
+      Policies:
+        - PolicyName: processor-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub 'arn:aws:s3:::invoices-incoming-${AWS::AccountId}/*'
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: !Ref KmsKeyArn
+                Condition:
+                  StringEquals:
+                    kms:ViaService: !Sub 'lambda.${AWS::Region}.amazonaws.com'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/invoice-processor*'
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource: !Ref DlqArn
+
+  ProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: invoice-processor
+      Runtime: python3.12
+      Handler: processor.handler
+      Role: !GetAtt ProcessorRole.Arn
+      Code:
+        S3Bucket: !Ref CodeBucket
+        S3Key: !Ref CodeKey
+      KmsKeyArn: !Ref KmsKeyArn
+      Environment:
+        Variables:
+          INVOICE_TABLE: !Sub 'invoices-${AWS::Region}'
+      TracingConfig:
+        Mode: Active
+      DeadLetterConfig:
+        TargetArn: !Ref DlqArn
+      ReservedConcurrentExecutions: 25
+      Timeout: 120
+      MemorySize: 1024
+      EphemeralStorage:
+        Size: 1024
+
+Outputs:
+  FunctionArn:
+    Value: !GetAtt ProcessorFunction.Arn

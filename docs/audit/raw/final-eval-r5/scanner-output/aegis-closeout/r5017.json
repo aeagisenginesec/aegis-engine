@@ -1,0 +1,260 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5017",
+  "summary": {
+    "resources": 3,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 11,
+    "critical": 0,
+    "high": 6,
+    "medium": 1,
+    "low": 4
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-004",
+      "severity": "high",
+      "title": "Security group ingress open to the world",
+      "description": "Ingress rules allowing 0.0.0.0/0 expose the workload to the entire internet. Restrict source CIDRs to known ranges.",
+      "resource": "aws_security_group.jumpbox",
+      "file": "corpus/r5017/main.tf",
+      "line": 26,
+      "evidence": "ingress.cidr_blocks = 0.0.0.0/0",
+      "expected": "restricted source CIDR ranges",
+      "remediation": "Restrict the ingress CIDR to trusted ranges. Replace `0.0.0.0/0` with your\noffice/VPN CIDRs, or remove the rule and use SSM Session Manager (no inbound\nSSH needed):\ningress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"203.0.113.0/24\"]  # your trusted range\n}",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "5.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-004",
+      "severity": "high",
+      "title": "Security group ingress open to the world",
+      "description": "Ingress rules allowing 0.0.0.0/0 expose the workload to the entire internet. Restrict source CIDRs to known ranges.",
+      "resource": "aws_security_group.jumpbox",
+      "file": "corpus/r5017/main.tf",
+      "line": 26,
+      "evidence": "ingress.cidr_blocks = 0.0.0.0/0",
+      "expected": "restricted source CIDR ranges",
+      "remediation": "Restrict the ingress CIDR to trusted ranges. Replace `0.0.0.0/0` with your\noffice/VPN CIDRs, or remove the rule and use SSM Session Manager (no inbound\nSSH needed):\ningress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"203.0.113.0/24\"]  # your trusted range\n}",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "5.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-004",
+      "severity": "high",
+      "title": "Security group ingress open to the world",
+      "description": "Ingress rules allowing 0.0.0.0/0 expose the workload to the entire internet. Restrict source CIDRs to known ranges.",
+      "resource": "aws_security_group.jumpbox",
+      "file": "corpus/r5017/main.tf",
+      "line": 26,
+      "evidence": "ingress.cidr_blocks = 0.0.0.0/0",
+      "expected": "restricted source CIDR ranges",
+      "remediation": "Restrict the ingress CIDR to trusted ranges. Replace `0.0.0.0/0` with your\noffice/VPN CIDRs, or remove the rule and use SSM Session Manager (no inbound\nSSH needed):\ningress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"203.0.113.0/24\"]  # your trusted range\n}",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "5.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-315",
+      "severity": "high",
+      "title": "Redshift cluster publicly accessible",
+      "description": "A publicly_accessible Redshift cluster accepts connections from the internet, exposing the data warehouse to network attacks.",
+      "resource": "aws_redshift_cluster.warehouse",
+      "file": "corpus/r5017/main.tf",
+      "line": 8,
+      "evidence": "publicly_accessible = true",
+      "expected": "publicly_accessible = false (or omitted)",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, move the resource into private subnets, and front it with a load balancer or API gateway if external access is required. Verify with `aws ec2 describe-security-groups`.",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-3"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-316",
+      "severity": "medium",
+      "title": "Redshift cluster without audit logging",
+      "description": "Without a logging block, Redshift audit logs are not delivered to S3, leaving connection and query activity unrecorded for forensics and compliance.",
+      "resource": "aws_redshift_cluster.warehouse",
+      "file": "corpus/r5017/main.tf",
+      "line": 1,
+      "evidence": "logging = absent (audit logging disabled)",
+      "expected": "logging { bucket_name = ... }",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-339",
+      "severity": "high",
+      "title": "Hardcoded credentials in resource config",
+      "description": "A database password written as a literal in Terraform config is stored in state, plan output, and version control. The same holds for a secret-like variable or local flowing into a credential attribute. Reference a secrets manager or a generated password instead. The secret value is never included in findings.",
+      "resource": "aws_redshift_cluster.warehouse",
+      "file": "corpus/r5017/main.tf",
+      "line": 7,
+      "evidence": "master_password = [REDACTED]",
+      "expected": "reference to a secrets manager or generated password",
+      "remediation": "Remove the hardcoded credential and rotate it immediately — it is compromised.\nReference a Secrets Manager secret instead:\ndata \"aws_secretsmanager_secret_version\" \"db\" {\n  secret_id = aws_secretsmanager_secret.db.id\n}\n# then: password = jsondecode(data.aws_secretsmanager_secret_version.db.secret_string)[\"password\"]\nIf the value was committed to git, purge it from history (BFG/truffleHog) and rotate.",
+      "references": [
+        "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-508",
+      "severity": "high",
+      "title": "Redshift cluster outside VPC",
+      "description": "A Redshift cluster without cluster_subnet_group_name is not placed in a VPC subnet group, leaving the data warehouse outside VPC network controls.",
+      "resource": "aws_redshift_cluster.warehouse",
+      "file": "corpus/r5017/main.tf",
+      "line": 1,
+      "evidence": "cluster_subnet_group_name = absent",
+      "expected": "cluster_subnet_group_name set to a VPC subnet group",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-528",
+      "severity": "low",
+      "title": "Redshift cluster without enhanced VPC routing",
+      "description": "Enhanced VPC routing forces all COPY/UNLOAD traffic between the Redshift cluster and data sources through the VPC, so VPC security groups, network ACLs and flow logs apply. It defaults to false; an absent attribute is therefore treated as disabled.",
+      "resource": "aws_redshift_cluster.warehouse",
+      "file": "corpus/r5017/main.tf",
+      "line": 1,
+      "evidence": "enhanced_vpc_routing = absent",
+      "expected": "enhanced_vpc_routing = true",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "severity": "low",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "resource": "aws_security_group.jumpbox",
+      "file": "corpus/r5017/main.tf",
+      "line": 18,
+      "evidence": "description = absent or empty",
+      "expected": "description attribute documenting the group or rule",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "severity": "low",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "resource": "aws_security_group.jumpbox",
+      "file": "corpus/r5017/main.tf",
+      "line": 18,
+      "evidence": "egress[0].description = absent",
+      "expected": "description on each inline egress rule",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-713",
+      "severity": "low",
+      "title": "Redshift cluster snapshots do not copy tags",
+      "description": "copy_tags_to_snapshot is absent or false, so automated snapshots lose the cluster's tags, breaking tag-based access control and cost allocation on restores.",
+      "resource": "aws_redshift_cluster.warehouse",
+      "file": "corpus/r5017/main.tf",
+      "line": 1,
+      "evidence": "copy_tags_to_snapshot = absent (provider default: false)",
+      "expected": "copy_tags_to_snapshot = true",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "CP-9"
+        }
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5017/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

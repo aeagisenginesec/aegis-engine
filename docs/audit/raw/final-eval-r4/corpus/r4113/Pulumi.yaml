@@ -1,0 +1,33 @@
+name: r4113-stack
+runtime: yaml
+description: Pulumi stack (toplevel layout)
+resources:
+    bastionSg:
+      type: aws:ec2:SecurityGroup
+      properties:
+        name: bastion-49ddba
+        description: bastion access
+        ingress:
+          - protocol: tcp
+            fromPort: 22
+            toPort: 22
+            cidrBlocks: ["203.0.113.7/32"]
+        egress:
+          - protocol: "-1"
+            fromPort: 0
+            toPort: 0
+            cidrBlocks: ["0.0.0.0/0"]
+
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: kv-49ddba
+        resourceGroupName: rg-kv
+        location: westeurope
+        properties:
+          sku:
+            family: A
+            name: standard
+          tenantId: 00000000-0000-0000-0000-000000000000
+          enablePurgeProtection: true
+          enableSoftDelete: true

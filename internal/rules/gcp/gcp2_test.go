@@ -1,6 +1,7 @@
 package gcp
 
 import (
+	"strings"
 	"testing"
 
 	"aegis/internal/ir"
@@ -110,6 +111,24 @@ func TestGCP008_UnknownQuiet(t *testing.T) {
 	}
 }
 
+func TestGCP008_AbsentSSLFires(t *testing.T) {
+	// Absent require_ssl: Cloud SQL does not enforce SSL by default.
+	r := res("google_sql_database_instance", "s", map[string]ir.Value{
+		"settings": ipConfig("ipv4_enabled", kv(true, 5)),
+	})
+	mustFinding(t, runRule(sqlNoSSL{}, r), "AEGIS-GCP-008")
+}
+
+func TestGCP008_NoIPConfigQuiet(t *testing.T) {
+	// No ip_configuration block at all: nothing to evaluate.
+	r := res("google_sql_database_instance", "s", map[string]ir.Value{
+		"settings": blks(3),
+	})
+	if len(runRule(sqlNoSSL{}, r)) != 0 {
+		t.Fatal("expected 0 findings without ip_configuration")
+	}
+}
+
 func TestGCP009_LegacyABACFires(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{"enable_legacy_abac": kv(true, 3)})
 	mustFinding(t, runRule(gkeLegacyABAC{}, r), "AEGIS-GCP-009")
@@ -126,27 +145,6 @@ func TestGCP009_UnknownQuiet(t *testing.T) {
 	r := res("google_container_cluster", "c", map[string]ir.Value{"enable_legacy_abac": ku(3)})
 	if len(runRule(gkeLegacyABAC{}, r)) != 0 {
 		t.Fatal("expected 0 findings for unknown")
-	}
-}
-
-func TestGCP010_NoNetworkPolicyFires(t *testing.T) {
-	r := res("google_container_cluster", "c", map[string]ir.Value{})
-	mustFinding(t, runRule(gkeNoNetworkPolicy{}, r), "AEGIS-GCP-010")
-}
-
-func TestGCP010_DisabledFires(t *testing.T) {
-	r := res("google_container_cluster", "c", map[string]ir.Value{
-		"network_policy": blks(3, blk("enabled", kv(false, 4))),
-	})
-	mustFinding(t, runRule(gkeNoNetworkPolicy{}, r), "AEGIS-GCP-010")
-}
-
-func TestGCP010_EnabledQuiet(t *testing.T) {
-	r := res("google_container_cluster", "c", map[string]ir.Value{
-		"network_policy": blks(3, blk("enabled", kv(true, 4))),
-	})
-	if len(runRule(gkeNoNetworkPolicy{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
 	}
 }
 
@@ -242,6 +240,45 @@ func TestGCP014_NoSSHQuiet(t *testing.T) {
 	}
 }
 
+// TestGCP014_PortRangeFires: a port RANGE containing 22 (e.g. 0-65535,
+// the multi-cloud fixture) permits SSH — the old exact-match logic missed
+// ranges entirely once the parser recovered the ports list.
+func TestGCP014_PortRangeFires(t *testing.T) {
+	r := res("google_compute_firewall", "f", map[string]ir.Value{
+		"source_ranges": strList(3, "0.0.0.0/0"),
+		"allow":         blks(3, blk("protocol", ks("tcp", 4), "ports", strList(4, "0-65535"))),
+	})
+	f := mustFinding(t, runRule(firewallOpenSSH{}, r), "AEGIS-GCP-014")
+	if !strings.Contains(f.Evidence.Actual, "0-65535") {
+		t.Fatalf("evidence must cite the matched range, got %q", f.Evidence.Actual)
+	}
+}
+
+// TestGCP014_RangeExcludingSSHQuiet: a range that does not contain 22
+// stays quiet.
+func TestGCP014_RangeExcludingSSHQuiet(t *testing.T) {
+	r := res("google_compute_firewall", "f", map[string]ir.Value{
+		"source_ranges": strList(3, "0.0.0.0/0"),
+		"allow":         blks(3, blk("protocol", ks("tcp", 4), "ports", strList(4, "80-443"))),
+	})
+	if len(runRule(firewallOpenSSH{}, r)) != 0 {
+		t.Fatal("expected 0 findings for range 80-443 (excludes 22)")
+	}
+}
+
+// TestGCP014_AllProtocolNoPortsFires: protocol "all" with no ports list
+// allows every port including 22.
+func TestGCP014_AllProtocolNoPortsFires(t *testing.T) {
+	r := res("google_compute_firewall", "f", map[string]ir.Value{
+		"source_ranges": strList(3, "0.0.0.0/0"),
+		"allow":         blks(3, blk("protocol", ks("all", 4))),
+	})
+	f := mustFinding(t, runRule(firewallOpenSSH{}, r), "AEGIS-GCP-014")
+	if !strings.Contains(f.Evidence.Actual, "all ports") {
+		t.Fatalf("evidence must say all ports, got %q", f.Evidence.Actual)
+	}
+}
+
 func TestGCP015_NoArmorFires(t *testing.T) {
 	r := res("google_compute_backend_service", "b", map[string]ir.Value{})
 	mustFinding(t, runRule(backendNoCloudArmor{}, r), "AEGIS-GCP-015")
@@ -318,6 +355,27 @@ func TestGCP017_UnknownQuiet(t *testing.T) {
 	if len(runRule(instancePublicIP{}, r)) != 0 {
 		t.Fatal("expected 0 findings for unknown")
 	}
+}
+
+// TestGCP017_ForwardingApplianceQuiet: a NAT/router appliance
+// (can_ip_forward = true) needs its public IP to forward traffic;
+// flagging it is a by-design false positive surfaced by the round-3
+// rescore (the parser fix exposed network_interface attributes on NAT
+// fixtures). The forwarding itself stays flagged by the IP-forwarding
+// rule.
+func TestGCP017_ForwardingApplianceQuiet(t *testing.T) {
+	r := res("google_compute_instance", "nat", map[string]ir.Value{
+		"can_ip_forward":    kv(true, 2),
+		"network_interface": nicWithAccess(true),
+	})
+	if len(runRule(instancePublicIP{}, r)) != 0 {
+		t.Fatal("expected 0 findings on forwarding appliance")
+	}
+	r2 := res("google_compute_instance", "i", map[string]ir.Value{
+		"can_ip_forward":    kv(false, 2),
+		"network_interface": nicWithAccess(true),
+	})
+	mustFinding(t, runRule(instancePublicIP{}, r2), "AEGIS-GCP-017")
 }
 
 func TestGCP018_BroadScopeFires(t *testing.T) {
@@ -463,7 +521,7 @@ func TestGCP2Rules_IDOrder(t *testing.T) {
 	rules := GCP2Rules()
 	want := []string{
 		"AEGIS-GCP-005", "AEGIS-GCP-006", "AEGIS-GCP-007", "AEGIS-GCP-008",
-		"AEGIS-GCP-009", "AEGIS-GCP-010", "AEGIS-GCP-011", "AEGIS-GCP-012",
+		"AEGIS-GCP-009", "AEGIS-GCP-011", "AEGIS-GCP-012",
 		"AEGIS-GCP-013", "AEGIS-GCP-014", "AEGIS-GCP-015", "AEGIS-GCP-016",
 		"AEGIS-GCP-017", "AEGIS-GCP-018", "AEGIS-GCP-019", "AEGIS-GCP-020",
 		"AEGIS-GCP-021", "AEGIS-GCP-022", "AEGIS-GCP-023", "AEGIS-GCP-024",

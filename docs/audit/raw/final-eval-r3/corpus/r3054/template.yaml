@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Hardened web server
+Resources:
+  WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t3.micro
+      MetadataOptions:
+        HttpTokens: required
+        HttpEndpoint: enabled
+      Tags: [{Key: Name, Value: web-32a737}]
+
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: data-32a737
+  DataPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DataBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: arn:aws:s3:::data-32a737/*

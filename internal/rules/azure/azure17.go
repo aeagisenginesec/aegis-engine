@@ -22,7 +22,6 @@ func Azure17Rules() []ir.Rule {
 		aksNoAutoScaling{},       // AEGIS-AZURE-227
 		aksNoOSAutoUpgrade{},     // AEGIS-AZURE-228
 		aksAPIServerOpen{},       // AEGIS-AZURE-229
-		aksNoAADRBAC{},           // AEGIS-AZURE-230
 		aksRunCommandOn{},        // AEGIS-AZURE-231
 		aksLBNotStandard{},       // AEGIS-AZURE-232
 		aksNoEphemeralDisk{},     // AEGIS-AZURE-233
@@ -35,7 +34,6 @@ func Azure17Rules() []ir.Rule {
 		publicIPBasicSKU{},       // AEGIS-AZURE-241
 		lbBasicSKU{},             // AEGIS-AZURE-242
 		nsgInlineOpenRule{},      // AEGIS-AZURE-244
-		aksLocalAccounts{},       // AEGIS-AZURE-245
 	}
 }
 
@@ -208,39 +206,7 @@ func (s aksAPIServerOpen) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-230: AKS without Entra ID RBAC
-// ---------------------------------------------------------------------------
-
-type aksNoAADRBAC struct{}
-
-func (aksNoAADRBAC) ID() string { return "AEGIS-AZURE-230" }
-func (aksNoAADRBAC) Title() string {
-	return "AKS cluster without Entra ID RBAC"
-}
-func (aksNoAADRBAC) Description() string {
-	return "azurerm_kubernetes_cluster without an " +
-		"azure_active_directory_role_based_access_control block manages " +
-		"cluster access with local accounts. Integrate Entra ID for " +
-		"centralized identity, MFA and conditional access."
-}
-func (aksNoAADRBAC) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (aksNoAADRBAC) AppliesTo(resType string) bool {
-	return resType == "azurerm_kubernetes_cluster"
-}
-
-func (s aksNoAADRBAC) Check(r ir.Resource) []ir.Finding {
-	blks, span, present, known := getBlocks(r, "azure_active_directory_role_based_access_control")
-	if present && !known {
-		return nil
-	}
-	if present && len(blks) > 0 {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "azure_active_directory_role_based_access_control",
-		evidenceSpan(span, r.Span), "absent (local accounts only)",
-		"azure_active_directory_role_based_access_control { ... }")}
-}
+// AEGIS-AZURE-230: AKS cluster without Entra ID RBAC
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-231: AKS with run command enabled
@@ -446,7 +412,7 @@ func (s firewallThreatIntelOff) Check(r ir.Resource) []ir.Finding {
 	if present && strings.EqualFold(strings.TrimSpace(m), "Deny") {
 		return nil
 	}
-	actual := "Alert"
+	var actual string
 	if !present {
 		actual = "absent (provider default: Alert)"
 	} else {
@@ -525,7 +491,7 @@ func (s frontdoorWAFNotPrevent) Check(r ir.Resource) []ir.Finding {
 	if present && strings.EqualFold(strings.TrimSpace(m), "Prevention") {
 		return nil
 	}
-	actual := "Detection"
+	var actual string
 	if !present {
 		actual = "absent (provider default: Detection)"
 	} else {
@@ -752,28 +718,4 @@ func (s nsgInlineOpenRule) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-245: AKS with local accounts enabled
-// ---------------------------------------------------------------------------
-
-type aksLocalAccounts struct{}
-
-func (aksLocalAccounts) ID() string { return "AEGIS-AZURE-245" }
-func (aksLocalAccounts) Title() string {
-	return "AKS cluster with local accounts enabled"
-}
-func (aksLocalAccounts) Description() string {
-	return "azurerm_kubernetes_cluster without local_account_disabled = " +
-		"true keeps the static cluster-admin kubeconfig credential " +
-		"active, bypassing Entra ID controls. Disable local accounts " +
-		"once Entra ID RBAC is configured."
-}
-func (aksLocalAccounts) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (aksLocalAccounts) AppliesTo(resType string) bool {
-	return resType == "azurerm_kubernetes_cluster"
-}
-
-func (s aksLocalAccounts) Check(r ir.Resource) []ir.Finding {
-	return absentInsecureFalse(s, r, "local_account_disabled",
-		"local_account_disabled = true")
-}
+// AEGIS-AZURE-245: AKS cluster with local accounts enabled

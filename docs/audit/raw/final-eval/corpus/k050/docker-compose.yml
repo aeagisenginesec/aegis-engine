@@ -1,0 +1,22 @@
+services:
+  api:
+    image: example/api:2.4.0
+    user: "10001"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  worker:
+    image: example/worker:2.4.0
+    user: "10001"
+    read_only: true
+
+  # Legacy admin panel, pending migration
+  admin:
+    image: example/admin:latest
+    ports:
+      - "8081:80"
+    environment:
+      ADMIN_PASSWORD: "admin123"

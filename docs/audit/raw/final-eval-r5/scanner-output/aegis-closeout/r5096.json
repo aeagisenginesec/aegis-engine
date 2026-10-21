@@ -1,0 +1,61 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5096",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 2,
+    "critical": 0,
+    "high": 2,
+    "medium": 0,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-053",
+      "severity": "high",
+      "title": "NSG rule allows RDP from the internet",
+      "description": "azurerm_network_security_rule allowing TCP 3389 from * or 0.0.0.0/0 exposes RDP. Restrict source addresses.",
+      "resource": "azurerm_network_security_group.ops-ece2be",
+      "file": "corpus/r5096/main.bicep",
+      "line": 1,
+      "evidence": "security_rule = RDP open to *",
+      "expected": "restrict source_address_prefix",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-244",
+      "severity": "high",
+      "title": "NSG inline security rule open to the internet",
+      "description": "azurerm_network_security_group security_rule blocks with inbound Allow and a source of *, 0.0.0.0/0 or Internet expose the subnet to the world. Restrict inline rule sources.",
+      "resource": "azurerm_network_security_group.ops-ece2be",
+      "file": "corpus/r5096/main.bicep",
+      "line": 1,
+      "evidence": "security_rule = inline rule source *",
+      "expected": "restricted source address prefix",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5096/main.bicep",
+        "status": "parsed",
+        "format": "bicep"
+      }
+    ]
+  }
+}

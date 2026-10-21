@@ -1,0 +1,68 @@
+name: order-events
+runtime: yaml
+description: Order event processor. Environment is KMS-encrypted, but there is no DLQ, no tracing and the role is broader than needed.
+template:
+  configuration:
+    kmsKeyArn:
+      type: String
+    codeBucket:
+      type: String
+    codeKey:
+      type: String
+      default: order-events.zip
+  variables:
+    functionName: order-events
+  resources:
+    processorRole:
+      type: aws:iam:Role
+      properties:
+        name: ${functionName}-role
+        assumeRolePolicy:
+          fn::toJSON:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service: lambda.amazonaws.com
+                Action: sts:AssumeRole
+    processorPolicy:
+      type: aws:iam:RolePolicy
+      properties:
+        name: ${functionName}-policy
+        role: ${processorRole.id}
+        policy:
+          fn::toJSON:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                  - sqs:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+              - Effect: Allow
+                Action: kms:Decrypt
+                Resource: ${kmsKeyArn}
+    processorFunction:
+      type: aws:lambda:Function
+      properties:
+        functionName: ${functionName}
+        runtime: python3.12
+        handler: events.handler
+        role: ${processorRole.arn}
+        s3Bucket: ${codeBucket}
+        s3Key: ${codeKey}
+        kmsKeyArn: ${kmsKeyArn}
+        timeout: 120
+        memorySize: 1024
+        reservedConcurrentExecutions: 50
+      options:
+        dependsOn:
+          - ${processorPolicy}
+  outputs:
+    functionArn: ${processorFunction.arn}

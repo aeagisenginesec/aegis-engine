@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Least-privilege execution role for the thumbnail-generator Lambda. Scoped
+  to a single bucket prefix, TLS-only, and guarded by a permissions boundary.
+
+Parameters:
+  AppName:
+    Type: String
+    Default: thumbnail-gen
+  SourceBucket:
+    Type: String
+    Description: Bucket holding the original uploads.
+  BoundaryPolicyArn:
+    Type: String
+    Default: ''
+
+Conditions:
+  HasBoundary: !Not [!Equals [!Ref BoundaryPolicyArn, '']]
+
+Resources:
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AppName}-exec-${AWS::Region}'
+      PermissionsBoundary: !If [HasBoundary, !Ref BoundaryPolicyArn, !Ref 'AWS::NoValue']
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref 'AWS::AccountId'
+      Policies:
+        - PolicyName: !Sub '${AppName}-s3-read'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub 'arn:aws:s3:::${SourceBucket}/uploads/*'
+                Condition:
+                  Bool:
+                    aws:SecureTransport: 'true'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AppName}*'
+
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AppName}'
+      RetentionInDays: 90
+
+Outputs:
+  RoleArn:
+    Value: !GetAtt ExecutionRole.Arn

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-b49b4d
+  labels:
+    app: web-b49b4d
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-b49b4d
+  template:
+    metadata:
+      labels:
+        app: web-b49b4d
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: web
+          image: registry.example.com/web:2.1.0
+          resources:
+            limits: {cpu: "250m", memory: 128Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}

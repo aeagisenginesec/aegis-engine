@@ -55,7 +55,7 @@ const usageText = `aegis — Infrastructure-as-Code security scanner
 Usage:
   aegis scan <dir> [--format=text|json|sarif] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW] [--config=aegis.yaml] [--exclude=globs]
   aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json] [--force]
-  aegis serve [--addr=127.0.0.1:8734]
+  aegis serve [--addr=127.0.0.1:8734] [--auth-token=TOKEN]
   aegis quality-gate [--format=text|json] [--bench-dir=DIR] [--corpus-dir=DIR]
   aegis doctor
   aegis --version
@@ -75,6 +75,8 @@ Commands:
 
 Flags:
   --format     output format: text (default), json, sarif (scan only)
+  --color      text colors: auto (default, on when stdout is a terminal),
+               always, never
   --rules      comma-separated rule packs: aws,azure,gcp,k8s,supplychain,all (default "all")
   --advisories threat-advisory JSON feed enabling supply-chain checks
   --custom-rules directory of YAML custom rule files (see docs/custom-rules-example.yaml)
@@ -99,6 +101,11 @@ Flags:
   --exclude  scan: comma-separated glob patterns for paths to skip
                (e.g. "vendor/**,*.tfvars"); skipped files are reported
   --strict   scan: fail with exit 2 if any file fails to parse
+  --attack-paths scan: report only attack-chain findings (internet-to-data
+               kill chains and exposure paths); works with text and json
+  --auth-token serve: require "Authorization: Bearer TOKEN" on /v1/scan
+               (or set AEGIS_SERVE_TOKEN); required in practice whenever
+               serve binds a non-loopback address
 
 Exit codes:
   0  scan clean (or below --fail-on threshold) / fix dry run
@@ -176,6 +183,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 	}
 	if cmd == "serve" {
 		addr := "127.0.0.1:8734"
+		authToken := os.Getenv("AEGIS_SERVE_TOKEN")
 		for i := 0; i < len(flagArgs); i++ {
 			a := flagArgs[i]
 			if a == "--addr" && i+1 < len(flagArgs) {
@@ -183,9 +191,14 @@ func run(args []string, stdout, stderr io.Writer) int {
 				i++
 			} else if strings.HasPrefix(a, "--addr=") {
 				addr = strings.TrimPrefix(a, "--addr=")
+			} else if a == "--auth-token" && i+1 < len(flagArgs) {
+				authToken = flagArgs[i+1]
+				i++
+			} else if strings.HasPrefix(a, "--auth-token=") {
+				authToken = strings.TrimPrefix(a, "--auth-token=")
 			}
 		}
-		return runServe(addr)
+		return runServe(addr, authToken)
 	}
 	if len(posArgs) < 2 {
 		fmt.Fprintf(stderr, "aegis: %s requires a target directory\n", cmd)
@@ -332,7 +345,7 @@ func runFix(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		claimed := map[string]map[int]int{}
 		var selected []int // indexes into outcomes
 		for i, o := range outcomes {
-			if !(o.validation.Fixed && len(o.validation.NewFindings) == 0) {
+			if !o.validation.Fixed || len(o.validation.NewFindings) != 0 {
 				outcomes[i].skipped = "did not validate cleanly"
 				continue
 			}
@@ -435,7 +448,14 @@ func runFix(target string, flagArgs []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "aegis: re-scan error: %v\n", rerr)
 			return 2
 		}
-		fmt.Fprintf(stdout, "\nre-scan: findings %d → %d\n", before, len(after.Findings))
+		// In JSON mode the re-scan line must not go to stdout: it
+		// would corrupt the JSON document (Phase 7 F1). It belongs
+		// on stderr there; text mode keeps it on stdout.
+		if *format == "json" {
+			fmt.Fprintf(stderr, "\nre-scan: findings %d → %d\n", before, len(after.Findings))
+		} else {
+			fmt.Fprintf(stdout, "\nre-scan: findings %d → %d\n", before, len(after.Findings))
+		}
 	}
 	if len(outcomes) > 0 {
 		return 1
@@ -524,6 +544,41 @@ func (f *failOnValue) Set(s string) error {
 	return nil
 }
 
+// resolveColor maps --color to a boolean. "auto" (the default) enables
+// color only when stdout is a terminal, honoring the NO_COLOR convention
+// and TERM=dumb. It returns false for ok on an unknown mode.
+func resolveColor(mode string, stdout io.Writer) (color, ok bool) {
+	switch strings.ToLower(strings.TrimSpace(mode)) {
+	case "", "auto":
+		if os.Getenv("NO_COLOR") != "" {
+			return false, true
+		}
+		if os.Getenv("TERM") == "dumb" {
+			return false, true
+		}
+		return isTerminal(stdout), true
+	case "always":
+		return true, true
+	case "never":
+		return false, true
+	default:
+		return false, false
+	}
+}
+
+// isTerminal reports whether w is a character device (a terminal).
+func isTerminal(w io.Writer) bool {
+	f, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	st, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return st.Mode()&os.ModeCharDevice != 0
+}
+
 // complianceSummary builds the per-control pass/fail summary for a
 // --compliance run: every control mapped for the framework is listed;
 // controls with at least one finding fail, the rest pass.
@@ -557,6 +612,7 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	format := fs.String("format", "text", "")
 	ruleset := fs.String("rules", "all", "")
+	colorMode := fs.String("color", "auto", "")
 	advisoriesPath := fs.String("advisories", "", "")
 	baselinePath := fs.String("baseline", "", "")
 	baselineOut := fs.String("baseline-out", "", "")
@@ -592,6 +648,11 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	case "text", "json", "sarif":
 	default:
 		fmt.Fprintf(stderr, "aegis: unknown --format %q (want text|json|sarif)\n", *format)
+		return 2
+	}
+	color, ok := resolveColor(*colorMode, stdout)
+	if !ok {
+		fmt.Fprintf(stderr, "aegis: unknown --color %q (want auto|always|never)\n", *colorMode)
 		return 2
 	}
 	if *complianceFw != "" && !rules.HasComplianceFramework(*complianceFw) {
@@ -747,7 +808,7 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		if *attackPaths {
 			werr = report.WriteAttackPathsText(stdout, res)
 		} else {
-			werr = report.WriteText(stdout, res)
+			werr = report.WriteTextWithOptions(stdout, res, report.TextOptions{Color: color})
 		}
 	}
 	if werr != nil {
@@ -882,9 +943,31 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 	if _, err := os.Stat(target); err != nil {
 		return res, nil, nil, fmt.Errorf("target: %w", err)
 	}
-	files, err := discovery.Discover(target)
+	files, discSkipped, err := discovery.DiscoverWithReport(target)
 	if err != nil {
 		return res, nil, nil, fmt.Errorf("discovery: %w", err)
+	}
+	// Files discovery dropped for size/total caps must be reported, not
+	// silently skipped: an over-cap file used to vanish with no
+	// diagnostic at all (0 findings that looked clean). Oversize files
+	// get a warning diagnostic each; a scan-wide cap hit gets one
+	// diagnostic naming the cap (the remaining files are unknowable).
+	var discSkippedFiles []discovery.Skipped
+	for _, sk := range discSkipped {
+		if sk.Path == target {
+			res.Diagnostics = append(res.Diagnostics, ir.Diagnostic{
+				Level:   "warning",
+				Message: sk.Reason,
+				Span:    ir.Span{File: target},
+			})
+			continue
+		}
+		discSkippedFiles = append(discSkippedFiles, sk)
+		res.Diagnostics = append(res.Diagnostics, ir.Diagnostic{
+			Level:   "warning",
+			Message: fmt.Sprintf("discovery: skipped %s: %s", sk.Path, sk.Reason),
+			Span:    ir.Span{File: sk.Path},
+		})
 	}
 	var resources []ir.Resource
 	var mods []terraform.Module
@@ -898,7 +981,16 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 	// Build scan-completeness: every discovered file gets an explicit outcome,
 	// including which adapter (format) handled it.
 	completeness := ir.ScanCompleteness{
-		FilesDiscovered: len(files),
+		FilesDiscovered: len(files) + len(discSkippedFiles),
+	}
+	// Discovery-dropped oversize files count as discovered-but-skipped.
+	for _, sk := range discSkippedFiles {
+		completeness.FilesSkipped++
+		completeness.Files = append(completeness.Files, ir.FileStatus{
+			Path:   sk.Path,
+			Status: "skipped",
+			Reason: sk.Reason,
+		})
 	}
 	for i, pr := range results {
 		res.Diagnostics = append(res.Diagnostics, pr.diags...)
@@ -969,6 +1061,11 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 			expanded, mdiags := semantics.ExpandModules(target, mods, tfAdapter, 2)
 			res.Diagnostics = append(res.Diagnostics, mdiags...)
 			resources = append(resources, expanded...)
+			// Drop bare-address twins: module files are parsed once as
+			// roots and again via expansion. The expanded copy (correct
+			// address, resolved inputs, rewritten refs) is authoritative;
+			// the bare copy would double every finding on the block.
+			resources = semantics.RemoveBareModuleTwins(resources, expanded)
 		}
 	}
 	res.Resources = len(resources)
@@ -1029,7 +1126,7 @@ func parseOneFile(f discovery.File, adapters []ir.Adapter) (pr fileParseResult) 
 	if discovery.IsExcluded(f.Path) {
 		pr.diags = append(pr.diags, ir.Diagnostic{
 			Level:   "warning",
-			Message: fmt.Sprintf("excluded by --exclude pattern; skipped"),
+			Message: "excluded by --exclude pattern; skipped",
 			Span:    ir.Span{File: f.Path},
 		})
 		return pr

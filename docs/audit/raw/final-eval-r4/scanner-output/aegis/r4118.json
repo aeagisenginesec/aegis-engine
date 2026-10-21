@@ -1,0 +1,391 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 24,
+    "critical": 0,
+    "high": 4,
+    "medium": 15,
+    "low": 5
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZR-001",
+      "severity": "high",
+      "title": "Storage account allows public blob access",
+      "description": "allow_blob_public_access exposes blob data to anonymous requests. It should be disabled unless public content delivery is intended.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 14,
+      "evidence": "allow_blob_public_access = true",
+      "expected": "allow_blob_public_access = false",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-028",
+      "severity": "medium",
+      "title": "Storage account without blob versioning",
+      "description": "azurerm_storage_account blob_properties without versioning_enabled loses protection against accidental overwrite or deletion. Enable versioning.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "blob_properties = absent",
+      "expected": "blob_properties { versioning_enabled = true }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time restore / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/backup/backup-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-029",
+      "severity": "medium",
+      "title": "Storage account without blob soft delete",
+      "description": "azurerm_storage_account blob_properties without delete_retention_policy cannot recover accidentally deleted blobs. Enable soft delete.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "blob_properties = absent",
+      "expected": "blob_properties { delete_retention_policy { days = 7 } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-031",
+      "severity": "medium",
+      "title": "Storage account allows shared key access",
+      "description": "azurerm_storage_account with shared_access_key_enabled = true permits storage account key authentication. Prefer Microsoft Entra ID and disable shared key access.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "shared_access_key_enabled = [REDACTED]",
+      "expected": "shared_access_key_enabled = false",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-032",
+      "severity": "medium",
+      "title": "Storage account without infrastructure encryption",
+      "description": "azurerm_storage_account without infrastructure_encryption_enabled lacks double encryption at the infrastructure layer. Enable it for defense in depth.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "infrastructure_encryption_enabled = absent",
+      "expected": "infrastructure_encryption_enabled = true",
+      "remediation": "Enable encryption at rest. For storage accounts set `infrastructure_encryption_enabled = true` and use a customer-managed key via `azurerm_key_vault_key`. For regulated data use a customer-managed key in Key Vault with purge protection and key rotation.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-atrest"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-033",
+      "severity": "low",
+      "title": "Storage account without customer-managed key",
+      "description": "azurerm_storage_account without customer_managed_key block uses Microsoft-managed keys. Use a customer-managed key in Key Vault for sensitive data.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "customer_managed_key = [REDACTED]",
+      "expected": "customer_managed_key { key_vault_key_id = ... }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-034",
+      "severity": "low",
+      "title": "Storage account queue without logging",
+      "description": "azurerm_storage_account queue_properties without logging loses audit trail for queue operations. Enable queue logging.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "queue_properties = absent",
+      "expected": "queue_properties { logging { read = true } }",
+      "remediation": "Enable audit logging. Turn on Azure Monitor diagnostic settings, the Activity Log, and Defender for Cloud. Ship logs to a Log Analytics workspace in a security subscription.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-046",
+      "severity": "medium",
+      "title": "MSSQL server without security alert policy",
+      "description": "azurerm_mssql_server without security_alert_policy misses advanced threat detection. Enable security alerts.",
+      "resource": "azurerm_mssql_server.dbServer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 19,
+      "evidence": "security_alert_policy = absent",
+      "expected": "security_alert_policy block with state = \"Enabled\"",
+      "remediation": "Enable the security alert policy and clear disabled_alerts so all\nthreat types are detected:\nresource \"azurerm_mssql_server_security_alert_policy\" \"pol\" {\n  resource_group_name  = azurerm_resource_group.rg.name\n  server_name          = azurerm_mssql_server.db.name\n  state                = \"Enabled\"\n  disabled_alerts      = []\n  email_account_admins = true\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_security_alert_policy"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-101",
+      "severity": "medium",
+      "title": "MSSQL server without auditing enabled",
+      "description": "azurerm_mssql_server with no azurerm_mssql_server_extended_auditing_policy referencing it loses the database activity audit trail. Attach an extended auditing policy with a storage endpoint. The legacy azurerm_sql_server type is covered the same way via its inline extended_auditing_policy block (it has no standalone policy resource).",
+      "resource": "azurerm_mssql_server.dbServer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 19,
+      "evidence": "extended_auditing_policy = absent",
+      "expected": "azurerm_mssql_server_extended_auditing_policy with server_id = azurerm_mssql_server.dbServer.id",
+      "remediation": "Attach an extended auditing policy to the server:\nresource \"azurerm_mssql_server_extended_auditing_policy\" \"audit\" {\n  server_id                  = azurerm_mssql_server.db.id\n  storage_endpoint           = azurerm_storage_account.audit.primary_blob_endpoint\n  storage_account_access_key = azurerm_storage_account.audit.primary_access_key\n  retention_in_days          = 90\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_extended_auditing_policy"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-102",
+      "severity": "low",
+      "title": "MSSQL auditing retention less than 90 days",
+      "description": "azurerm_mssql_server_extended_auditing_policy with retention_in_days \u003c 90 discards audit logs too early for investigation. Retain at least 90 days.",
+      "resource": "azurerm_mssql_server.dbServer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 19,
+      "evidence": "retention_in_days = absent or \u003c 90",
+      "expected": "retention_in_days \u003e= 90",
+      "remediation": "Raise the audit log retention on the extended auditing policy:\nresource \"azurerm_mssql_server_extended_auditing_policy\" \"audit\" {\n  retention_in_days = 90\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_extended_auditing_policy"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-105",
+      "severity": "medium",
+      "title": "MSSQL server not using TLS 1.2",
+      "description": "azurerm_mssql_server with minimum_tls_version absent or below \"1.2\" permits older, weaker protocol versions in transit. Set minimum_tls_version = \"1.2\".",
+      "resource": "azurerm_mssql_server.dbServer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 19,
+      "evidence": "minimum_tls_version = absent (defaults below 1.2)",
+      "expected": "minimum_tls_version = \"1.2\"",
+      "remediation": "Enforce TLS 1.2 on the server:\nresource \"azurerm_mssql_server\" \"db\" {\n  minimum_tls_version = \"1.2\"\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-106",
+      "severity": "high",
+      "title": "MSSQL server allows public network access",
+      "description": "azurerm_mssql_server with public_network_access_enabled true or absent (provider default is true) exposes the database endpoint. Set public_network_access_enabled = false and use private endpoints.",
+      "resource": "azurerm_mssql_server.dbServer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 19,
+      "evidence": "public_network_access_enabled = absent (defaults to true)",
+      "expected": "public_network_access_enabled = false",
+      "remediation": "Disable public network access and front the server with a private endpoint:\nresource \"azurerm_mssql_server\" \"db\" {\n  public_network_access_enabled = false\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-107",
+      "severity": "medium",
+      "title": "MSSQL server without Azure AD authentication",
+      "description": "azurerm_mssql_server with no azurerm_mssql_server_azuread_administrator referencing it relies solely on SQL authentication. Configure an Azure AD administrator for centralized identity.",
+      "resource": "azurerm_mssql_server.dbServer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 19,
+      "evidence": "azuread_administrator = absent",
+      "expected": "azurerm_mssql_server_azuread_administrator with server_id = azurerm_mssql_server.dbServer.id",
+      "remediation": "Add an Azure AD administrator to the server:\nresource \"azurerm_mssql_server_azuread_administrator\" \"ad\" {\n  server_id                   = azurerm_mssql_server.db.id\n  login_username              = \"sql-admin\"\n  object_id                   = data.azuread_user.admin.object_id\n  tenant_id                   = data.azurerm_client_config.current.tenant_id\n  azuread_authentication_only = true\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_azuread_administrator"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-108",
+      "severity": "medium",
+      "title": "MSSQL server without private endpoint",
+      "description": "azurerm_mssql_server with no azurerm_private_endpoint whose private_service_connection targets it keeps database traffic off the private network. Add a private endpoint with subresource \"sqlServer\".",
+      "resource": "azurerm_mssql_server.dbServer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 19,
+      "evidence": "private_endpoint = absent",
+      "expected": "azurerm_private_endpoint with private_service_connection targeting azurerm_mssql_server.dbServer",
+      "remediation": "Create a private endpoint for the SQL server subresource:\nresource \"azurerm_private_endpoint\" \"sql\" {\n  subnet_id = azurerm_subnet.db.id\n  private_service_connection {\n    name                           = \"sql-privatelink\"\n    private_connection_resource_id = azurerm_mssql_server.db.id\n    subresource_names              = [\"sqlServer\"]\n    is_manual_connection           = false\n  }\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-122",
+      "severity": "high",
+      "title": "Storage blobs allow public access",
+      "description": "azurerm_storage_account with allow_blob_public_access = true (the provider default) exposes blob data to anonymous requests. Set allow_blob_public_access = false.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 14,
+      "evidence": "allow_blob_public_access = true",
+      "expected": "allow_blob_public_access = false",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-124",
+      "severity": "medium",
+      "title": "Storage account without private endpoint",
+      "description": "azurerm_storage_account with no azurerm_private_endpoint targeting it is reachable over the public endpoint. Connect it via a private endpoint on the storage subresource (blob, dfs, queue, table, or file).",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "private_endpoint = no azurerm_private_endpoint targets this account",
+      "expected": "azurerm_private_endpoint { private_service_connection { private_connection_resource_id = azurerm_storage_account.this.id subresource_names = [\"blob\"] } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-125",
+      "severity": "low",
+      "title": "Storage account without SAS expiry policy",
+      "description": "azurerm_storage_account without a sas_policy block issues shared access signatures with no enforced expiry. Set sas_policy { expiration_period and expiration_action } to bound SAS lifetimes.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "sas_policy = absent",
+      "expected": "sas_policy { expiration_period = \"90.00:00:00\" expiration_action = \"Log\" }",
+      "remediation": "Set a SAS expiry policy on the storage account so shared access signatures\ncannot be minted without an expiration:\nresource \"azurerm_storage_account\" \"this\" {\n  # ...\n  sas_policy {\n    expiration_period = \"00.01:00:00\"\n    expiration_action = \"Log\"\n  }\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account#sas_policy"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-147",
+      "severity": "low",
+      "title": "Storage account without blob change feed",
+      "description": "azurerm_storage_account blob_properties without change_feed_enabled = true records no ordered log of blob create/update/delete events, blinding incident response to data tampering. Enable the blob change feed.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "blob_properties.change_feed_enabled = absent (default false)",
+      "expected": "blob_properties { change_feed_enabled = true }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-148",
+      "severity": "high",
+      "title": "Storage account with public network access (default)",
+      "description": "azurerm_storage_account without public_network_access_enabled = false exposes the storage endpoint to the internet by default. Disable public network access and use private endpoints instead. (Strict complement of AEGIS-AZURE-006, which covers an explicit true value.)",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "public_network_access_enabled = absent (default true)",
+      "expected": "public_network_access_enabled = false",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-149",
+      "severity": "medium",
+      "title": "Storage account without network rules",
+      "description": "azurerm_storage_account without a network_rules block accepts storage traffic from any network by default. Add network_rules with default_action = \"Deny\" and explicit allow rules. (Strict complement of AEGIS-AZURE-021, which covers an explicit Allow default action.)",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "network_rules = absent (default allow all)",
+      "expected": "network_rules { default_action = \"Deny\" ... }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-180",
+      "severity": "medium",
+      "title": "SQL server without managed identity",
+      "description": "azurerm_mssql_server without an identity block cannot use customer-managed keys for transparent data encryption or Entra ID authentication cleanly. Enable a system-assigned identity.",
+      "resource": "azurerm_mssql_server.dbServer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 19,
+      "evidence": "identity = absent (no managed identity)",
+      "expected": "identity { type = \"SystemAssigned\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-181",
+      "severity": "medium",
+      "title": "Storage account without managed identity",
+      "description": "azurerm_storage_account without an identity block cannot use customer-managed keys stored in Key Vault. Enable a system-assigned identity when CMK encryption is required.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "identity = absent (no managed identity)",
+      "expected": "identity { type = \"SystemAssigned\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-192",
+      "severity": "medium",
+      "title": "Storage account not defaulting to OAuth authentication",
+      "description": "azurerm_storage_account without default_to_oauth_authentication = true lets clients fall back to Shared Key auth. Default to Entra ID OAuth for data-plane operations.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "default_to_oauth_authentication = absent (provider default: false)",
+      "expected": "default_to_oauth_authentication = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-195",
+      "severity": "medium",
+      "title": "Storage account allows nested public items",
+      "description": "azurerm_storage_account with allow_nested_items_to_be_public lets containers and blobs be marked public while account-level blob public access is enabled. Disable it to enforce private-by-default.",
+      "resource": "azurerm_storage_account.dataAccount",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+      "line": 6,
+      "evidence": "allow_nested_items_to_be_public = absent (provider default: enabled)",
+      "expected": "allow_nested_items_to_be_public = false",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4118/Pulumi.yaml",
+        "status": "parsed",
+        "format": "pulumi"
+      }
+    ]
+  }
+}

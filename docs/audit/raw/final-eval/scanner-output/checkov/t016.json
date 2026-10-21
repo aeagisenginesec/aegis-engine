@@ -1,0 +1,297 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_33",
+                "bc_check_id": "BC_AWS_IAM_63",
+                "check_name": "Ensure KMS key policy does not contain wildcard (*) principal",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/[0]/Statement/[0]/Principal/AWS"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_kms_key\" \"data\" {\n"
+                    ],
+                    [
+                        15,
+                        "  description             = \"Application data key\"\n"
+                    ],
+                    [
+                        16,
+                        "  enable_key_rotation     = false\n"
+                    ],
+                    [
+                        17,
+                        "  deletion_window_in_days = 7\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        20,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        21,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        22,
+                        "      {\n"
+                    ],
+                    [
+                        23,
+                        "        Sid       = \"OpenDecrypt\"\n"
+                    ],
+                    [
+                        24,
+                        "        Effect    = \"Allow\"\n"
+                    ],
+                    [
+                        25,
+                        "        Principal = { AWS = \"*\" }\n"
+                    ],
+                    [
+                        26,
+                        "        Action = [\n"
+                    ],
+                    [
+                        27,
+                        "          \"kms:Decrypt\",\n"
+                    ],
+                    [
+                        28,
+                        "          \"kms:DescribeKey\"\n"
+                    ],
+                    [
+                        29,
+                        "        ]\n"
+                    ],
+                    [
+                        30,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        31,
+                        "      }\n"
+                    ],
+                    [
+                        32,
+                        "    ]\n"
+                    ],
+                    [
+                        33,
+                        "  })\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  tags = {\n"
+                    ],
+                    [
+                        36,
+                        "    Name = \"app-data-key\"\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t016/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t016/main.tf",
+                "file_line_range": [
+                    14,
+                    38
+                ],
+                "resource": "aws_kms_key.data",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.KMSKeyWildcardPrincipal",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "app-data-key"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-kms-key-policy-does-not-contain-wildcard-principal",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t016/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_7",
+                "bc_check_id": "BC_AWS_LOGGING_8",
+                "check_name": "Ensure rotation for customer created CMKs is enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "enable_key_rotation"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_kms_key\" \"data\" {\n"
+                    ],
+                    [
+                        15,
+                        "  description             = \"Application data key\"\n"
+                    ],
+                    [
+                        16,
+                        "  enable_key_rotation     = false\n"
+                    ],
+                    [
+                        17,
+                        "  deletion_window_in_days = 7\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        20,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        21,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        22,
+                        "      {\n"
+                    ],
+                    [
+                        23,
+                        "        Sid       = \"OpenDecrypt\"\n"
+                    ],
+                    [
+                        24,
+                        "        Effect    = \"Allow\"\n"
+                    ],
+                    [
+                        25,
+                        "        Principal = { AWS = \"*\" }\n"
+                    ],
+                    [
+                        26,
+                        "        Action = [\n"
+                    ],
+                    [
+                        27,
+                        "          \"kms:Decrypt\",\n"
+                    ],
+                    [
+                        28,
+                        "          \"kms:DescribeKey\"\n"
+                    ],
+                    [
+                        29,
+                        "        ]\n"
+                    ],
+                    [
+                        30,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        31,
+                        "      }\n"
+                    ],
+                    [
+                        32,
+                        "    ]\n"
+                    ],
+                    [
+                        33,
+                        "  })\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  tags = {\n"
+                    ],
+                    [
+                        36,
+                        "    Name = \"app-data-key\"\n"
+                    ],
+                    [
+                        37,
+                        "  }\n"
+                    ],
+                    [
+                        38,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t016/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t016/main.tf",
+                "file_line_range": [
+                    14,
+                    38
+                ],
+                "resource": "aws_kms_key.data",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.KMSRotation",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "app-data-key"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t016/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 3,
+        "failed": 2,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

@@ -1,0 +1,81 @@
+name: invoice-processor
+runtime: yaml
+description: Hardened invoice Lambda. KMS-encrypted environment, scoped role, tracing, DLQ and reserved concurrency.
+template:
+  configuration:
+    kmsKeyArn:
+      type: String
+    codeBucket:
+      type: String
+    codeKey:
+      type: String
+      default: invoice-processor.zip
+    dlqArn:
+      type: String
+  variables:
+    functionName: invoice-processor
+  resources:
+    processorRole:
+      type: aws:iam:Role
+      properties:
+        name: ${functionName}-role
+        assumeRolePolicy:
+          fn::toJSON:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service: lambda.amazonaws.com
+                Action: sts:AssumeRole
+                Condition:
+                  StringEquals:
+                    aws:SourceAccount:
+                      fn::invoke:
+                        Function: aws:getCallerIdentity
+                        Return: accountId
+    processorPolicy:
+      type: aws:iam:RolePolicy
+      properties:
+        name: ${functionName}-access
+        role: ${processorRole.id}
+        policy:
+          fn::toJSON:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: arn:aws:s3:::invoices-incoming/*
+              - Effect: Allow
+                Action: kms:Decrypt
+                Resource: ${kmsKeyArn}
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:log-group:/aws/lambda/${functionName}*
+              - Effect: Allow
+                Action: sqs:SendMessage
+                Resource: ${dlqArn}
+    processorFunction:
+      type: aws:lambda:Function
+      properties:
+        functionName: ${functionName}
+        runtime: python3.12
+        handler: processor.handler
+        role: ${processorRole.arn}
+        s3Bucket: ${codeBucket}
+        s3Key: ${codeKey}
+        kmsKeyArn: ${kmsKeyArn}
+        tracingConfig:
+          mode: Active
+        deadLetterConfig:
+          targetArn: ${dlqArn}
+        reservedConcurrentExecutions: 25
+        timeout: 120
+        memorySize: 1024
+      options:
+        dependsOn:
+          - ${processorPolicy}
+  outputs:
+    functionArn: ${processorFunction.arn}

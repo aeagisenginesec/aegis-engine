@@ -1,0 +1,67 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4198",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-K8S-014",
+      "title": "Container without liveness probe",
+      "description": "A container without a livenessProbe is never restarted when it deadlocks, leaving a broken pod serving traffic. Define a liveness probe.",
+      "severity": "low",
+      "resource": "k8s_Deployment.worker-80d82e",
+      "evidence": {
+        "attribute": "livenessProbe",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4198/deployment.yaml",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (container \"worker\")",
+        "expected": "livenessProbe configured"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-015",
+      "title": "Container without readiness probe",
+      "description": "A container without a readinessProbe receives traffic before it is ready, causing failed requests during startup. Define a readiness probe.",
+      "severity": "low",
+      "resource": "k8s_Deployment.worker-80d82e",
+      "evidence": {
+        "attribute": "readinessProbe",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4198/deployment.yaml",
+          "start_line": 1,
+          "start_col": 1,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (container \"worker\")",
+        "expected": "readinessProbe configured"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4198/deployment.yaml",
+        "status": "parsed",
+        "format": "manifests"
+      }
+    ]
+  }
+}

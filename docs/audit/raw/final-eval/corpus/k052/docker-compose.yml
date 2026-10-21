@@ -1,0 +1,33 @@
+services:
+  api:
+    build: .
+    image: example/api:1.9.0
+    user: "10001"
+    read_only: true
+    tmpfs:
+      - /tmp
+    secrets:
+      - db_password
+    environment:
+      DB_HOST: db
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  db:
+    image: postgres:16.3-alpine
+    secrets:
+      - db_password
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+
+volumes:
+  dbdata:

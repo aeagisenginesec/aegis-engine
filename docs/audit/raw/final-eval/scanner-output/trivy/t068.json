@@ -1,0 +1,686 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1329f-205e-7484-ad3e-b79b8a4e1318",
+  "CreatedAt": "2026-10-13T00:17:31.742299975Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t068",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 45,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 6
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0029",
+          "Title": "VPC flow logs should be enabled for all subnetworks",
+          "Description": "VPC flow logs record information about all traffic, which is a vital tool in reviewing anomalous traffic.\n",
+          "Message": "Subnetwork does not have VPC flow logs enabled.",
+          "Namespace": "builtin.google.compute.google0029",
+          "Query": "data.builtin.google.compute.google0029.deny",
+          "Resolution": "Enable VPC flow logs",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0029",
+          "References": [
+            "https://avd.aquasec.com/misconfig/gcp-0029"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_compute_subnetwork.no_logs",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 20,
+            "EndLine": 25,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 20,
+                  "Content": "resource \"google_compute_subnetwork\" \"no_logs\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_subnetwork\"\u001b[0m \u001b[38;5;37m\"no_logs\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "  name          = \"default-subnet\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m          = \u001b[38;5;37m\"default-subnet\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "  network       = google_compute_network.default.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mnetwork\u001b[0m       = google_compute_network.default.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  region        = \"us-central1\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mregion\u001b[0m        = \u001b[38;5;37m\"us-central1\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  ip_cidr_range = \"10.128.0.0/20\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mip_cidr_range\u001b[0m = \u001b[38;5;37m\"10.128.0.0/20\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0072",
+          "Title": "Google Compute Network Using Firewall Rule that Allows All Ports",
+          "Description": "Firewall rules should not be wide open to all ports. Lock down rules to only required ports.\n",
+          "Message": "Firewall rule allows access to all ports.",
+          "Namespace": "builtin.google.compute.google0072",
+          "Query": "data.builtin.google.compute.google0072.deny",
+          "Resolution": "Modify firewall rules that allow all ports to restrict to only required ports. Use separate rules for specific port ranges as needed, instead of a single overly broad rule.\n",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0072",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall#allow",
+            "https://avd.aquasec.com/misconfig/gcp-0072"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_compute_firewall.allow_internal",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 27,
+            "EndLine": 36,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 27,
+                  "Content": "resource \"google_compute_firewall\" \"allow_internal\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_firewall\"\u001b[0m \u001b[38;5;37m\"allow_internal\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  name    = \"allow-internal\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m    = \u001b[38;5;37m\"allow-internal\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "  network = google_compute_network.default.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mnetwork\u001b[0m = google_compute_network.default.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "  allow {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  allow {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "    protocol = \"all\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mprotocol\u001b[0m = \u001b[38;5;37m\"all\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "  }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
+                  "Content": "  source_ranges = [\"10.128.0.0/9\"]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245msource_ranges\u001b[0m = [\u001b[38;5;37m\"10.128.0.0/9\"\u001b[0m]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 36,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0073",
+          "Title": "Disable Default Firewall Rules",
+          "Description": "Ensures that Google Cloud's default firewall rules are disabled, as they may be overly permissive and pose security risks.\nThe default network comes with pre-populated firewall rules that allow broad access and should be replaced with more restrictive custom rules.\n",
+          "Message": "Default firewall rule should be disabled and replaced with more restrictive rules.",
+          "Namespace": "builtin.google.compute.google0073",
+          "Query": "data.builtin.google.compute.google0073.deny",
+          "Resolution": "Replace default firewall rules with custom, more restrictive rules appropriate for your security requirements",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0073",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall",
+            "https://cloud.google.com/firewall/docs/firewalls#more_rules_default_vpc",
+            "https://avd.aquasec.com/misconfig/gcp-0073"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_compute_firewall.allow_internal",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 27,
+            "EndLine": 36,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 27,
+                  "Content": "resource \"google_compute_firewall\" \"allow_internal\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_firewall\"\u001b[0m \u001b[38;5;37m\"allow_internal\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  name    = \"allow-internal\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m    = \u001b[38;5;37m\"allow-internal\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "  network = google_compute_network.default.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mnetwork\u001b[0m = google_compute_network.default.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "  allow {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  allow {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "    protocol = \"all\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mprotocol\u001b[0m = \u001b[38;5;37m\"all\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "  }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
+                  "Content": "  source_ranges = [\"10.128.0.0/9\"]",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245msource_ranges\u001b[0m = [\u001b[38;5;37m\"10.128.0.0/9\"\u001b[0m]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 36,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0074",
+          "Title": "Google Compute Network Using Firewall Rule that Allows Large Port Range",
+          "Description": "Firewall rules allowing broad port ranges can be risky. Ensure rules are as specific as possible.\n",
+          "Message": "Firewall rule allows a large port range (65535 ports, max allowed: 30).",
+          "Namespace": "builtin.google.compute.google0074",
+          "Query": "data.builtin.google.compute.google0074.deny",
+          "Resolution": "Limit firewall rules to necessary port ranges only. If a wide range is specified, consider splitting into smaller ranges or specific ports needed for your application.\n",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0074",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall#allow",
+            "https://avd.aquasec.com/misconfig/gcp-0074"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_compute_firewall.allow_internal",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 31,
+            "EndLine": 33,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 27,
+                  "Content": "resource \"google_compute_firewall\" \"allow_internal\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_firewall\"\u001b[0m \u001b[38;5;37m\"allow_internal\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  name    = \"allow-internal\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m    = \u001b[38;5;37m\"allow-internal\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "  network = google_compute_network.default.id",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mnetwork\u001b[0m = google_compute_network.default.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "  allow {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  allow {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "    protocol = \"all\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mprotocol\u001b[0m = \u001b[38;5;37m\"all\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "  }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  }",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 34,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
+                  "Content": "  source_ranges = [\"10.128.0.0/9\"]",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245msource_ranges\u001b[0m = [\u001b[38;5;37m\"10.128.0.0/9\"\u001b[0m]",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 36,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "google_compute_firewall.allow_internal",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 27,
+                  "EndLine": 36
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0075",
+          "Title": "Google Compute Subnetwork with Private Google Access Disabled",
+          "Description": "Private Google Access allows instances in a subnet to reach Google APIs and services via internal IP, which should be enabled for private networks.\n",
+          "Message": "Subnetwork does not have Private Google Access configured.",
+          "Namespace": "builtin.google.compute.google0075",
+          "Query": "data.builtin.google.compute.google0075.deny",
+          "Resolution": "Enable Private Google Access on subnets. In Terraform, set `private_ip_google_access = true` in the `google_compute_subnetwork` resource.\n",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0075",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork#private_ip_google_access",
+            "https://cloud.google.com/architecture/best-practices-vpc-design#limit-access",
+            "https://avd.aquasec.com/misconfig/gcp-0075"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_compute_subnetwork.no_logs",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 20,
+            "EndLine": 25,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 20,
+                  "Content": "resource \"google_compute_subnetwork\" \"no_logs\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_subnetwork\"\u001b[0m \u001b[38;5;37m\"no_logs\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "  name          = \"default-subnet\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m          = \u001b[38;5;37m\"default-subnet\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "  network       = google_compute_network.default.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mnetwork\u001b[0m       = google_compute_network.default.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  region        = \"us-central1\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mregion\u001b[0m        = \u001b[38;5;37m\"us-central1\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  ip_cidr_range = \"10.128.0.0/20\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mip_cidr_range\u001b[0m = \u001b[38;5;37m\"10.128.0.0/20\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0076",
+          "Title": "Google Compute Subnetwork Logging Disabled",
+          "Description": "Flow logs for subnets should be enabled to capture network traffic details for security analysis.\n",
+          "Message": "Subnetwork does not have flow logs enabled.",
+          "Namespace": "builtin.google.compute.google0076",
+          "Query": "data.builtin.google.compute.google0076.deny",
+          "Resolution": "Enable VPC Flow Logs for subnets.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0076",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork",
+            "https://cloud.google.com/architecture/best-practices-vpc-design#tailor-logging",
+            "https://avd.aquasec.com/misconfig/gcp-0076"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_compute_subnetwork.no_logs",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 20,
+            "EndLine": 25,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 20,
+                  "Content": "resource \"google_compute_subnetwork\" \"no_logs\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_subnetwork\"\u001b[0m \u001b[38;5;37m\"no_logs\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 21,
+                  "Content": "  name          = \"default-subnet\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m          = \u001b[38;5;37m\"default-subnet\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 22,
+                  "Content": "  network       = google_compute_network.default.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mnetwork\u001b[0m       = google_compute_network.default.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  region        = \"us-central1\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mregion\u001b[0m        = \u001b[38;5;37m\"us-central1\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  ip_cidr_range = \"10.128.0.0/20\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mip_cidr_range\u001b[0m = \u001b[38;5;37m\"10.128.0.0/20\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

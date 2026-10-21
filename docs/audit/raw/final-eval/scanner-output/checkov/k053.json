@@ -1,0 +1,3331 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_K8S_11",
+                "bc_check_id": "BC_K8S_10",
+                "check_name": "CPU Limits should be set",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.CPULimits",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-10",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_10",
+                "bc_check_id": "BC_K8S_9",
+                "check_name": "CPU requests should be set",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.CPURequests",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-9",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_21",
+                "bc_check_id": "BC_K8S_20",
+                "check_name": "The default namespace should not be used",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.DefaultNamespace",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-20",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_28",
+                "bc_check_id": "BC_K8S_27",
+                "check_name": "Minimize the admission of containers with the NET_RAW capability",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/0/security_context"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.DropCapabilities",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-27",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_43",
+                "bc_check_id": "BC_K8S_39",
+                "check_name": "Image should use digest",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/[0]/image"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.ImageDigest",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-39",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_15",
+                "bc_check_id": "BC_K8S_14",
+                "check_name": "Image Pull Policy should be Always",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.ImagePullPolicyAlways",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-14",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_8",
+                "bc_check_id": "BC_K8S_7",
+                "check_name": "Liveness Probe Should be Configured",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/container/[0]/liveness_probe/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.LivenessProbe",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-7",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_12",
+                "bc_check_id": "BC_K8S_11",
+                "check_name": "Memory Limits should be set",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.MemoryLimits",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-11",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_13",
+                "bc_check_id": "BC_K8S_12",
+                "check_name": "Memory requests should be set",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.MemoryRequests",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-12",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_16",
+                "bc_check_id": "BC_K8S_15",
+                "check_name": "Do not admit privileged containers",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/[0]/security_context/[0]/privileged"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.PrivilegedContainer",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-15",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_9",
+                "bc_check_id": "BC_K8S_8",
+                "check_name": "Readiness Probe Should be Configured",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/[0]/readiness_probe/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.ReadinessProbe",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_22",
+                "bc_check_id": "BC_K8S_21",
+                "check_name": "Use read-only filesystem for containers where possible",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/container/[0]/security_context/[0]/read_only_root_filesystem"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.ReadonlyRootFilesystem",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-21",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_19",
+                "bc_check_id": "BC_K8S_18",
+                "check_name": "Do not admit containers wishing to share the host network namespace",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/[0]/template/[0]/spec/[0]/host_network"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"kubernetes_deployment\" \"agent\" {\n"
+                    ],
+                    [
+                        15,
+                        "  metadata {\n"
+                    ],
+                    [
+                        16,
+                        "    name = \"host-agent\"\n"
+                    ],
+                    [
+                        17,
+                        "    labels = {\n"
+                    ],
+                    [
+                        18,
+                        "      app = \"host-agent\"\n"
+                    ],
+                    [
+                        19,
+                        "    }\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "\n"
+                    ],
+                    [
+                        22,
+                        "  spec {\n"
+                    ],
+                    [
+                        23,
+                        "    replicas = 1\n"
+                    ],
+                    [
+                        24,
+                        "\n"
+                    ],
+                    [
+                        25,
+                        "    selector {\n"
+                    ],
+                    [
+                        26,
+                        "      match_labels = {\n"
+                    ],
+                    [
+                        27,
+                        "        app = \"host-agent\"\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    }\n"
+                    ],
+                    [
+                        30,
+                        "\n"
+                    ],
+                    [
+                        31,
+                        "    template {\n"
+                    ],
+                    [
+                        32,
+                        "      metadata {\n"
+                    ],
+                    [
+                        33,
+                        "        labels = {\n"
+                    ],
+                    [
+                        34,
+                        "          app = \"host-agent\"\n"
+                    ],
+                    [
+                        35,
+                        "        }\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "\n"
+                    ],
+                    [
+                        38,
+                        "      spec {\n"
+                    ],
+                    [
+                        39,
+                        "        host_network = true\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "        container {\n"
+                    ],
+                    [
+                        42,
+                        "          name  = \"agent\"\n"
+                    ],
+                    [
+                        43,
+                        "          image = \"example/host-agent:1.0\"\n"
+                    ],
+                    [
+                        44,
+                        "\n"
+                    ],
+                    [
+                        45,
+                        "          security_context {\n"
+                    ],
+                    [
+                        46,
+                        "            privileged = true\n"
+                    ],
+                    [
+                        47,
+                        "          }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "          volume_mount {\n"
+                    ],
+                    [
+                        50,
+                        "            name       = \"rootfs\"\n"
+                    ],
+                    [
+                        51,
+                        "            mount_path = \"/host\"\n"
+                    ],
+                    [
+                        52,
+                        "          }\n"
+                    ],
+                    [
+                        53,
+                        "        }\n"
+                    ],
+                    [
+                        54,
+                        "\n"
+                    ],
+                    [
+                        55,
+                        "        volume {\n"
+                    ],
+                    [
+                        56,
+                        "          name = \"rootfs\"\n"
+                    ],
+                    [
+                        57,
+                        "\n"
+                    ],
+                    [
+                        58,
+                        "          host_path {\n"
+                    ],
+                    [
+                        59,
+                        "            path = \"/\"\n"
+                    ],
+                    [
+                        60,
+                        "          }\n"
+                    ],
+                    [
+                        61,
+                        "        }\n"
+                    ],
+                    [
+                        62,
+                        "      }\n"
+                    ],
+                    [
+                        63,
+                        "    }\n"
+                    ],
+                    [
+                        64,
+                        "  }\n"
+                    ],
+                    [
+                        65,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    14,
+                    65
+                ],
+                "resource": "kubernetes_deployment.agent",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.SharedHostNetworkNamespace",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-18",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            },
+            {
+                "check_id": "CKV_K8S_42",
+                "bc_check_id": "BC_K8S_45",
+                "check_name": "Ensure that default service accounts are not actively used",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "subject/[0]/name"
+                    ]
+                },
+                "code_block": [
+                    [
+                        67,
+                        "resource \"kubernetes_cluster_role_binding\" \"agent_admin\" {\n"
+                    ],
+                    [
+                        68,
+                        "  metadata {\n"
+                    ],
+                    [
+                        69,
+                        "    name = \"host-agent-admin\"\n"
+                    ],
+                    [
+                        70,
+                        "  }\n"
+                    ],
+                    [
+                        71,
+                        "\n"
+                    ],
+                    [
+                        72,
+                        "  subject {\n"
+                    ],
+                    [
+                        73,
+                        "    kind      = \"ServiceAccount\"\n"
+                    ],
+                    [
+                        74,
+                        "    name      = \"default\"\n"
+                    ],
+                    [
+                        75,
+                        "    namespace = \"default\"\n"
+                    ],
+                    [
+                        76,
+                        "  }\n"
+                    ],
+                    [
+                        77,
+                        "\n"
+                    ],
+                    [
+                        78,
+                        "  role_ref {\n"
+                    ],
+                    [
+                        79,
+                        "    kind      = \"ClusterRole\"\n"
+                    ],
+                    [
+                        80,
+                        "    name      = \"cluster-admin\"\n"
+                    ],
+                    [
+                        81,
+                        "    api_group = \"rbac.authorization.k8s.io\"\n"
+                    ],
+                    [
+                        82,
+                        "  }\n"
+                    ],
+                    [
+                        83,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf",
+                "file_line_range": [
+                    67,
+                    83
+                ],
+                "resource": "kubernetes_cluster_role_binding.agent_admin",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.kubernetes.DefaultServiceAccountBinding",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/ensure-default-service-accounts-are-not-actively-used",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k053/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 14,
+        "failed": 14,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

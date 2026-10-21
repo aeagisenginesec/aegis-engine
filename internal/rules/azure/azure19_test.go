@@ -91,6 +91,9 @@ func TestAZURE266_269_281(t *testing.T) {
 	if f.Severity != ir.SeverityHigh {
 		t.Fatalf("267: wrong severity %s", f.Severity)
 	}
+	if f := runRule(eventHubPublicNet{}, ehnsRes(map[string]ir.Value{"public_network_access_enabled": kv(false, 3)})); len(f) != 0 {
+		t.Fatalf("267: disabled must not fire")
+	}
 
 	mustFinding(t, runRule(eventHubLocalAuth{}, ehnsRes(nil)), "AEGIS-AZURE-268")
 	r2 := ehnsRes(map[string]ir.Value{"local_auth_enabled": kv(false, 3)})
@@ -126,6 +129,9 @@ func TestAZURE270_273_278(t *testing.T) {
 	f := mustFinding(t, runRule(serviceBusPublicNet{}, sbnsRes(nil)), "AEGIS-AZURE-271")
 	if f.Severity != ir.SeverityHigh {
 		t.Fatalf("271: wrong severity %s", f.Severity)
+	}
+	if f := runRule(serviceBusPublicNet{}, sbnsRes(map[string]ir.Value{"public_network_access_enabled": kv(false, 3)})); len(f) != 0 {
+		t.Fatalf("271: disabled must not fire")
 	}
 
 	mustFinding(t, runRule(serviceBusLocalAuth{}, sbnsRes(nil)), "AEGIS-AZURE-272")

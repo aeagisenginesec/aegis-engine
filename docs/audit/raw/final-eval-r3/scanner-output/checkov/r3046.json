@@ -1,0 +1,205 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_7",
+                "bc_check_id": "BC_AWS_LOGGING_8",
+                "check_name": "Ensure rotation for customer created CMKs is enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/EnableKeyRotation"
+                    ]
+                },
+                "code_block": [
+                    [
+                        4,
+                        "  DataKey:\n"
+                    ],
+                    [
+                        5,
+                        "    Type: AWS::KMS::Key\n"
+                    ],
+                    [
+                        6,
+                        "    Properties:\n"
+                    ],
+                    [
+                        7,
+                        "      Description: data-key-571f1f\n"
+                    ],
+                    [
+                        8,
+                        "      EnableKeyRotation: false\n"
+                    ],
+                    [
+                        9,
+                        "      KeyPolicy:\n"
+                    ],
+                    [
+                        10,
+                        "        Version: \"2012-10-17\"\n"
+                    ],
+                    [
+                        11,
+                        "        Statement:\n"
+                    ],
+                    [
+                        12,
+                        "          - Effect: Allow\n"
+                    ],
+                    [
+                        13,
+                        "            Principal:\n"
+                    ],
+                    [
+                        14,
+                        "              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root\n"
+                    ],
+                    [
+                        15,
+                        "            Action: kms:*\n"
+                    ],
+                    [
+                        16,
+                        "            Resource: \"*\"\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3046/template.yaml",
+                "repo_file_path": "/corpus/r3046/template.yaml",
+                "file_line_range": [
+                    4,
+                    16
+                ],
+                "resource": "AWS::KMS::Key.DataKey",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.KMSRotation",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_18",
+                "bc_check_id": "BC_AWS_S3_13",
+                "check_name": "Ensure the S3 bucket has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/LoggingConfiguration"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "  LogsBucket:\n"
+                    ],
+                    [
+                        19,
+                        "    Type: AWS::S3::Bucket\n"
+                    ],
+                    [
+                        20,
+                        "    Properties:\n"
+                    ],
+                    [
+                        21,
+                        "      BucketName: logs-571f1f\n"
+                    ],
+                    [
+                        22,
+                        "      VersioningConfiguration:\n"
+                    ],
+                    [
+                        23,
+                        "        Status: Enabled\n"
+                    ],
+                    [
+                        24,
+                        "      BucketEncryption:\n"
+                    ],
+                    [
+                        25,
+                        "        ServerSideEncryptionConfiguration:\n"
+                    ],
+                    [
+                        26,
+                        "          - ServerSideEncryptionByDefault:\n"
+                    ],
+                    [
+                        27,
+                        "              SSEAlgorithm: AES256\n"
+                    ],
+                    [
+                        28,
+                        "      PublicAccessBlockConfiguration:\n"
+                    ],
+                    [
+                        29,
+                        "        BlockPublicAcls: true\n"
+                    ],
+                    [
+                        30,
+                        "        BlockPublicPolicy: true\n"
+                    ],
+                    [
+                        31,
+                        "        IgnorePublicAcls: true\n"
+                    ],
+                    [
+                        32,
+                        "        RestrictPublicBuckets: true\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3046/template.yaml",
+                "repo_file_path": "/corpus/r3046/template.yaml",
+                "file_line_range": [
+                    18,
+                    32
+                ],
+                "resource": "AWS::S3::Bucket.LogsBucket",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.S3AccessLogs",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 9,
+        "failed": 2,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

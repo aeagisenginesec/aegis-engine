@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-2ea04c
+  labels:
+    app: api-2ea04c
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-2ea04c
+  template:
+    metadata:
+      labels:
+        app: api-2ea04c
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            limits: {cpu: "500m", memory: 256Mi}
+            requests: {cpu: "250m", memory: 128Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: {path: /ready, port: 8080}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-2ea04c
+  labels:
+    app: web-2ea04c
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web-2ea04c
+  template:
+    metadata:
+      labels:
+        app: web-2ea04c
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: web
+          image: registry.example.com/web:2.1.0
+          ports: [{containerPort: 8080}]
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+            initialDelaySeconds: 10

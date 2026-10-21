@@ -117,15 +117,42 @@ type File struct {
 	Size int64
 }
 
+// Skipped describes a parseable-looking file that discovery dropped
+// before parsing (oversize, or the scan-wide total/file-count cap).
+// Callers surface these as diagnostics: a dropped file must never vanish
+// silently, or its resources' missing findings look like a clean scan.
+type Skipped struct {
+	Path   string
+	Size   int64
+	Reason string
+}
+
 // Discover walks root and returns parseable IaC files. Symlinks are never
 // followed; the walk itself uses Lstat semantics via WalkDir (which does not
 // follow symlinks).
 func Discover(root string) ([]File, error) {
+	files, _, err := DiscoverWithReport(root)
+	return files, err
+}
+
+// DiscoverWithReport is Discover plus the list of files dropped by the
+// size/total caps, so callers can report them instead of silently
+// skipping them. The caps themselves are unchanged.
+func DiscoverWithReport(root string) ([]File, []Skipped, error) {
 	var out []File
+	var skipped []Skipped
 	var total int64
+	capHit := ""
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil // skip unreadable entries, don't fail the scan
+			if path == root {
+				// The scan target itself is unreadable: this is a
+				// discovery hard failure, not a skippable entry. Failing
+				// loudly here prevents reporting a clean "0 findings"
+				// scan for a target the scanner could not read at all.
+				return fmt.Errorf("cannot read scan target %s: %w", root, err)
+			}
+			return nil // skip unreadable entries below the root, don't fail the scan
 		}
 		// Never descend into symlinked directories.
 		if d.IsDir() {
@@ -152,20 +179,60 @@ func Discover(root string) ([]File, error) {
 			return nil
 		}
 		if info.Size() > effectiveMaxFileBytes() {
-			return nil // oversize file: skip, don't OOM
+			// Oversize file: skip, don't OOM — but record it so the
+			// caller can emit a diagnostic naming the file and cap.
+			skipped = append(skipped, Skipped{
+				Path:   path,
+				Size:   info.Size(),
+				Reason: fmt.Sprintf("file size %d bytes exceeds per-file cap %d bytes (--max-file-size)", info.Size(), effectiveMaxFileBytes()),
+			})
+			return nil
+		}
+		if info.Mode().IsRegular() {
+			// Probe readability: a file discovery cannot open would
+			// otherwise be reported as discovered and only fail later
+			// at read time. Skip it here and record why — mid-walk
+			// leniency: one unreadable file below the root must not
+			// fail the scan, but it must never vanish silently either.
+			fh, err := os.Open(path)
+			if err != nil {
+				skipped = append(skipped, Skipped{
+					Path:   path,
+					Size:   info.Size(),
+					Reason: fmt.Sprintf("file is not readable: %v", err),
+				})
+				return nil
+			}
+			fh.Close()
 		}
 		total += info.Size()
 		if total > MaxTotalBytes || len(out) >= MaxFiles {
+			if total > MaxTotalBytes {
+				capHit = fmt.Sprintf("scan stopped: total size cap %d bytes reached at %s; remaining files not scanned", MaxTotalBytes, path)
+			} else {
+				capHit = fmt.Sprintf("scan stopped: file-count cap %d reached at %s; remaining files not scanned", MaxFiles, path)
+			}
 			return filepath.SkipAll
 		}
 		out = append(out, File{Path: path, Size: info.Size()})
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return out, nil
+	if capHit != "" {
+		skipped = append(skipped, Skipped{Path: root, Reason: capHit})
+	}
+	return out, skipped, nil
 }
+
+// EffectiveMaxFileBytes returns the active per-file size cap (the
+// --max-file-size override when set, else MaxFileBytes). Adapters that
+// enforce their own size check (e.g. terraform PreValidate) must use this
+// instead of the MaxFileBytes constant, or a raised flag raises the
+// discovery cap while the parser cap stays at the default and the file
+// fails with a confusing message.
+func EffectiveMaxFileBytes() int64 { return effectiveMaxFileBytes() }
 
 // globToRegex compiles a glob with ** support to a regexp.
 // **/ matches zero or more path segments, ** matches anything,

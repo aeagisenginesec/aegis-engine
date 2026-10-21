@@ -38,8 +38,6 @@ func ServicesDeepRules() []ir.Rule {
 		mskPlaintextBrokers{},         // AEGIS-AWS-808
 		mskWeakMonitoring{},           // AEGIS-AWS-809
 		mskFewBrokers{},               // AEGIS-AWS-810
-		opensearchNoAdvSecurity{},     // AEGIS-AWS-811
-		opensearchNoLogPublishing{},   // AEGIS-AWS-812
 		neptuneSkipFinalSnapshot{},    // AEGIS-AWS-813
 		neptuneNoCopyTags{},           // AEGIS-AWS-814
 		apprunnerNoEncryption{},       // AEGIS-AWS-816
@@ -499,82 +497,10 @@ func trimFloat(f float64) string {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-811: OpenSearch domain without advanced security options
-// ---------------------------------------------------------------------------
-
-type opensearchNoAdvSecurity struct{}
-
-func (opensearchNoAdvSecurity) ID() string { return "AEGIS-AWS-811" }
-func (opensearchNoAdvSecurity) Title() string {
-	return "OpenSearch domain without advanced security options"
-}
-func (opensearchNoAdvSecurity) Description() string {
-	return "An OpenSearch domain whose advanced_security_options block is " +
-		"absent or disabled runs without fine-grained access control, leaving " +
-		"index data exposed to any caller with network access. Enable " +
-		"advanced security with internal user database or IAM/SAML auth."
-}
-func (opensearchNoAdvSecurity) Severity() ir.Severity { return ir.SeverityHigh }
-func (opensearchNoAdvSecurity) AppliesTo(resType string) bool {
-	return resType == "aws_opensearch_domain"
-}
-
-func (s opensearchNoAdvSecurity) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "advanced_security_options")
-	if present && !known {
-		return nil
-	}
-	if !present || len(blks) == 0 {
-		return absentInsecureDefault(s, r, "advanced_security_options.enabled",
-			"absent (provider default: disabled)",
-			"advanced_security_options { enabled = true }")
-	}
-	en, _, epresent, eknown := blockBool(blks[0], "enabled")
-	if epresent && !eknown {
-		return nil
-	}
-	if epresent && en {
-		return nil
-	}
-	actual := "absent (default false)"
-	if epresent {
-		actual = "false"
-	}
-	return []ir.Finding{sdFinding(s, r, "advanced_security_options.enabled",
-		ir.Span{}, actual, "enabled = true")}
-}
+// AEGIS-AWS-811: OpenSearch without fine-grained access control
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-812: OpenSearch domain without log publishing
-// ---------------------------------------------------------------------------
-
-type opensearchNoLogPublishing struct{}
-
-func (opensearchNoLogPublishing) ID() string { return "AEGIS-AWS-812" }
-func (opensearchNoLogPublishing) Title() string {
-	return "OpenSearch domain without log publishing options"
-}
-func (opensearchNoLogPublishing) Description() string {
-	return "An OpenSearch domain with no log_publishing_options block sends " +
-		"no audit, slow-query or error logs to CloudWatch, blinding incident " +
-		"response. Publish AUDIT_LOGS (and slow logs) to CloudWatch Logs."
-}
-func (opensearchNoLogPublishing) Severity() ir.Severity { return ir.SeverityMedium }
-func (opensearchNoLogPublishing) AppliesTo(resType string) bool {
-	return resType == "aws_opensearch_domain"
-}
-
-func (s opensearchNoLogPublishing) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "log_publishing_options")
-	if present && !known {
-		return nil
-	}
-	if present && len(blks) > 0 {
-		return nil
-	}
-	return absentInsecureDefault(s, r, "log_publishing_options",
-		"absent (no logs published)", "log_publishing_options { log_type = \"AUDIT_LOGS\" ... }")
-}
+// AEGIS-AWS-812: OpenSearch without log publishing
 
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-813: Neptune cluster skipping the final snapshot

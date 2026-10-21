@@ -6,6 +6,8 @@
 //   b) rules.EnrichCompliance(findings)              -- enrichment only
 //
 // Usage: rulebreak <target>
+//go:build ignore
+
 package main
 
 import (

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "apiVersion": "2023-01-01",
+      "kind": "StorageV2",
+      "location": "westeurope",
+      "name": "aegiscompliantst",
+      "properties": {
+        "accessTier": "Hot",
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": false,
+        "defaultToOAuthAuthentication": true,
+        "encryption": {
+          "keySource": "Microsoft.Keyvault",
+          "keyVaultProperties": {
+            "keyVaultUri": "https://aegis-compliant-vault.vault.azure.net/",
+            "keyName": "storage-cmk",
+            "keyVersion": "0123456789abcdef0123456789abcdef"
+          },
+          "requireInfrastructureEncryption": true,
+          "services": {
+            "blob": {
+              "enabled": true
+            },
+            "file": {
+              "enabled": true
+            },
+            "queue": {
+              "enabled": true
+            },
+            "table": {
+              "enabled": true
+            }
+          }
+        },
+        "minimumTlsVersion": "TLS1_2",
+        "networkAcls": {
+          "bypass": "None",
+          "defaultAction": "Deny",
+          "ipRules": [],
+          "virtualNetworkRules": []
+        },
+        "publicNetworkAccess": "Disabled",
+        "supportsHttpsTrafficOnly": true,
+        "sasPolicy": {
+          "sasExpirationPeriod": "1.00:00:00",
+          "expirationAction": "Block"
+        }
+      },
+      "sku": {
+        "name": "Standard_GRS"
+      },
+      "type": "Microsoft.Storage/storageAccounts",
+      "identity": {
+        "type": "SystemAssigned"
+      }
+    },
+    {
+      "apiVersion": "2023-01-01",
+      "name": "aegiscompliantst/default",
+      "properties": {
+        "changeFeed": {
+          "enabled": true
+        },
+        "containerDeleteRetentionPolicy": {
+          "days": 7,
+          "enabled": true
+        },
+        "deleteRetentionPolicy": {
+          "days": 7,
+          "enabled": true
+        },
+        "isVersioningEnabled": true,
+        "restorePolicy": {
+          "days": 6,
+          "enabled": true
+        }
+      },
+      "type": "Microsoft.Storage/storageAccounts/blobServices"
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/queueServices",
+      "apiVersion": "2023-01-01",
+      "name": "aegiscompliantst/default",
+      "properties": {
+        "analyticsLogging": {
+          "delete": true,
+          "read": true,
+          "write": true,
+          "version": "1.0",
+          "retentionPolicy": {
+            "enabled": true,
+            "days": 10
+          }
+        },
+        "hourMetrics": {
+          "enabled": true,
+          "version": "1.0",
+          "includeAPIs": true,
+          "retentionPolicy": {
+            "enabled": true,
+            "days": 10
+          }
+        },
+        "minuteMetrics": {
+          "enabled": true,
+          "version": "1.0",
+          "includeAPIs": true,
+          "retentionPolicy": {
+            "enabled": true,
+            "days": 10
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2023-05-01",
+      "name": "aegis-compliant-vnet",
+      "location": "westeurope",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.20.0.0/16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "endpoints",
+            "properties": {
+              "addressPrefix": "10.20.1.0/24",
+              "privateEndpointNetworkPolicies": "Disabled"
+            }
+          }
+        ],
+        "enableDdosProtection": true,
+        "ddosProtectionPlan": {
+          "id": "[resourceId('Microsoft.Network/ddosProtectionPlans', 'aegis-ddos-plan')]"
+        },
+        "dhcpOptions": {
+          "dnsServers": [
+            "10.20.0.4",
+            "10.20.0.5"
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2023-05-01",
+      "name": "aegiscompliantst-blob-pe",
+      "location": "westeurope",
+      "properties": {
+        "subnet": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'aegis-compliant-vnet', 'endpoints')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "blob",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', 'aegiscompliantst')]",
+              "groupIds": [
+                "blob"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/ddosProtectionPlans",
+      "apiVersion": "2023-05-01",
+      "name": "aegis-ddos-plan",
+      "location": "westeurope",
+      "properties": {}
+    }
+  ]
+}

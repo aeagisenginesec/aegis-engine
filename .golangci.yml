@@ -1,0 +1,66 @@
+# golangci-lint configuration (v2 schema).
+#
+# Gate set: errcheck, govet, ineffassign, staticcheck, unused — run on
+# every push and PR by .github/workflows/lint.yml.
+#
+# Calibration notes (2026-10-21, v2.1.1): the codebase was brought to
+# zero findings by fixing code (dead functions removed, dead
+# initializers, De Morgan simplifications, Pulumi Sscanf errors now
+# surface as Unknown values, a placeholder attack-path test assertion
+# made real). What remains below is a short list of *named* exclusions,
+# each with its reason — no blanket suppressions.
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  settings:
+    errcheck:
+      exclude-functions:
+        # Terminal/report output writers: a failed write surfaces as a
+        # broken pipe at process exit; there is no useful recovery at
+        # these call sites.
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        # Deferred closes of read files and temp copies: the read/copy
+        # error is already returned to the caller; a Close error on a
+        # regular file carries no actionable information.
+        - (*os.File).Close
+        # Deferred temp-dir cleanup in the remediation engine.
+        - os.RemoveAll
+  exclusions:
+    rules:
+      # Test files: unchecked setup/cleanup errors are idiomatic; the
+      # assertions are the gate. (staticcheck/ineffassign still apply.)
+      - path: _test\.go
+        linters:
+          - errcheck
+      # Bicep expression parser: a hand-rolled scanner loop where a
+      # tagged switch would obscure the token walk.
+      - path: internal/adapter/bicep/bicep\.go
+        linters:
+          - staticcheck
+        text: QF1003
+      # IaC block-decision helpers: the config-block list is decided by
+      # its FIRST block by construction (every branch returns). These
+      # single-iteration loops are intentional.
+      - path: internal/rules/
+        linters:
+          - staticcheck
+        text: SA4004
+      # Robustness harness: the (diags, err, panicked) return triple is
+      # the harness's deliberate shape for panic capture.
+      - path: cmd/aegis/scan_robustness_test\.go
+        linters:
+          - staticcheck
+        text: ST1008
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

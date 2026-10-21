@@ -1,0 +1,44 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4171",
+  "resources_scanned": 1,
+  "findings": [
+    {
+      "rule_id": "AEGIS-COMPOSE-006",
+      "title": "Secret in service environment",
+      "description": "Literal secrets in the compose file are committed to version control and visible to anyone who can read the file or inspect the service. Reference secrets from a secrets manager or an env_file outside version control.",
+      "severity": "high",
+      "resource": "compose_service.api",
+      "evidence": {
+        "attribute": "environment",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4171/docker-compose.yml",
+          "start_line": 4,
+          "start_col": 1,
+          "end_line": 4,
+          "end_col": 1
+        },
+        "actual": "API_TOKEN=[REDACTED]",
+        "expected": "secret from a manager or env_file outside version control"
+      },
+      "remediation": "Remove the hardcoded secret immediately and rotate it. Store secrets in AWS Secrets Manager or SSM Parameter Store (SecureString) and reference them via data sources. Never commit secrets to version control — scan history with gitleaks if the value was ever committed.",
+      "references": [
+        "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4171/docker-compose.yml",
+        "status": "parsed",
+        "format": "compose"
+      }
+    ]
+  }
+}

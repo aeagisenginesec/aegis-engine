@@ -372,35 +372,17 @@ func TestGCP005_EnabledQuiet(t *testing.T) {
 	}
 }
 
-// --- 122: public access prevention ---
-func TestGCP122_AbsentFires(t *testing.T) {
-	r := res("google_storage_bucket", "b", map[string]ir.Value{})
-	mustFinding(t, runRule(bucketPAPNotEnforced{}, r), "AEGIS-GCP-122")
-}
-func TestGCP122_EnforcedQuiet(t *testing.T) {
-	r := res("google_storage_bucket", "b",
-		map[string]ir.Value{"public_access_prevention": ks("enforced", 3)})
-	if len(runRule(bucketPAPNotEnforced{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
-	}
-}
-func TestGCP122_InheritedFires(t *testing.T) {
-	r := res("google_storage_bucket", "b",
-		map[string]ir.Value{"public_access_prevention": ks("inherited", 3)})
-	mustFinding(t, runRule(bucketPAPNotEnforced{}, r), "AEGIS-GCP-122")
-}
-
-// Verify all 22 new rules are registered in ID order
+// Verify all 16 new rules are registered in ID order
 func TestGCP4_AllRegistered(t *testing.T) {
 	rules := GCP4Rules()
-	// 17 rules after post-audit dedup removed 110, 112, 118, 119, 121
-	// (duplicates of 009, 011, 057, 058, 005).
+	// 16 rules after post-audit dedup removed 110, 112, 118, 119, 121
+	// (duplicates of 009, 011, 057, 058, 005) and the quality audit
+	// removed 122 (exact duplicate of 032).
 	wantIDs := []string{
 		"AEGIS-GCP-101", "AEGIS-GCP-102", "AEGIS-GCP-103", "AEGIS-GCP-104",
 		"AEGIS-GCP-105", "AEGIS-GCP-106", "AEGIS-GCP-107", "AEGIS-GCP-108",
 		"AEGIS-GCP-109", "AEGIS-GCP-111", "AEGIS-GCP-113", "AEGIS-GCP-114",
 		"AEGIS-GCP-115", "AEGIS-GCP-116", "AEGIS-GCP-117", "AEGIS-GCP-120",
-		"AEGIS-GCP-122",
 	}
 	if len(rules) != len(wantIDs) {
 		t.Fatalf("expected %d rules, got %d", len(wantIDs), len(rules))
@@ -468,11 +450,54 @@ func TestGCP4_UnknownNoFindings(t *testing.T) {
 		{instanceSerialPort{}, unknownInst},
 		{subnetworkNoFlowLogs{}, unknownSubnet},
 		{bucketNoUniformAccess{}, unknownBucket},
-		{bucketPAPNotEnforced{}, unknownBucket},
 	}
 	for _, c := range cases {
 		if len(runRule(c.rule, c.res)) != 0 {
 			t.Fatalf("rule %s: expected 0 findings for unknown", c.rule.ID())
 		}
+	}
+}
+
+// --- engine gating: PostgreSQL-only flags must stay quiet on MySQL ---
+func sqlWithVersionAndFlags(version string, flags ...map[string]ir.Value) ir.Resource {
+	attrs := map[string]ir.Value{
+		"settings": blks(3, blk("database_flags", blks(4, flags...))),
+	}
+	if version != "" {
+		attrs["database_version"] = ks(version, 2)
+	}
+	return res("google_sql_database_instance", "db", attrs)
+}
+
+func TestGCP101_MySQLQuiet(t *testing.T) {
+	r := sqlWithVersionAndFlags("MYSQL_5_7")
+	if len(runRule(sqlNoLogCheckpoints{}, r)) != 0 {
+		t.Fatal("GCP-101 must not fire on MySQL")
+	}
+}
+
+func TestGCP101_PostgresFires(t *testing.T) {
+	r := sqlWithVersionAndFlags("POSTGRES_15")
+	mustFinding(t, runRule(sqlNoLogCheckpoints{}, r), "AEGIS-GCP-101")
+}
+
+func TestGCP106_MySQLQuiet(t *testing.T) {
+	r := sqlWithVersionAndFlags("MYSQL_8_0")
+	if len(runRule(sqlNoPgAudit{}, r)) != 0 {
+		t.Fatal("GCP-106 must not fire on MySQL")
+	}
+}
+
+func TestGCP107_MySQLQuiet(t *testing.T) {
+	r := sqlWithVersionAndFlags("MYSQL_8_0")
+	if len(runRule(sqlLogMinMessages{}, r)) != 0 {
+		t.Fatal("GCP-107 must not fire on MySQL")
+	}
+}
+
+func TestGCP107_SQLServerQuiet(t *testing.T) {
+	r := sqlWithVersionAndFlags("SQLSERVER_2019_STANDARD")
+	if len(runRule(sqlLogMinMessages{}, r)) != 0 {
+		t.Fatal("GCP-107 must not fire on SQL Server")
 	}
 }

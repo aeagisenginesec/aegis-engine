@@ -1,0 +1,61 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5177",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 2,
+    "critical": 0,
+    "high": 0,
+    "medium": 1,
+    "low": 1
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-K8S-015",
+      "severity": "low",
+      "title": "Container without readiness probe",
+      "description": "A container without a readinessProbe receives traffic before it is ready, causing failed requests during startup. Define a readiness probe.",
+      "resource": "k8s_Deployment.shop-6302eb",
+      "file": "corpus/r5177/deployment.yaml",
+      "line": 10,
+      "evidence": "readinessProbe = absent (container \"main\")",
+      "expected": "readinessProbe configured",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-K8S-032",
+      "severity": "medium",
+      "title": "Container image without digest pin",
+      "description": "A container image without an @digest pin (e.g. image@sha256:...) can change under its tag: the tag may be moved to a different image. Pin images by digest for reproducible, verifiable deployments.",
+      "resource": "k8s_Deployment.shop-6302eb",
+      "file": "corpus/r5177/deployment.yaml",
+      "line": 10,
+      "evidence": "image = \"registry.example.org/shop:2.6.0\" (container \"main\")",
+      "expected": "pin image by digest (image@sha256:...)",
+      "remediation": "Review the flagged configuration against Kubernetes security best practices and the CIS Kubernetes Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://kubernetes.io/docs/concepts/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5177/deployment.yaml",
+        "status": "parsed",
+        "format": "manifests"
+      }
+    ]
+  }
+}

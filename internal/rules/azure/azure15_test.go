@@ -19,8 +19,9 @@ func TestAzure15RegisteredInIDOrder(t *testing.T) {
 	for i, r := range rules {
 		idx[r.ID()] = i
 	}
-	// 188,190,193,196,198,202,203 removed as post-audit duplicates.
-	want := []int{186, 187, 189, 191, 192, 194, 195, 197, 199, 200, 201, 204, 205}
+	// 188,190,193,196,198,202,203 removed as post-audit duplicates;
+	// 191 removed in Sprint 2 (exact duplicate of AEGIS-AZURE-031).
+	want := []int{186, 187, 189, 192, 194, 195, 197, 199, 200, 201, 204, 205}
 	for i, n := range want {
 		id := "AEGIS-AZURE-" + strconv.Itoa(n)
 		pos, ok := idx[id]
@@ -127,7 +128,6 @@ func TestAZURE191_193_195_196(t *testing.T) {
 		fireWhenTrue bool
 		absentFires  bool
 	}{
-		{storageSharedKeyEnabled{}, "AEGIS-AZURE-191", "shared_access_key_enabled", true, true},
 		{storageNoOAuthDefault{}, "AEGIS-AZURE-192", "default_to_oauth_authentication", false, true},
 		{storageNestedPublic{}, "AEGIS-AZURE-195", "allow_nested_items_to_be_public", true, true},
 		{storageNoInfraEncryption{}, "AEGIS-AZURE-032", "infrastructure_encryption_enabled", false, true},
@@ -147,6 +147,32 @@ func TestAZURE191_193_195_196(t *testing.T) {
 			t.Fatalf("%s: unknown must not fire", c.id)
 		}
 	}
+}
+
+// R5 regression (AEGIS-AZURE-195): when account-level blob public
+// access is explicitly disabled, nested items cannot be public, so
+// the rule must stay quiet whether the nested flag is absent or true
+// (13 R5 false positives, all with allowBlobPublicAccess=false).
+// Control: with blob public access enabled, the rule still fires.
+func TestAZURE195_BlobPublicAccessDisabledQuiet(t *testing.T) {
+	absent := res("azurerm_storage_account", "s", map[string]ir.Value{
+		"allow_blob_public_access": kv(false, 3),
+	})
+	if f := runRule(storageNestedPublic{}, absent); len(f) != 0 {
+		t.Fatalf("195: blob public access disabled must not fire (nested absent), got %v", f)
+	}
+	explicit := res("azurerm_storage_account", "s", map[string]ir.Value{
+		"allow_blob_public_access":        kv(false, 3),
+		"allow_nested_items_to_be_public": kv(true, 3),
+	})
+	if f := runRule(storageNestedPublic{}, explicit); len(f) != 0 {
+		t.Fatalf("195: blob public access disabled must not fire (nested true), got %v", f)
+	}
+	control := res("azurerm_storage_account", "s", map[string]ir.Value{
+		"allow_blob_public_access":        kv(true, 3),
+		"allow_nested_items_to_be_public": kv(true, 3),
+	})
+	mustFinding(t, runRule(storageNestedPublic{}, control), "AEGIS-AZURE-195")
 }
 
 // ---------------------------------------------------------------------------

@@ -112,8 +112,11 @@ func topMetaString(r ir.Resource, key string) (val string, span ir.Span, present
 // and node pools.
 func nodeConfigMetaString(r ir.Resource, key string) (val string, span ir.Span, present, known bool) {
 	blks, _, bpresent, bknown := getBlocks(r, "node_config")
-	if !bpresent || !bknown {
+	if !bpresent {
 		return "", ir.Span{}, false, false
+	}
+	if !bknown {
+		return "", ir.Span{}, true, false // node_config unresolved: cannot decide
 	}
 	for _, b := range blks {
 		v, ok := b["metadata"]

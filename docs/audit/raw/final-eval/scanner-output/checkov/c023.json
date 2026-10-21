@@ -1,0 +1,168 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": null,
+                "check_name": "Ensure every security groups rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        10,
+                        "    \"AppSecurityGroup\": {\n"
+                    ],
+                    [
+                        11,
+                        "      \"Type\": \"AWS::EC2::SecurityGroup\",\n"
+                    ],
+                    [
+                        12,
+                        "      \"Properties\": {\n"
+                    ],
+                    [
+                        13,
+                        "        \"GroupDescription\": \"App server ingress\",\n"
+                    ],
+                    [
+                        14,
+                        "        \"SecurityGroupIngress\": [\n"
+                    ],
+                    [
+                        15,
+                        "          {\n"
+                    ],
+                    [
+                        16,
+                        "            \"IpProtocol\": \"tcp\",\n"
+                    ],
+                    [
+                        17,
+                        "            \"FromPort\": 22,\n"
+                    ],
+                    [
+                        18,
+                        "            \"ToPort\": 22,\n"
+                    ],
+                    [
+                        19,
+                        "            \"CidrIp\": { \"Ref\": \"OfficeCidr\" }\n"
+                    ],
+                    [
+                        20,
+                        "          },\n"
+                    ],
+                    [
+                        21,
+                        "          {\n"
+                    ],
+                    [
+                        22,
+                        "            \"IpProtocol\": \"tcp\",\n"
+                    ],
+                    [
+                        23,
+                        "            \"FromPort\": 443,\n"
+                    ],
+                    [
+                        24,
+                        "            \"ToPort\": 443,\n"
+                    ],
+                    [
+                        25,
+                        "            \"CidrIp\": { \"Ref\": \"OfficeCidr\" }\n"
+                    ],
+                    [
+                        26,
+                        "          }\n"
+                    ],
+                    [
+                        27,
+                        "        ]\n"
+                    ],
+                    [
+                        28,
+                        "      }\n"
+                    ],
+                    [
+                        29,
+                        "    },\n"
+                    ]
+                ],
+                "file_path": "/template.json",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c023/template.json",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c023/template.json",
+                "file_line_range": [
+                    10,
+                    29
+                ],
+                "resource": "AWS::EC2::SecurityGroup.AppSecurityGroup",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": null,
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "SecurityGroupIngress.0.CidrIp": [
+                        {
+                            "type": "parameters",
+                            "name": "OfficeCidr",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c023/template.json",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "SecurityGroupIngress.0": [
+                        {
+                            "type": "parameters",
+                            "name": "OfficeCidr",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c023/template.json",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "SecurityGroupIngress.1.CidrIp": [
+                        {
+                            "type": "parameters",
+                            "name": "OfficeCidr",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c023/template.json",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "SecurityGroupIngress.1": [
+                        {
+                            "type": "parameters",
+                            "name": "OfficeCidr",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c023/template.json",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

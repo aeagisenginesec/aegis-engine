@@ -501,3 +501,145 @@ data:
 `
 	mustFire(t, good, "AEGIS-K8S-025", 0)
 }
+
+// ---------------------------------------------------------------------------
+// AEGIS-K8S-026: secret in env
+// ---------------------------------------------------------------------------
+
+func TestK8S026(t *testing.T) {
+	bad := `apiVersion: apps/v1
+kind: Deployment
+metadata: {name: app}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: app}}
+  template:
+    metadata: {labels: {app: app}}
+    spec:
+      securityContext: {runAsNonRoot: true}
+      containers:
+      - name: app
+        image: myapp:1.0
+        env:
+        - {name: DB_PASSWORD, value: Sup3rSecret!-prod-2024}
+        - {name: API_TOKEN, value: tok_live_abc}
+        - {name: LOG_LEVEL, value: info}
+`
+	mustFire(t, bad, "AEGIS-K8S-026", 1)
+	// valueFrom secretKeyRef is the correct pattern: quiet.
+	good := `apiVersion: apps/v1
+kind: Deployment
+metadata: {name: app}
+spec:
+  selector: {matchLabels: {app: app}}
+  template:
+    metadata: {labels: {app: app}}
+    spec:
+      securityContext: {runAsNonRoot: true}
+      containers:
+      - name: app
+        image: myapp:1.0
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef: {name: db, key: password}
+        - {name: LOG_LEVEL, value: info}
+`
+	mustFire(t, good, "AEGIS-K8S-026", 0)
+	// Placeholders and expansions are not leaked secrets.
+	ph := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  securityContext: {runAsNonRoot: true}
+  containers:
+  - name: app
+    image: myapp:1.0
+    env:
+    - {name: DB_PASSWORD, value: changeme}
+    - {name: API_TOKEN, value: $(TOKEN_FROM_FILE)}
+`
+	mustFire(t, ph, "AEGIS-K8S-026", 0)
+	// KEYBOARD is not a secret name; ENCRYPTION_KEY is.
+	kb := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  securityContext: {runAsNonRoot: true}
+  containers:
+  - name: app
+    image: myapp:1.0
+    env:
+    - {name: KEYBOARD_LAYOUT, value: us}
+`
+	mustFire(t, kb, "AEGIS-K8S-026", 0)
+	ek := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  securityContext: {runAsNonRoot: true}
+  containers:
+  - name: app
+    image: myapp:1.0
+    env:
+    - {name: ENCRYPTION_KEY, value: abcdef123456}
+`
+	mustFire(t, ek, "AEGIS-K8S-026", 1)
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-K8S-027: no securityContext
+// ---------------------------------------------------------------------------
+
+func TestK8S027(t *testing.T) {
+	bad := `apiVersion: apps/v1
+kind: Deployment
+metadata: {name: app}
+spec:
+  selector: {matchLabels: {app: app}}
+  template:
+    metadata: {labels: {app: app}}
+    spec:
+      containers:
+      - {name: app, image: myapp:1.0}
+`
+	mustFire(t, bad, "AEGIS-K8S-027", 1)
+	// Pod-level context alone suffices.
+	podLevel := `apiVersion: apps/v1
+kind: Deployment
+metadata: {name: app}
+spec:
+  selector: {matchLabels: {app: app}}
+  template:
+    metadata: {labels: {app: app}}
+    spec:
+      securityContext: {runAsNonRoot: true}
+      containers:
+      - {name: app, image: myapp:1.0}
+`
+	mustFire(t, podLevel, "AEGIS-K8S-027", 0)
+	// Container-level context alone suffices.
+	containerLevel := `apiVersion: apps/v1
+kind: Deployment
+metadata: {name: app}
+spec:
+  selector: {matchLabels: {app: app}}
+  template:
+    metadata: {labels: {app: app}}
+    spec:
+      containers:
+      - name: app
+        image: myapp:1.0
+        securityContext: {runAsNonRoot: true}
+`
+	mustFire(t, containerLevel, "AEGIS-K8S-027", 0)
+	// Non-workload kinds never fire.
+	svc := `apiVersion: v1
+kind: Service
+metadata: {name: app}
+spec:
+  selector: {app: app}
+  ports: [{port: 80}]
+`
+	mustFire(t, svc, "AEGIS-K8S-027", 0)
+}

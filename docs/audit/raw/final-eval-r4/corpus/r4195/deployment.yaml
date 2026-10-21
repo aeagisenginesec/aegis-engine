@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-7a47b4
+  labels:
+    app: api-7a47b4
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-7a47b4
+  template:
+    metadata:
+      labels:
+        app: api-7a47b4
+    spec:
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          resources:
+            limits: {cpu: "500m", memory: 256Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-7a47b4
+  labels:
+    app: web-7a47b4
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-7a47b4
+  template:
+    metadata:
+      labels:
+        app: web-7a47b4
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: web
+          image: registry.example.com/web:2.1.0
+          resources:
+            limits: {cpu: "250m", memory: 128Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-7a47b4
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-7a47b4
+  ports: [{port: 80, targetPort: 8080}]

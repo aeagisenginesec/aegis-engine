@@ -9,9 +9,9 @@
       "attribute": "ingress.cidr_blocks",
       "span": {
         "file": "sg_open.tf",
-        "start_line": 13,
+        "start_line": 16,
         "start_col": 19,
-        "end_line": 13,
+        "end_line": 16,
         "end_col": 32
       },
       "actual": "0.0.0.0/0",
@@ -28,9 +28,9 @@
       "attribute": "ingress.cidr_blocks",
       "span": {
         "file": "sg_open.tf",
-        "start_line": 21,
+        "start_line": 24,
         "start_col": 19,
-        "end_line": 21,
+        "end_line": 24,
         "end_col": 32
       },
       "actual": "0.0.0.0/0",
@@ -40,20 +40,96 @@
   {
     "rule_id": "AEGIS-AWS-005",
     "title": "Security group egress open to the world",
-    "description": "Egress rules allowing 0.0.0.0/0 permit unrestricted outbound traffic, aiding data exfiltration. Restrict destinations to required ranges.",
+    "description": "Egress rules allowing 0.0.0.0/0 permit unrestricted outbound traffic, aiding data exfiltration. Restrict destinations to required ranges. Unrestricted egress is the AWS default and by itself is not a misconfiguration, so this rule fires only on evidence the group carries live traffic: the group is attached to a workload resource in the same module, or the finding comes from a standalone egress-rule resource that explicitly targets the group. A standalone security group with no attachments carries no traffic and is not flagged.",
     "severity": "medium",
     "resource": "aws_security_group.web",
     "evidence": {
       "attribute": "egress.cidr_blocks",
       "span": {
         "file": "sg_open.tf",
-        "start_line": 29,
+        "start_line": 32,
         "start_col": 19,
-        "end_line": 29,
+        "end_line": 32,
         "end_col": 32
       },
       "actual": "0.0.0.0/0",
       "expected": "restricted source CIDR ranges"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-204",
+    "title": "EC2 instance without IMDSv2 enforcement",
+    "description": "Without metadata_options.http_tokens = \"required\", the instance metadata service accepts IMDSv1 requests, which SSRF vulnerabilities can abuse to steal credentials.",
+    "severity": "high",
+    "resource": "aws_instance.web",
+    "evidence": {
+      "attribute": "metadata_options.http_tokens",
+      "span": {
+        "file": "sg_open.tf",
+        "start_line": 40,
+        "start_col": 1,
+        "end_line": 44,
+        "end_col": 2
+      },
+      "actual": "absent (provider default allows IMDSv1)",
+      "expected": "metadata_options { http_tokens = \"required\" }"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-310",
+    "title": "EC2 instance without detailed monitoring",
+    "description": "With monitoring absent or false (the provider default), the instance ships only basic 5-minute CloudWatch metrics, delaying detection of performance and availability issues.",
+    "severity": "medium",
+    "resource": "aws_instance.web",
+    "evidence": {
+      "attribute": "monitoring",
+      "span": {
+        "file": "sg_open.tf",
+        "start_line": 40,
+        "start_col": 1,
+        "end_line": 44,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: disabled)",
+      "expected": "monitoring = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-683",
+    "title": "EC2 instance without termination protection",
+    "description": "disable_api_termination is absent or false, so the instance can be terminated by an accidental or malicious API call. Enable it for instances that must not be deleted casually.",
+    "severity": "low",
+    "resource": "aws_instance.web",
+    "evidence": {
+      "attribute": "disable_api_termination",
+      "span": {
+        "file": "sg_open.tf",
+        "start_line": 40,
+        "start_col": 1,
+        "end_line": 44,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: false)",
+      "expected": "disable_api_termination = true"
+    }
+  },
+  {
+    "rule_id": "AEGIS-AWS-699",
+    "title": "EC2 instance without Nitro Enclaves enabled",
+    "description": "enclave_options is absent, so Nitro Enclaves are unavailable on this instance. Workloads that process sensitive data should enable enclave_options { enabled = true } to isolate it.",
+    "severity": "low",
+    "resource": "aws_instance.web",
+    "evidence": {
+      "attribute": "enclave_options",
+      "span": {
+        "file": "sg_open.tf",
+        "start_line": 40,
+        "start_col": 1,
+        "end_line": 44,
+        "end_col": 2
+      },
+      "actual": "absent (provider default: enclaves unavailable)",
+      "expected": "enclave_options { enabled = true }"
     }
   }
 ]

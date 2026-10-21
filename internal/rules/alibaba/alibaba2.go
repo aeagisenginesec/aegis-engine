@@ -168,6 +168,9 @@ func (s sgOpenIngress) Check(r ir.Resource) []ir.Finding {
 		return nil
 	}
 	pol, _, ppresent, pknown := getString(r, "policy")
+	if ppresent && !pknown {
+		return nil // unresolved: cannot decide (pack unknown-value contract)
+	}
 	if ppresent && pknown && !strings.EqualFold(strings.TrimSpace(pol), "accept") {
 		return nil // explicit drop: compliant
 	}

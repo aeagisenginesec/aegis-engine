@@ -1,0 +1,30 @@
+name: r4119-stack
+runtime: yaml
+description: Pulumi stack (toplevel layout)
+resources:
+    webNsg:
+      type: azure-native:network:NetworkSecurityGroup
+      properties:
+        networkSecurityGroupName: web-351ce5
+        resourceGroupName: rg-web
+        location: westeurope
+        securityRules:
+          - name: allow-ssh
+            properties:
+              priority: 100
+              direction: Inbound
+              access: Allow
+              protocol: Tcp
+              sourcePortRange: "*"
+              destinationPortRange: "22"
+              sourceAddressPrefix: "*"
+              destinationAddressPrefix: "*"
+
+    dbServer:
+      type: azure-native:sql:Server
+      properties:
+        serverName: sql-351ce5
+        resourceGroupName: rg-db
+        location: westeurope
+        administratorLogin: sqladmin
+        version: "12.0"

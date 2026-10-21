@@ -1,6 +1,7 @@
 package gcp
 
 import (
+	"strings"
 	"testing"
 
 	"aegis/internal/ir"
@@ -26,6 +27,7 @@ func TestGCP9RegisteredInIDOrder(t *testing.T) {
 		"AEGIS-GCP-277", "AEGIS-GCP-278", "AEGIS-GCP-279", "AEGIS-GCP-282",
 		"AEGIS-GCP-284", "AEGIS-GCP-285", "AEGIS-GCP-286", "AEGIS-GCP-288",
 		"AEGIS-GCP-289", "AEGIS-GCP-290", "AEGIS-GCP-291", "AEGIS-GCP-292",
+		"AEGIS-GCP-293", "AEGIS-GCP-294",
 	}
 	if len(rules) != len(wantIDs) {
 		t.Fatalf("expected %d rules, got %d", len(wantIDs), len(rules))
@@ -468,4 +470,144 @@ func TestGCP292(t *testing.T) {
 		item(ks("enable-oslogin", 3), ku(4))))
 	mustQuiet(t, runRule(metadataItemOSLoginDisabled{},
 		item(ku(3), ks("FALSE", 4))))
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-GCP-293: Secrets in instance metadata scripts
+// ---------------------------------------------------------------------------
+
+func TestGCP293_MetadataMapLiteralSecret(t *testing.T) {
+	// The multi-cloud fixture case: startup-script writes a literal password.
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"metadata": kvmap(3,
+			"startup-script", ks("echo 'password=WeakPassword123!' > /tmp/app.conf; chmod 644 /tmp/app.conf", 4)),
+	})
+	f := mustFinding(t, runRule(instanceMetadataSecret{}, r), "AEGIS-GCP-293")
+	if f.Severity != ir.SeverityCritical {
+		t.Fatalf("literal secret must be Critical, got %s", f.Severity)
+	}
+	if strings.Contains(f.Evidence.Actual, "WeakPassword123!") {
+		t.Fatal("finding must not leak the secret value")
+	}
+}
+
+func TestGCP293_MetadataBlockLiteralSecret(t *testing.T) {
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"metadata": blks(3, blk("startup-script", ks("token=abcdefgh1234", 4))),
+	})
+	mustFinding(t, runRule(instanceMetadataSecret{}, r), "AEGIS-GCP-293")
+}
+
+func TestGCP293_TopLevelStartupScript(t *testing.T) {
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"metadata_startup_script": ks("export SECRET_KEY=abcdefgh1234", 3),
+	})
+	mustFinding(t, runRule(instanceMetadataSecret{}, r), "AEGIS-GCP-293")
+}
+
+func TestGCP293_UserDataKey(t *testing.T) {
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"metadata": kvmap(3, "user-data", ks("#cloud-config\npassword=abcdefgh1234", 4)),
+	})
+	mustFinding(t, runRule(instanceMetadataSecret{}, r), "AEGIS-GCP-293")
+}
+
+func TestGCP293_StartupScriptURLIgnored(t *testing.T) {
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"metadata": kvmap(3, "startup-script-url", ks("gs://bucket/startup.sh", 4)),
+	})
+	mustQuiet(t, runRule(instanceMetadataSecret{}, r))
+}
+
+func TestGCP293_CleanScriptQuiet(t *testing.T) {
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"metadata": kvmap(3, "startup-script", ks("echo hello; apt-get update", 4)),
+	})
+	mustQuiet(t, runRule(instanceMetadataSecret{}, r))
+}
+
+func TestGCP293_TemplateTaint(t *testing.T) {
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"metadata_startup_script": {Known: false, Template: "echo ${var.db_password} > /tmp/x"},
+	})
+	f := mustFinding(t, runRule(instanceMetadataSecret{}, r), "AEGIS-GCP-293")
+	if f.Severity != ir.SeverityHigh {
+		t.Fatalf("taint finding must be High, got %s", f.Severity)
+	}
+}
+
+func TestGCP293_TemplateCleanVarQuiet(t *testing.T) {
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"metadata_startup_script": {Known: false, Template: "echo ${var.ami_id}"},
+	})
+	mustQuiet(t, runRule(instanceMetadataSecret{}, r))
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-GCP-294: Compute instance on an end-of-life OS image
+// ---------------------------------------------------------------------------
+
+func TestGCP294_Debian10Fires(t *testing.T) {
+	// The multi-cloud fixture case.
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"boot_disk": blks(3, blk("initialize_params",
+			blks(4, blk("image", ks("debian-cloud/debian-10", 5))))),
+	})
+	f := mustFinding(t, runRule(instanceEOLImage{}, r), "AEGIS-GCP-294")
+	if f.Severity != ir.SeverityHigh {
+		t.Fatalf("EOL image must be High, got %s", f.Severity)
+	}
+}
+
+func TestGCP294_SupportedImageQuiet(t *testing.T) {
+	for _, img := range []string{
+		"debian-cloud/debian-12",
+		"ubuntu-os-cloud/ubuntu-2204-lts",
+		"projects/debian-cloud/global/images/debian-11-v20230101",
+		"centos-cloud/centos-stream-9",
+	} {
+		r := res("google_compute_instance", "vm", map[string]ir.Value{
+			"boot_disk": blks(3, blk("initialize_params",
+				blks(4, blk("image", ks(img, 5))))),
+		})
+		mustQuiet(t, runRule(instanceEOLImage{}, r))
+	}
+}
+
+func TestGCP294_EOLVariantsFire(t *testing.T) {
+	for _, img := range []string{
+		"debian-cloud/debian-10-v20230101",
+		"ubuntu-os-cloud/ubuntu-1804-lts",
+		"windows-cloud/windows-2016",
+		"projects/windows-cloud/global/images/windows-server-2012-r2-dc-v20230101",
+		"centos-cloud/centos-7-v20230101",
+	} {
+		r := res("google_compute_instance", "vm", map[string]ir.Value{
+			"boot_disk": blks(3, blk("initialize_params",
+				blks(4, blk("image", ks(img, 5))))),
+		})
+		mustFinding(t, runRule(instanceEOLImage{}, r), "AEGIS-GCP-294")
+	}
+}
+
+func TestGCP294_NearMissQuiet(t *testing.T) {
+	// "debian-101" is not "debian-10" — prefix matching must be dash-delimited.
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"boot_disk": blks(3, blk("initialize_params",
+			blks(4, blk("image", ks("debian-cloud/debian-101", 5))))),
+	})
+	mustQuiet(t, runRule(instanceEOLImage{}, r))
+}
+
+func TestGCP294_NoBootDiskQuiet(t *testing.T) {
+	r := res("google_compute_instance", "vm", map[string]ir.Value{})
+	mustQuiet(t, runRule(instanceEOLImage{}, r))
+}
+
+func TestGCP294_UnknownImageQuiet(t *testing.T) {
+	r := res("google_compute_instance", "vm", map[string]ir.Value{
+		"boot_disk": blks(3, blk("initialize_params",
+			blks(4, blk("image", ku(5))))),
+	})
+	mustQuiet(t, runRule(instanceEOLImage{}, r))
 }

@@ -7,6 +7,7 @@
 package gcp
 
 import (
+	"strconv"
 	"strings"
 
 	"aegis/internal/ir"
@@ -20,7 +21,6 @@ func GCP2Rules() []ir.Rule {
 		sqlPublicIP{},             // AEGIS-GCP-007
 		sqlNoSSL{},                // AEGIS-GCP-008
 		gkeLegacyABAC{},           // AEGIS-GCP-009
-		gkeNoNetworkPolicy{},      // AEGIS-GCP-010
 		gkeNoPrivateCluster{},     // AEGIS-GCP-011
 		kmsNoRotation{},           // AEGIS-GCP-012
 		functionIngressAll{},      // AEGIS-GCP-013
@@ -192,8 +192,15 @@ func (sqlNoSSL) AppliesTo(resType string) bool {
 func (s sqlNoSSL) Check(r ir.Resource) []ir.Finding {
 	for _, ipc := range ipConfigBlocks(r) {
 		req, span, present, known := blockBool(ipc, "require_ssl")
-		if !present || !known {
+		if present && !known {
 			continue // unresolved: cannot decide for this block
+		}
+		if !present {
+			// Absent require_ssl: Cloud SQL does not enforce SSL
+			// connections by default, so plaintext is accepted.
+			return []ir.Finding{mkFinding(s, r,
+				"settings.ip_configuration.require_ssl", span,
+				"absent", "require_ssl = true")}
 		}
 		if !req {
 			return []ir.Finding{mkFinding(s, r,
@@ -238,44 +245,6 @@ func (s gkeLegacyABAC) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-GCP-010: GKE cluster without network policy
-// ---------------------------------------------------------------------------
-
-type gkeNoNetworkPolicy struct{}
-
-func (gkeNoNetworkPolicy) ID() string { return "AEGIS-GCP-010" }
-func (gkeNoNetworkPolicy) Title() string {
-	return "GKE cluster without network policy"
-}
-func (gkeNoNetworkPolicy) Description() string {
-	return "google_container_cluster with no network_policy block, or with " +
-		"network_policy disabled, allows unrestricted pod-to-pod traffic."
-}
-func (gkeNoNetworkPolicy) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (gkeNoNetworkPolicy) AppliesTo(resType string) bool {
-	return resType == "google_container_cluster"
-}
-
-func (s gkeNoNetworkPolicy) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "network_policy")
-	if !present {
-		// No network_policy block: disabled by default. Documented.
-		return []ir.Finding{mkFinding(s, r, "network_policy", r.Span,
-			"absent (disabled by default)", "network_policy { enabled = true }")}
-	}
-	if !known || len(blks) == 0 {
-		return nil // unresolved: cannot decide
-	}
-	en, span, epresent, eknown := blockBool(blks[0], "enabled")
-	if !epresent || !eknown {
-		return nil // unresolved: cannot decide
-	}
-	if !en {
-		return []ir.Finding{mkFinding(s, r, "network_policy.enabled", span,
-			"false", "enabled = true")}
-	}
-	return nil
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-GCP-011: GKE cluster not private
@@ -411,29 +380,69 @@ func (firewallOpenSSH) AppliesTo(resType string) bool {
 }
 
 // allowHasPort reports whether any allow block permits the given port on
-// the given protocol (or all ports/protocols).
-func allowHasPort(blks []map[string]ir.Value, protocol, port string) bool {
+// the given protocol (or all ports/protocols). Port entries may be single
+// ports ("22") or ranges ("0-65535", "8000-9000"). On a match it also
+// returns the matched allow entry for evidence (e.g. "tcp 0-65535",
+// "tcp (all ports)"). A protocol of "all" (or absent) matches any
+// requested protocol, including with no ports list — previously the
+// all-protocols/no-ports case was missed.
+func allowHasPort(blks []map[string]ir.Value, protocol, port string) (bool, string) {
+	want, err := strconv.Atoi(strings.TrimSpace(port))
+	if err != nil {
+		return false, ""
+	}
 	for _, b := range blks {
 		proto, _, ppresent, pknown := blockString(b, "protocol")
-		if ppresent && pknown && !strings.EqualFold(strings.TrimSpace(proto), protocol) &&
-			!strings.EqualFold(strings.TrimSpace(proto), "all") {
+		protoMatch := false
+		protoLabel := protocol
+		switch {
+		case !ppresent:
+			// No protocol: GCP treats a missing protocol as all.
+			protoMatch = true
+			protoLabel = "all"
+		case !pknown:
+			continue // unresolved: cannot decide for this block
+		case strings.EqualFold(strings.TrimSpace(proto), protocol):
+			protoMatch = true
+			protoLabel = strings.TrimSpace(proto)
+		case strings.EqualFold(strings.TrimSpace(proto), "all"):
+			protoMatch = true
+			protoLabel = "all"
+		}
+		if !protoMatch {
 			continue
 		}
 		ports, _, ok := blockStringList(b, "ports")
 		if !ok {
 			// No ports list with a matching protocol means all ports.
-			if !ppresent || (pknown && strings.EqualFold(strings.TrimSpace(proto), protocol)) {
-				return true
-			}
-			continue
+			return true, protoLabel + " (all ports)"
 		}
 		for _, p := range ports {
-			if strings.TrimSpace(p) == port {
-				return true
+			p = strings.TrimSpace(p)
+			if p == port {
+				return true, protoLabel + " " + p
+			}
+			if lo, hi, ok := parsePortRange(p); ok && want >= lo && want <= hi {
+				return true, protoLabel + " " + p
 			}
 		}
 	}
-	return false
+	return false, ""
+}
+
+// parsePortRange parses "lo-hi" into (lo, hi). Returns ok=false for
+// anything else (single ports, malformed entries).
+func parsePortRange(s string) (lo, hi int, ok bool) {
+	parts := strings.SplitN(s, "-", 2)
+	if len(parts) != 2 {
+		return 0, 0, false
+	}
+	lo, err1 := strconv.Atoi(strings.TrimSpace(parts[0]))
+	hi, err2 := strconv.Atoi(strings.TrimSpace(parts[1]))
+	if err1 != nil || err2 != nil || lo > hi {
+		return 0, 0, false
+	}
+	return lo, hi, true
 }
 
 // blockStringList extracts a string list from a block map.
@@ -486,9 +495,9 @@ func (s firewallOpenSSH) Check(r ir.Resource) []ir.Finding {
 	if !present || !known || len(blks) == 0 {
 		return nil
 	}
-	if allowHasPort(blks, "tcp", "22") {
+	if matched, entry := allowHasPort(blks, "tcp", "22"); matched {
 		return []ir.Finding{mkFinding(s, r, "allow", span,
-			"tcp:22 from 0.0.0.0/0", "restricted source_ranges for SSH")}
+			entry+" from 0.0.0.0/0 (includes port 22)", "restricted source_ranges for SSH")}
 	}
 	return nil
 }
@@ -580,7 +589,10 @@ func (instancePublicIP) Title() string {
 func (instancePublicIP) Description() string {
 	return "google_compute_instance with an access_config block on a " +
 		"network_interface gets an ephemeral public IP. Remove access_config " +
-		"for internal-only instances."
+		"for internal-only instances. Instances with can_ip_forward = true " +
+		"are explicit forwarding appliances (NAT/router): their public IP " +
+		"is required for that function and is not flagged here (the " +
+		"forwarding itself is covered by the IP-forwarding rule)."
 }
 func (instancePublicIP) Severity() ir.Severity { return ir.SeverityHigh }
 
@@ -589,6 +601,14 @@ func (instancePublicIP) AppliesTo(resType string) bool {
 }
 
 func (s instancePublicIP) Check(r ir.Resource) []ir.Finding {
+	// A NAT/router appliance (can_ip_forward = true) needs its public
+	// IP to forward traffic: flagging it is a by-design false positive
+	// (round-3 rescore: the parser fix surfaced it on NAT fixtures).
+	// The forwarding configuration itself remains flagged by the
+	// IP-forwarding rule.
+	if fwd, _, present, known := getBool(r, "can_ip_forward"); present && known && fwd {
+		return nil
+	}
 	nics, _, present, known := getBlocks(r, "network_interface")
 	if !present || !known {
 		return nil

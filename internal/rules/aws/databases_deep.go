@@ -18,20 +18,19 @@ import (
 func DatabasesDeepRules() []ir.Rule {
 	return []ir.Rule{
 		auroraPerfInsightsNoCMK{},      // AEGIS-AWS-700
-		dbInstanceNoCopyTagsSnapshot{}, // AEGIS-AWS-702
 		auroraSkipFinalSnapshot{},      // AEGIS-AWS-703
 		auroraNoAutomatedBackup{},      // AEGIS-AWS-704
-		dbClusterSnapshotShared{},     // AEGIS-AWS-705
+		dbClusterSnapshotShared{},      // AEGIS-AWS-705
 		dbInstanceDefaultOptionGroup{}, // AEGIS-AWS-706
-		dbSubnetGroupSingleSubnet{},   // AEGIS-AWS-707
-		auroraDefaultParamGroup{},     // AEGIS-AWS-708
-		dbParamGroupNoForceSSL{},      // AEGIS-AWS-709
+		dbSubnetGroupSingleSubnet{},    // AEGIS-AWS-707
+		auroraDefaultParamGroup{},      // AEGIS-AWS-708
+		dbParamGroupNoForceSSL{},       // AEGIS-AWS-709
 		dbInstancePasswordNoRotation{}, // AEGIS-AWS-710
-		redshiftNoVersionUpgrade{},    // AEGIS-AWS-711
-		redshiftShortSnapshotRet{},    // AEGIS-AWS-712
-		redshiftNoCopyTagsSnapshot{},  // AEGIS-AWS-713
-		elasticacheNoSnapRetention{},  // AEGIS-AWS-714
-		elasticacheNoAutoFailover{},   // AEGIS-AWS-716
+		redshiftNoVersionUpgrade{},     // AEGIS-AWS-711
+		redshiftShortSnapshotRet{},     // AEGIS-AWS-712
+		redshiftNoCopyTagsSnapshot{},   // AEGIS-AWS-713
+		elasticacheNoSnapRetention{},   // AEGIS-AWS-714
+		elasticacheNoAutoFailover{},    // AEGIS-AWS-716
 		elasticacheRGNoSnapRetention{}, // AEGIS-AWS-717
 	}
 }
@@ -82,52 +81,6 @@ func (auroraPerfInsightsNoCMK) Check(r ir.Resource) []ir.Finding {
 			Span:      r.Span,
 			Actual:    "absent (AWS-managed key)",
 			Expected:  "performance_insights_kms_key_id set",
-		},
-	}}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AWS-702: RDS instance snapshot without tag copying (low)
-// ---------------------------------------------------------------------------
-
-type dbInstanceNoCopyTagsSnapshot struct{}
-
-func (dbInstanceNoCopyTagsSnapshot) ID() string { return "AEGIS-AWS-702" }
-func (dbInstanceNoCopyTagsSnapshot) Title() string {
-	return "RDS instance snapshots do not copy tags"
-}
-func (dbInstanceNoCopyTagsSnapshot) Description() string {
-	return "copy_tags_to_snapshot is absent or false, so automated snapshots " +
-		"lose the instance's tags (owner, environment, cost center), which " +
-		"breaks tag-based access control and cost allocation on restores."
-}
-func (dbInstanceNoCopyTagsSnapshot) Severity() ir.Severity { return ir.SeverityLow }
-func (dbInstanceNoCopyTagsSnapshot) AppliesTo(resType string) bool {
-	return resType == "aws_db_instance"
-}
-func (dbInstanceNoCopyTagsSnapshot) Check(r ir.Resource) []ir.Finding {
-	val, span, present, known := getBool(r, "copy_tags_to_snapshot")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present && val {
-		return nil
-	}
-	actual := "absent (provider default: false)"
-	if present {
-		actual = "false"
-	}
-	return []ir.Finding{{
-		RuleID:      "AEGIS-AWS-702",
-		Title:       (dbInstanceNoCopyTagsSnapshot{}).Title(),
-		Description: (dbInstanceNoCopyTagsSnapshot{}).Description(),
-		Severity:    ir.SeverityLow,
-		Resource:    r.Address(),
-		Evidence: ir.Evidence{
-			Attribute: "copy_tags_to_snapshot",
-			Span:      evidenceSpan(span, r.Span),
-			Actual:    actual,
-			Expected:  "copy_tags_to_snapshot = true",
 		},
 	}}
 }
@@ -482,9 +435,10 @@ func (dbParamGroupNoForceSSL) Check(r ir.Resource) []ir.Finding {
 // AEGIS-AWS-710: RDS master password without Secrets Manager rotation (medium)
 // ---------------------------------------------------------------------------
 // Replaces the originally-planned iam_database_authentication check:
-// AEGIS-AWS-311 (rdsNoIAMAuth) and AEGIS-AWS-540 (rdsNoIAMAuthScoped)
-// already cover it on aws_db_instance. Static master passwords are the
-// remaining credential-hygiene gap in this area.
+// AEGIS-AWS-311 (rdsNoIAMAuth) already covers it on aws_db_instance
+// (AEGIS-AWS-540, its scoped duplicate, was removed in Sprint 2).
+// Static master passwords are the remaining credential-hygiene gap
+// in this area.
 
 type dbInstancePasswordNoRotation struct{}
 
@@ -801,4 +755,3 @@ func (elasticacheRGNoSnapRetention) Check(r ir.Resource) []ir.Finding {
 		},
 	}}
 }
-

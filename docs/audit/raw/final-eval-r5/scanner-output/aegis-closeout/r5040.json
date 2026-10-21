@@ -1,0 +1,86 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5040",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 3,
+    "critical": 0,
+    "high": 1,
+    "medium": 2,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-312",
+      "severity": "medium",
+      "title": "DynamoDB table without point-in-time recovery",
+      "description": "Without a point_in_time_recovery block, DynamoDB continuous backups are disabled and the table cannot be restored to an arbitrary point in the preceding 35 days.",
+      "resource": "aws_dynamodb_table.sessions",
+      "file": "corpus/r5040/main.tf",
+      "line": 9,
+      "evidence": "point_in_time_recovery.enabled = false",
+      "expected": "point_in_time_recovery { enabled = true }",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-313",
+      "severity": "high",
+      "title": "DynamoDB table without customer-managed encryption",
+      "description": "AWS encrypts DynamoDB tables at rest by default with AWS-owned keys; this rule treats a missing server_side_encryption block as insufficient because AWS-owned keys offer no customer control over key rotation or revocation. Set server_side_encryption { enabled = true, kms_key_arn = ... }.",
+      "resource": "aws_dynamodb_table.sessions",
+      "file": "corpus/r5040/main.tf",
+      "line": 1,
+      "evidence": "server_side_encryption.enabled = absent (AWS-owned key, no customer control)",
+      "expected": "server_side_encryption { enabled = true }",
+      "remediation": "Enable encryption at rest. For AWS-managed keys add the service's encryption block (e.g. `storage_encrypted = true` for RDS, `server_side_encryption_configuration` for S3). For regulated data use a customer-managed KMS key via `kms_key_id` and enable key rotation.",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-28"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.5.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-417",
+      "severity": "medium",
+      "title": "DynamoDB table without deletion protection",
+      "description": "A DynamoDB table without deletion_protection_enabled can be deleted by anyone with table-management permissions.",
+      "resource": "aws_dynamodb_table.sessions",
+      "file": "corpus/r5040/main.tf",
+      "line": 1,
+      "evidence": "deletion_protection_enabled = absent (provider default: disabled)",
+      "expected": "deletion_protection_enabled = true",
+      "remediation": "Enable deletion protection to prevent accidental destruction:\nresource \"aws_db_instance\" \"this\" {\n  deletion_protection = true\n}\nFor S3, remove `force_destroy = true`. For EC2, set `disable_api_termination = true`.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5040/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

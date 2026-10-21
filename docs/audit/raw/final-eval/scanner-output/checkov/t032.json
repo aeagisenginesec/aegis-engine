@@ -1,0 +1,1471 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_59",
+                "bc_check_id": "BC_AZR_NETWORKING_18",
+                "check_name": "Ensure that Storage accounts disallow public access",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "public_network_access_enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "resource \"azurerm_storage_account\" \"backups\" {\n"
+                    ],
+                    [
+                        34,
+                        "  name                      = \"acmebackups02\"\n"
+                    ],
+                    [
+                        35,
+                        "  resource_group_name       = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        36,
+                        "  location                  = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        37,
+                        "  account_tier              = \"Standard\"\n"
+                    ],
+                    [
+                        38,
+                        "  account_replication_type  = \"GRS\"\n"
+                    ],
+                    [
+                        39,
+                        "  allow_blob_public_access  = false\n"
+                    ],
+                    [
+                        40,
+                        "  min_tls_version           = \"TLS1_2\"\n"
+                    ],
+                    [
+                        41,
+                        "  shared_access_key_enabled = false\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  network_rules {\n"
+                    ],
+                    [
+                        44,
+                        "    default_action             = \"Deny\"\n"
+                    ],
+                    [
+                        45,
+                        "    bypass                     = [\"AzureServices\"]\n"
+                    ],
+                    [
+                        46,
+                        "    virtual_network_subnet_ids = [azurerm_subnet.data.id]\n"
+                    ],
+                    [
+                        47,
+                        "  }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "  blob_properties {\n"
+                    ],
+                    [
+                        50,
+                        "    versioning_enabled = true\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  tags = {\n"
+                    ],
+                    [
+                        54,
+                        "    environment = \"prod\"\n"
+                    ],
+                    [
+                        55,
+                        "  }\n"
+                    ],
+                    [
+                        56,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "file_line_range": [
+                    33,
+                    56
+                ],
+                "resource": "azurerm_storage_account.backups",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.StorageAccountDisablePublicAccess",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/ensure-that-storage-accounts-disallow-public-access",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_33",
+                "bc_check_id": "BC_AZR_LOGGING_4",
+                "check_name": "Ensure Storage logging is enabled for Queue service for read, write and delete requests",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "account_kind"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "resource \"azurerm_storage_account\" \"backups\" {\n"
+                    ],
+                    [
+                        34,
+                        "  name                      = \"acmebackups02\"\n"
+                    ],
+                    [
+                        35,
+                        "  resource_group_name       = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        36,
+                        "  location                  = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        37,
+                        "  account_tier              = \"Standard\"\n"
+                    ],
+                    [
+                        38,
+                        "  account_replication_type  = \"GRS\"\n"
+                    ],
+                    [
+                        39,
+                        "  allow_blob_public_access  = false\n"
+                    ],
+                    [
+                        40,
+                        "  min_tls_version           = \"TLS1_2\"\n"
+                    ],
+                    [
+                        41,
+                        "  shared_access_key_enabled = false\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  network_rules {\n"
+                    ],
+                    [
+                        44,
+                        "    default_action             = \"Deny\"\n"
+                    ],
+                    [
+                        45,
+                        "    bypass                     = [\"AzureServices\"]\n"
+                    ],
+                    [
+                        46,
+                        "    virtual_network_subnet_ids = [azurerm_subnet.data.id]\n"
+                    ],
+                    [
+                        47,
+                        "  }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "  blob_properties {\n"
+                    ],
+                    [
+                        50,
+                        "    versioning_enabled = true\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  tags = {\n"
+                    ],
+                    [
+                        54,
+                        "    environment = \"prod\"\n"
+                    ],
+                    [
+                        55,
+                        "  }\n"
+                    ],
+                    [
+                        56,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "file_line_range": [
+                    33,
+                    56
+                ],
+                "resource": "azurerm_storage_account.backups",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.StorageAccountLoggingQueueServiceEnabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-logging-policies/enable-requests-on-storage-logging-for-queue-service",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_190",
+                "bc_check_id": "BC_AZR_NETWORKING_72",
+                "check_name": "Ensure that Storage blobs restrict public access",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "allow_nested_items_to_be_public"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "resource \"azurerm_storage_account\" \"backups\" {\n"
+                    ],
+                    [
+                        34,
+                        "  name                      = \"acmebackups02\"\n"
+                    ],
+                    [
+                        35,
+                        "  resource_group_name       = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        36,
+                        "  location                  = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        37,
+                        "  account_tier              = \"Standard\"\n"
+                    ],
+                    [
+                        38,
+                        "  account_replication_type  = \"GRS\"\n"
+                    ],
+                    [
+                        39,
+                        "  allow_blob_public_access  = false\n"
+                    ],
+                    [
+                        40,
+                        "  min_tls_version           = \"TLS1_2\"\n"
+                    ],
+                    [
+                        41,
+                        "  shared_access_key_enabled = false\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  network_rules {\n"
+                    ],
+                    [
+                        44,
+                        "    default_action             = \"Deny\"\n"
+                    ],
+                    [
+                        45,
+                        "    bypass                     = [\"AzureServices\"]\n"
+                    ],
+                    [
+                        46,
+                        "    virtual_network_subnet_ids = [azurerm_subnet.data.id]\n"
+                    ],
+                    [
+                        47,
+                        "  }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "  blob_properties {\n"
+                    ],
+                    [
+                        50,
+                        "    versioning_enabled = true\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  tags = {\n"
+                    ],
+                    [
+                        54,
+                        "    environment = \"prod\"\n"
+                    ],
+                    [
+                        55,
+                        "  }\n"
+                    ],
+                    [
+                        56,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "file_line_range": [
+                    33,
+                    56
+                ],
+                "resource": "azurerm_storage_account.backups",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.StorageBlobRestrictPublicAccess",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-190",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AZURE_33",
+                "bc_check_id": "BC_AZR_GENERAL_126",
+                "check_name": "Ensure storage account is configured with private endpoint",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "azurerm_storage_account": {
+                            "backups": {
+                                "__end_line__": 56,
+                                "__start_line__": 33,
+                                "account_replication_type": [
+                                    "GRS"
+                                ],
+                                "account_tier": [
+                                    "Standard"
+                                ],
+                                "allow_blob_public_access": [
+                                    false
+                                ],
+                                "blob_properties": [
+                                    {
+                                        "versioning_enabled": [
+                                            true
+                                        ]
+                                    }
+                                ],
+                                "location": [
+                                    "North Europe"
+                                ],
+                                "min_tls_version": [
+                                    "TLS1_2"
+                                ],
+                                "name": [
+                                    "acmebackups02"
+                                ],
+                                "network_rules": [
+                                    {
+                                        "bypass": [
+                                            [
+                                                "AzureServices"
+                                            ]
+                                        ],
+                                        "default_action": [
+                                            "Deny"
+                                        ],
+                                        "virtual_network_subnet_ids": [
+                                            [
+                                                "azurerm_subnet.data.id"
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "resource_group_name": [
+                                    "rg-backups-prod"
+                                ],
+                                "shared_access_key_enabled": [
+                                    false
+                                ],
+                                "tags": [
+                                    {
+                                        "environment": "prod"
+                                    }
+                                ],
+                                "__address__": "azurerm_storage_account.backups",
+                                "__provider_address__": "azurerm.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "resource \"azurerm_storage_account\" \"backups\" {\n"
+                    ],
+                    [
+                        34,
+                        "  name                      = \"acmebackups02\"\n"
+                    ],
+                    [
+                        35,
+                        "  resource_group_name       = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        36,
+                        "  location                  = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        37,
+                        "  account_tier              = \"Standard\"\n"
+                    ],
+                    [
+                        38,
+                        "  account_replication_type  = \"GRS\"\n"
+                    ],
+                    [
+                        39,
+                        "  allow_blob_public_access  = false\n"
+                    ],
+                    [
+                        40,
+                        "  min_tls_version           = \"TLS1_2\"\n"
+                    ],
+                    [
+                        41,
+                        "  shared_access_key_enabled = false\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  network_rules {\n"
+                    ],
+                    [
+                        44,
+                        "    default_action             = \"Deny\"\n"
+                    ],
+                    [
+                        45,
+                        "    bypass                     = [\"AzureServices\"]\n"
+                    ],
+                    [
+                        46,
+                        "    virtual_network_subnet_ids = [azurerm_subnet.data.id]\n"
+                    ],
+                    [
+                        47,
+                        "  }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "  blob_properties {\n"
+                    ],
+                    [
+                        50,
+                        "    versioning_enabled = true\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  tags = {\n"
+                    ],
+                    [
+                        54,
+                        "    environment = \"prod\"\n"
+                    ],
+                    [
+                        55,
+                        "  }\n"
+                    ],
+                    [
+                        56,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "file_line_range": [
+                    33,
+                    56
+                ],
+                "resource": "azurerm_storage_account.backups",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/bc-azure-2-33",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AZURE_47",
+                "bc_check_id": "BC_AZR_IAM_22",
+                "check_name": "Ensure storage account is configured without blob anonymous access",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "azurerm_storage_account": {
+                            "backups": {
+                                "__end_line__": 56,
+                                "__start_line__": 33,
+                                "account_replication_type": [
+                                    "GRS"
+                                ],
+                                "account_tier": [
+                                    "Standard"
+                                ],
+                                "allow_blob_public_access": [
+                                    false
+                                ],
+                                "blob_properties": [
+                                    {
+                                        "versioning_enabled": [
+                                            true
+                                        ]
+                                    }
+                                ],
+                                "location": [
+                                    "North Europe"
+                                ],
+                                "min_tls_version": [
+                                    "TLS1_2"
+                                ],
+                                "name": [
+                                    "acmebackups02"
+                                ],
+                                "network_rules": [
+                                    {
+                                        "bypass": [
+                                            [
+                                                "AzureServices"
+                                            ]
+                                        ],
+                                        "default_action": [
+                                            "Deny"
+                                        ],
+                                        "virtual_network_subnet_ids": [
+                                            [
+                                                "azurerm_subnet.data.id"
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "resource_group_name": [
+                                    "rg-backups-prod"
+                                ],
+                                "shared_access_key_enabled": [
+                                    false
+                                ],
+                                "tags": [
+                                    {
+                                        "environment": "prod"
+                                    }
+                                ],
+                                "__address__": "azurerm_storage_account.backups",
+                                "__provider_address__": "azurerm.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "allow_nested_items_to_be_public"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "resource \"azurerm_storage_account\" \"backups\" {\n"
+                    ],
+                    [
+                        34,
+                        "  name                      = \"acmebackups02\"\n"
+                    ],
+                    [
+                        35,
+                        "  resource_group_name       = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        36,
+                        "  location                  = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        37,
+                        "  account_tier              = \"Standard\"\n"
+                    ],
+                    [
+                        38,
+                        "  account_replication_type  = \"GRS\"\n"
+                    ],
+                    [
+                        39,
+                        "  allow_blob_public_access  = false\n"
+                    ],
+                    [
+                        40,
+                        "  min_tls_version           = \"TLS1_2\"\n"
+                    ],
+                    [
+                        41,
+                        "  shared_access_key_enabled = false\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  network_rules {\n"
+                    ],
+                    [
+                        44,
+                        "    default_action             = \"Deny\"\n"
+                    ],
+                    [
+                        45,
+                        "    bypass                     = [\"AzureServices\"]\n"
+                    ],
+                    [
+                        46,
+                        "    virtual_network_subnet_ids = [azurerm_subnet.data.id]\n"
+                    ],
+                    [
+                        47,
+                        "  }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "  blob_properties {\n"
+                    ],
+                    [
+                        50,
+                        "    versioning_enabled = true\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  tags = {\n"
+                    ],
+                    [
+                        54,
+                        "    environment = \"prod\"\n"
+                    ],
+                    [
+                        55,
+                        "  }\n"
+                    ],
+                    [
+                        56,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "file_line_range": [
+                    33,
+                    56
+                ],
+                "resource": "azurerm_storage_account.backups",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-iam-policies/bc-azure-2-47",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AZURE_38",
+                "bc_check_id": "BC_AZR_GENERAL_128",
+                "check_name": "Ensure soft-delete is enabled on Azure storage account",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "azurerm_storage_account": {
+                            "backups": {
+                                "__end_line__": 56,
+                                "__start_line__": 33,
+                                "account_replication_type": [
+                                    "GRS"
+                                ],
+                                "account_tier": [
+                                    "Standard"
+                                ],
+                                "allow_blob_public_access": [
+                                    false
+                                ],
+                                "blob_properties": [
+                                    {
+                                        "versioning_enabled": [
+                                            true
+                                        ]
+                                    }
+                                ],
+                                "location": [
+                                    "North Europe"
+                                ],
+                                "min_tls_version": [
+                                    "TLS1_2"
+                                ],
+                                "name": [
+                                    "acmebackups02"
+                                ],
+                                "network_rules": [
+                                    {
+                                        "bypass": [
+                                            [
+                                                "AzureServices"
+                                            ]
+                                        ],
+                                        "default_action": [
+                                            "Deny"
+                                        ],
+                                        "virtual_network_subnet_ids": [
+                                            [
+                                                "azurerm_subnet.data.id"
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "resource_group_name": [
+                                    "rg-backups-prod"
+                                ],
+                                "shared_access_key_enabled": [
+                                    false
+                                ],
+                                "tags": [
+                                    {
+                                        "environment": "prod"
+                                    }
+                                ],
+                                "__address__": "azurerm_storage_account.backups",
+                                "__provider_address__": "azurerm.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "account_kind",
+                        "blob_properties/delete_retention_policy",
+                        "blob_properties/delete_retention_policy/days"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "resource \"azurerm_storage_account\" \"backups\" {\n"
+                    ],
+                    [
+                        34,
+                        "  name                      = \"acmebackups02\"\n"
+                    ],
+                    [
+                        35,
+                        "  resource_group_name       = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        36,
+                        "  location                  = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        37,
+                        "  account_tier              = \"Standard\"\n"
+                    ],
+                    [
+                        38,
+                        "  account_replication_type  = \"GRS\"\n"
+                    ],
+                    [
+                        39,
+                        "  allow_blob_public_access  = false\n"
+                    ],
+                    [
+                        40,
+                        "  min_tls_version           = \"TLS1_2\"\n"
+                    ],
+                    [
+                        41,
+                        "  shared_access_key_enabled = false\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  network_rules {\n"
+                    ],
+                    [
+                        44,
+                        "    default_action             = \"Deny\"\n"
+                    ],
+                    [
+                        45,
+                        "    bypass                     = [\"AzureServices\"]\n"
+                    ],
+                    [
+                        46,
+                        "    virtual_network_subnet_ids = [azurerm_subnet.data.id]\n"
+                    ],
+                    [
+                        47,
+                        "  }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "  blob_properties {\n"
+                    ],
+                    [
+                        50,
+                        "    versioning_enabled = true\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  tags = {\n"
+                    ],
+                    [
+                        54,
+                        "    environment = \"prod\"\n"
+                    ],
+                    [
+                        55,
+                        "  }\n"
+                    ],
+                    [
+                        56,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "file_line_range": [
+                    33,
+                    56
+                ],
+                "resource": "azurerm_storage_account.backups",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/bc-azure-2-38",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AZURE_1",
+                "bc_check_id": "BC_AZR_GENERAL_32",
+                "check_name": "Ensure storage for critical data are encrypted with Customer Managed Key",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "azurerm_storage_account": {
+                            "backups": {
+                                "__end_line__": 56,
+                                "__start_line__": 33,
+                                "account_replication_type": [
+                                    "GRS"
+                                ],
+                                "account_tier": [
+                                    "Standard"
+                                ],
+                                "allow_blob_public_access": [
+                                    false
+                                ],
+                                "blob_properties": [
+                                    {
+                                        "versioning_enabled": [
+                                            true
+                                        ]
+                                    }
+                                ],
+                                "location": [
+                                    "North Europe"
+                                ],
+                                "min_tls_version": [
+                                    "TLS1_2"
+                                ],
+                                "name": [
+                                    "acmebackups02"
+                                ],
+                                "network_rules": [
+                                    {
+                                        "bypass": [
+                                            [
+                                                "AzureServices"
+                                            ]
+                                        ],
+                                        "default_action": [
+                                            "Deny"
+                                        ],
+                                        "virtual_network_subnet_ids": [
+                                            [
+                                                "azurerm_subnet.data.id"
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "resource_group_name": [
+                                    "rg-backups-prod"
+                                ],
+                                "shared_access_key_enabled": [
+                                    false
+                                ],
+                                "tags": [
+                                    {
+                                        "environment": "prod"
+                                    }
+                                ],
+                                "__address__": "azurerm_storage_account.backups",
+                                "__provider_address__": "azurerm.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "customer_managed_key/key_vault_key_id",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "resource \"azurerm_storage_account\" \"backups\" {\n"
+                    ],
+                    [
+                        34,
+                        "  name                      = \"acmebackups02\"\n"
+                    ],
+                    [
+                        35,
+                        "  resource_group_name       = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        36,
+                        "  location                  = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        37,
+                        "  account_tier              = \"Standard\"\n"
+                    ],
+                    [
+                        38,
+                        "  account_replication_type  = \"GRS\"\n"
+                    ],
+                    [
+                        39,
+                        "  allow_blob_public_access  = false\n"
+                    ],
+                    [
+                        40,
+                        "  min_tls_version           = \"TLS1_2\"\n"
+                    ],
+                    [
+                        41,
+                        "  shared_access_key_enabled = false\n"
+                    ],
+                    [
+                        42,
+                        "\n"
+                    ],
+                    [
+                        43,
+                        "  network_rules {\n"
+                    ],
+                    [
+                        44,
+                        "    default_action             = \"Deny\"\n"
+                    ],
+                    [
+                        45,
+                        "    bypass                     = [\"AzureServices\"]\n"
+                    ],
+                    [
+                        46,
+                        "    virtual_network_subnet_ids = [azurerm_subnet.data.id]\n"
+                    ],
+                    [
+                        47,
+                        "  }\n"
+                    ],
+                    [
+                        48,
+                        "\n"
+                    ],
+                    [
+                        49,
+                        "  blob_properties {\n"
+                    ],
+                    [
+                        50,
+                        "    versioning_enabled = true\n"
+                    ],
+                    [
+                        51,
+                        "  }\n"
+                    ],
+                    [
+                        52,
+                        "\n"
+                    ],
+                    [
+                        53,
+                        "  tags = {\n"
+                    ],
+                    [
+                        54,
+                        "    environment = \"prod\"\n"
+                    ],
+                    [
+                        55,
+                        "  }\n"
+                    ],
+                    [
+                        56,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "file_line_range": [
+                    33,
+                    56
+                ],
+                "resource": "azurerm_storage_account.backups",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "environment": "prod"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-storage-for-critical-data-are-encrypted-with-customer-managed-key",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "breadcrumbs": {
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AZURE_31",
+                "bc_check_id": "BC_AZR_GENERAL_124",
+                "check_name": "Ensure VNET subnet is configured with a Network Security Group (NSG)",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "azurerm_subnet": {
+                            "data": {
+                                "__end_line__": 31,
+                                "__start_line__": 25,
+                                "address_prefixes": [
+                                    [
+                                        "10.40.1.0/24"
+                                    ]
+                                ],
+                                "name": [
+                                    "snet-data"
+                                ],
+                                "resource_group_name": [
+                                    "rg-backups-prod"
+                                ],
+                                "service_endpoints": [
+                                    [
+                                        "Microsoft.Storage"
+                                    ]
+                                ],
+                                "virtual_network_name": [
+                                    "vnet-data"
+                                ],
+                                "__address__": "azurerm_subnet.data",
+                                "__provider_address__": "azurerm.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "delegation/service_delegation/name",
+                        "name",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        25,
+                        "resource \"azurerm_subnet\" \"data\" {\n"
+                    ],
+                    [
+                        26,
+                        "  name                 = \"snet-data\"\n"
+                    ],
+                    [
+                        27,
+                        "  resource_group_name  = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        28,
+                        "  virtual_network_name = azurerm_virtual_network.main.name\n"
+                    ],
+                    [
+                        29,
+                        "  address_prefixes     = [\"10.40.1.0/24\"]\n"
+                    ],
+                    [
+                        30,
+                        "  service_endpoints    = [\"Microsoft.Storage\"]\n"
+                    ],
+                    [
+                        31,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "file_line_range": [
+                    25,
+                    31
+                ],
+                "resource": "azurerm_subnet.data",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/bc-azure-2-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "virtual_network_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_virtual_network.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t032/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 11,
+        "failed": 8,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 4,
+        "checkov_version": "3.3.26"
+    }
+}

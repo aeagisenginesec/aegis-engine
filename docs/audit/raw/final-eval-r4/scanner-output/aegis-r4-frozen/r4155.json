@@ -1,0 +1,44 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4155",
+  "resources_scanned": 2,
+  "findings": [
+    {
+      "rule_id": "AEGIS-COMPOSE-007",
+      "title": "Service runs as root",
+      "description": "Without a user: directive the service runs as root; a container breakout then yields host root. Run as a non-root UID/GID.",
+      "severity": "medium",
+      "resource": "compose_service.db",
+      "evidence": {
+        "attribute": "user",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4155/docker-compose.yml",
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 1
+        },
+        "actual": "no user directive (defaults to root)",
+        "expected": "user: \"\u003cuid\u003e\" (non-root)"
+      },
+      "remediation": "Enable MFA on the account and restrict root usage. Create individual IAM users or federate via SSO, attach least-privilege policies, and never use root for daily operations.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4155/docker-compose.yml",
+        "status": "parsed",
+        "format": "compose"
+      }
+    ]
+  }
+}

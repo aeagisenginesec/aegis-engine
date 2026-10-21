@@ -1,0 +1,45 @@
+name: team-vault
+runtime: yaml
+description: Quick team vault for dev secrets. Open network ACLs, no soft delete or purge protection.
+template:
+  configuration:
+    location:
+      type: String
+      default: westeurope
+    deployerObjectId:
+      type: String
+  variables:
+    rgName: rg-team-dev
+    vaultName: teamdevvault
+  resources:
+    resourceGroup:
+      type: azure-native:resources:ResourceGroup
+      properties:
+        resourceGroupName: ${rgName}
+        location: ${location}
+    vault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: ${vaultName}
+        resourceGroupName: ${resourceGroup.name}
+        location: ${location}
+        properties:
+          tenantId: ${tenantId}
+          sku:
+            family: A
+            name: standard
+          enableSoftDelete: false
+          enablePurgeProtection: false
+          enableRbacAuthorization: false
+          networkAcls:
+            bypass: AzureServices
+            defaultAction: Allow
+          accessPolicies:
+            - tenantId: ${tenantId}
+              objectId: ${deployerObjectId}
+              permissions:
+                keys: [all]
+                secrets: [all]
+                certificates: [all]
+  outputs:
+    vaultUri: ${vault.properties.vaultUri}

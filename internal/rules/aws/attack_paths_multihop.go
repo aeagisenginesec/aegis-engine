@@ -43,22 +43,32 @@ func (multiHopPath) Check(ir.Resource) []ir.Finding { return nil }
 
 func (multiHopPath) CheckAll(resources []ir.Resource) []ir.Finding {
 	g := buildAttackGraph(resources)
+	byAddr := make(map[string]ir.Resource, len(resources))
+	for _, r := range resources {
+		byAddr[r.Address()] = r
+	}
 	sorted := append([]ir.Resource(nil), resources...)
 	sort.Slice(sorted, func(i, j int) bool {
 		return sorted[i].Address() < sorted[j].Address()
 	})
 	var out []ir.Finding
+	// One BFS from the internet entrypoint serves every RDS. The old code
+	// ran a full BFS per RDS target — O(rdss * (V+E)). BFS explores
+	// deterministically (sorted adjacency), so each per-target run is a
+	// prefix of the full run: prev[] on any target's ancestor chain is
+	// identical, and reconstructed paths are unchanged.
+	prev := bfsPrev(g, "internet", 4)
 	for _, r := range sorted {
 		if r.Type != "aws_db_instance" {
 			continue
 		}
-		path := shortestAttackPath(g, "internet", r.Address(), 4)
+		path := reconstructPath(prev, "internet", r.Address())
 		if len(path) < 4 {
 			// 0 = unreachable, 3 = internet->SG->RDS (covered by 103).
 			// Only multi-hop paths (4+ nodes) belong to 105.
 			continue
 		}
-		out = append(out, multiHopFinding(r, path, resources))
+		out = append(out, multiHopFinding(r, path, byAddr))
 	}
 	return out
 }
@@ -120,9 +130,20 @@ func buildAttackGraph(resources []ir.Resource) *attackGraph {
 		sgOfRDS[d.Address()] = attachedSGs(d, byAddr)
 	}
 
-	// SG-A -> SG-B when SG-B's ingress references SG-A
+	// SG-A -> SG-B when SG-B's ingress references SG-A.
+	// Standalone rule resources are indexed once by their parent SG
+	// (sgRuleIndex): one O(n) pass instead of one O(n) scan per SG.
+	// Each SG's ingress-source list is then computed ONCE (sgSources):
+	// sgIngressSources parses the SG's own ingress blocks, so calling it
+	// per (EC2, RDS) pair below would re-parse the same blocks O(ec2s*rdss)
+	// times. Precomputation makes every use O(1).
+	ruleIdx := buildSGRuleIndex(resources)
+	sgSources := make(map[string][]string, len(sgs))
+	for _, sg := range sgs {
+		sgSources[sg.Address()] = sgIngressSources(sg, byAddr, ruleIdx)
+	}
 	for _, sgB := range sgs {
-		for _, sgAAddr := range sgIngressSources(sgB, byAddr) {
+		for _, sgAAddr := range sgSources[sgB.Address()] {
 			if _, ok := byAddr[sgAAddr]; ok {
 				addEdge(sgAAddr, sgB.Address())
 			}
@@ -160,10 +181,11 @@ func buildAttackGraph(resources []ir.Resource) *attackGraph {
 				addEdge(e.Address(), d.Address())
 				continue
 			}
-			// RDS's SG allows from one of EC2's SGs.
+			// RDS's SG allows from one of EC2's SGs (precomputed per-SG
+			// source lists: O(1) lookup, no re-parsing per pair).
 			for _, rdsSG := range sgOfRDS[d.Address()] {
 				allowed := false
-				for _, src := range sgIngressSources(byAddr[rdsSG], byAddr) {
+				for _, src := range sgSources[rdsSG] {
 					if eSGs[src] {
 						allowed = true
 						break
@@ -210,10 +232,44 @@ func attachedSGs(r ir.Resource, byAddr map[string]ir.Resource) []string {
 	return out
 }
 
+// sgRuleIndex maps a security group address to the standalone
+// aws_security_group_rule / aws_vpc_security_group_ingress_rule resources
+// whose security_group_id targets it. Built once per buildAttackGraph in a
+// single O(n) pass, so sgIngressSources lookups are O(rules per SG) instead
+// of one O(n) full-resource scan per SG.
+type sgRuleIndex struct {
+	byParent map[string][]ir.Resource
+}
+
+// buildSGRuleIndex indexes every standalone (non-egress) SG rule resource
+// by the security group its security_group_id reference targets.
+// Insertion order is address-sorted for determinism.
+func buildSGRuleIndex(resources []ir.Resource) *sgRuleIndex {
+	idx := &sgRuleIndex{byParent: map[string][]ir.Resource{}}
+	sorted := append([]ir.Resource(nil), resources...)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Address() < sorted[j].Address() })
+	for _, r := range sorted {
+		if r.Type != "aws_security_group_rule" && r.Type != "aws_vpc_security_group_ingress_rule" {
+			continue
+		}
+		if t, _, present, known := getString(r, "type"); present && known && t == "egress" {
+			continue
+		}
+		parent, ok := refTargetAddr(r, "security_group_id")
+		if !ok {
+			continue
+		}
+		idx.byParent[parent] = append(idx.byParent[parent], r)
+	}
+	return idx
+}
+
 // sgIngressSources returns the addresses of security groups referenced by
 // SG ingress rules via source_security_group_id (or security_groups).
 // Only known aws_security_group targets count; unknown values are skipped.
-func sgIngressSources(sg ir.Resource, byAddr map[string]ir.Resource) []string {
+// The standalone-rule scan is served by idx: O(1) lookup of the rules
+// targeting this SG instead of scanning every resource.
+func sgIngressSources(sg ir.Resource, byAddr map[string]ir.Resource, idx *sgRuleIndex) []string {
 	seen := map[string]bool{}
 	blks, _, present, known := getBlocks(sg, "ingress")
 	if !present || !known {
@@ -232,16 +288,12 @@ func sgIngressSources(sg ir.Resource, byAddr map[string]ir.Resource) []string {
 			}
 		}
 	}
-	// Standalone rule resources pointing at this SG.
-	for _, r := range byAddr {
+	// Standalone rule resources pointing at this SG, via the index.
+	for _, r := range idx.byParent[sg.Address()] {
 		if r.Type != "aws_security_group_rule" && r.Type != "aws_vpc_security_group_ingress_rule" {
 			continue
 		}
 		if t, _, p, k := getString(r, "type"); p && k && t == "egress" {
-			continue
-		}
-		parent, ok := refTargetAddr(r, "security_group_id")
-		if !ok || parent != sg.Address() {
 			continue
 		}
 		for _, attr := range []string{"source_security_group_id"} {
@@ -264,23 +316,16 @@ func sgIngressSources(sg ir.Resource, byAddr map[string]ir.Resource) []string {
 	return out
 }
 
-// shortestAttackPath runs BFS from source, capped at maxDepth edges,
-// returning the shortest node path to target (nil if unreachable within
-// the cap). Neighbors are visited in sorted order: the first path found
-// to a node is the deterministic shortest.
-func shortestAttackPath(g *attackGraph, source, target string, maxDepth int) []string {
-	if source == target {
-		return []string{source}
-	}
+// bfsPrev runs BFS from source, capped at maxDepth edges, and returns the
+// predecessor map. Neighbors are visited in sorted adjacency order: the
+// first path found to a node is the deterministic shortest.
+func bfsPrev(g *attackGraph, source string, maxDepth int) map[string]string {
 	prev := map[string]string{source: ""}
 	depth := map[string]int{source: 0}
 	queue := []string{source}
 	for len(queue) > 0 {
 		cur := queue[0]
 		queue = queue[1:]
-		if cur == target {
-			break
-		}
 		if depth[cur] >= maxDepth {
 			continue
 		}
@@ -293,22 +338,29 @@ func shortestAttackPath(g *attackGraph, source, target string, maxDepth int) []s
 			queue = append(queue, nxt)
 		}
 	}
+	return prev
+}
+
+// reconstructPath walks prev[] back from target to source, returning the
+// deterministic shortest path (nil when the target is unreachable).
+func reconstructPath(prev map[string]string, source, target string) []string {
 	if _, ok := prev[target]; !ok {
 		return nil
 	}
 	var path []string
-	for n := target; n != ""; n = prev[n] {
+	for n := target; ; n = prev[n] {
 		path = append([]string{n}, path...)
+		if n == source {
+			break
+		}
 	}
 	return path
 }
 
 // multiHopFinding builds the AEGIS-AWS-105 finding with per-hop evidence.
-func multiHopFinding(rds ir.Resource, path []string, resources []ir.Resource) ir.Finding {
-	byAddr := map[string]ir.Resource{}
-	for _, r := range resources {
-		byAddr[r.Address()] = r
-	}
+// byAddr is the caller's precomputed address index (hoisted out of the
+// per-finding path so finding emission stays O(1) per finding).
+func multiHopFinding(rds ir.Resource, path []string, byAddr map[string]ir.Resource) ir.Finding {
 	steps := make([]ir.PathStep, 0, len(path))
 	for i, node := range path {
 		var detail string

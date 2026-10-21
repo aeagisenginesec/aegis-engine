@@ -440,7 +440,7 @@ func compileSpec(where string, s ruleSpec) (*Rule, error) {
 		types[t] = true
 	}
 	match := strings.ToLower(strings.TrimSpace(s.Match))
-	matchAll := true
+	var matchAll bool
 	switch match {
 	case "", "all":
 		matchAll = true

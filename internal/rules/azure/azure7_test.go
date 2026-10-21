@@ -255,6 +255,23 @@ func TestAZURE108_PrivateEndpointQuiet(t *testing.T) {
 	}
 }
 
+// R5 regression: a server with public network access explicitly
+// disabled has no public exposure, so the missing-private-endpoint
+// finding must stay quiet (r5104/r5105: publicNetworkAccess='Disabled').
+func TestAZURE108_PublicAccessDisabledQuiet(t *testing.T) {
+	srv := res("azurerm_mssql_server", "db", map[string]ir.Value{
+		"public_network_access_enabled": kv(false, 3),
+	})
+	if len(runRuleAll(mssqlNoPrivateEndpoint{}, srv)) != 0 {
+		t.Fatal("expected 0 findings: public access explicitly disabled")
+	}
+	// Control: explicitly enabled public access still fires.
+	srvOn := res("azurerm_mssql_server", "db", map[string]ir.Value{
+		"public_network_access_enabled": kv(true, 3),
+	})
+	mustFinding(t, runRuleAll(mssqlNoPrivateEndpoint{}, srvOn), "AEGIS-AZURE-108")
+}
+
 func TestAZURE108_OtherServerPEStillFires(t *testing.T) {
 	srv := res("azurerm_mssql_server", "db", map[string]ir.Value{})
 	pe := res("azurerm_private_endpoint", "pe", map[string]ir.Value{

@@ -18,7 +18,6 @@ import (
 // Azure9Rules returns storage hardening rules in ID order.
 func Azure9Rules() []ir.Rule {
 	return []ir.Rule{
-		storageNestedItemsPublic{}, // AEGIS-AZURE-119
 		storageMinTLS2{},           // AEGIS-AZURE-121
 		storageBlobPublic2{},       // AEGIS-AZURE-122
 		storageNoPrivateEndpoint{}, // AEGIS-AZURE-124
@@ -27,54 +26,7 @@ func Azure9Rules() []ir.Rule {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-119: Storage account allows public blob/nested item access
-// ---------------------------------------------------------------------------
-
-type storageNestedItemsPublic struct{}
-
-func (storageNestedItemsPublic) ID() string { return "AEGIS-AZURE-119" }
-func (storageNestedItemsPublic) Title() string {
-	return "Storage account allows public nested item access"
-}
-func (storageNestedItemsPublic) Description() string {
-	return "azurerm_storage_account with allow_blob_public_access = true " +
-		"(the provider default) or allow_nested_items_to_be_public = true " +
-		"exposes blob data to anonymous requests. Disable public access " +
-		"unless public content delivery is intended."
-}
-func (storageNestedItemsPublic) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (storageNestedItemsPublic) AppliesTo(resType string) bool {
-	return resType == "azurerm_storage_account"
-}
-
-func (s storageNestedItemsPublic) Check(r ir.Resource) []ir.Finding {
-	if pub, span, present, known := getBool(r, "allow_nested_items_to_be_public"); present {
-		if !known {
-			return nil
-		}
-		if pub {
-			return []ir.Finding{mkFinding(s, r, "allow_nested_items_to_be_public", span,
-				"true", "allow_nested_items_to_be_public = false")}
-		}
-		return nil
-	}
-	// Provider default for allow_blob_public_access is true.
-	pub, span, present, known := getBool(r, "allow_blob_public_access")
-	if !present {
-		return []ir.Finding{mkFinding(s, r, "allow_blob_public_access",
-			evidenceSpan(ir.Span{}, r.Span), "absent (default true)",
-			"allow_blob_public_access = false")}
-	}
-	if !known {
-		return nil
-	}
-	if pub {
-		return []ir.Finding{mkFinding(s, r, "allow_blob_public_access", span,
-			"true", "allow_blob_public_access = false")}
-	}
-	return nil
-}
+// AEGIS-AZURE-119: Storage account allows public nested item access
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-120: Storage account without queue logging (strict)

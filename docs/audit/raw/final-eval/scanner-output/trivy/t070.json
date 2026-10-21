@@ -1,0 +1,1738 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1329f-5865-7d81-8475-67ddf05e14dd",
+  "CreatedAt": "2026-10-13T00:17:46.085889117Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 68,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 3
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0051",
+          "Title": "Clusters should be configured with Labels",
+          "Description": "Labels make it easier to manage assets and differentiate between clusters and environments, allowing the mapping of computational resources to the wider organisational structure.\n",
+          "Message": "Cluster does not use GCE resource labels.",
+          "Namespace": "builtin.google.gke.google0051",
+          "Query": "data.builtin.google.gke.google0051.deny",
+          "Resolution": "Set cluster resource labels",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0051",
+          "References": [
+            "https://avd.aquasec.com/misconfig/gcp-0051"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_container_cluster.main",
+            "Provider": "Google",
+            "Service": "gke",
+            "StartLine": 22,
+            "EndLine": 42,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 22,
+                  "Content": "resource \"google_container_cluster\" \"main\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_container_cluster\"\u001b[0m \u001b[38;5;37m\"main\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  name                     = var.cluster_name",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m                     = \u001b[38;5;33mvar\u001b[0m.cluster_name",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  location                 = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mlocation\u001b[0m                 = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "  network                  = module.network.network_id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mnetwork\u001b[0m                  = \u001b[38;5;33mmodule\u001b[0m.network.network_id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "  subnetwork               = module.network.subnetwork_id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245msubnetwork\u001b[0m               = \u001b[38;5;33mmodule\u001b[0m.network.subnetwork_id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  remove_default_node_pool = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mremove_default_node_pool\u001b[0m = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  initial_node_count       = 1",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245minitial_node_count\u001b[0m       = \u001b[38;5;37m1",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "  private_cluster_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  private_cluster_config {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 31,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0056",
+          "Title": "Network Policy should be enabled on GKE clusters",
+          "Description": "Enabling a network policy allows the segregation of network traffic by namespace\n",
+          "Message": "Cluster does not have a network policy enabled.",
+          "Namespace": "builtin.google.gke.google0056",
+          "Query": "data.builtin.google.gke.google0056.deny",
+          "Resolution": "Enable network policy",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0056",
+          "References": [
+            "https://avd.aquasec.com/misconfig/gcp-0056"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_container_cluster.main",
+            "Provider": "Google",
+            "Service": "gke",
+            "StartLine": 22,
+            "EndLine": 42,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 22,
+                  "Content": "resource \"google_container_cluster\" \"main\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_container_cluster\"\u001b[0m \u001b[38;5;37m\"main\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  name                     = var.cluster_name",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m                     = \u001b[38;5;33mvar\u001b[0m.cluster_name",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  location                 = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mlocation\u001b[0m                 = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "  network                  = module.network.network_id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mnetwork\u001b[0m                  = \u001b[38;5;33mmodule\u001b[0m.network.network_id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "  subnetwork               = module.network.subnetwork_id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245msubnetwork\u001b[0m               = \u001b[38;5;33mmodule\u001b[0m.network.subnetwork_id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  remove_default_node_pool = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mremove_default_node_pool\u001b[0m = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  initial_node_count       = 1",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245minitial_node_count\u001b[0m       = \u001b[38;5;37m1",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "  private_cluster_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  private_cluster_config {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 31,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0061",
+          "Title": "Master authorized networks should be configured on GKE clusters",
+          "Description": "Enabling authorized networks means you can restrict master access to a fixed set of CIDR ranges\n",
+          "Message": "Cluster does not have master authorized networks enabled.",
+          "Namespace": "builtin.google.gke.google0061",
+          "Query": "data.builtin.google.gke.google0061.deny",
+          "Resolution": "Enable master authorized networks",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0061",
+          "References": [
+            "https://avd.aquasec.com/misconfig/gcp-0061"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_container_cluster.main",
+            "Provider": "Google",
+            "Service": "gke",
+            "StartLine": 22,
+            "EndLine": 42,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 22,
+                  "Content": "resource \"google_container_cluster\" \"main\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_container_cluster\"\u001b[0m \u001b[38;5;37m\"main\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  name                     = var.cluster_name",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m                     = \u001b[38;5;33mvar\u001b[0m.cluster_name",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  location                 = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mlocation\u001b[0m                 = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "  network                  = module.network.network_id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mnetwork\u001b[0m                  = \u001b[38;5;33mmodule\u001b[0m.network.network_id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "  subnetwork               = module.network.subnetwork_id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245msubnetwork\u001b[0m               = \u001b[38;5;33mmodule\u001b[0m.network.subnetwork_id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  remove_default_node_pool = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mremove_default_node_pool\u001b[0m = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  initial_node_count       = 1",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245minitial_node_count\u001b[0m       = \u001b[38;5;37m1",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "  private_cluster_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  private_cluster_config {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 31,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "Target": "modules/network/main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 3
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0029",
+          "Title": "VPC flow logs should be enabled for all subnetworks",
+          "Description": "VPC flow logs record information about all traffic, which is a vital tool in reviewing anomalous traffic.\n",
+          "Message": "Subnetwork does not have VPC flow logs enabled.",
+          "Namespace": "builtin.google.compute.google0029",
+          "Query": "data.builtin.google.compute.google0029.deny",
+          "Resolution": "Enable VPC flow logs",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0029",
+          "References": [
+            "https://avd.aquasec.com/misconfig/gcp-0029"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "module.network",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 22,
+            "EndLine": 28,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 22,
+                  "Content": "resource \"google_compute_subnetwork\" \"main\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_subnetwork\"\u001b[0m \u001b[38;5;37m\"main\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  name          = \"${var.network_name}-subnet\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m          = \u001b[38;5;37m\"\u001b[0m\u001b[38;5;37m${\u001b[0m\u001b[38;5;33mvar\u001b[0m.network_name\u001b[38;5;37m}\u001b[0m\u001b[38;5;37m-subnet\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  project       = var.project",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mproject\u001b[0m       = \u001b[38;5;33mvar\u001b[0m.project",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "  region        = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mregion\u001b[0m        = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "  network       = google_compute_network.main.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mnetwork\u001b[0m       = google_compute_network.main.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  ip_cidr_range = \"10.60.0.0/16\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mip_cidr_range\u001b[0m = \u001b[38;5;37m\"10.60.0.0/16\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "module.network",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 15,
+                  "EndLine": 20
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0075",
+          "Title": "Google Compute Subnetwork with Private Google Access Disabled",
+          "Description": "Private Google Access allows instances in a subnet to reach Google APIs and services via internal IP, which should be enabled for private networks.\n",
+          "Message": "Subnetwork does not have Private Google Access configured.",
+          "Namespace": "builtin.google.compute.google0075",
+          "Query": "data.builtin.google.compute.google0075.deny",
+          "Resolution": "Enable Private Google Access on subnets. In Terraform, set `private_ip_google_access = true` in the `google_compute_subnetwork` resource.\n",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0075",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork#private_ip_google_access",
+            "https://cloud.google.com/architecture/best-practices-vpc-design#limit-access",
+            "https://avd.aquasec.com/misconfig/gcp-0075"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "module.network",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 22,
+            "EndLine": 28,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 22,
+                  "Content": "resource \"google_compute_subnetwork\" \"main\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_subnetwork\"\u001b[0m \u001b[38;5;37m\"main\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  name          = \"${var.network_name}-subnet\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m          = \u001b[38;5;37m\"\u001b[0m\u001b[38;5;37m${\u001b[0m\u001b[38;5;33mvar\u001b[0m.network_name\u001b[38;5;37m}\u001b[0m\u001b[38;5;37m-subnet\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  project       = var.project",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mproject\u001b[0m       = \u001b[38;5;33mvar\u001b[0m.project",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "  region        = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mregion\u001b[0m        = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "  network       = google_compute_network.main.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mnetwork\u001b[0m       = google_compute_network.main.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  ip_cidr_range = \"10.60.0.0/16\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mip_cidr_range\u001b[0m = \u001b[38;5;37m\"10.60.0.0/16\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "module.network",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 15,
+                  "EndLine": 20
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0076",
+          "Title": "Google Compute Subnetwork Logging Disabled",
+          "Description": "Flow logs for subnets should be enabled to capture network traffic details for security analysis.\n",
+          "Message": "Subnetwork does not have flow logs enabled.",
+          "Namespace": "builtin.google.compute.google0076",
+          "Query": "data.builtin.google.compute.google0076.deny",
+          "Resolution": "Enable VPC Flow Logs for subnets.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0076",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork",
+            "https://cloud.google.com/architecture/best-practices-vpc-design#tailor-logging",
+            "https://avd.aquasec.com/misconfig/gcp-0076"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "module.network",
+            "Provider": "Google",
+            "Service": "compute",
+            "StartLine": 22,
+            "EndLine": 28,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 22,
+                  "Content": "resource \"google_compute_subnetwork\" \"main\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_compute_subnetwork\"\u001b[0m \u001b[38;5;37m\"main\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "  name          = \"${var.network_name}-subnet\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m          = \u001b[38;5;37m\"\u001b[0m\u001b[38;5;37m${\u001b[0m\u001b[38;5;33mvar\u001b[0m.network_name\u001b[38;5;37m}\u001b[0m\u001b[38;5;37m-subnet\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 24,
+                  "Content": "  project       = var.project",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mproject\u001b[0m       = \u001b[38;5;33mvar\u001b[0m.project",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 25,
+                  "Content": "  region        = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mregion\u001b[0m        = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "  network       = google_compute_network.main.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mnetwork\u001b[0m       = google_compute_network.main.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  ip_cidr_range = \"10.60.0.0/16\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mip_cidr_range\u001b[0m = \u001b[38;5;37m\"10.60.0.0/16\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "module.network",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 15,
+                  "EndLine": 20
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Target": "sql.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 8
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0014",
+          "Title": "Temporary file logging should be enabled for all temporary files.",
+          "Description": "Temporary files are not logged by default. To log all temporary files, a value of `0` should set in the `log_temp_files` flag - as all files greater in size than the number of bytes set in this flag will be logged.\n",
+          "Message": "Database instance has temporary file logging disabled.",
+          "Namespace": "builtin.google.sql.google0014",
+          "Query": "data.builtin.google.sql.google0014.deny",
+          "Resolution": "Enable temporary file logging for all files",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0014",
+          "References": [
+            "https://postgresqlco.nf/doc/en/param/log_temp_files/",
+            "https://avd.aquasec.com/misconfig/gcp-0014"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.app",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 1,
+            "EndLine": 23,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"google_sql_database_instance\" \"app\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  name             = \"${var.cluster_name}-db\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"\u001b[0m\u001b[38;5;37m${\u001b[0m\u001b[38;5;33mvar\u001b[0m.cluster_name\u001b[38;5;37m}\u001b[0m\u001b[38;5;37m-db\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  region           = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "    tier = var.db_tier",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;33mvar\u001b[0m.db_tier",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 8,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 9,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 10,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0015",
+          "Title": "SSL connections to a SQL database instance should be enforced.",
+          "Description": "In-transit data should be encrypted so that if traffic is intercepted data will not be exposed in plaintext to attackers.\n",
+          "Message": "Database instance does not require TLS for all connections.",
+          "Namespace": "builtin.google.sql.google0015",
+          "Query": "data.builtin.google.sql.google0015.deny",
+          "Resolution": "Enforce SSL for all connections",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0015",
+          "References": [
+            "https://cloud.google.com/sql/docs/mysql/configure-ssl-instance",
+            "https://avd.aquasec.com/misconfig/gcp-0015"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.app",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 9,
+            "EndLine": 16,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"google_sql_database_instance\" \"app\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 9,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 10,
+                  "Content": "      ipv4_enabled = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;245mipv4_enabled\u001b[0m = \u001b[38;5;166mtrue",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 11,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 12,
+                  "Content": "      authorized_networks {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      authorized_networks {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "        name  = \"internet\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;245mname\u001b[0m  = \u001b[38;5;37m\"internet\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 14,
+                  "Content": "        value = \"0.0.0.0/0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;245mvalue\u001b[0m = \u001b[38;5;37m\"0.0.0.0/0\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 15,
+                  "Content": "      }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      }",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 16,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "settings",
+                "Filename": "sql.tf",
+                "Location": {
+                  "StartLine": 6,
+                  "EndLine": 22
+                }
+              },
+              {
+                "Resource": "google_sql_database_instance.app",
+                "Filename": "sql.tf",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 23
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0016",
+          "Title": "Ensure that logging of connections is enabled.",
+          "Description": "Logging connections provides useful diagnostic data such as session length, which can identify performance issues in an application and potential DoS vectors.\n",
+          "Message": "Database instance is not configured to log connections.",
+          "Namespace": "builtin.google.sql.google0016",
+          "Query": "data.builtin.google.sql.google0016.deny",
+          "Resolution": "Enable connection logging.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0016",
+          "References": [
+            "https://www.postgresql.org/docs/13/runtime-config-logging.html#GUC-LOG-CONNECTIONS",
+            "https://avd.aquasec.com/misconfig/gcp-0016"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.app",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 1,
+            "EndLine": 23,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"google_sql_database_instance\" \"app\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  name             = \"${var.cluster_name}-db\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"\u001b[0m\u001b[38;5;37m${\u001b[0m\u001b[38;5;33mvar\u001b[0m.cluster_name\u001b[38;5;37m}\u001b[0m\u001b[38;5;37m-db\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  region           = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "    tier = var.db_tier",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;33mvar\u001b[0m.db_tier",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 8,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 9,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 10,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0017",
+          "Title": "Ensure that Cloud SQL Database Instances are not publicly exposed",
+          "Description": "Database instances should be configured so that they are not available over the public internet, but to internal compute resources which access them.\n",
+          "Message": "Database instance allows access from the public internet.",
+          "Namespace": "builtin.google.sql.google0017",
+          "Query": "data.builtin.google.sql.google0017.deny",
+          "Resolution": "Remove public access from database instances",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0017",
+          "References": [
+            "https://www.cloudconformity.com/knowledge-base/gcp/CloudSQL/publicly-accessible-cloud-sql-instances.html",
+            "https://avd.aquasec.com/misconfig/gcp-0017"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.app",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 14,
+            "EndLine": 14,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"google_sql_database_instance\" \"app\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 14,
+                  "Content": "        value = \"0.0.0.0/0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m        \u001b[38;5;245mvalue\u001b[0m = \u001b[38;5;37m\"0.0.0.0/0\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 22,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "authorized_networks",
+                "Filename": "sql.tf",
+                "Location": {
+                  "StartLine": 12,
+                  "EndLine": 15
+                }
+              },
+              {
+                "Resource": "ip_configuration",
+                "Filename": "sql.tf",
+                "Location": {
+                  "StartLine": 9,
+                  "EndLine": 16
+                }
+              },
+              {
+                "Resource": "settings",
+                "Filename": "sql.tf",
+                "Location": {
+                  "StartLine": 6,
+                  "EndLine": 22
+                }
+              },
+              {
+                "Resource": "google_sql_database_instance.app",
+                "Filename": "sql.tf",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 23
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0017",
+          "Title": "Ensure that Cloud SQL Database Instances are not publicly exposed",
+          "Description": "Database instances should be configured so that they are not available over the public internet, but to internal compute resources which access them.\n",
+          "Message": "Database instance is granted a public internet address.",
+          "Namespace": "builtin.google.sql.google0017",
+          "Query": "data.builtin.google.sql.google0017.deny",
+          "Resolution": "Remove public access from database instances",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0017",
+          "References": [
+            "https://www.cloudconformity.com/knowledge-base/gcp/CloudSQL/publicly-accessible-cloud-sql-instances.html",
+            "https://avd.aquasec.com/misconfig/gcp-0017"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.app",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 10,
+            "EndLine": 10,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"google_sql_database_instance\" \"app\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 10,
+                  "Content": "      ipv4_enabled = true",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;245mipv4_enabled\u001b[0m = \u001b[38;5;166mtrue",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 22,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 23,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "ip_configuration",
+                "Filename": "sql.tf",
+                "Location": {
+                  "StartLine": 9,
+                  "EndLine": 16
+                }
+              },
+              {
+                "Resource": "settings",
+                "Filename": "sql.tf",
+                "Location": {
+                  "StartLine": 6,
+                  "EndLine": 22
+                }
+              },
+              {
+                "Resource": "google_sql_database_instance.app",
+                "Filename": "sql.tf",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 23
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0020",
+          "Title": "Ensure that logging of lock waits is enabled.",
+          "Description": "Lock waits are often an indication of poor performance and often an indicator of a potential denial of service vulnerability, therefore occurrences should be logged for analysis.\n",
+          "Message": "Database instance is not configured to log lock waits.",
+          "Namespace": "builtin.google.sql.google0020",
+          "Query": "data.builtin.google.sql.google0020.deny",
+          "Resolution": "Enable lock wait logging.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0020",
+          "References": [
+            "https://www.postgresql.org/docs/13/runtime-config-logging.html#GUC-LOG-LOCK-WAITS",
+            "https://avd.aquasec.com/misconfig/gcp-0020"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.app",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 1,
+            "EndLine": 23,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"google_sql_database_instance\" \"app\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  name             = \"${var.cluster_name}-db\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"\u001b[0m\u001b[38;5;37m${\u001b[0m\u001b[38;5;33mvar\u001b[0m.cluster_name\u001b[38;5;37m}\u001b[0m\u001b[38;5;37m-db\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  region           = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "    tier = var.db_tier",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;33mvar\u001b[0m.db_tier",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 8,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 9,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 10,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0022",
+          "Title": "Ensure that logging of disconnections is enabled.",
+          "Description": "Logging disconnections provides useful diagnostic data such as session length, which can identify performance issues in an application and potential DoS vectors.\n",
+          "Message": "Database instance is not configured to log disconnections.",
+          "Namespace": "builtin.google.sql.google0022",
+          "Query": "data.builtin.google.sql.google0022.deny",
+          "Resolution": "Enable disconnection logging.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0022",
+          "References": [
+            "https://www.postgresql.org/docs/13/runtime-config-logging.html#GUC-LOG-DISCONNECTIONS",
+            "https://avd.aquasec.com/misconfig/gcp-0022"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.app",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 1,
+            "EndLine": 23,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"google_sql_database_instance\" \"app\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  name             = \"${var.cluster_name}-db\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"\u001b[0m\u001b[38;5;37m${\u001b[0m\u001b[38;5;33mvar\u001b[0m.cluster_name\u001b[38;5;37m}\u001b[0m\u001b[38;5;37m-db\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  region           = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "    tier = var.db_tier",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;33mvar\u001b[0m.db_tier",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 8,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 9,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 10,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "GCP-0025",
+          "Title": "Ensure that logging of checkpoints is enabled.",
+          "Description": "Logging checkpoints provides useful diagnostic data, which can identify performance issues in an application and potential DoS vectors.\n",
+          "Message": "Database instance is not configured to log checkpoints.",
+          "Namespace": "builtin.google.sql.google0025",
+          "Query": "data.builtin.google.sql.google0025.deny",
+          "Resolution": "Enable checkpoints logging.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/gcp-0025",
+          "References": [
+            "https://www.postgresql.org/docs/13/runtime-config-logging.html#GUC-LOG-CHECKPOINTS",
+            "https://avd.aquasec.com/misconfig/gcp-0025"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "google_sql_database_instance.app",
+            "Provider": "Google",
+            "Service": "sql",
+            "StartLine": 1,
+            "EndLine": 23,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"google_sql_database_instance\" \"app\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"google_sql_database_instance\"\u001b[0m \u001b[38;5;37m\"app\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  name             = \"${var.cluster_name}-db\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m             = \u001b[38;5;37m\"\u001b[0m\u001b[38;5;37m${\u001b[0m\u001b[38;5;33mvar\u001b[0m.cluster_name\u001b[38;5;37m}\u001b[0m\u001b[38;5;37m-db\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  database_version = \"POSTGRES_15\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mdatabase_version\u001b[0m = \u001b[38;5;37m\"POSTGRES_15\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  region           = var.region",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mregion\u001b[0m           = \u001b[38;5;33mvar\u001b[0m.region",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "  settings {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  settings {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "    tier = var.db_tier",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mtier\u001b[0m = \u001b[38;5;33mvar\u001b[0m.db_tier",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 8,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 9,
+                  "Content": "    ip_configuration {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    ip_configuration {",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 10,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

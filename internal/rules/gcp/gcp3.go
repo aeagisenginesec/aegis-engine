@@ -25,14 +25,14 @@ func GCP3Rules() []ir.Rule {
 		sqlNoMaintWindow{}, sqlOldVersion{}, sqlNoIAMAuth{},
 		sqlLocalInfile{}, sqlNoLogDisconnections{},
 		// GKE 047-056
-		gkeNoWorkloadIdentity{}, gkeNoBinaryAuth{}, gkeNoAutoUpgrade{},
+		gkeNoWorkloadIdentity{}, gkeNoAutoUpgrade{},
 		gkeNoAutoRepair{}, gkeBasicAuth{}, gkeClientCert{},
 		gkeDefaultSAFullScope{}, gkeNoIntranodeVisibility{},
 		gkeNoShieldedNodes{}, gkeNoConfidentialNodes{},
 		// Compute 057-066
 		instanceIPForward{}, instanceSerialPort{}, instanceNoSecureBoot{},
 		instanceNoOSLogin{}, instanceDiskNoCMEK{}, instanceDefaultSA{},
-		instanceFullScope{}, instanceNoDeletionProtection{},
+		instanceNoDeletionProtection{},
 		instanceProjectSSHKeys{}, computeDiskNoCMEK{},
 		// Firewall 067-071
 		firewallOpenRDP{}, firewallAllPorts{}, firewallNoLogging{},
@@ -782,6 +782,9 @@ func (sqlNoLogDisconnections) AppliesTo(t string) bool {
 	return t == "google_sql_database_instance"
 }
 func (s sqlNoLogDisconnections) Check(r ir.Resource) []ir.Finding {
+	if !sqlIsPostgres(r) {
+		return nil
+	}
 	settings, _, present, known := getBlocks(r, "settings")
 	if !present || !known {
 		return nil
@@ -837,31 +840,6 @@ func (s gkeNoWorkloadIdentity) Check(r ir.Resource) []ir.Finding {
 }
 
 // AEGIS-GCP-048: GKE without binary authorization
-type gkeNoBinaryAuth struct{}
-
-func (gkeNoBinaryAuth) ID() string { return "AEGIS-GCP-048" }
-func (gkeNoBinaryAuth) Title() string {
-	return "GKE cluster without binary authorization"
-}
-func (gkeNoBinaryAuth) Description() string {
-	return "google_container_cluster with no binary_authorization block " +
-		"deploys container images without signature verification."
-}
-func (gkeNoBinaryAuth) Severity() ir.Severity { return ir.SeverityMedium }
-func (gkeNoBinaryAuth) AppliesTo(t string) bool {
-	return t == "google_container_cluster"
-}
-func (s gkeNoBinaryAuth) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "binary_authorization")
-	if present && !known {
-		return nil
-	}
-	if !present || len(blks) == 0 {
-		return []ir.Finding{mkFinding(s, r, "binary_authorization", r.Span,
-			"absent", "binary_authorization { evaluation_mode = \"PROJECT_SINGLETON_POLICY_ENFORCE\" }")}
-	}
-	return nil
-}
 
 // AEGIS-GCP-049: GKE node auto-upgrade disabled
 type gkeNoAutoUpgrade struct{}
@@ -1342,42 +1320,6 @@ func (s instanceDefaultSA) Check(r ir.Resource) []ir.Finding {
 	return nil
 }
 
-// AEGIS-GCP-063: Compute instance with full cloud-platform scope
-type instanceFullScope struct{}
-
-func (instanceFullScope) ID() string { return "AEGIS-GCP-063" }
-func (instanceFullScope) Title() string {
-	return "Compute instance with full cloud-platform access scope"
-}
-func (instanceFullScope) Description() string {
-	return "google_compute_instance service_account with " +
-		"https://www.googleapis.com/auth/cloud-platform scope grants the " +
-		"instance broad GCP API access."
-}
-func (instanceFullScope) Severity() ir.Severity { return ir.SeverityHigh }
-func (instanceFullScope) AppliesTo(t string) bool {
-	return t == "google_compute_instance"
-}
-func (s instanceFullScope) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "service_account")
-	if !present || !known {
-		return nil
-	}
-	for _, b := range blks {
-		scopes, span, ok := getStringList(mapRes(b), "scopes")
-		if !ok {
-			continue
-		}
-		for _, sc := range scopes {
-			if strings.Contains(sc, "cloud-platform") {
-				return []ir.Finding{mkFinding(s, r, "service_account.scopes", span,
-					sc, "minimal required scopes")}
-			}
-		}
-	}
-	return nil
-}
-
 // AEGIS-GCP-064: Compute instance without deletion protection
 type instanceNoDeletionProtection struct{}
 
@@ -1423,15 +1365,25 @@ func (instanceProjectSSHKeys) AppliesTo(t string) bool {
 func (s instanceProjectSSHKeys) Check(r ir.Resource) []ir.Finding {
 	v, ok := r.Attributes["metadata"]
 	if !ok || !v.Known {
-		return nil
+		// No metadata block: project-wide SSH keys are enabled by
+		// default, so the instance accepts them.
+		return []ir.Finding{mkFinding(s, r, "metadata.block-project-ssh-keys",
+			r.Span, "absent (project defaults apply)",
+			"block-project-ssh-keys = \"TRUE\"")}
 	}
 	m, ok := v.AsMap()
 	if !ok {
 		return nil
 	}
 	bv, ok := m["block-project-ssh-keys"]
-	if !ok || !bv.Known {
-		return nil
+	if !ok {
+		// Key absent: defaults to false, so project-wide SSH keys
+		// are accepted.
+		return []ir.Finding{mkFinding(s, r, "metadata.block-project-ssh-keys",
+			v.Span, "absent", "block-project-ssh-keys = \"TRUE\"")}
+	}
+	if !bv.Known {
+		return nil // unresolved: cannot decide
 	}
 	if sv, ok := bv.AsString(); ok && strings.ToUpper(sv) != "TRUE" {
 		return []ir.Finding{mkFinding(s, r, "metadata.block-project-ssh-keys", bv.Span,
@@ -2209,10 +2161,13 @@ func (projectAutoNetwork) AppliesTo(t string) bool {
 }
 func (s projectAutoNetwork) Check(r ir.Resource) []ir.Finding {
 	v, ok := r.Attributes["auto_create_network"]
-	if !ok || !v.Known {
+	if !ok {
 		// absent: provider default is true
 		return []ir.Finding{mkFinding(s, r, "auto_create_network", r.Span,
 			"absent (defaults to true)", "auto_create_network = false")}
+	}
+	if !v.Known {
+		return nil // unresolved: cannot decide
 	}
 	if b, ok := v.AsBool(); ok && b {
 		return []ir.Finding{mkFinding(s, r, "auto_create_network", v.Span,
@@ -2304,9 +2259,12 @@ func (dnsPolicyNoLogging) AppliesTo(t string) bool {
 }
 func (s dnsPolicyNoLogging) Check(r ir.Resource) []ir.Finding {
 	v, ok := r.Attributes["enable_logging"]
-	if !ok || !v.Known {
+	if !ok {
 		return []ir.Finding{mkFinding(s, r, "enable_logging", r.Span,
 			"absent", "enable_logging = true")}
+	}
+	if !v.Known {
+		return nil // unresolved: cannot decide
 	}
 	if b, ok := v.AsBool(); ok && !b {
 		return []ir.Finding{mkFinding(s, r, "enable_logging", v.Span,

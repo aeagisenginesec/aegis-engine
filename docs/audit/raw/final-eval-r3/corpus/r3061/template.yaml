@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Production database
+Resources:
+  ProdDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: "15.4"
+      DBInstanceClass: db.t3.medium
+      DBInstanceIdentifier: prod-5379e2
+      AllocatedStorage: "100"
+      StorageEncrypted: true
+      PubliclyAccessible: false
+      MasterUsername: appadmin
+      MasterUserPassword: Str0ng-5379e2-Db!
+      BackupRetentionPeriod: 14
+      DeletionProtection: true
+      MultiAZ: true
+
+  LogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: logs-5379e2
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true

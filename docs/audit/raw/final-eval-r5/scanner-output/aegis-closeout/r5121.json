@@ -1,0 +1,136 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5121",
+  "summary": {
+    "resources": 1,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 7,
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 6
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-DOCKER-007",
+      "severity": "low",
+      "title": "apt-get install without --no-install-recommends",
+      "description": "Installing recommended packages bloats the image with unneeded software, enlarging the attack surface. Pass --no-install-recommends to apt-get install.",
+      "resource": "docker_stage.stage0",
+      "file": "corpus/r5121/Dockerfile",
+      "line": 3,
+      "evidence": "RUN = apt-get install without --no-install-recommends",
+      "expected": "apt-get install --no-install-recommends",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-012",
+      "severity": "high",
+      "title": "Remote script piped to shell",
+      "description": "Piping curl/wget output straight into sh or bash executes remote code with no integrity check: a compromised server or MITM owns the build. Download the file, verify a checksum or signature, then execute it.",
+      "resource": "docker_stage.stage0",
+      "file": "corpus/r5121/Dockerfile",
+      "line": 5,
+      "evidence": "RUN = curl/wget piped to shell",
+      "expected": "download, verify checksum/signature, then execute",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-013",
+      "severity": "low",
+      "title": "chown in RUN instead of COPY --chown",
+      "description": "Running chown in a separate RUN duplicates every affected file into a new layer, bloating the image. Use COPY --chown to set ownership at copy time.",
+      "resource": "docker_stage.stage0",
+      "file": "corpus/r5121/Dockerfile",
+      "line": 8,
+      "evidence": "RUN = chown in RUN layer",
+      "expected": "COPY --chown=\u003cuser\u003e:\u003cgroup\u003e",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-017",
+      "severity": "low",
+      "title": "No maintainer label",
+      "description": "Images without ownership metadata are harder to triage when a vulnerability is found. Add LABEL maintainer= or org.opencontainers.image.authors.",
+      "resource": "docker_stage.stage0",
+      "file": "corpus/r5121/Dockerfile",
+      "line": 2,
+      "evidence": "LABEL = no maintainer/authors label",
+      "expected": "LABEL maintainer=... or org.opencontainers.image.authors=...",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-018",
+      "severity": "low",
+      "title": "No STOPSIGNAL directive",
+      "description": "Without STOPSIGNAL the container gets SIGTERM, which apps that only handle SIGINT (or expect another signal) ignore until the orchestrator SIGKILLs them, risking data loss. Declare the signal your app handles for graceful shutdown.",
+      "resource": "docker_stage.stage0",
+      "file": "corpus/r5121/Dockerfile",
+      "line": 2,
+      "evidence": "STOPSIGNAL = absent",
+      "expected": "STOPSIGNAL \u003csignal your app handles\u003e",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-022",
+      "severity": "low",
+      "title": "COPY of entire build context",
+      "description": "COPY . ships the whole build context into the image, often including credentials, VCS history, and dev tooling. Copy only what the app needs and gate the context with .dockerignore.",
+      "resource": "docker_stage.stage0",
+      "file": "corpus/r5121/Dockerfile",
+      "line": 7,
+      "evidence": "COPY = COPY . (entire context)",
+      "expected": "COPY only required paths; maintain .dockerignore",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-DOCKER-029",
+      "severity": "low",
+      "title": "apt-get install without pinned versions",
+      "description": "Unpinned apt packages float across rebuilds, making images non-reproducible and silently pulling new versions. Pin versions: apt-get install pkg=1.2.3.",
+      "resource": "docker_stage.stage0",
+      "file": "corpus/r5121/Dockerfile",
+      "line": 3,
+      "evidence": "RUN = unpinned packages: wget, ca-certificates",
+      "expected": "apt-get install pkg=\u003cversion\u003e",
+      "remediation": "Review the flagged configuration against Docker and CIS Docker Benchmark best practices. Apply the control the rule describes, preferring restrictive defaults, least privilege, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.docker.com/engine/security/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5121/Dockerfile",
+        "status": "parsed",
+        "format": "dockerfile"
+      }
+    ]
+  }
+}

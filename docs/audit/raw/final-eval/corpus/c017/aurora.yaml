@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Aurora MySQL cluster for the analytics sandbox.
+
+Parameters:
+  MasterPassword:
+    Type: String
+    Description: Master password for the cluster.
+  DBClusterClass:
+    Type: String
+    Default: db.r6g.large
+
+Resources:
+  AnalyticsDbSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Analytics database
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+
+  AnalyticsCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      Engine: aurora-mysql
+      EngineVersion: '8.0.mysql_aurora.3.05.2'
+      MasterUsername: root
+      MasterUserPassword: !Ref MasterPassword
+      StorageEncrypted: false
+      BackupRetentionPeriod: 1
+      Port: 3306
+      VpcSecurityGroupIds:
+        - !Ref AnalyticsDbSg
+
+  AnalyticsInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref AnalyticsCluster
+      DBInstanceClass: !Ref DBClusterClass
+      Engine: aurora-mysql
+      PubliclyAccessible: true
+
+Outputs:
+  ClusterEndpoint:
+    Value: !GetAtt AnalyticsCluster.Endpoint

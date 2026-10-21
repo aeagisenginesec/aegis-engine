@@ -11,7 +11,7 @@ func TestAuroraPerfInsightsNoCMK(t *testing.T) {
 		"performance_insights_enabled": kv(true, 2),
 	})
 	quiet := res("aws_rds_cluster", "db", map[string]ir.Value{
-		"performance_insights_enabled": kv(true, 2),
+		"performance_insights_enabled":    kv(true, 2),
 		"performance_insights_kms_key_id": ks("arn:aws:kms:eu-west-1:123:key/abc", 3),
 	})
 	disabled := res("aws_rds_cluster", "db", map[string]ir.Value{
@@ -41,24 +41,6 @@ func TestDBInstanceNoEnhancedMon(t *testing.T) {
 		}
 	}
 	if got := runRule(rdsNoEnhancedMonitoring{}, quiet); len(got) != 0 {
-		t.Fatalf("expected quiet, got %d", len(got))
-	}
-}
-
-func TestDBInstanceNoCopyTagsSnapshot(t *testing.T) {
-	absent := res("aws_db_instance", "db", map[string]ir.Value{})
-	explicit := res("aws_db_instance", "db", map[string]ir.Value{
-		"copy_tags_to_snapshot": kv(false, 2),
-	})
-	quiet := res("aws_db_instance", "db", map[string]ir.Value{
-		"copy_tags_to_snapshot": kv(true, 2),
-	})
-	for _, r := range []ir.Resource{absent, explicit} {
-		if got := runRule(dbInstanceNoCopyTagsSnapshot{}, r); len(got) != 1 {
-			t.Fatalf("expected 1 finding, got %d", len(got))
-		}
-	}
-	if got := runRule(dbInstanceNoCopyTagsSnapshot{}, quiet); len(got) != 0 {
 		t.Fatalf("expected quiet, got %d", len(got))
 	}
 }
@@ -198,7 +180,7 @@ func TestDBInstancePasswordNoRotation(t *testing.T) {
 		"password": ks("s3cr3t-static", 2),
 	})
 	quiet := res("aws_db_instance", "db", map[string]ir.Value{
-		"password":                   ks("s3cr3t-static", 2),
+		"password":                    ks("s3cr3t-static", 2),
 		"manage_master_user_password": kv(true, 3),
 	})
 	noPw := res("aws_db_instance", "db", map[string]ir.Value{})
@@ -385,11 +367,12 @@ func TestNeptuneNoDeletionProtection(t *testing.T) {
 }
 
 // TestDatabasesDeepRuleIDs asserts the 700-719 ID range is covered
-// (minus 701, 715, 718, 719 removed as post-audit duplicates).
+// (minus 701, 702, 715, 718, 719 removed as post-audit duplicates;
+// 702 is a duplicate of 546).
 func TestDatabasesDeepRuleIDs(t *testing.T) {
 	rules := DatabasesDeepRules()
 	wantIDs := []string{
-		"AEGIS-AWS-700", "AEGIS-AWS-702", "AEGIS-AWS-703", "AEGIS-AWS-704",
+		"AEGIS-AWS-700", "AEGIS-AWS-703", "AEGIS-AWS-704",
 		"AEGIS-AWS-705", "AEGIS-AWS-706", "AEGIS-AWS-707", "AEGIS-AWS-708",
 		"AEGIS-AWS-709", "AEGIS-AWS-710", "AEGIS-AWS-711", "AEGIS-AWS-712",
 		"AEGIS-AWS-713", "AEGIS-AWS-714", "AEGIS-AWS-716", "AEGIS-AWS-717",

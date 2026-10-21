@@ -363,6 +363,51 @@ func Test501_505_NotActionSilent(t *testing.T) {
 // policy so 502 fires end-to-end.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Regression: policies built with jsonencode(merge(...)) and concat() must
+// evaluate end-to-end: a wrapped admin policy fires 006, a wrapped
+// least-privilege policy stays quiet for 006/501.
+// ---------------------------------------------------------------------------
+
+func Test006_EndToEndJsonencodeMergeConcat(t *testing.T) {
+	adminSrc := `resource "aws_iam_policy" "admin" {
+  policy = jsonencode(merge(
+    { Version = "2012-10-17" },
+    { Statement = [{ Effect = "Allow" Action = concat(["*"], []) Resource = "*" }] }
+  ))
+}
+`
+	mod, _, err := (terraform.Adapter{}).ParseModule("t.tf", []byte(adminSrc))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if len(mod.Resources) != 1 {
+		t.Fatalf("expected 1 resource, got %d", len(mod.Resources))
+	}
+	if f := (iamAdminPolicy{}).Check(mod.Resources[0]); len(f) != 1 || f[0].RuleID != "AEGIS-AWS-006" {
+		t.Fatalf("expected 006 to fire on jsonencode(merge(...)) admin policy, got %+v", f)
+	}
+
+	leastSrc := `resource "aws_iam_policy" "readonly" {
+  policy = jsonencode({
+    Statement = [{ Effect = "Allow" Action = concat(["s3:GetObject"], ["s3:ListBucket"]) Resource = "arn:aws:s3:::c2/*" }]
+  })
+}
+`
+	mod2, _, err := (terraform.Adapter{}).ParseModule("t.tf", []byte(leastSrc))
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if f := (iamAdminPolicy{}).Check(mod2.Resources[0]); len(f) != 0 {
+		t.Fatalf("006 must not fire on jsonencode/concat least-privilege policy, got %+v", f)
+	}
+	for _, r := range IAMPrivilegeRules() {
+		if f := runRule(r, mod2.Resources[0]); len(f) != 0 {
+			t.Fatalf("%s must not fire on least-privilege policy, got %+v", r.ID(), f)
+		}
+	}
+}
+
 func Test502_EndToEndMissingCommaHCL(t *testing.T) {
 	src := `resource "aws_iam_policy" "v" {
   policy = jsonencode({

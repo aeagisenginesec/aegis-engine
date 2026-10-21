@@ -61,14 +61,29 @@ var publicACLValues = map[string]bool{
 	"authenticated-read": true,
 }
 
-// attrEdit builds an Edit replacing the evidence span's lines with
-// `<indent><name> = <newValue>`. It sanity-checks that the first replaced
-// line actually assigns the attribute; otherwise it returns ok=false and
-// the caller proposes nothing (never corrupt on a span mismatch).
+// attrEdit builds an Edit replacing the evidence span's line with
+// `<indent><name> = <newValue>`. It sanity-checks that the replaced line
+// really assigns the attribute; otherwise it returns ok=false and the
+// caller proposes nothing (never corrupt on a span mismatch).
+//
+// Two further guards (Item 5, 2026-10-13):
+//
+//   - Literal-only: the current right-hand side must be a plain literal
+//     (true/false/null/number/quoted string). A reference or expression
+//     (var.x, local.x, data.*, function call, conditional, interpolation)
+//     must NOT be rewritten to a literal: the semantics layer may resolve
+//     var.encrypt (default false) to Known=false, but replacing the
+//     reference severs the variable binding and silently overrides every
+//     other consumer of that variable / tfvars value. Such findings need
+//     a human to change the variable or drop the indirection.
+//   - Single-line spans only: a multi-line attribute value must never be
+//     collapsed to one line.
+//   - Trailing comments are preserved: `name = false # reason` becomes
+//     `name = true # reason` instead of silently deleting the comment.
 func attrEdit(src []byte, f ir.Finding, name, newValue string) (Edit, bool) {
 	span := f.Evidence.Span
 	lines := splitLines(src)
-	if span.StartLine < 1 || span.EndLine < span.StartLine || span.EndLine > len(lines) {
+	if span.StartLine < 1 || span.EndLine != span.StartLine || span.EndLine > len(lines) {
 		return Edit{}, false
 	}
 	first := lines[span.StartLine-1]
@@ -81,13 +96,110 @@ func attrEdit(src []byte, f ir.Finding, name, newValue string) (Edit, bool) {
 	if !strings.HasPrefix(rest, "=") {
 		return Edit{}, false
 	}
+	rhs := strings.TrimLeft(rest[1:], " \t")
+	_, comment, ok := splitLiteralComment(rhs)
+	if !ok {
+		return Edit{}, false
+	}
 	indent := first[:len(first)-len(strings.TrimLeft(first, " \t"))]
+	newText := indent + name + " = " + newValue
+	if comment != "" {
+		newText += " " + comment
+	}
+	// Preserve CRLF: the replaced line keeps its original line ending
+	// instead of silently converting one line of a CRLF file to LF.
+	if strings.HasSuffix(first, "\r") {
+		newText += "\r"
+	}
 	return Edit{
 		File:      span.File,
 		StartLine: span.StartLine,
 		EndLine:   span.EndLine,
-		NewText:   indent + name + " = " + newValue,
+		NewText:   newText,
 	}, true
+}
+
+// splitLiteralComment splits an attribute right-hand side into its literal
+// value and an optional trailing comment. It reports ok=false when the RHS
+// is not a plain literal (reference, call, conditional, collection,
+// heredoc, …) or when trailing text is not a `#` / `//` comment.
+func splitLiteralComment(rhs string) (literal, comment string, ok bool) {
+	var rest string
+	if strings.HasPrefix(rhs, `"`) {
+		// Quoted string: scan for the closing quote, honoring escapes.
+		i := 1
+		closed := false
+		for i < len(rhs) {
+			switch rhs[i] {
+			case '\\':
+				i += 2
+			case '"':
+				closed = true
+			default:
+				i++
+			}
+			if closed {
+				break
+			}
+		}
+		if !closed {
+			return "", "", false
+		}
+		literal = rhs[:i+1]
+		rest = strings.TrimLeft(rhs[i+1:], " \t")
+	} else {
+		// Bare token: run until whitespace or a comment opener.
+		i := 0
+		for i < len(rhs) && rhs[i] != ' ' && rhs[i] != '\t' && rhs[i] != '#' {
+			// A "//" starts a comment; a lone "/" is not a literal.
+			if rhs[i] == '/' {
+				break
+			}
+			i++
+		}
+		literal = rhs[:i]
+		rest = strings.TrimLeft(rhs[i:], " \t")
+		if literal == "" || !isBareLiteral(literal) {
+			return "", "", false
+		}
+	}
+	if rest == "" {
+		return literal, "", true
+	}
+	if strings.HasPrefix(rest, "#") || strings.HasPrefix(rest, "//") {
+		return literal, rest, true
+	}
+	return "", "", false
+}
+
+// isBareLiteral reports whether tok is a plain true/false/null/number
+// literal (no references, calls, operators, or delimiters).
+func isBareLiteral(tok string) bool {
+	switch tok {
+	case "true", "false", "null":
+		return true
+	}
+	// Number: optional '-', then digit, then digits/letters/._+- (covers
+	// 10, 1.5, 1e3). Anything else (var.x, foo(, a?b:c, [1], {k=v}) fails.
+	if tok == "" {
+		return false
+	}
+	i := 0
+	if tok[0] == '-' {
+		i = 1
+	}
+	if i >= len(tok) || tok[i] < '0' || tok[i] > '9' {
+		return false
+	}
+	for ; i < len(tok); i++ {
+		c := tok[i]
+		if (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+			c == '.' || c == '_' || c == '+' || c == '-' {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // insertBeforeClose builds an Edit inserting blockText (already indented
@@ -108,10 +220,16 @@ func insertBeforeClose(src []byte, res ir.Resource, blockText string) (Edit, boo
 	}
 	braceIndent := braceLine[:len(braceLine)-len(strings.TrimLeft(braceLine, " \t"))]
 	bodyIndent := braceIndent + "  "
+	// Preserve CRLF: in a CRLF file the inserted lines use CRLF too,
+	// so the patch does not mix line endings.
+	joiner := "\n"
+	if strings.HasSuffix(braceLine, "\r") {
+		joiner = "\r\n"
+	}
 	var sb strings.Builder
 	for i, l := range strings.Split(blockText, "\n") {
 		if i > 0 {
-			sb.WriteString("\n")
+			sb.WriteString(joiner)
 		}
 		sb.WriteString(bodyIndent + l)
 	}
@@ -119,7 +237,7 @@ func insertBeforeClose(src []byte, res ir.Resource, blockText string) (Edit, boo
 		File:      res.Span.File,
 		StartLine: end,
 		EndLine:   end,
-		NewText:   sb.String() + "\n" + braceLine,
+		NewText:   sb.String() + joiner + braceLine,
 	}, true
 }
 
@@ -170,7 +288,15 @@ func (b boolFixer) Propose(f ir.Finding, res ir.Resource, src []byte) []Patch {
 	if !b.setTrue {
 		want = "false"
 	}
-	if v, ok := res.Attr(b.attr); ok && v.Known {
+	// The attribute is present in the resource: only flip it when its
+	// value is a known boolean. An unknown or non-boolean value (variable
+	// reference, function call, …) must NOT fall through to the insert
+	// path below — that would write a second, duplicate attribute line
+	// next to the existing one. Refuse instead.
+	if v, ok := res.Attr(b.attr); ok {
+		if !v.Known {
+			return nil
+		}
 		cur, ok := v.AsBool()
 		if !ok {
 			return nil

@@ -1,0 +1,398 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "corpus/r5038",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 23,
+    "critical": 0,
+    "high": 3,
+    "medium": 7,
+    "low": 13
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-330",
+      "severity": "medium",
+      "title": "CloudFront distribution without WAF",
+      "description": "A distribution with no web_acl_id attached has no WAFv2 protection against common web exploits and bots at the edge.",
+      "resource": "aws_cloudfront_distribution.cdn",
+      "file": "corpus/r5038/main.tf",
+      "line": 1,
+      "evidence": "web_acl_id = absent",
+      "expected": "a WAFv2 web ACL ID",
+      "remediation": "Attach a WAFv2 Web ACL with managed rule groups (AWSManagedRulesCommonRuleSet,\nAWSManagedRulesKnownBadInputsRuleSet) to the load balancer / API / distribution.\nSet the default action to block and monitor via CloudWatch metrics.",
+      "references": [
+        "https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-405",
+      "severity": "high",
+      "title": "CloudFront custom origin fetched over plain HTTP",
+      "description": "A custom origin with origin_protocol_policy http-only means CloudFront talks to the origin in cleartext. Use https-only or match-viewer.",
+      "resource": "aws_cloudfront_distribution.cdn",
+      "file": "corpus/r5038/main.tf",
+      "line": 9,
+      "evidence": "origin.custom_origin_config.origin_protocol_policy = http-only",
+      "expected": "https-only or match-viewer",
+      "remediation": "Enforce TLS 1.2+. Replace HTTP listeners with HTTPS, set a modern TLS policy (e.g. `ELBSecurityPolicy-TLS13-1-2-2021-06`), and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions everywhere.",
+      "references": [
+        "https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-8"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "4.2.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-512",
+      "severity": "medium",
+      "title": "CloudFront distribution without geo restriction",
+      "description": "A distribution with geo_restriction restriction_type \"none\" serves content to every country, with no geographic access control to limit exposure or meet data-residency requirements.",
+      "resource": "aws_cloudfront_distribution.cdn",
+      "file": "corpus/r5038/main.tf",
+      "line": 24,
+      "evidence": "restrictions.geo_restriction.restriction_type = none",
+      "expected": "restriction_type = \"whitelist\" or \"blacklist\"",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-529",
+      "severity": "low",
+      "title": "CloudFront distribution without custom SSL certificate",
+      "description": "Distributions using the CloudFront default certificate cannot serve a custom domain over HTTPS with a proper certificate. Use a custom ACM certificate in viewer_certificate instead.",
+      "resource": "aws_cloudfront_distribution.cdn",
+      "file": "corpus/r5038/main.tf",
+      "line": 26,
+      "evidence": "viewer_certificate.cloudfront_default_certificate = true",
+      "expected": "custom ACM certificate (cloudfront_default_certificate = false)",
+      "remediation": "Enforce TLS 1.2+. Replace HTTP listeners with HTTPS, set a modern TLS policy (e.g. `ELBSecurityPolicy-TLS13-1-2-2021-06`), and redirect HTTP→HTTPS. Disable weak ciphers and old protocol versions everywhere.",
+      "references": [
+        "https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-625",
+      "severity": "low",
+      "title": "CloudFront distribution without access logging",
+      "description": "Hygiene: CloudFront distributions should log access to S3 for traffic analysis. Add a logging_config block with a bucket.",
+      "resource": "aws_cloudfront_distribution.cdn",
+      "file": "corpus/r5038/main.tf",
+      "line": 1,
+      "evidence": "logging_config = absent",
+      "expected": "logging_config block with S3 bucket",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "AU-2"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-826",
+      "severity": "low",
+      "title": "CloudFront distribution without a response headers policy",
+      "description": "A CloudFront distribution with no response_headers_policy_id serves responses without hardened security headers (HSTS, frame-options, content-type options). Attach a response headers policy such as the managed SecurityHeadersPolicy.",
+      "resource": "aws_cloudfront_distribution.cdn",
+      "file": "corpus/r5038/main.tf",
+      "line": 1,
+      "evidence": "response_headers_policy_id = absent (no security headers)",
+      "expected": "response_headers_policy_id = \u003cmanaged SecurityHeadersPolicy\u003e",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-007",
+      "severity": "high",
+      "title": "Cloud SQL instance with public IP",
+      "description": "google_sql_database_instance with settings.ip_configuration.ipv4_enabled = true exposes the database to the internet. Use private IP with VPC peering instead.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 37,
+      "evidence": "settings.ip_configuration.ipv4_enabled = true",
+      "expected": "ipv4_enabled = false (private IP only)",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public IPs / public access, and use Private Service Connect / VPC Service Controls if external access is required. Verify with `gcloud compute firewall-rules list`.",
+      "references": [
+        "https://cloud.google.com/vpc/docs/firewalls"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-008",
+      "severity": "high",
+      "title": "Cloud SQL instance without SSL enforcement",
+      "description": "google_sql_database_instance with settings.ip_configuration.require_ssl = false accepts plaintext database connections.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 38,
+      "evidence": "settings.ip_configuration.require_ssl = false",
+      "expected": "require_ssl = true",
+      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS_1_2\"` / `minimum_tls_version`, replace HTTP with HTTPS, and redirect HTTP→HTTPS.",
+      "references": [
+        "https://cloud.google.com/load-balancing/docs/ssl-policies-concepts"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-019",
+      "severity": "medium",
+      "title": "Cloud SQL instance without deletion protection",
+      "description": "google_sql_database_instance with deletion_protection = false (the provider default) can be destroyed accidentally. Enable deletion protection for production databases.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "deletion_protection = absent (provider default: false)",
+      "expected": "deletion_protection = true",
+      "remediation": "Enable deletion protection to prevent accidental destruction. For Cloud SQL and Compute instances set `deletion_protection = true`. For GCS buckets there is no deletion_protection argument — instead remove `force_destroy = true` (or omit it; the default is false) and consider a `retention_policy` or a resource-manager lien for critical data.",
+      "references": [
+        "https://cloud.google.com/resource-manager/docs/creating-managing-liens"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-042",
+      "severity": "low",
+      "title": "Cloud SQL instance without maintenance window",
+      "description": "google_sql_database_instance with no maintenance_window lets GCP apply disruptive maintenance at any time; hygiene finding.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.maintenance_window = absent",
+      "expected": "maintenance_window { day = 7 hour = 3 }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-044",
+      "severity": "medium",
+      "title": "Cloud SQL instance without IAM database authentication",
+      "description": "google_sql_database_instance without database flag cloudsql.iam_authentication=on forces password-only auth.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.database_flags = cloudsql.iam_authentication not enabled",
+      "expected": "database_flags { name = \"cloudsql.iam_authentication\" value = \"on\" }",
+      "remediation": "Apply least privilege. Replace broad roles with the minimum predefined or custom IAM roles the workload needs. Use Workload Identity Federation and service accounts with minimal scopes.",
+      "references": [
+        "https://cloud.google.com/iam/docs/using-iam-securely"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-046",
+      "severity": "low",
+      "title": "Cloud SQL instance without log_disconnections",
+      "description": "google_sql_database_instance without database flag log_disconnections=on misses session audit data; hygiene finding.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.database_flags = log_disconnections not enabled",
+      "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-101",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_checkpoints",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_checkpoints=on misses checkpoint timing and buffer-write audit data.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.database_flags = log_checkpoints not set",
+      "expected": "database_flags { name = \"log_checkpoints\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-102",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_connections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_connections=on misses connection-attempt audit data.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.database_flags = log_connections not set",
+      "expected": "database_flags { name = \"log_connections\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-103",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_disconnections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_disconnections=on misses session-termination audit data.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.database_flags = log_disconnections not set",
+      "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-104",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_lock_waits",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_lock_waits=on misses deadlock-risk visibility into sessions waiting longer than deadlock_timeout.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.database_flags = log_lock_waits not set",
+      "expected": "database_flags { name = \"log_lock_waits\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-105",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_duration",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_duration=on misses per-statement duration logging needed to detect anomalous query timing.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.database_flags = log_duration not set",
+      "expected": "database_flags { name = \"log_duration\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-106",
+      "severity": "medium",
+      "title": "Cloud SQL PostgreSQL without pgAudit logging",
+      "description": "google_sql_database_instance (PostgreSQL) without pgAudit (pgaudit.log with READ,WRITE or shared_preload_libraries containing pgaudit) misses detailed session/object audit logging.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.database_flags = pgAudit not enabled",
+      "expected": "database_flags { name = \"pgaudit.log\" value = \"READ,WRITE\" } and database_flags { name = \"shared_preload_libraries\" value = \"pgaudit\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-107",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL log_min_messages not set appropriately",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_min_messages set to WARNING or more severe emits overly verbose logs (or none at all), burying security-relevant messages.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.database_flags = log_min_messages not set",
+      "expected": "database_flags { name = \"log_min_messages\" value = \"WARNING\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-153",
+      "severity": "low",
+      "title": "Cloud SQL instance without Query Insights",
+      "description": "google_sql_database_instance with no settings.insights_config block has no Query Insights: slow or abusive queries go undetected, hiding both performance and security anomalies. Enable Query Insights.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.insights_config = absent",
+      "expected": "settings { insights_config { query_insights_enabled = true } }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-154",
+      "severity": "medium",
+      "title": "Cloud SQL instance not highly available",
+      "description": "google_sql_database_instance with settings.availability_type other than REGIONAL (the default is ZONAL) has no standby in another zone: a zonal outage takes the database offline. Use availability_type = \"REGIONAL\" for production.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.availability_type = absent (provider default: ZONAL)",
+      "expected": "settings { availability_type = \"REGIONAL\" }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-157",
+      "severity": "low",
+      "title": "Cloud SQL instance without password validation policy",
+      "description": "google_sql_database_instance with no settings.password_validation_policy block accepts weak database passwords (short, no complexity requirements). Enforce a password validation policy.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.password_validation_policy = [REDACTED]",
+      "expected": "settings { password_validation_policy { min_length = 12 ... } }",
+      "remediation": "Apply least privilege. Replace broad roles with the minimum predefined or custom IAM roles the workload needs. Use Workload Identity Federation and service accounts with minimal scopes.",
+      "references": [
+        "https://cloud.google.com/iam/docs/using-iam-securely"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-160",
+      "severity": "medium",
+      "title": "Cloud SQL MySQL instance without binary logging",
+      "description": "google_sql_database_instance with a backup_configuration block but binary_log_enabled not true keeps no binary logs: MySQL point-in-time recovery and change auditing are impossible. Enable binary logging.",
+      "resource": "google_sql_database_instance.analytics",
+      "file": "corpus/r5038/main.tf",
+      "line": 29,
+      "evidence": "settings.backup_configuration.binary_log_enabled = absent (provider default: false)",
+      "expected": "binary_log_enabled = true",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "corpus/r5038/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

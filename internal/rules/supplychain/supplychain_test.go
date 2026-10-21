@@ -86,6 +86,28 @@ func TestFixedVersionSilent(t *testing.T) {
 	}
 }
 
+// TestSC001_FixedVersionQuiet is the explicit rule-ID-tagged negative for
+// AEGIS-SC-001: a provider version outside every advisory's affected range
+// produces no finding from this rule alone.
+func TestSC001_FixedVersionQuiet(t *testing.T) {
+	resources := []ir.Resource{
+		providerRes("hashicorp/aws", "5.2.0"),
+		advisoryRes("CVE-2024-1234", "hashicorp/aws", ">= 4.0.0, < 5.2.0", "high"),
+	}
+	var fs []ir.Finding
+	for _, r := range Rules() {
+		if r.ID() != "AEGIS-SC-001" {
+			continue
+		}
+		if cr, ok := r.(ir.CrossResourceRule); ok {
+			fs = append(fs, cr.CheckAll(resources)...)
+		}
+	}
+	if len(fs) != 0 {
+		t.Fatalf("AEGIS-SC-001: expected 0 findings for fixed version, got %+v", fs)
+	}
+}
+
 func TestRangeConstraintNoFinding(t *testing.T) {
 	for _, c := range []string{">= 4.0.0", "~> 4.2", ">= 4.0.0, < 6.0.0", "*"} {
 		fs := runSC(t, []ir.Resource{

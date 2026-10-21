@@ -1,0 +1,2627 @@
+
+                                                                                                                                                   
+                                                                                                                                                                                                    
+   MLLLLLM             MLLLLLLLLL   LLLLLLL             KLLLLLLLLLLLLLLLL       LLLLLLLLLLLLLLLLLLLLLLL 
+   MMMMMMM           MMMMMMMMMML    MMMMMMMK       LMMMMMMMMMMMMMMMMMMMML   KLMMMMMMMMMMMMMMMMMMMMMMMMM 
+   MMMMMMM         MMMMMMMMML       MMMMMMMK     LMMMMMMMMMMMMMMMMMMMMMML  LMMMMMMMMMMMMMMMMMMMMMMMMMMM 
+   MMMMMMM      MMMMMMMMMML         MMMMMMMK   LMMMMMMMMMMMMMMMMMMMMMMMML LMMMMMMMMMMMMMMMMMMMMMMMMMMMM 
+   MMMMMMM    LMMMMMMMMML           MMMMMMMK  LMMMMMMMMMLLMLLLLLLLLLLLLLL LMMMMMMMLLLLLLLLLLLLLLLLLLLLM 
+   MMMMMMM  MMMMMMMMMLM             MMMMMMMK LMMMMMMMM                    LMMMMMML                      
+   MMMMMMMLMMMMMMMML                MMMMMMMK MMMMMMML                     LMMMMMMMMLLLLLLLLLLLLLMLL     
+   MMMMMMMMMMMMMMMM                 MMMMMMMK MMMMMML                       LMMMMMMMMMMMMMMMMMMMMMMMMML  
+   MMMMMMMMMMMMMMMMMM               MMMMMMMK MMMMMMM                         LMMMMMMMMMMMMMMMMMMMMMMMML 
+   MMMMMMM KLMMMMMMMMML             MMMMMMMK LMMMMMMM                                          MMMMMMMML
+   MMMMMMM    LMMMMMMMMMM           MMMMMMMK LMMMMMMMMLL                                        MMMMMMML
+   MMMMMMM      LMMMMMMMMMLL        MMMMMMMK  LMMMMMMMMMMMMMMMMMMMMMMMMML LLLLLLLLLLLLLLLLLLLLMMMMMMMMMM
+   MMMMMMM        MMMMMMMMMMML      MMMMMMMK   MMMMMMMMMMMMMMMMMMMMMMMMML LMMMMMMMMMMMMMMMMMMMMMMMMMMMM 
+   MMMMMMM          LLMMMMMMMMML    MMMMMMMK     LLMMMMMMMMMMMMMMMMMMMMML LMMMMMMMMMMMMMMMMMMMMMMMMMML  
+   MMMMMMM             MMMMMMMMMML  MMMMMMMK         KLMMMMMMMMMMMMMMMMML LMMMMMMMMMMMMMMMMMMMMMMMLK    
+                                                                                                            
+                                                                                                                                                                                                                                                                                                                        
+
+
+Scanning with Keeping Infrastructure as Code Secure 2.1.20
+
+
+
+
+
+Shared Volumes Between Containers, Severity: INFO, Results: 1
+Description: Volumes shared between containers can cause data corruption or can be used to share malicious files between containers.
+Platform: DockerCompose
+CWE: 693
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockercompose-queries/8c978947-0ff6-485c-b0c2-0bfca6026466
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k058/docker-compose.yml:21
+
+		020:     volumes:
+		021:       - dbdata:/var/lib/postgresql/data
+		022: 
+
+
+Security Group Without Description, Severity: INFO, Results: 1
+Description: It's considered a best practice for AWS Security Group to have a description
+Platform: Terraform
+CWE: 710
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/cb3f5ed6-0d18-40de-a93d-b3538db31e8c
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:14
+
+		013: 
+		014: resource "aws_security_group" "web" {
+		015:   name   = "web-alb-sg"
+
+
+Security Group Rule Without Description, Severity: INFO, Results: 3
+Description: It's considered a best practice for AWS Security Group to have a description
+Platform: CloudFormation
+CWE: 710
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/5e6c9c68-8a82-408e-8749-ddad78cbb9c5
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c023/template.json:16
+
+		015:           {
+		016:             "IpProtocol": "tcp",
+		017:             "FromPort": 22,
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/c008/rds.yaml:32
+
+		031:       SecurityGroupIngress:
+		032:         - IpProtocol: tcp
+		033:           FromPort: 5432
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/c023/template.json:22
+
+		021:           {
+		022:             "IpProtocol": "tcp",
+		023:             "FromPort": 443,
+
+
+Security Group Rule Without Description, Severity: INFO, Results: 4
+Description: It's considered a best practice for all rules in AWS Security Group to have a description
+Platform: Terraform
+CWE: 710
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/68eb4bf3-f9bf-463d-b5cf-e029bb446d2e
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:93
+
+		092: 
+		093:   egress {
+		094:     from_port   = 0
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:18
+
+		017: 
+		018:   ingress {
+		019:     from_port   = 80
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:25
+
+		024: 
+		025:   egress {
+		026:     from_port   = 0
+
+
+	[4]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:35
+
+		034: 
+		035:   egress {
+		036:     from_port   = 0
+
+
+Security Group Not Used, Severity: INFO, Results: 1
+Description: Security group must be used or not declared
+Platform: Terraform
+CWE: 284
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/4849211b-ac39-479e-ae78-5694d506cb24
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:80
+
+		079: 
+		080: resource "aws_security_group" "db" {
+		081:   name        = "db-tier"
+
+
+Resource Not Using Tags, Severity: INFO, Results: 20
+Description: AWS services resource tags are an essential part of managing components. As a best practice, the field 'tags' should have additional tags defined other than 'Name'
+Platform: Terraform
+CWE: 665
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/e38a8e0a-b88b-4902-b3fe-b0fcb17d5c10
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t008/main.tf:14
+
+		013: 
+		014: resource "aws_kms_key" "rds" {
+		015:   description         = "RDS encryption key"
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:19
+
+		018: 
+		019:   tags = {
+		020:     Name = "app-vpc"
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:42
+
+		041: 
+		042:   tags = {
+		043:     Name = "bastion-open"
+
+
+	[4]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:50
+
+		049: 
+		050:   tags = {
+		051:     Name = "app-private-b"
+
+
+	[5]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:58
+
+		057: 
+		058:   tags = {
+		059:     Name = "app-igw"
+
+
+	[6]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:30
+
+		029: 
+		030:   tags = {
+		031:     Name = "app-public-a"
+
+
+	[7]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:75
+
+		074: 
+		075:   tags = {
+		076:     Name = "app-nat"
+
+
+	[8]: ../eval2-kics-harness/scratch/batch3/corpus/t028/iam.tf:14
+
+		013: 
+		014: resource "aws_iam_role" "api" {
+		015:   name = "${var.project}-api-role"
+
+
+	[9]: ../eval2-kics-harness/scratch/batch3/corpus/t008/main.tf:23
+
+		022: 
+		023:   tags = {
+		024:     Name = "analytics-private"
+
+
+	[10]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:40
+
+		039: 
+		040:   tags = {
+		041:     Name = "app-private-a"
+
+
+	[11]: ../eval2-kics-harness/scratch/batch3/corpus/t008/main.tf:28
+
+		027: 
+		028: resource "aws_db_parameter_group" "pg15" {
+		029:   name   = "analytics-pg15"
+
+
+	[12]: ../eval2-kics-harness/scratch/batch3/corpus/t008/main.tf:59
+
+		058: 
+		059:   tags = {
+		060:     Name = "analytics-pg"
+
+
+	[13]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:44
+
+		043: 
+		044:   tags = {
+		045:     Name = "web-alb"
+
+
+	[14]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:60
+
+		059: 
+		060:   tags = {
+		061:     Name = "web-tg"
+
+
+	[15]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:32
+
+		031: 
+		032:   tags = {
+		033:     Name = "web-alb-sg"
+
+
+	[16]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:58
+
+		057: 
+		058:   tags = {
+		059:     Name = "bastion-host"
+
+
+	[17]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:66
+
+		065: 
+		066:   tags = {
+		067:     Name = "app-nat-eip"
+
+
+	[18]: ../eval2-kics-harness/scratch/batch3/corpus/t023/main.tf:47
+
+		046: 
+		047:   tags = {
+		048:     Name = "orders-fifo"
+
+
+	[19]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:100
+
+		099: 
+		100:   tags = {
+		101:     Name = "db-tier"
+
+
+	[20]: ../eval2-kics-harness/scratch/batch3/corpus/t023/main.tf:19
+
+		018: 
+		019:   tags = {
+		020:     Name = "orders-fifo"
+
+
+Liveness Probe Is Not Defined, Severity: INFO, Results: 3
+Description: In case of an unresponsive container, a Liveness Probe can help your application become more available since it restarts the container. However, it can lead to cascading failures. Define one if you really need it
+Platform: Kubernetes
+CWE: 754
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/ade74944-a674-4e00-859e-c6eab5bde441
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:23
+
+		022:       containers:
+		023:         - name: billing
+		024:           image: example/billing:3.3.1
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:25
+
+		024:       containers:
+		025:         - name: api
+		026:           image: example/api:1.4.2
+
+
+Liveness Probe Is Not Defined, Severity: INFO, Results: 1
+Description: In case of an unresponsive container, a Liveness Probe can help your application become more available since it restarts the container. However, it can lead to cascading failures. Define one if you really need it
+Platform: Terraform
+CWE: 754
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/5b6d53dd-3ba3-4269-b4d7-f82e880e43c3
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:41
+
+		040: 
+		041:         container {
+		042:           name  = "agent"
+
+
+Ensure Administrative Boundaries Between Resources, Severity: INFO, Results: 1
+Description: As a best practice, ensure that is made the correct use of namespaces to adequately administer your resources. Kubernetes Authorization plugins can also be used to create policies that segregate user access to namespaces.
+Platform: Kubernetes
+CWE: 284
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/e84eaf4d-2f45-47b2-abe8-e581b06deb66
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k028/rbac.yaml:5
+
+		004:   name: config-reader
+		005:   namespace: app
+		006: rules:
+
+
+DynamoDB Table Point In Time Recovery Disabled, Severity: INFO, Results: 1
+Description: It's considered a best practice to have point in time recovery enabled for DynamoDB Table
+Platform: Terraform
+CWE: 754
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/741f1291-47ac-4a85-a07b-3d32a9d6bd3e
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t028/lambda.tf:1
+
+		001: resource "aws_dynamodb_table" "api" {
+		002:   name         = var.table_name
+		003:   billing_mode = "PAY_PER_REQUEST"
+
+
+Apt Get Install Lists Were Not Deleted, Severity: INFO, Results: 1
+Description: After using apt-get install, it is needed to delete apt-get lists
+Platform: Dockerfile
+CWE: 459
+Risk Score: 0.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockerfile-queries/df746b39-6564-4fed-bf85-e9c44382303c
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k008/Dockerfile:6
+
+		005: 
+		006: RUN apt-get update && apt-get install -y --no-install-recommends     sudo     openssh-client     ca-certificates     && echo "appuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers     && useradd -m -s /bin/bash appuser     && chmod u+s /usr/bin/find
+		007: 
+
+
+Virtual Network with DDoS Protection Plan disabled, Severity: LOW, Results: 1
+Description: Virtual Network should have DDoS Protection Plan enabled
+Platform: Terraform
+CWE: 693
+Risk Score: 3.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/b4cc2c52-34a6-4b43-b57c-4bdeb4514a5a
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t048/aks.tf:1
+
+		001: resource "azurerm_virtual_network" "main" {
+		002:   name                = "vnet-${var.prefix}"
+		003:   address_space       = ["10.73.0.0/16"]
+
+
+Using Default Namespace, Severity: LOW, Results: 1
+Description: The default namespace should not be used
+Platform: Terraform
+CWE: 665
+Risk Score: 4.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/abcb818b-5af7-4d72-aba9-6dd84956b451
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:15
+
+		014: resource "kubernetes_deployment" "agent" {
+		015:   metadata {
+		016:     name = "host-agent"
+
+
+Tags Not Copied to RDS Cluster Snapshot, Severity: LOW, Results: 1
+Description: Tags of the RDS Cluster should be copied to the respective snapshots to ensure that snapshots retain important metadata for identification, cost allocation, and resource management
+Platform: Terraform
+CWE: 284
+Risk Score: 1.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/6d3dead4-c6b2-4db7-81bd-3a83eae8f255
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t008/main.tf:38
+
+		037: 
+		038: resource "aws_db_instance" "analytics" {
+		039:   identifier                      = "analytics-pg"
+
+
+Storage Account Allows Default Network Access, Severity: LOW, Results: 1
+Description: 'Microsoft.Storage/storageAccounts' should force the use of HTTPS
+Platform: AzureResourceManager
+CWE: 319
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/azureresourcemanager-queries/azure/9073f073-5d60-4b46-b569-0d6baa80ed95
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c038/azuredeploy.json:25
+
+		024:       "kind": "StorageV2",
+		025:       "properties": {
+		026:         "supportsHttpsTrafficOnly": false,
+
+
+Shield Advanced Not In Use, Severity: LOW, Results: 2
+Description: AWS Shield Advanced should be used for Amazon Route 53 hosted zone, AWS Global Accelerator accelerator, Elastic IP Address, Elastic Load Balancing, and Amazon CloudFront Distribution to protect these resources against robust DDoS attacks
+Platform: Terraform
+CWE: 665
+Risk Score: 3.3
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/084c6686-2a70-4710-91b1-000393e54c12
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:37
+
+		036: 
+		037: resource "aws_lb" "web" {
+		038:   name               = "web-alb"
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:63
+
+		062: 
+		063: resource "aws_eip" "nat" {
+		064:   domain = "vpc"
+
+
+S3 bucket notifications disabled, Severity: LOW, Results: 3
+Description: S3 bucket notifications provide alerts triggered when certain operations are performed, which might be a helpful indicator for detecting unintended operations that might compromise your infrastructure or even malicious activity.
+Platform: Terraform
+CWE: 778
+Risk Score: 1.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/e39f87f5-0abf-488b-864c-63ee1f588140
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t023/main.tf:41
+
+		040: 
+		041: resource "aws_sqs_queue" "orders" {
+		042:   name                        = "orders.fifo"
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t028/lambda.tf:16
+
+		015: 
+		016: resource "aws_lambda_function" "api" {
+		017:   function_name = var.function_name
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/t023/main.tf:14
+
+		013: 
+		014: resource "aws_sns_topic" "orders" {
+		015:   name                        = "orders.fifo"
+
+
+S3 Bucket Should Have Bucket Policy, Severity: LOW, Results: 1
+Description: Checks if S3 Bucket has the same name as a Bucket Policy, if it has, S3 Bucket has a Bucket Policy associated
+Platform: CloudFormation
+CWE: 665
+Risk Score: 4.3
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/37fa8188-738b-42c8-bf82-6334ea567738
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c018/s3-lambda-trigger.yaml:14
+
+		013: Resources:
+		014:   IntakeBucket:
+		015:     Type: AWS::S3::Bucket
+
+
+Root Container Not Mounted Read-only, Severity: LOW, Results: 1
+Description: Check if the root container filesystem is not being mounted as read-only.
+Platform: Kubernetes
+CWE: 668
+Risk Score: 3.6
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/a9c2f49d-0671-4fc9-9ece-f4e261e128d0
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+Root Container Not Mounted As Read-only, Severity: LOW, Results: 1
+Description: Check if the root container filesystem is not being mounted as read-only.
+Platform: Terraform
+CWE: 668
+Risk Score: 3.6
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/d532566b-8d9d-4f3b-80bd-361fe802f9c2
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:45
+
+		044: 
+		045:           security_context {
+		046:             privileged = true
+
+
+Postgres RDS logging disabled, Severity: LOW, Results: 1
+Description: Logging of executed database queries should be enabled to help assess performance impact and detect potential malicious activity.Note that these logs might contain password information and other credentials if provided in cleartext. More Information: https://repost.aws/knowledge-center/rds-postgresql-cleartext-logging
+Platform: Terraform
+CWE: 778
+Risk Score: 1.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/820882c4-0c07-4686-b1ca-c69241c57470
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t008/main.tf:28
+
+		027: 
+		028: resource "aws_db_parameter_group" "pg15" {
+		029:   name   = "analytics-pg15"
+
+
+Pod or Container Without Security Context, Severity: LOW, Results: 1
+Description: A security context defines privilege and access control settings for a Pod or Container
+Platform: Kubernetes
+CWE: 285
+Risk Score: 3.6
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/a97a340a-0063-418e-b3a1-3028941d0995
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+Pod or Container Without ResourceQuota, Severity: LOW, Results: 3
+Description: Each namespace should have a ResourceQuota policy associated to limit the total amount of resources Pods, Containers and PersistentVolumeClaims can consume
+Platform: Kubernetes
+CWE: 400
+Risk Score: 2.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/48a5beba-e4c0-4584-a2aa-e6894e4cf424
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:4
+
+		003: metadata:
+		004:   name: billing
+		005:   labels:
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:4
+
+		003: metadata:
+		004:   name: api
+		005:   labels:
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:4
+
+		003: metadata:
+		004:   name: batch
+		005:   labels:
+
+
+Pod or Container Without LimitRange, Severity: LOW, Results: 3
+Description: Each namespace should have a LimitRange policy associated to ensure that resource allocations of Pods, Containers and PersistentVolumeClaims do not exceed the defined boundaries
+Platform: Kubernetes
+CWE: 400
+Risk Score: 2.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/4a20ebac-1060-4c81-95d1-1f7f620e983b
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:4
+
+		003: metadata:
+		004:   name: batch
+		005:   labels:
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:4
+
+		003: metadata:
+		004:   name: billing
+		005:   labels:
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:4
+
+		003: metadata:
+		004:   name: api
+		005:   labels:
+
+
+No Drop Capabilities for Containers, Severity: LOW, Results: 1
+Description: Sees if Kubernetes Drop Capabilities exists to ensure containers security context
+Platform: Terraform
+CWE: 754
+Risk Score: 3.6
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/21cef75f-289f-470e-8038-c7cee0664164
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:45
+
+		044: 
+		045:           security_context {
+		046:             privileged = true
+
+
+No Drop Capabilities for Containers, Severity: LOW, Results: 1
+Description: Sees if Kubernetes Drop Capabilities exists to ensure containers security context
+Platform: Kubernetes
+CWE: 754
+Risk Score: 3.6
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/268ca686-7fb7-4ae9-b129-955a2a89064e
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+Missing AppArmor Profile, Severity: LOW, Results: 3
+Description: Containers should be configured with an AppArmor profile to enforce fine-grained access control over low-level system resources
+Platform: Kubernetes
+CWE: 284
+Risk Score: 3.3
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/8b36775e-183d-4d46-b0f7-96a6f34a723f
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:13
+
+		012:   template:
+		013:     metadata:
+		014:       labels:
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:13
+
+		012:   template:
+		013:     metadata:
+		014:       labels:
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:13
+
+		012:   template:
+		013:     metadata:
+		014:       labels:
+
+
+Lambda Functions Without X-Ray Tracing, Severity: LOW, Results: 1
+Description: AWS Lambda functions should have TracingConfig enabled. For this, property 'tracing_Config.mode' should have the value 'Active'
+Platform: Terraform
+CWE: 778
+Risk Score: 3.3
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/8152e0cf-d2f0-47ad-96d5-d003a76eabd1
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t028/lambda.tf:16
+
+		015: 
+		016: resource "aws_lambda_function" "api" {
+		017:   function_name = var.function_name
+
+
+Lambda Function Without Tags, Severity: LOW, Results: 1
+Description: AWS Lambda Functions must have associated tags.
+Platform: CloudFormation
+CWE: 665
+Risk Score: 3.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/8df8e857-bd59-44fa-9f4c-d77594b95b46
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c018/s3-lambda-trigger.yaml:75
+
+		074:     Type: AWS::Lambda::Function
+		075:     Properties:
+		076:       FunctionName: image-resizer
+
+
+Lambda Function Without Dead Letter Queue, Severity: LOW, Results: 1
+Description: AWS Lambda Function should be configured for a Dead Letter Queue(DLQ)
+Platform: Terraform
+CWE: 390
+Risk Score: 1.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/720f44cf-285e-4b69-8f72-835e6bc1dceb
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t028/lambda.tf:16
+
+		015: 
+		016: resource "aws_lambda_function" "api" {
+		017:   function_name = var.function_name
+
+
+Lambda Function Without Dead Letter Queue, Severity: LOW, Results: 1
+Description: AWS Lambda Function should be configured for a Dead Letter Queue(DLQ)
+Platform: CloudFormation
+CWE: 390
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/c2eae442-d3ba-4cb1-84ca-1db4f80eae3d
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c018/s3-lambda-trigger.yaml:75
+
+		074:     Type: AWS::Lambda::Function
+		075:     Properties:
+		076:       FunctionName: image-resizer
+
+
+Invalid Image Tag, Severity: LOW, Results: 1
+Description: Image tag must be defined and not be empty or equal to latest.
+Platform: Kubernetes
+CWE: 665
+Risk Score: 3.6
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/583053b7-e632-46f0-b989-f81ff8045385
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:19
+
+		018:         - name: batch
+		019:           image: example/batch:latest
+		020:           imagePullPolicy: Always
+
+
+Instance With No VPC, Severity: LOW, Results: 1
+Description: EC2 Instances should be configured under a VPC network. AWS VPCs provide the controls to facilitate a formal process for approving and testing all network connections and changes to the firewall and router configurations.
+Platform: CloudFormation
+CWE: 284
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/8a6d36cd-0bc6-42b7-92c4-67acc8576861
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c023/template.json:32
+
+		031:       "Type": "AWS::EC2::Instance",
+		032:       "Properties": {
+		033:         "ImageId": { "Ref": "AmiId" },
+
+
+Instance Uses Metadata Service IMDSv1, Severity: LOW, Results: 1
+Description: Instance metadata can be accessed with both IMDSv1 or IMDSv2. Although, IMDSv2 service is a session-oriented service, granting additional protection against exposure of metadata information. That version should be used instead of IMDSv1 in order to mitigate those situations.
+Platform: Terraform
+CWE: 200
+Risk Score: 1.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/c306ac53-ee5b-41d3-86a9-0fd2722b4e67
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:47
+
+		046: 
+		047: resource "aws_instance" "bastion" {
+		048:   ami                    = "ami-0c55b159cbfafe1f0"
+
+
+Image Without Digest, Severity: LOW, Results: 3
+Description: Images should be specified together with their digests to ensure integrity
+Platform: Kubernetes
+CWE: 665
+Risk Score: 4.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/7c81d34c-8e5a-402b-9798-9f442630e678
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:26
+
+		025:         - name: api
+		026:           image: example/api:1.4.2
+		027:           ports:
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:24
+
+		023:         - name: billing
+		024:           image: example/billing:3.3.1
+		025:           ports:
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:19
+
+		018:         - name: batch
+		019:           image: example/batch:latest
+		020:           imagePullPolicy: Always
+
+
+Image Without Digest, Severity: LOW, Results: 1
+Description: Images should be specified together with their digests to ensure integrity
+Platform: Terraform
+CWE: 665
+Risk Score: 4.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/228c4c19-feeb-4c18-848c-800ac70fdfb7
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:43
+
+		042:           name  = "agent"
+		043:           image = "example/host-agent:1.0"
+		044: 
+
+
+Image Pull Policy Of The Container Is Not Set To Always, Severity: LOW, Results: 2
+Description: Image Pull Policy of the container must be defined and set to Always
+Platform: Kubernetes
+CWE: 665
+Risk Score: 2.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/caa3479d-885d-4882-9aac-95e5e78ef5c2
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:23
+
+		022:       containers:
+		023:         - name: billing
+		024:           image: example/billing:3.3.1
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:25
+
+		024:       containers:
+		025:         - name: api
+		026:           image: example/api:1.4.2
+
+
+IAM Access Analyzer Not Enabled, Severity: LOW, Results: 7
+Description: IAM Access Analyzer should be enabled and configured to continuously monitor resource permissions
+Platform: Terraform
+CWE: 710
+Risk Score: 3.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/e592a0c5-5bdb-414c-9066-5dba7cdea370
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:14
+
+		013: 
+		014: resource "aws_security_group" "bastion" {
+		015:   name        = "bastion-open"
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:14
+
+		013: 
+		014: resource "aws_vpc" "main" {
+		015:   cidr_block           = "10.20.0.0/16"
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/t023/main.tf:14
+
+		013: 
+		014: resource "aws_sns_topic" "orders" {
+		015:   name                        = "orders.fifo"
+
+
+	[4]: ../eval2-kics-harness/scratch/batch3/corpus/t008/main.tf:14
+
+		013: 
+		014: resource "aws_kms_key" "rds" {
+		015:   description         = "RDS encryption key"
+
+
+	[5]: ../eval2-kics-harness/scratch/batch3/corpus/t028/iam.tf:14
+
+		013: 
+		014: resource "aws_iam_role" "api" {
+		015:   name = "${var.project}-api-role"
+
+
+	[6]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:14
+
+		013: 
+		014: resource "aws_security_group" "web" {
+		015:   name   = "web-alb-sg"
+
+
+	[7]: ../eval2-kics-harness/scratch/batch3/corpus/t028/lambda.tf:1
+
+		001: resource "aws_dynamodb_table" "api" {
+		002:   name         = var.table_name
+		003:   billing_mode = "PAY_PER_REQUEST"
+
+
+IAM Access Analyzer Not Enabled, Severity: LOW, Results: 5
+Description: IAM Access Analyzer should be enabled and configured to continuously monitor resource permissions
+Platform: CloudFormation
+CWE: 778
+Risk Score: 3.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/8d29754a-2a18-460d-a1ba-9509f8d359da
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c013/logging-bucket.yaml:9
+
+		008: 
+		009: Resources:
+		010:   AccessLogsBucket:
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/c003/iam.yaml:11
+
+		010: 
+		011: Resources:
+		012:   DeployRole:
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/c023/template.json:9
+
+		008:   },
+		009:   "Resources": {
+		010:     "AppSecurityGroup": {
+
+
+	[4]: ../eval2-kics-harness/scratch/batch3/corpus/c018/s3-lambda-trigger.yaml:13
+
+		012: 
+		013: Resources:
+		014:   IntakeBucket:
+
+
+	[5]: ../eval2-kics-harness/scratch/batch3/corpus/c008/rds.yaml:19
+
+		018: 
+		019: Resources:
+		020:   DbSubnetGroup:
+
+
+Healthcheck Instruction Missing, Severity: LOW, Results: 5
+Description: Ensure that HEALTHCHECK is being used. The HEALTHCHECK instruction tells Docker how to test a container to check that it is still working
+Platform: Dockerfile
+CWE: 710
+Risk Score: 3.6
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockerfile-queries/b03a748a-542d-44f4-bb86-9199ab4fd2d5
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k013/Dockerfile:9
+
+		008: 
+		009: FROM alpine:3.20.2
+		010: 
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k063/Dockerfile:1
+
+		001: FROM python:3.11.9-slim-bookworm
+		002: 
+		003: WORKDIR /app
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k008/Dockerfile:1
+
+		001: FROM debian:bookworm-slim
+		002: 
+		003: ENV GITHUB_TOKEN=<SECRET-MASKED-ON-PURPOSE>
+
+
+	[4]: ../eval2-kics-harness/scratch/batch3/corpus/k058/Dockerfile:1
+
+		001: FROM node:latest
+		002: 
+		003: WORKDIR /app
+
+
+	[5]: ../eval2-kics-harness/scratch/batch3/corpus/k018/Dockerfile:1
+
+		001: FROM debian:bookworm-20240904-slim
+		002: 
+		003: RUN apt-get update     && apt-get install -y --no-install-recommends dumb-init     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*     && useradd --create-home --uid 10001 --shell /usr/sbin/nologin appuser     && mkdir -p /app/tmp && chown appuser:appuse
+
+
+Google Compute Subnetwork with Private Google Access Disabled, Severity: LOW, Results: 1
+Description: Google Compute Subnetwork should have Private Google Access enabled, which means 'private_ip_google_access' should be set to true
+Platform: Terraform
+CWE: 732
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/gcp/ee7b93c1-b3f8-4a3b-9588-146d481814f5
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t068/main.tf:20
+
+		019: 
+		020: resource "google_compute_subnetwork" "no_logs" {
+		021:   name          = "default-subnet"
+
+
+Deployment Without PodDisruptionBudget, Severity: LOW, Results: 3
+Description: Deployments should be assigned with a PodDisruptionBudget to ensure high availability
+Platform: Kubernetes
+CWE: 400
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/b23e9b98-0cb6-4fc9-b257-1f3270442678
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:10
+
+		009:   selector:
+		010:     matchLabels:
+		011:       app: batch
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:10
+
+		009:   selector:
+		010:     matchLabels:
+		011:       app: billing
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:10
+
+		009:   selector:
+		010:     matchLabels:
+		011:       app: api
+
+
+Deployment Has No PodAntiAffinity, Severity: LOW, Results: 1
+Description: Check if Deployment resources don't have a podAntiAffinity policy, which prevents multiple pods from being scheduled on the same node.
+Platform: Kubernetes
+CWE: 710
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/a31b7b82-d994-48c4-bd21-3bab6c31827a
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:16
+
+		015:         app: batch
+		016:     spec:
+		017:       containers:
+
+
+Cosmos DB Account Without Tags, Severity: LOW, Results: 1
+Description: Cosmos DB Account must have a mapping of tags.
+Platform: Terraform
+CWE: 665
+Risk Score: 3.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/56dad03e-e94f-4dd6-93a4-c253a03ff7a0
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t043/main.tf:18
+
+		017: 
+		018: resource "azurerm_cosmosdb_account" "shop" {
+		019:   name                = "acme-shop-cosmos"
+
+
+Cluster Admin Rolebinding With Superuser Permissions, Severity: LOW, Results: 1
+Description: Ensure that the cluster-admin role is only used where required (RBAC)
+Platform: Terraform
+CWE: 250
+Risk Score: 4.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/17172bc2-56fb-4f17-916f-a014147706cd
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:80
+
+		079:     kind      = "ClusterRole"
+		080:     name      = "cluster-admin"
+		081:     api_group = "rbac.authorization.k8s.io"
+
+
+Chown Flag Exists, Severity: LOW, Results: 3
+Description: It is considered a best practice for every executable in a container to be owned by the root user even if it is executed by a non-root user, only execution permissions are required on the file, not ownership
+Platform: Dockerfile
+CWE: 282
+Risk Score: 4.6
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockerfile-queries/aa93e17f-b6db-4162-9334-c70334e7ac28
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k018/Dockerfile:10
+
+		009: WORKDIR /app
+		010: COPY --chown=appuser:appuser bin/worker /app/worker
+		011: 
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k008/Dockerfile:15
+
+		014: WORKDIR /home/appuser/app
+		015: COPY --chown=appuser:appuser . .
+		016: 
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k003/Dockerfile:9
+
+		008: 
+		009: COPY --chown=appuser:appuser . .
+		010: 
+
+
+CPU Requests Not Set, Severity: LOW, Results: 1
+Description: CPU requests should be set to ensure the sum of the resource requests of the scheduled Containers is less than the capacity of the node
+Platform: Terraform
+CWE: 400
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/577ac19c-6a77-46d7-9f14-e049cdd15ec2
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:41
+
+		040: 
+		041:         container {
+		042:           name  = "agent"
+
+
+CPU Requests Not Set, Severity: LOW, Results: 2
+Description: CPU requests should be set to ensure the sum of the resource requests of the scheduled Containers is less than the capacity of the node
+Platform: Kubernetes
+CWE: 400
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/ca469dd4-c736-448f-8ac1-30a642705e0a
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:32
+
+		031:               drop: ["ALL"]
+		032:           resources:
+		033:             limits:
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+CPU Limits Not Set, Severity: LOW, Results: 1
+Description: CPU limits should be set because if the system has CPU time free, a container is guaranteed to be allocated as much CPU as it requests
+Platform: Kubernetes
+CWE: 400
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/4ac0e2b7-d2d2-4af7-8799-e8de6721ccda
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+CPU Limits Not Set, Severity: LOW, Results: 1
+Description: CPU limits should be set because if the system has CPU time free, a container is guaranteed to be allocated as much CPU as it requests
+Platform: Terraform
+CWE: 400
+Risk Score: 2.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/5f4735ce-b9ba-4d95-a089-a37a767b716f
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:41
+
+		040: 
+		041:         container {
+		042:           name  = "agent"
+
+
+Automatic Minor Upgrades Disabled, Severity: LOW, Results: 1
+Description: RDS instance should have automatic minor upgrades enabled, which means the attribute 'AutoMinorVersionUpgrade' must be set to true.
+Platform: CloudFormation
+CWE: 710
+Risk Score: 4.3
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/f0104061-8bfc-4b45-8a7d-630eb502f281
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c008/rds.yaml:39
+
+		038:     Type: AWS::RDS::DBInstance
+		039:     Properties:
+		040:       Engine: postgres
+
+
+AKS Uses Azure Policies Add-On Disabled, Severity: LOW, Results: 1
+Description: Azure Container Service (AKS) should use Azure Policies Add-On
+Platform: Terraform
+CWE: 710
+Risk Score: 3.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/43789711-161b-4708-b5bb-9d1c626f7492
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t048/aks.tf:15
+
+		014: 
+		015: resource "azurerm_kubernetes_cluster" "main" {
+		016:   name                = "${var.prefix}-aks"
+
+
+AKS Disk Encryption Set ID Undefined, Severity: LOW, Results: 1
+Description: Azure Container Service (AKS) should use Disk Encryption Set ID in supported types of disk
+Platform: Terraform
+CWE: 311
+Risk Score: 2.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/b17d8bb8-4c08-4785-867e-cb9e62a622aa
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t048/aks.tf:15
+
+		014: 
+		015: resource "azurerm_kubernetes_cluster" "main" {
+		016:   name                = "${var.prefix}-aks"
+
+
+Vault Auditing Disabled, Severity: MEDIUM, Results: 1
+Description: Ensure that logging for Azure KeyVault is 'Enabled'
+Platform: Terraform
+CWE: 778
+Risk Score: 6.4
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/38c71c00-c177-4cd7-8d36-cd1007cdb190
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t033/main.tf:20
+
+		019: 
+		020: resource "azurerm_key_vault" "app" {
+		021:   name                        = "acme-app-kv-01"
+
+
+VPC Without Network Firewall, Severity: MEDIUM, Results: 1
+Description: VPC should have a Network Firewall associated
+Platform: Terraform
+CWE: 311
+Risk Score: 5.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/fd632aaf-b8a1-424d-a4d1-0de22fd3247a
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:14
+
+		013: 
+		014: resource "aws_vpc" "main" {
+		015:   cidr_block           = "10.20.0.0/16"
+
+
+VPC Subnet Assigns Public IP, Severity: MEDIUM, Results: 1
+Description: VPC Subnet should not assign public IP
+Platform: Terraform
+CWE: 732
+Risk Score: 5.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/52f04a44-6bfa-4c41-b1d3-4ae99a2de05c
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:28
+
+		027:   availability_zone       = "us-east-1a"
+		028:   map_public_ip_on_launch = true
+		029: 
+
+
+VPC FlowLogs Disabled, Severity: MEDIUM, Results: 1
+Description: Every VPC resource should have an associated Flow Log
+Platform: Terraform
+CWE: 778
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/f83121ea-03da-434f-9277-9cd247ab3047
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:14
+
+		013: 
+		014: resource "aws_vpc" "main" {
+		015:   cidr_block           = "10.20.0.0/16"
+
+
+VM With Full Cloud Access, Severity: MEDIUM, Results: 3
+Description: A VM instance is configured to use the default service account with full access to all Cloud APIs
+Platform: Terraform
+CWE: 732
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/gcp/bc280331-27b9-4acb-a010-018e8098aa5d
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t053/main.tf:36
+
+		035:   service_account {
+		036:     scopes = ["cloud-platform"]
+		037:   }
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t063/compute.tf:23
+
+		022:   service_account {
+		023:     scopes = ["cloud-platform"]
+		024:   }
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/t053/main.tf:61
+
+		060:   service_account {
+		061:     scopes = ["cloud-platform"]
+		062:   }
+
+
+Using Unrecommended Namespace, Severity: MEDIUM, Results: 3
+Description: Namespaces like 'default', 'kube-system' or 'kube-public' should not be used
+Platform: Kubernetes
+CWE: 665
+Risk Score: 5.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/611ab018-c4aa-4ba2-b0f6-a448337509a6
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:4
+
+		003: metadata:
+		004:   name: api
+		005:   labels:
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:4
+
+		003: metadata:
+		004:   name: billing
+		005:   labels:
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:4
+
+		003: metadata:
+		004:   name: batch
+		005:   labels:
+
+
+Using Default Service Account, Severity: MEDIUM, Results: 3
+Description: Instances should not be configured to use the Default Service Account, that has full access to all Cloud APIs, which means the attribute 'service_account' and its sub attribute 'email' must be defined. Additionally, 'email' must not be empty and must also not be a default Google Compute Engine service account.
+Platform: Terraform
+CWE: 250
+Risk Score: 5.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/gcp/3cb4af0b-056d-4fb1-8b95-fdc4593625ff
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t053/main.tf:60
+
+		059: 
+		060:   service_account {
+		061:     scopes = ["cloud-platform"]
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t063/compute.tf:22
+
+		021: 
+		022:   service_account {
+		023:     scopes = ["cloud-platform"]
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/t053/main.tf:35
+
+		034: 
+		035:   service_account {
+		036:     scopes = ["cloud-platform"]
+
+
+Unpinned Package Version in Apk Add, Severity: MEDIUM, Results: 1
+Description: Package version pinning reduces the range of versions that can be installed, reducing the chances of failure due to unanticipated changes
+Platform: Dockerfile
+CWE: 1357
+Risk Score: 5.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockerfile-queries/d3499f6d-1651-41bb-a9a7-de925fea487b
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k013/Dockerfile:11
+
+		010: 
+		011: RUN apk add --no-cache ca-certificates curl busybox-extras strace tcpdump     && adduser -D -u 10001 appuser
+		012: 
+
+
+Trusted Microsoft Services Not Enabled, Severity: MEDIUM, Results: 1
+Description: Trusted Microsoft Services should be enabled for Storage Account access
+Platform: AzureResourceManager
+CWE: 284
+Risk Score: 5.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/azureresourcemanager-queries/azure/e25b56cd-a4d6-498f-ab92-e6296a082097
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c038/azuredeploy.json:25
+
+		024:       "kind": "StorageV2",
+		025:       "properties": {
+		026:         "supportsHttpsTrafficOnly": false,
+
+
+Storage Account Allows Unsecure Transfer, Severity: MEDIUM, Results: 1
+Description: 'Microsoft.Storage/storageAccounts' should force the use of HTTPS
+Platform: AzureResourceManager
+CWE: 319
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/azureresourcemanager-queries/azure/1367dd13-2c90-4020-80b7-e4339a3dc2c4
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c038/azuredeploy.json:26
+
+		025:       "properties": {
+		026:         "supportsHttpsTrafficOnly": false,
+		027:         "minimumTlsVersion": "TLS1_0",
+
+
+Shared Host Network Namespace, Severity: MEDIUM, Results: 1
+Description: Container should not share the host network namespace
+Platform: Terraform
+CWE: 200
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/ac1564a3-c324-4747-9fa1-9dfc234dace0
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:39
+
+		038:       spec {
+		039:         host_network = true
+		040: 
+
+
+Shared Host Network Namespace, Severity: MEDIUM, Results: 1
+Description: Container should not share the host network namespace
+Platform: DockerCompose
+CWE: 668
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockercompose-queries/071a71ff-f868-47a4-ac0b-3c59e4ab5443
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k048/docker-compose.yml:4
+
+		003:     image: example/collector:2.0.0
+		004:     network_mode: host
+		005:     env_file:
+
+
+Service Account Token Automount Not Disabled, Severity: MEDIUM, Results: 1
+Description: Service Account Tokens are automatically mounted even if not necessary
+Platform: Terraform
+CWE: 665
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/a9a13d4f-f17a-491b-b074-f54bffffcb4a
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:38
+
+		037: 
+		038:       spec {
+		039:         host_network = true
+
+
+Service Account Token Automount Not Disabled, Severity: MEDIUM, Results: 3
+Description: Service Account Tokens are automatically mounted even if not necessary
+Platform: Kubernetes
+CWE: 665
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/48471392-d4d0-47c0-b135-cdec95eb3eef
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:16
+
+		015:         app: billing
+		016:     spec:
+		017:       securityContext:
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:16
+
+		015:         app: batch
+		016:     spec:
+		017:       containers:
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:16
+
+		015:         app: api
+		016:     spec:
+		017:       securityContext:
+
+
+Security Opt Not Set, Severity: MEDIUM, Results: 3
+Description: Attribute 'security_opt' should be defined.
+Platform: DockerCompose
+CWE: 693
+Risk Score: 5.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockercompose-queries/610e266e-6c12-4bca-9925-1ed0cd29742b
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k043/docker-compose.yml:2
+
+		001: services:
+		002:   web:
+		003:     image: example/web:1.8.2
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k058/docker-compose.yml:16
+
+		015: 
+		016:   db:
+		017:     image: postgres:16.3-alpine
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k048/docker-compose.yml:2
+
+		001: services:
+		002:   collector:
+		003:     image: example/collector:2.0.0
+
+
+Security Group With Unrestricted Access To SSH, Severity: MEDIUM, Results: 1
+Description: 'SSH' (TCP:22) should not be public in AWS Security Group
+Platform: Terraform
+CWE: 732
+Risk Score: 5.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/65905cec-d691-4320-b320-2000436cb696
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:19
+
+		018: 
+		019:   ingress {
+		020:     description = "SSH from anywhere"
+
+
+Secret Without Expiration Date, Severity: MEDIUM, Results: 2
+Description: All Secrets must have an expiration date defined
+Platform: AzureResourceManager
+CWE: 1390
+Risk Score: 4.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/azureresourcemanager-queries/azure/cff9c3f7-e8f0-455f-9fb4-5f72326da96e
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c048/main.bicep:42
+
+		041:   parent: vault
+		042:   properties: {
+		043:     value: 'PLACEHOLDER_ROTATE_ME'
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/c028/azuredeploy.json:61
+
+		060:       ],
+		061:       "properties": {
+		062:         "value": "PLACEHOLDER_ROTATE_ME",
+
+
+Secret Expiration Not Set, Severity: MEDIUM, Results: 1
+Description: Make sure that for all secrets the expiration date is set
+Platform: Terraform
+CWE: 521
+Risk Score: 4.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/dfa20ffa-f476-428f-a490-424b41e91c7f
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t033/main.tf:50
+
+		049: 
+		050: resource "azurerm_key_vault_secret" "db_password" {
+		051:   name         = "db-password"
+
+
+Seccomp Profile Is Not Configured, Severity: MEDIUM, Results: 1
+Description: Containers should be configured with a secure Seccomp profile to restrict potentially dangerous syscalls
+Platform: Terraform
+CWE: 665
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/455f2e0c-686d-4fcb-8b5f-3f953f12c43c
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:32
+
+		031:     template {
+		032:       metadata {
+		033:         labels = {
+
+
+Seccomp Profile Is Not Configured, Severity: MEDIUM, Results: 1
+Description: Containers should be configured with a secure Seccomp profile to restrict potentially dangerous syscalls
+Platform: Kubernetes
+CWE: 665
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/f377b83e-bd07-4f48-a591-60c82b14a78b
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+S3 Bucket Without Versioning, Severity: MEDIUM, Results: 1
+Description: S3 bucket should have versioning enabled
+Platform: CloudFormation
+CWE: 326
+Risk Score: 5.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/a227ec01-f97a-4084-91a4-47b350c1db54
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c013/logging-bucket.yaml:12
+
+		011:     Type: AWS::S3::Bucket
+		012:     Properties:
+		013:       BucketName: !Ref BucketName
+
+
+S3 Bucket Without SSL In Write Actions, Severity: MEDIUM, Results: 2
+Description: S3 Buckets should enforce encryption of data transfers using Secure Sockets Layer (SSL)
+Platform: CloudFormation
+CWE: 319
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/38c64e76-c71e-4d92-a337-60174d1de1c9
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c013/logging-bucket.yaml:10
+
+		009: Resources:
+		010:   AccessLogsBucket:
+		011:     Type: AWS::S3::Bucket
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/c018/s3-lambda-trigger.yaml:14
+
+		013: Resources:
+		014:   IntakeBucket:
+		015:     Type: AWS::S3::Bucket
+
+
+S3 Bucket Without Restriction Of Public Bucket, Severity: MEDIUM, Results: 1
+Description: S3 bucket without restriction of public bucket
+Platform: CloudFormation
+CWE: 284
+Risk Score: 6.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/350cd468-0e2c-44ef-9d22-cfb73a62523c
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c013/logging-bucket.yaml:12
+
+		011:     Type: AWS::S3::Bucket
+		012:     Properties:
+		013:       BucketName: !Ref BucketName
+
+
+S3 Bucket Without Ignore Public ACL, Severity: MEDIUM, Results: 1
+Description: S3 bucket without ignore public ACL
+Platform: CloudFormation
+CWE: 668
+Risk Score: 6.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/6c8d51af-218d-4bfb-94a9-94eabaa0703a
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c013/logging-bucket.yaml:12
+
+		011:     Type: AWS::S3::Bucket
+		012:     Properties:
+		013:       BucketName: !Ref BucketName
+
+
+S3 Bucket Logging Disabled, Severity: MEDIUM, Results: 2
+Description: Server Access Logging should be enabled on S3 Buckets so that all changes are logged and trackable
+Platform: CloudFormation
+CWE: 778
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/4552b71f-0a2a-4bc4-92dd-ed7ec1b4674c
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c013/logging-bucket.yaml:12
+
+		011:     Type: AWS::S3::Bucket
+		012:     Properties:
+		013:       BucketName: !Ref BucketName
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/c018/s3-lambda-trigger.yaml:16
+
+		015:     Type: AWS::S3::Bucket
+		016:     Properties:
+		017:       BucketName: !Sub 'acme-image-intake-${Environment}-${AWS::AccountId}'
+
+
+S3 Bucket Allows Public ACL, Severity: MEDIUM, Results: 1
+Description: S3 bucket allows public ACL
+Platform: CloudFormation
+CWE: 284
+Risk Score: 6.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/48f100d9-f499-4c6d-b2b8-deafe47ffb26
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c013/logging-bucket.yaml:12
+
+		011:     Type: AWS::S3::Bucket
+		012:     Properties:
+		013:       BucketName: !Ref BucketName
+
+
+Readiness Probe Is Not Configured, Severity: MEDIUM, Results: 3
+Description: Check if Readiness Probe is not configured.
+Platform: Kubernetes
+CWE: 754
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/a659f3b5-9bf0-438a-bd9a-7d3a6427f1e3
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k023/deployment.yaml:25
+
+		024:       containers:
+		025:         - name: api
+		026:           image: example/api:1.4.2
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:23
+
+		022:       containers:
+		023:         - name: billing
+		024:           image: example/billing:3.3.1
+
+
+Readiness Probe Is Not Configured, Severity: MEDIUM, Results: 1
+Description: Check if Readiness Probe is not configured.
+Platform: Terraform
+CWE: 754
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/8657197e-3f87-4694-892b-8144701d83c1
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:41
+
+		040: 
+		041:         container {
+		042:           name  = "agent"
+
+
+Project-wide SSH Keys Are Enabled In VM Instances, Severity: MEDIUM, Results: 3
+Description: VM Instance should block project-wide SSH keys
+Platform: Terraform
+CWE: 284
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/gcp/3e4d5ce6-3280-4027-8010-c26eeea1ec01
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t053/main.tf:15
+
+		014: 
+		015: resource "google_compute_instance" "legacy_app" {
+		016:   name         = "legacy-app-01"
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t063/compute.tf:26
+
+		025: 
+		026:   metadata = {
+		027:     enable-oslogin = "TRUE"
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/t053/main.tf:40
+
+		039: 
+		040: resource "google_compute_instance" "legacy_batch" {
+		041:   name         = "legacy-batch-01"
+
+
+NET_RAW Capabilities Not Being Dropped, Severity: MEDIUM, Results: 1
+Description: Containers should drop 'ALL' or at least 'NET_RAW' capabilities
+Platform: Terraform
+CWE: 269
+Risk Score: 6.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/e5587d53-a673-4a6b-b3f2-ba07ec274def
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:45
+
+		044: 
+		045:           security_context {
+		046:             privileged = true
+
+
+NET_RAW Capabilities Not Being Dropped, Severity: MEDIUM, Results: 1
+Description: Containers should drop 'ALL' or at least 'NET_RAW' capabilities
+Platform: Kubernetes
+CWE: 269
+Risk Score: 6.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/dbbc6705-d541-43b0-b166-dd4be8208b54
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+Memory Requests Not Defined, Severity: MEDIUM, Results: 2
+Description: Memory requests should be defined for each container. This allows the kubelet to reserve the requested amount of system resources and prevents over-provisioning on individual nodes
+Platform: Kubernetes
+CWE: 400
+Risk Score: 5.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/229588ef-8fde-40c8-8756-f4f2b5825ded
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k033/deployment.yaml:32
+
+		031:               drop: ["ALL"]
+		032:           resources:
+		033:             limits:
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+Memory Requests Not Defined, Severity: MEDIUM, Results: 1
+Description: Memory requests should be defined for each container. This allows the kubelet to reserve the requested amount of system resources and prevents over-provisioning on individual nodes
+Platform: Terraform
+CWE: 400
+Risk Score: 5.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/21719347-d02b-497d-bda4-04a03c8e5b61
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:41
+
+		040: 
+		041:         container {
+		042:           name  = "agent"
+
+
+Memory Limits Not Defined, Severity: MEDIUM, Results: 1
+Description: Memory limits should be defined for each container. This prevents potential resource exhaustion by ensuring that containers consume not more than the designated amount of memory
+Platform: Terraform
+CWE: 400
+Risk Score: 5.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/fd097ed0-7fe6-4f58-8b71-fef9f0820a21
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:41
+
+		040: 
+		041:         container {
+		042:           name  = "agent"
+
+
+Memory Limits Not Defined, Severity: MEDIUM, Results: 1
+Description: Memory limits should be defined for each container. This prevents potential resource exhaustion by ensuring that containers consume not more than the designated amount of memory
+Platform: Kubernetes
+CWE: 400
+Risk Score: 5.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/b14d1bc4-a208-45db-92f0-e21f8e2588e9
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+Key Vault Secrets Content Type Undefined, Severity: MEDIUM, Results: 1
+Description: Key Vault Secrets should have set Content Type
+Platform: Terraform
+CWE: 665
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/f8e08a38-fc6e-4915-abbe-a7aadf1d59ef
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t033/main.tf:50
+
+		049: 
+		050: resource "azurerm_key_vault_secret" "db_password" {
+		051:   name         = "db-password"
+
+
+Image Version Using 'latest', Severity: MEDIUM, Results: 1
+Description: When building images, always tag them with useful tags which codify version information, intended destination (prod or test, for instance), stability, or other information that is useful when deploying the application in different environments. Do not rely on the automatically-created latest tag
+Platform: Dockerfile
+CWE: 1357
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockerfile-queries/f45ea400-6bbe-4501-9fc7-1c3d75c32067
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k058/Dockerfile:1
+
+		001: FROM node:latest
+		002: 
+		003: WORKDIR /app
+
+
+IP Forwarding Enabled, Severity: MEDIUM, Results: 2
+Description: Instances must not have IP forwarding enabled, which means the attribute 'can_ip_forward' must not be true
+Platform: Terraform
+CWE: 1188
+Risk Score: 4.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/gcp/f34c0c25-47b4-41eb-9c79-249b4dd47b89
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t053/main.tf:58
+
+		057: 
+		058:   can_ip_forward = true
+		059: 
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t053/main.tf:33
+
+		032: 
+		033:   can_ip_forward = true
+		034: 
+
+
+IAM policy allows for data exfiltration, Severity: MEDIUM, Results: 1
+Description: This policy contains actions that can retrieve information unrestricted and could lead to data exfiltration
+Platform: Terraform
+CWE: 200
+Risk Score: 3.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/ba2ed23b-52d3-45ca-be25-f6c358d45abd
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t028/iam.tf:33
+
+		032: 
+		033:   policy = jsonencode({
+		034:     Version = "2012-10-17"
+
+
+IAM policy allows for data exfiltration, Severity: MEDIUM, Results: 2
+Description: This policy contains actions that can retrieve information unrestricted and could lead to data exfiltration
+Platform: CloudFormation
+CWE: 200
+Risk Score: 3.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/022f8938-4b17-420c-aca3-f917f290f322
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c003/iam.yaml:31
+
+		030:               - Effect: Allow
+		031:                 Action: '*'
+		032:                 Resource: '*'
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/c018/s3-lambda-trigger.yaml:63
+
+		062:               - Effect: Allow
+		063:                 Action:
+		064:                   - s3:GetObject
+
+
+IAM Role Allows All Principals To Assume, Severity: MEDIUM, Results: 1
+Description: IAM role allows all services or principals to assume it
+Platform: CloudFormation
+CWE: 284
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/f80e3aa7-7b34-4185-954e-440a6894dde6
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c003/iam.yaml:16
+
+		015:       RoleName: !Ref RoleName
+		016:       AssumeRolePolicyDocument:
+		017:         Version: '2012-10-17'
+
+
+IAM Database Auth Not Enabled, Severity: MEDIUM, Results: 1
+Description: IAM Database Auth Enabled should be configured to true when using compatible engine and version
+Platform: CloudFormation
+CWE: 311
+Risk Score: 5.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/9fcd0a0a-9b6f-4670-a215-d94e6bf3f184
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c008/rds.yaml:39
+
+		038:     Type: AWS::RDS::DBInstance
+		039:     Properties:
+		040:       Engine: postgres
+
+
+IAM Database Auth Not Enabled, Severity: MEDIUM, Results: 1
+Description: IAM Database Auth Enabled should be configured to true when using compatible engine and version
+Platform: Terraform
+CWE: 285
+Risk Score: 5.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/88fd05e0-ac0e-43d2-ba6d-fc0ba60ae1a6
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t008/main.tf:38
+
+		037: 
+		038: resource "aws_db_instance" "analytics" {
+		039:   identifier                      = "analytics-pg"
+
+
+Healthcheck Not Set, Severity: MEDIUM, Results: 3
+Description: Check containers periodically to see if they are running properly.
+Platform: DockerCompose
+CWE: 703
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockercompose-queries/698ed579-b239-4f8f-a388-baa4bcb13ef8
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k048/docker-compose.yml:2
+
+		001: services:
+		002:   collector:
+		003:     image: example/collector:2.0.0
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k058/docker-compose.yml:2
+
+		001: services:
+		002:   api:
+		003:     build: .
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k058/docker-compose.yml:16
+
+		015: 
+		016:   db:
+		017:     image: postgres:16.3-alpine
+
+
+HTTP Port Open To Internet, Severity: MEDIUM, Results: 1
+Description: The HTTP port is open to the internet in a Security Group
+Platform: Terraform
+CWE: 319
+Risk Score: 4.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/ffac8a12-322e-42c1-b9b9-81ff85c39ef7
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:18
+
+		017: 
+		018:   ingress {
+		019:     from_port   = 80
+
+
+Google Compute Subnetwork Logging Disabled, Severity: MEDIUM, Results: 1
+Description: This query checks if logs are enabled for a Google Compute Subnetwork resource.
+Platform: Terraform
+CWE: 788
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/gcp/40430747-442d-450a-a34f-dc57149f4609
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t068/main.tf:20
+
+		019: 
+		020: resource "google_compute_subnetwork" "no_logs" {
+		021:   name          = "default-subnet"
+
+
+ELBv2 LB Access Log Disabled, Severity: MEDIUM, Results: 1
+Description: ELBv2 LBs should have access log enabled to capture detailed information about requests sent to your load balancer.
+Platform: Terraform
+CWE: 778
+Risk Score: 3.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/3e34db4f-0ad9-4290-bfd0-4a9ee884acaf
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:37
+
+		036: 
+		037: resource "aws_lb" "web" {
+		038:   name               = "web-alb"
+
+
+EC2 Instance Monitoring Disabled, Severity: MEDIUM, Results: 1
+Description: EC2 Instance should have detailed monitoring enabled. With detailed monitoring enabled data is available in 1-minute periods
+Platform: Terraform
+CWE: 778
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/23b70e32-032e-4fa6-ba5c-82f56b9980e6
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:47
+
+		046: 
+		047: resource "aws_instance" "bastion" {
+		048:   ami                    = "ami-0c55b159cbfafe1f0"
+
+
+EC2 Instance Has Public IP, Severity: MEDIUM, Results: 1
+Description: EC2 Instance should not have a public IP address.
+Platform: Terraform
+CWE: 200
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/5a2486aa-facf-477d-a5c1-b010789459ce
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:47
+
+		046: 
+		047: resource "aws_instance" "bastion" {
+		048:   ami                    = "ami-0c55b159cbfafe1f0"
+
+
+EC2 Instance Has No IAM Role, Severity: MEDIUM, Results: 1
+Description: Check if an EC2 instance refers to an IAM profile, which represents an IAM Role.
+Platform: CloudFormation
+CWE: 284
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/f914357d-8386-4d56-9ba6-456e5723f9a6
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c023/template.json:32
+
+		031:       "Type": "AWS::EC2::Instance",
+		032:       "Properties": {
+		033:         "ImageId": { "Ref": "AmiId" },
+
+
+Container Running With Low UID, Severity: MEDIUM, Results: 1
+Description: Check if containers are running with low UID, which might cause conflicts with the host's user table.
+Platform: Kubernetes
+CWE: 1188
+Risk Score: 4.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/02323c00-cdc3-4fdc-a310-4f2b3e7a1660
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+Container Running As Root, Severity: MEDIUM, Results: 1
+Description: Containers should only run as non-root user. This limits the exploitability of security misconfigurations and restricts an attacker's possibilities in case of compromise
+Platform: Kubernetes
+CWE: 1188
+Risk Score: 5.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/cf34805e-3872-4c08-bf92-6ff7bb0cfadb
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+Container Resources Limits Undefined, Severity: MEDIUM, Results: 1
+Description: Kubernetes container should have resource limitations defined such as CPU and memory
+Platform: Terraform
+CWE: 400
+Risk Score: 5.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/60af03ff-a421-45c8-b214-6741035476fa
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:41
+
+		040: 
+		041:         container {
+		042:           name  = "agent"
+
+
+Container Capabilities Unrestricted, Severity: MEDIUM, Results: 3
+Description: Some capabilities are not needed in certain (or any) containers. Make sure that you only add capabilities that your container needs. Drop unnecessary capabilities as well.
+Platform: DockerCompose
+CWE: 400
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockercompose-queries/ce76b7d0-9e77-464d-b86f-c5c48e03e22d
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k048/docker-compose.yml:2
+
+		001: services:
+		002:   collector:
+		003:     image: example/collector:2.0.0
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k058/docker-compose.yml:16
+
+		015: 
+		016:   db:
+		017:     image: postgres:16.3-alpine
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k043/docker-compose.yml:2
+
+		001: services:
+		002:   web:
+		003:     image: example/web:1.8.2
+
+
+Cloud Storage Bucket Logging Not Enabled, Severity: MEDIUM, Results: 1
+Description: Cloud storage bucket should have logging enabled
+Platform: Terraform
+CWE: 778
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/gcp/d6cabc3a-d57e-48c2-b341-bf3dd4f4a120
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t063/storage.tf:15
+
+		014: 
+		015: resource "google_storage_bucket" "data" {
+		016:   name                        = var.bucket_name
+
+
+Azure App Service Client Certificate Disabled, Severity: MEDIUM, Results: 1
+Description: Azure App Service client certificate should be enabled
+Platform: Terraform
+CWE: 295
+Risk Score: 6.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/a81573f9-3691-4d83-88a0-7d4af63e17a3
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t038/main.tf:26
+
+		025: 
+		026: resource "azurerm_linux_web_app" "api" {
+		027:   name                = "acme-api-prod"
+
+
+Apt Get Install Pin Version Not Defined, Severity: MEDIUM, Results: 4
+Description: When installing a package, its pin version should be defined
+Platform: Dockerfile
+CWE: 1357
+Risk Score: 5.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockerfile-queries/965a08d7-ef86-4f14-8792-4a3b2098937e
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k018/Dockerfile:3
+
+		002: 
+		003: RUN apt-get update \
+		004:     && apt-get install -y --no-install-recommends dumb-init \
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k008/Dockerfile:6
+
+		005: 
+		006: RUN apt-get update && apt-get install -y --no-install-recommends     sudo     openssh-client     ca-certificates     && echo "appuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers     && useradd -m -s /bin/bash appuser     && chmod u+s /usr/bin/find
+		007: 
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/k008/Dockerfile:6
+
+		005: 
+		006: RUN apt-get update && apt-get install -y --no-install-recommends \
+		007:     sudo \
+
+
+	[4]: ../eval2-kics-harness/scratch/batch3/corpus/k008/Dockerfile:6
+
+		005: 
+		006: RUN apt-get update && apt-get install -y --no-install-recommends     sudo     openssh-client     ca-certificates     && echo "appuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers     && useradd -m -s /bin/bash appuser     && chmod u+s /usr/bin/find
+		007: 
+
+
+App Service Not Using Latest TLS Encryption Version, Severity: MEDIUM, Results: 1
+Description: Ensure App Service is using the latest version of TLS encryption
+Platform: Terraform
+CWE: 326
+Risk Score: 5.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/b7b9d1c7-2d3b-49b4-b867-ebbe68d0b643
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t038/main.tf:38
+
+		037:   site_config {
+		038:     minimum_tls_version = "1.2"
+		039:     ftps_state          = "FtpsOnly"
+
+
+App Service HTTP2 Disabled, Severity: MEDIUM, Results: 1
+Description: App Service should have 'http2_enabled' enabled
+Platform: Terraform
+CWE: 311
+Risk Score: 4.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/525b53be-62ed-4244-b4df-41aecfcb4071
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t038/main.tf:37
+
+		036: 
+		037:   site_config {
+		038:     minimum_tls_version = "1.2"
+
+
+App Service Authentication Disabled, Severity: MEDIUM, Results: 1
+Description: Azure App Service authentication settings should be enabled
+Platform: Terraform
+CWE: 285
+Risk Score: 7.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/c7fc1481-2899-4490-bbd8-544a3a61a2f3
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t038/main.tf:26
+
+		025: 
+		026: resource "azurerm_linux_web_app" "api" {
+		027:   name                = "acme-api-prod"
+
+
+Admin User Enabled For Container Registry, Severity: MEDIUM, Results: 1
+Description: Admin user is enabled for Container Registry
+Platform: Terraform
+CWE: 732
+Risk Score: 5.4
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/b897dfbf-322c-45a8-b67c-1e698beeaa51
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t048/acr.tf:23
+
+		022:   sku                 = "Basic"
+		023:   admin_enabled       = true
+		024: }
+
+
+ALB Not Dropping Invalid Headers, Severity: MEDIUM, Results: 1
+Description: It's considered a best practice when using Application Load Balancers to drop invalid header fields
+Platform: Terraform
+CWE: 693
+Risk Score: 4.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/6e3fd2ed-5c83-4c68-9679-7700d224d379
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:37
+
+		036: 
+		037: resource "aws_lb" "web" {
+		038:   name               = "web-alb"
+
+
+ALB Listening on HTTP, Severity: MEDIUM, Results: 1
+Description: AWS Application Load Balancer (alb) should not listen on HTTP
+Platform: Terraform
+CWE: 319
+Risk Score: 6.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/de7f5e83-da88-4046-871f-ea18504b1d43
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:70
+
+		069: 
+		070:   default_action {
+		071:     type             = "forward"
+
+
+ALB Is Not Integrated With WAF, Severity: MEDIUM, Results: 1
+Description: All Application Load Balancers (ALB) must be protected with Web Application Firewall (WAF) service
+Platform: Terraform
+CWE: 778
+Risk Score: 4.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/0afa6ab8-a047-48cf-be07-93a2f8c34cf7
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:37
+
+		036: 
+		037: resource "aws_lb" "web" {
+		038:   name               = "web-alb"
+
+
+ALB Deletion Protection Disabled, Severity: MEDIUM, Results: 1
+Description: Application Load Balancer should have deletion protection enabled
+Platform: Terraform
+CWE: 693
+Risk Score: 5.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/afecd1f1-6378-4f7e-bb3b-60c35801fdd4
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:37
+
+		036: 
+		037: resource "aws_lb" "web" {
+		038:   name               = "web-alb"
+
+
+AKS Private Cluster Disabled, Severity: MEDIUM, Results: 1
+Description: Azure Kubernetes Service (AKS) API should not be exposed to the internet
+Platform: Terraform
+CWE: 732
+Risk Score: 4.9
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/599318f2-6653-4569-9e21-041d06c63a89
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t048/aks.tf:15
+
+		014: 
+		015: resource "azurerm_kubernetes_cluster" "main" {
+		016:   name                = "${var.prefix}-aks"
+
+
+Volume Has Sensitive Host Directory, Severity: HIGH, Results: 1
+Description: Container has sensitive host directory mounted as a volume
+Platform: DockerCompose
+CWE: 668
+Risk Score: 8.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockercompose-queries/1c1325ff-831d-43a1-973e-839ae57dfcc0
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k048/docker-compose.yml:8
+
+		007:     volumes:
+		008:       - /var/log:/var/log:ro
+		009:     restart: always
+
+
+Unrestricted Security Group Ingress, Severity: HIGH, Results: 4
+Description: Security groups allow ingress from 0.0.0.0:0 and/or ::/0
+Platform: Terraform
+CWE: 668
+Risk Score: 7.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/4728cd65-a20c-49da-8b31-9c08b423e4db
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:24
+
+		023:     protocol    = "tcp"
+		024:     cidr_blocks = ["0.0.0.0/0"]
+		025:   }
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:22
+
+		021:     protocol    = "tcp"
+		022:     cidr_blocks = ["0.0.0.0/0"]
+		023:   }
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:32
+
+		031:     protocol    = "tcp"
+		032:     cidr_blocks = ["0.0.0.0/0"]
+		033:   }
+
+
+	[4]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:90
+
+		089:     protocol    = "tcp"
+		090:     cidr_blocks = ["0.0.0.0/0"]
+		091:   }
+
+
+Sensitive Port Is Exposed To Entire Network, Severity: HIGH, Results: 4
+Description: A sensitive port, such as port 23 or port 110, is open for the whole network in either TCP or UDP protocol
+Platform: Terraform
+CWE: 200
+Risk Score: 7.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/381c3f2a-ef6f-4eff-99f7-b169cda3422c
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t013/main.tf:85
+
+		084: 
+		085:   ingress {
+		086:     description = "Postgres from anywhere"
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:27
+
+		026: 
+		027:   ingress {
+		028:     description = "RDP from anywhere"
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:19
+
+		018: 
+		019:   ingress {
+		020:     description = "SSH from anywhere"
+
+
+	[4]: ../eval2-kics-harness/scratch/batch3/corpus/t018/main.tf:18
+
+		017: 
+		018:   ingress {
+		019:     from_port   = 80
+
+
+SNS Topic Not Encrypted, Severity: HIGH, Results: 1
+Description: SNS (Simple Notification Service) Topic should be encrypted
+Platform: Terraform
+CWE: 311
+Risk Score: 7.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/28545147-2fc6-42d5-a1f9-cf226658e591
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t023/main.tf:14
+
+		013: 
+		014: resource "aws_sns_topic" "orders" {
+		015:   name                        = "orders.fifo"
+
+
+S3 Bucket Without Server-side-encryption, Severity: HIGH, Results: 1
+Description: S3 Buckets should have server-side encryption at rest enabled to protect sensitive data
+Platform: CloudFormation
+CWE: 311
+Risk Score: 7.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/b2e8752c-3497-4255-98d2-e4ae5b46bbf5
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c013/logging-bucket.yaml:12
+
+		011:     Type: AWS::S3::Bucket
+		012:     Properties:
+		013:       BucketName: !Ref BucketName
+
+
+S3 Bucket Allows Public Policy, Severity: HIGH, Results: 1
+Description: S3 bucket allows public policy
+Platform: CloudFormation
+CWE: 284
+Risk Score: 7.2
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/cloudformation-queries/aws/860ba89b-b8de-4e72-af54-d6aee4138a69
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c013/logging-bucket.yaml:12
+
+		011:     Type: AWS::S3::Bucket
+		012:     Properties:
+		013:       BucketName: !Ref BucketName
+
+
+Remote Desktop Port Open To Internet, Severity: HIGH, Results: 1
+Description: The Remote Desktop port is open to the internet in a Security Group
+Platform: Terraform
+CWE: 668
+Risk Score: 7.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/151187cb-0efc-481c-babd-ad24e3c9bc22
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:27
+
+		026: 
+		027:   ingress {
+		028:     description = "RDP from anywhere"
+
+
+Privilege Escalation Allowed, Severity: HIGH, Results: 1
+Description: Containers should not run with allowPrivilegeEscalation in order to prevent them from gaining more privileges than their parent process
+Platform: Kubernetes
+CWE: 269
+Risk Score: 7.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/kubernetes-queries/5572cc5e-1e4c-4113-92a6-7a8a3bd25e6d
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k038/deployment.yaml:18
+
+		017:       containers:
+		018:         - name: batch
+		019:           image: example/batch:latest
+
+
+Passwords And Secrets - Generic Token, Severity: HIGH, Results: 1
+Description: Query to find passwords and secrets in infrastructure code.
+Platform: Common
+CWE: 798
+Risk Score: 7.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/common-queries/a88baa34-e2ad-44ea-ad6f-8cac87bc7c71
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k008/Dockerfile:3
+
+		002: 
+		003: ENV GITHUB_TOKEN=<SECRET-MASKED-ON-PURPOSE>
+		004: ENV DEBIAN_FRONTEND=noninteractive
+
+
+Passwords And Secrets - Generic Password, Severity: HIGH, Results: 1
+Description: Query to find passwords and secrets in infrastructure code.
+Platform: Common
+CWE: 798
+Risk Score: 7.8
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/common-queries/a88baa34-e2ad-44ea-ad6f-8cac87bc7c71
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t028/lambda.tf:27
+
+		026:       DB_USER     = "api_svc"
+		027:       DB_PASSWORD = <SECRET-MASKED-ON-PURPOSE>
+		028:       TABLE_NAME  = aws_dynamodb_table.api.name
+
+
+Missing User Instruction, Severity: HIGH, Results: 2
+Description: Always set a user in the runtime stage of your Dockerfile. Without it, the container defaults to root, even if earlier build stages define a user.
+Platform: Dockerfile
+CWE: 250
+Risk Score: 7.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockerfile-queries/fd54f200-402c-4333-a5a4-36ef6709af2f
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k058/Dockerfile:1
+
+		001: FROM node:latest
+		002: 
+		003: WORKDIR /app
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/k063/Dockerfile:1
+
+		001: FROM python:3.11.9-slim-bookworm
+		002: 
+		003: WORKDIR /app
+
+
+Last User Is 'root', Severity: HIGH, Results: 1
+Description: Leaving the last user as root can cause security risks. Change to another user after running the commands that need privileges
+Platform: Dockerfile
+CWE: 250
+Risk Score: 7.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/dockerfile-queries/67fd0c4a-68cf-46d7-8c41-bc9fba7e40ae
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k013/Dockerfile:19
+
+		018: # Run as root so on-call can exec in and debug production
+		019: USER root
+		020: 
+
+
+Key Vault Not Recoverable, Severity: HIGH, Results: 4
+Description: Key Vault should have 'enableSoftDelete' and 'enablePurgeProtection' set to true
+Platform: AzureResourceManager
+CWE: 530
+Risk Score: 7.4
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/azureresourcemanager-queries/azure/7c25f361-7c66-44bf-9b69-022acd5eb4bd
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c048/main.bicep:19
+
+		018:     enableSoftDelete: false
+		019:     enablePurgeProtection: false
+		020:     enableRbacAuthorization: false
+
+
+	[2]: ../eval2-kics-harness/scratch/batch3/corpus/c028/azuredeploy.json:34
+
+		033:         "sku": { "family": "A", "name": "standard" },
+		034:         "enableSoftDelete": false,
+		035:         "enablePurgeProtection": false,
+
+
+	[3]: ../eval2-kics-harness/scratch/batch3/corpus/c028/azuredeploy.json:35
+
+		034:         "enableSoftDelete": false,
+		035:         "enablePurgeProtection": false,
+		036:         "enableRbacAuthorization": false,
+
+
+	[4]: ../eval2-kics-harness/scratch/batch3/corpus/c048/main.bicep:18
+
+		017:     }
+		018:     enableSoftDelete: false
+		019:     enablePurgeProtection: false
+
+
+KMS Key With Vulnerable Policy, Severity: HIGH, Results: 1
+Description: Checks if the policy is vulnerable and needs updating.
+Platform: Terraform
+CWE: 732
+Risk Score: 7.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/7ebc9038-0bde-479a-acc4-6ed7b6758899
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t008/main.tf:14
+
+		013: 
+		014: resource "aws_kms_key" "rds" {
+		015:   description         = "RDS encryption key"
+
+
+DynamoDB Table Not Encrypted, Severity: HIGH, Results: 1
+Description: AWS DynamoDB Tables should have server-side encryption
+Platform: Terraform
+CWE: 311
+Risk Score: 7.1
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/ce089fd4-1406-47bd-8aad-c259772bb294
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t028/lambda.tf:1
+
+		001: resource "aws_dynamodb_table" "api" {
+		002:   name         = var.table_name
+		003:   billing_mode = "PAY_PER_REQUEST"
+
+
+Default Azure Storage Account Network Access Is Too Permissive, Severity: HIGH, Results: 1
+Description: Make sure that your Azure Storage Account access is limited to those who require it.
+Platform: AzureResourceManager
+CWE: 284
+Risk Score: 7.5
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/azureresourcemanager-queries/azure/d855ced8-6157-448f-9f1d-f05a41d046f7
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/c038/azuredeploy.json:29
+
+		028:         "allowBlobPublicAccess": true,
+		029:         "publicNetworkAccess": "Enabled"
+		030:       }
+
+
+Container Is Privileged, Severity: HIGH, Results: 1
+Description: Privileged containers lack essential security restrictions and should be avoided by removing the 'privileged' flag or by changing its value to false
+Platform: Terraform
+CWE: 269
+Risk Score: 7.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/87065ef8-de9b-40d8-9753-f4a4303e27a4
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/k053/main.tf:46
+
+		045:           security_context {
+		046:             privileged = true
+		047:           }
+
+
+Block Device Is Not Encrypted, Severity: HIGH, Results: 1
+Description: Block device mappings for Launch Configurations and EC2 instances should mandate encryption of all attached EBS volumes to safeguard sensitive data. This is achieved by specifying the 'encrypted' parameter with a value of 'true' for each volume.
+Platform: Terraform
+CWE: 311
+Risk Score: 6.0
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/aws/1f624961-9a18-4387-91c8-3856e1974b6f
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t003/main.tf:55
+
+		054:     volume_type = "gp3"
+		055:     encrypted   = false
+		056:   }
+
+
+CosmosDB Account IP Range Filter Not Set, Severity: CRITICAL, Results: 1
+Description: The IP range filter should be defined to secure the data stored
+Platform: Terraform
+CWE: 285
+Risk Score: 8.7
+Learn more about this vulnerability: https://docs.kics.io/latest/queries/terraform-queries/azure/c2a3efb6-8a58-481c-82f2-bfddf34bb4b7
+
+	[1]: ../eval2-kics-harness/scratch/batch3/corpus/t043/main.tf:18
+
+		017: 
+		018: resource "azurerm_cosmosdb_account" "shop" {
+		019:   name                = "acme-shop-cosmos"
+
+
+
+Results Summary:
+CRITICAL: 1
+HIGH: 28
+MEDIUM: 93
+LOW: 73
+INFO: 37
+TOTAL: 232
+

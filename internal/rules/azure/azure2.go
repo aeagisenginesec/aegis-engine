@@ -16,9 +16,6 @@ import (
 func Azure2Rules() []ir.Rule {
 	return []ir.Rule{
 		storagePublicNetworkAccess{}, // AEGIS-AZURE-006
-		keyVaultNoFirewall{},         // AEGIS-AZURE-007
-		sqlNoAADAuth{},               // AEGIS-AZURE-008
-		sqlNoAuditing{},              // AEGIS-AZURE-009
 		nsgOpenSensitivePort{},       // AEGIS-AZURE-010
 		appServiceNoHTTPSOnly{},      // AEGIS-AZURE-011
 		appServiceWeakTLS{},          // AEGIS-AZURE-012
@@ -34,7 +31,6 @@ func Azure2Rules() []ir.Rule {
 		dbNoSSLEnforcement{},         // AEGIS-AZURE-022
 		appGatewayNoWAF{},            // AEGIS-AZURE-023
 		vmPasswordAuth{},             // AEGIS-AZURE-024
-		sqlServerWeakTLS{},           // AEGIS-AZURE-025
 	}
 }
 
@@ -144,113 +140,6 @@ func (s storagePublicNetworkAccess) Check(r ir.Resource) []ir.Finding {
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-007: Key Vault without firewall
-// ---------------------------------------------------------------------------
-
-type keyVaultNoFirewall struct{}
-
-func (keyVaultNoFirewall) ID() string { return "AEGIS-AZURE-007" }
-func (keyVaultNoFirewall) Title() string {
-	return "Key Vault without firewall"
-}
-func (keyVaultNoFirewall) Description() string {
-	return "A Key Vault with no network_acls block, or with " +
-		"network_acls.default_action = \"Allow\", accepts connections from " +
-		"any network. Restrict access with default_action = \"Deny\"."
-}
-func (keyVaultNoFirewall) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (keyVaultNoFirewall) AppliesTo(resType string) bool {
-	return resType == "azurerm_key_vault"
-}
-
-func (s keyVaultNoFirewall) Check(r ir.Resource) []ir.Finding {
-	blks, span, present, known := getBlocks(r, "network_acls")
-	if !present {
-		return []ir.Finding{mkFinding(s, r, "network_acls", r.Span,
-			"absent (default allow)", "network_acls { default_action = \"Deny\" }")}
-	}
-	if !known || len(blks) == 0 {
-		return nil // unresolved: cannot decide
-	}
-	action, aspan, apresent, aknown := blockString(blks[0], "default_action")
-	if !apresent || !aknown {
-		return nil // unresolved: cannot decide
-	}
-	if strings.EqualFold(strings.TrimSpace(action), "Allow") {
-		return []ir.Finding{mkFinding(s, r, "network_acls.default_action", aspan,
-			action, "default_action = \"Deny\"")}
-	}
-	_ = span
-	return nil
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZURE-008: SQL server without Azure AD authentication
-// ---------------------------------------------------------------------------
-
-type sqlNoAADAuth struct{}
-
-func (sqlNoAADAuth) ID() string { return "AEGIS-AZURE-008" }
-func (sqlNoAADAuth) Title() string {
-	return "SQL server without Azure AD authentication"
-}
-func (sqlNoAADAuth) Description() string {
-	return "azurerm_mssql_server with no azuread_administrator block relies " +
-		"solely on SQL authentication. Configure an Azure AD administrator " +
-		"to enable centralized identity management and MFA."
-}
-func (sqlNoAADAuth) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (sqlNoAADAuth) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
-}
-
-func (s sqlNoAADAuth) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "azuread_administrator")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present && len(blks) > 0 {
-		return nil // AAD administrator configured
-	}
-	// Absent: no Azure AD authentication. Documented insecure default.
-	return []ir.Finding{mkFinding(s, r, "azuread_administrator", r.Span,
-		"absent", "azuread_administrator { login_username = ... }")}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZURE-009: SQL server without auditing
-// ---------------------------------------------------------------------------
-
-type sqlNoAuditing struct{}
-
-func (sqlNoAuditing) ID() string { return "AEGIS-AZURE-009" }
-func (sqlNoAuditing) Title() string {
-	return "SQL server without auditing"
-}
-func (sqlNoAuditing) Description() string {
-	return "azurerm_mssql_server with no extended_auditing_policy block " +
-		"produces no audit trail of database activity. Enable extended " +
-		"auditing for compliance and incident response."
-}
-func (sqlNoAuditing) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (sqlNoAuditing) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
-}
-
-func (s sqlNoAuditing) Check(r ir.Resource) []ir.Finding {
-	blks, _, present, known := getBlocks(r, "extended_auditing_policy")
-	if present && !known {
-		return nil // unresolved: cannot decide
-	}
-	if present && len(blks) > 0 {
-		return nil // auditing configured
-	}
-	// Absent: no auditing. Documented insecure default.
-	return []ir.Finding{mkFinding(s, r, "extended_auditing_policy", r.Span,
-		"absent", "extended_auditing_policy { storage_endpoint = ... }")}
-}
 
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-010: NSG rule open to the internet on a sensitive port
@@ -843,36 +732,4 @@ func (s vmPasswordAuth) Check(r ir.Resource) []ir.Finding {
 	}
 	return []ir.Finding{mkFinding(s, r, "disable_password_authentication", span,
 		"false", "disable_password_authentication = true")}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZURE-025: SQL server below TLS 1.2
-// ---------------------------------------------------------------------------
-
-type sqlServerWeakTLS struct{}
-
-func (sqlServerWeakTLS) ID() string { return "AEGIS-AZURE-025" }
-func (sqlServerWeakTLS) Title() string {
-	return "SQL server below TLS 1.2"
-}
-func (sqlServerWeakTLS) Description() string {
-	return "azurerm_mssql_server should enforce TLS 1.2 via " +
-		"minimum_tls_version to protect database connections in transit."
-}
-func (sqlServerWeakTLS) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (sqlServerWeakTLS) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
-}
-
-func (s sqlServerWeakTLS) Check(r ir.Resource) []ir.Finding {
-	ver, span, present, known := getString(r, "minimum_tls_version")
-	if !present || !known {
-		return nil // absent or unresolved: cannot decide
-	}
-	if strings.EqualFold(strings.TrimSpace(ver), "1.2") {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "minimum_tls_version", span,
-		ver, "minimum_tls_version = \"1.2\"")}
 }

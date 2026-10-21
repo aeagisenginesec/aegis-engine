@@ -1,0 +1,562 @@
+[
+  {
+    "id": "t001",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Static website bucket with a public-read ACL and an open bucket policy; server-side encryption and versioning are not configured."
+  },
+  {
+    "id": "t002",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "secure",
+    "description": "Private backup bucket encrypted with a rotating KMS key, versioning enabled, lifecycle rules, and full public-access blocking."
+  },
+  {
+    "id": "t003",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Bastion EC2 host with a security group allowing SSH and RDP from the internet; the root volume is unencrypted and detailed monitoring is off."
+  },
+  {
+    "id": "t004",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "secure",
+    "description": "Application server with encrypted EBS volumes, IMDSv2 enforced, detailed monitoring, and a security group limited to the office CIDR range."
+  },
+  {
+    "id": "t005",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "Shared IAM user attached to AdministratorAccess with an active long-lived access key and an inline policy granting wildcard actions on all resources."
+  },
+  {
+    "id": "t006",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "secure",
+    "description": "Developer IAM role scoped to specific S3 and CloudWatch actions with MFA-enforced assumption, plus a strict account password policy."
+  },
+  {
+    "id": "t007",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "MySQL instance marked publicly accessible with unencrypted storage, a weak hardcoded master password, and automated backups disabled."
+  },
+  {
+    "id": "t008",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "secure",
+    "description": "Postgres instance in private subnets with KMS-encrypted storage, seven-day backups, deletion protection, and enhanced monitoring."
+  },
+  {
+    "id": "t009",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Image-resize Lambda with an over-permissive execution role, no dead-letter queue or tracing, and an API key hardcoded in environment variables."
+  },
+  {
+    "id": "t010",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "secure",
+    "description": "Order-processing Lambda in private subnets with a scoped execution role, dead-letter queue, active tracing, and reserved concurrency."
+  },
+  {
+    "id": "t011",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "hard",
+    "profile": "vulnerable",
+    "description": "Kubernetes cluster with a public API endpoint open to the internet, no control-plane logging or secrets encryption, and worker nodes in public subnets."
+  },
+  {
+    "id": "t012",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "hard",
+    "profile": "secure",
+    "description": "Private-endpoint Kubernetes cluster with audit logging, KMS secrets encryption, and managed node groups in private subnets."
+  },
+  {
+    "id": "t013",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Three-tier VPC with public and private subnets and a NAT gateway, but VPC flow logs are not configured and a database security group allows Postgres from anywhere."
+  },
+  {
+    "id": "t014",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Single-region CloudTrail without log-file validation or KMS encryption, writing to a bucket with no versioning or access logging."
+  },
+  {
+    "id": "t015",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Multi-region CloudTrail with log-file validation and KMS encryption, but the destination bucket has no server-side encryption configured and the CloudWatch log group never expires."
+  },
+  {
+    "id": "t016",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Customer-managed KMS key with automatic rotation disabled and a key policy allowing any AWS principal to decrypt."
+  },
+  {
+    "id": "t017",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "secure",
+    "description": "Customer-managed KMS key with yearly rotation, a 30-day deletion window, and a key policy limited to the payments service role."
+  },
+  {
+    "id": "t018",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "Public application load balancer serving plain HTTP with no redirect to HTTPS, access logging disabled, and no deletion protection."
+  },
+  {
+    "id": "t019",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "secure",
+    "description": "Application load balancer with HTTPS-only listeners on a modern TLS policy, HTTP-to-HTTPS redirect, S3 access logging, deletion protection, and an attached WAF."
+  },
+  {
+    "id": "t020",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Session and audit tables using default encryption with point-in-time recovery disabled and no TTL on expiring records."
+  },
+  {
+    "id": "t021",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "easy",
+    "profile": "mixed",
+    "description": "Orders table encrypted with a rotating customer-managed key and TTL configured on expiring attributes, but point-in-time recovery is not enabled."
+  },
+  {
+    "id": "t022",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "Notification pipeline with a KMS-encrypted SNS topic enforcing TLS-only publishers, but the subscribing SQS queue has no encryption and no dead-letter redrive policy."
+  },
+  {
+    "id": "t023",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "FIFO topic with content-based deduplication and an encrypted queue, but the topic policy allows publishing from any AWS principal."
+  },
+  {
+    "id": "t024",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "Data-tier security group exposing database ports to the internet with unrestricted egress, including a separate open MySQL ingress rule."
+  },
+  {
+    "id": "t025",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "EC2 application host with encrypted volumes and IMDSv2, but its instance-profile role mixes a scoped S3 policy with a wildcard administrative statement; AMI resolved via data source."
+  },
+  {
+    "id": "t026",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "Encrypted Postgres with seven-day backups and a snapshot-export role, but the export bucket uses a public-read ACL without encryption."
+  },
+  {
+    "id": "t027",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "hard",
+    "profile": "secure",
+    "description": "Fully private VPC with flow logs to CloudWatch, SSM-managed instances with encrypted volumes and IMDSv2, and a security group limited to the office range."
+  },
+  {
+    "id": "t028",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "hard",
+    "profile": "vulnerable",
+    "description": "Serverless API with database credentials hardcoded in Lambda environment variables, a wildcard IAM policy, no VPC attachment, and no dead-letter handling."
+  },
+  {
+    "id": "t029",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Container registry with scan-on-push enabled but mutable tags and no lifecycle policy, paired with a staging cluster whose API endpoint is publicly reachable."
+  },
+  {
+    "id": "t030",
+    "format": "terraform",
+    "cloud": "aws",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Autoscaled web tier behind a load balancer with encrypted root volumes, but instances get public IPs and the target group health check runs over plain HTTP."
+  },
+  {
+    "id": "t031",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Storage account permitting public blob access over TLS 1.0 with shared-key authorization and no network restrictions."
+  },
+  {
+    "id": "t032",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "easy",
+    "profile": "secure",
+    "description": "Storage account enforcing TLS 1.2, denying public blob access and shared-key auth, restricted to one virtual network, with blob versioning on."
+  },
+  {
+    "id": "t033",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "Key vault without purge protection, open to all networks, with an access policy granting full key management to one user and a hardcoded secret value."
+  },
+  {
+    "id": "t034",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "medium",
+    "profile": "secure",
+    "description": "Key vault with Azure RBAC authorization, purge protection, default-deny network ACLs, and audit diagnostics flowing to Log Analytics."
+  },
+  {
+    "id": "t035",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "SQL server with a firewall rule open to the whole internet, a weak SA password, TLS 1.0, and transparent data encryption disabled on the database."
+  },
+  {
+    "id": "t036",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "medium",
+    "profile": "secure",
+    "description": "SQL server with public access disabled, a generated admin password, an Azure AD administrator, TDE, and 90-day extended auditing."
+  },
+  {
+    "id": "t037",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Windows web app serving plain HTTP with TLS 1.0, FTP allowed, no managed identity, and a database connection string in plain app settings."
+  },
+  {
+    "id": "t038",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "easy",
+    "profile": "secure",
+    "description": "Linux web app enforcing HTTPS with minimum TLS 1.2, FTPS-only deployment, and a system-assigned managed identity."
+  },
+  {
+    "id": "t039",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "hard",
+    "profile": "vulnerable",
+    "description": "Managed Kubernetes cluster without RBAC or network policy, a public API server, and no monitoring addon on the default node pool."
+  },
+  {
+    "id": "t040",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "hard",
+    "profile": "secure",
+    "description": "Private AKS cluster with Azure RBAC, Calico network policy, Key Vault secrets provider, monitoring, and a tainted user node pool."
+  },
+  {
+    "id": "t041",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Network security group with an inbound rule allowing RDP from any internet address on the workload subnet."
+  },
+  {
+    "id": "t042",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Segmented virtual network with a least-privilege NSG, but NSG flow logs are not configured so denied traffic goes unrecorded."
+  },
+  {
+    "id": "t043",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "Cosmos DB account reachable from the public internet with no IP firewall and only eight hours of periodic backup retention."
+  },
+  {
+    "id": "t044",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Cosmos DB account restricted to the office IP range with weekly periodic backups, but without a private endpoint and using only Microsoft-managed keys."
+  },
+  {
+    "id": "t045",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "Storage account locked to specific IPs and subnets, paired with a key vault that has soft-delete but no purge protection; firewall rules generated from variables."
+  },
+  {
+    "id": "t046",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "HTTPS-enforced web app backed by a SQL server whose firewall allows the whole internet, with the database password in plain application settings."
+  },
+  {
+    "id": "t047",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "Network security group exposing the SQL Server port to the internet on the data subnet."
+  },
+  {
+    "id": "t048",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "Basic-SKU container registry with the admin account enabled, attached to an RBAC-enabled AKS cluster with a private node subnet."
+  },
+  {
+    "id": "t049",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "easy",
+    "profile": "secure",
+    "description": "Minimal key vault with soft-delete, purge protection, and default-deny network access for application secrets."
+  },
+  {
+    "id": "t050",
+    "format": "terraform",
+    "cloud": "azure",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Hub virtual network with proper subnetting, but the management NSG retains a legacy rule allowing all high ports from the internet."
+  },
+  {
+    "id": "t051",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Storage bucket granting object viewer to allUsers with versioning disabled and no customer-managed encryption."
+  },
+  {
+    "id": "t052",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "easy",
+    "profile": "secure",
+    "description": "Storage bucket with uniform access, public-access prevention enforced, versioning, a rotating CMEK, and a lifecycle rule expiring old versions."
+  },
+  {
+    "id": "t053",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "Two legacy VMs with external IPs, IP forwarding enabled, no shielded-VM features, and the default service account on full cloud-platform scope."
+  },
+  {
+    "id": "t054",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "VM with shielded-VM features and OS Login enabled, but carrying a public external IP; a second instance is correctly private."
+  },
+  {
+    "id": "t055",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "hard",
+    "profile": "vulnerable",
+    "description": "GKE cluster using legacy basic authentication with a public control plane, no network policy, and node pools on full API scopes."
+  },
+  {
+    "id": "t056",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "hard",
+    "profile": "secure",
+    "description": "Private GKE cluster on the regular release channel with workload identity, network policy, shielded nodes, and binary authorization enforced."
+  },
+  {
+    "id": "t057",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "Postgres instance with a public IP open to all addresses, automated backups disabled, SSL not required, and a weak application password."
+  },
+  {
+    "id": "t058",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "medium",
+    "profile": "secure",
+    "description": "Postgres instance on private IP only with automated backups, point-in-time recovery, required SSL, CMEK, and deletion protection."
+  },
+  {
+    "id": "t059",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "Project IAM granting the basic Owner role to a CI service account, Editor to a broad group, and a long-lived service-account key."
+  },
+  {
+    "id": "t060",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Custom IAM role scoped to logging and monitoring for an analyst, but the basic Editor role is still granted to a developer account."
+  },
+  {
+    "id": "t061",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "VPC firewall rules allowing all protocols from the entire internet inbound and unrestricted egress to everywhere."
+  },
+  {
+    "id": "t062",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "Firewall rules generated from a variable map with dynamic allow blocks, alongside a legacy rule still permitting TCP 8080 from anywhere."
+  },
+  {
+    "id": "t063",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "Versioned storage bucket without CMEK paired with a shielded VM whose service account carries full cloud-platform scope; image resolved from a data source."
+  },
+  {
+    "id": "t064",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "Private Cloud SQL with backups and point-in-time recovery backing a GKE cluster that has workload identity but node pools running on full API scopes."
+  },
+  {
+    "id": "t065",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "easy",
+    "profile": "vulnerable",
+    "description": "VMs relying on SSH keys baked into instance metadata, with public IPs and the default service account on full scope."
+  },
+  {
+    "id": "t066",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Storage bucket with uniform access, versioning, and lifecycle management, but no customer-managed encryption, no access logging, and viewer access granted to an external group."
+  },
+  {
+    "id": "t067",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "GKE node pools running with minimal service-account scopes and workload identity, but the container.admin role is granted to a broad developer group."
+  },
+  {
+    "id": "t068",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "medium",
+    "profile": "vulnerable",
+    "description": "Auto-mode VPC with subnets lacking flow logs and a firewall rule allowing all internal traffic."
+  },
+  {
+    "id": "t069",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "medium",
+    "profile": "mixed",
+    "description": "Cloud SQL with backups, required SSL, and IP restricted to the office range, but without CMEK or deletion protection."
+  },
+  {
+    "id": "t070",
+    "format": "terraform",
+    "cloud": "gcp",
+    "difficulty": "hard",
+    "profile": "mixed",
+    "description": "GKE and Cloud SQL composed through a local network module with dynamic node pools; the cluster is private with workload identity, but SQL authorized networks include the whole internet."
+  }
+]

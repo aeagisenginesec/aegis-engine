@@ -1,0 +1,55 @@
+name: multi-cloud-assets
+runtime: yaml
+description: Multi-cloud asset hosting. The AWS bucket is locked down, but the Azure storage account allows public blob access.
+template:
+  configuration:
+    awsBucketName:
+      type: String
+      default: acme-assets-multi
+    azureLocation:
+      type: String
+      default: westeurope
+  variables:
+    rgName: rg-multi-assets
+    azureStorageName: acmemultiassets
+  resources:
+    awsBucket:
+      type: aws:s3:Bucket
+      properties:
+        bucket: ${awsBucketName}
+        acl: private
+        versioning:
+          enabled: true
+        serverSideEncryptionConfiguration:
+          rule:
+            applyServerSideEncryptionByDefault:
+              sseAlgorithm: AES256
+    awsBlockPublic:
+      type: aws:s3:BucketPublicAccessBlock
+      properties:
+        bucket: ${awsBucket.id}
+        blockPublicAcls: true
+        blockPublicPolicy: true
+        ignorePublicAcls: true
+        restrictPublicBuckets: true
+    resourceGroup:
+      type: azure-native:resources:ResourceGroup
+      properties:
+        resourceGroupName: ${rgName}
+        location: ${azureLocation}
+    azureStorage:
+      type: azure-native:storage:StorageAccount
+      properties:
+        accountName: ${azureStorageName}
+        resourceGroupName: ${resourceGroup.name}
+        location: ${azureLocation}
+        sku:
+          name: Standard_LRS
+        kind: StorageV2
+        supportsHttpsTrafficOnly: true
+        minimumTlsVersion: TLS1_2
+        allowBlobPublicAccess: true
+        publicNetworkAccess: Enabled
+  outputs:
+    awsBucketArn: ${awsBucket.arn}
+    azureStorageId: ${azureStorage.id}

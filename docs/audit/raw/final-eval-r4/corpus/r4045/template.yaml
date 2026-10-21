@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Legacy database
+Resources:
+  LegacyDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: mysql
+      EngineVersion: "8.0"
+      DBInstanceClass: db.t3.small
+      DBInstanceIdentifier: legacy-1909b7
+      AllocatedStorage: "50"
+      StorageEncrypted: false
+      PubliclyAccessible: false
+      MasterUsername: root
+      MasterUserPassword: Str0ng-1909b7-Db!
+      BackupRetentionPeriod: 7
+
+  WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t3.micro
+      MetadataOptions:
+        HttpTokens: required
+        HttpEndpoint: enabled
+      Tags: [{Key: Name, Value: web-1909b7}]

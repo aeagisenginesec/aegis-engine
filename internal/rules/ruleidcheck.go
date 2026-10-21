@@ -25,23 +25,43 @@ import (
 
 // deprecatedRuleIDs maps rule IDs removed during the post-audit
 // deduplication to their surviving canonical replacements.
-// Source of truth: docs/audit/DEPRECATED_RULE_IDS.md (39 entries).
+// Source of truth: docs/audit/DEPRECATED_RULE_IDS.md (67 entries).
 var deprecatedRuleIDs = map[string]string{
+	"AEGIS-AWS-418":   "AEGIS-AWS-523",
+	"AEGIS-AWS-540":   "AEGIS-AWS-311",
+	"AEGIS-AWS-547":   "AEGIS-AWS-308",
 	"AEGIS-AWS-549":   "AEGIS-AWS-321",
 	"AEGIS-AWS-550":   "AEGIS-AWS-320",
 	"AEGIS-AWS-621":   "AEGIS-AWS-316",
+	"AEGIS-AWS-684":   "AEGIS-AWS-565",
+	"AEGIS-AWS-692":   "",
 	"AEGIS-AWS-701":   "AEGIS-AWS-605",
+	"AEGIS-AWS-702":   "AEGIS-AWS-546",
 	"AEGIS-AWS-715":   "AEGIS-AWS-321",
 	"AEGIS-AWS-718":   "AEGIS-AWS-608",
 	"AEGIS-AWS-719":   "AEGIS-AWS-440",
 	"AEGIS-AWS-752":   "AEGIS-AWS-625",
 	"AEGIS-AWS-782":   "AEGIS-AWS-420",
+	"AEGIS-AWS-811":   "AEGIS-AWS-523",
+	"AEGIS-AWS-812":   "AEGIS-AWS-623",
 	"AEGIS-AWS-815":   "AEGIS-AWS-430",
 	"AEGIS-AWS-830":   "AEGIS-AWS-332",
+	"AEGIS-AWS-840":   "AEGIS-AWS-329",
 	"AEGIS-AWS-831":   "AEGIS-AWS-404",
 	"AEGIS-AZURE-036": "AEGIS-AZR-005",
+	"AEGIS-AZURE-007": "AEGIS-AZURE-187",
+	"AEGIS-AZURE-075": "AEGIS-AZURE-229",
+	"AEGIS-AZURE-008": "AEGIS-AZURE-107",
+	"AEGIS-AZURE-009": "AEGIS-AZURE-101",
+	"AEGIS-AZURE-025": "AEGIS-AZURE-105",
+	"AEGIS-AZURE-027": "AEGIS-AZURE-121",
+	"AEGIS-AZURE-045": "AEGIS-AZURE-101",
+	"AEGIS-AZURE-047": "AEGIS-AZURE-107",
+	"AEGIS-AZURE-048": "AEGIS-AZURE-106",
+	"AEGIS-AZURE-225": "AEGIS-AZURE-107",
 	"AEGIS-AZURE-109": "AEGIS-AZURE-061",
 	"AEGIS-AZURE-117": "AEGIS-AZURE-066",
+	"AEGIS-AZURE-119": "AEGIS-AZURE-122",
 	"AEGIS-AZURE-120": "AEGIS-AZURE-034",
 	"AEGIS-AZURE-123": "AEGIS-AZURE-031",
 	"AEGIS-AZURE-126": "AEGIS-AZURE-029",
@@ -50,22 +70,30 @@ var deprecatedRuleIDs = map[string]string{
 	"AEGIS-AZURE-178": "AEGIS-AZURE-062",
 	"AEGIS-AZURE-188": "AEGIS-AZURE-038",
 	"AEGIS-AZURE-190": "AEGIS-AZURE-040",
+	"AEGIS-AZURE-191": "AEGIS-AZURE-031",
 	"AEGIS-AZURE-193": "AEGIS-AZURE-029",
 	"AEGIS-AZURE-196": "AEGIS-AZURE-032",
 	"AEGIS-AZURE-198": "AEGIS-AZURE-030",
 	"AEGIS-AZURE-202": "AEGIS-AZURE-042",
 	"AEGIS-AZURE-203": "AEGIS-AZURE-028",
-	"AEGIS-AZURE-206": "AEGIS-AZURE-025",
+	"AEGIS-AZURE-206": "AEGIS-AZURE-105",
 	"AEGIS-AZURE-213": "AEGIS-AZURE-012",
+	"AEGIS-AZURE-230": "AEGIS-AZURE-128",
 	"AEGIS-AZURE-234": "AEGIS-AZURE-136",
 	"AEGIS-AZURE-243": "AEGIS-AZURE-057",
+	"AEGIS-AZURE-245": "AEGIS-AZURE-127",
 	"AEGIS-AZURE-298": "AEGIS-AZURE-155",
 	"AEGIS-AZURE-312": "AEGIS-AZURE-020",
+	"AEGIS-AZR-004":   "AEGIS-AZURE-106",
+	"AEGIS-GCP-010":   "AEGIS-GCP-111",
+	"AEGIS-GCP-048":   "AEGIS-GCP-109",
+	"AEGIS-GCP-063":   "AEGIS-GCP-018",
 	"AEGIS-GCP-110":   "AEGIS-GCP-009",
 	"AEGIS-GCP-112":   "AEGIS-GCP-011",
 	"AEGIS-GCP-118":   "AEGIS-GCP-057",
 	"AEGIS-GCP-119":   "AEGIS-GCP-058",
 	"AEGIS-GCP-121":   "AEGIS-GCP-005",
+	"AEGIS-GCP-122":   "AEGIS-GCP-032",
 }
 
 // RuleIDKind classifies a rule ID found in user configuration.
@@ -100,6 +128,10 @@ type RuleIDDiagnostic struct {
 func (d RuleIDDiagnostic) Message() string {
 	switch d.Kind {
 	case RuleIDDeprecated:
+		if d.Canonical == "" {
+			return fmt.Sprintf("rule ID %s in %s was removed and has no replacement; the entry has no effect (see docs/audit/DEPRECATED_RULE_IDS.md)",
+				d.ID, d.Source)
+		}
 		return fmt.Sprintf("rule ID %s in %s was removed by deduplication and has no effect; migrate to %s (see docs/audit/DEPRECATED_RULE_IDS.md)",
 			d.ID, d.Source, d.Canonical)
 	default:

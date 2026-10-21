@@ -20,18 +20,6 @@ func TestAZURE026_HTTPSQuiet(t *testing.T) {
 }
 
 // TestAZURE027_WeakTLSFires verifies weak TLS detection.
-func TestAZURE027_WeakTLSFires(t *testing.T) {
-	r := res("azurerm_storage_account", "s", map[string]ir.Value{"min_tls_version": ks("TLS1_0", 3)})
-	mustFinding(t, runRule(storageWeakTLS{}, r), "AEGIS-AZURE-027")
-}
-
-func TestAZURE027_TLS12Quiet(t *testing.T) {
-	r := res("azurerm_storage_account", "s", map[string]ir.Value{"min_tls_version": ks("TLS1_2", 3)})
-	if len(runRule(storageWeakTLS{}, r)) != 0 {
-		t.Fatal("expected 0 findings")
-	}
-}
-
 // TestAZURE028_NoVersioningFires verifies blob versioning detection.
 func TestAZURE028_NoVersioningFires(t *testing.T) {
 	r := res("azurerm_storage_account", "s", map[string]ir.Value{
@@ -92,6 +80,14 @@ func TestAZURE038_RBACQuiet(t *testing.T) {
 func TestAZURE039_PublicAccessFires(t *testing.T) {
 	r := res("azurerm_key_vault", "v", map[string]ir.Value{"public_network_access_enabled": kv(true, 3)})
 	mustFinding(t, runRule(keyVaultPublicAccess{}, r), "AEGIS-AZURE-039")
+}
+
+// TestAZURE039_PrivateAccessQuiet verifies a private Key Vault stays quiet.
+func TestAZURE039_PrivateAccessQuiet(t *testing.T) {
+	r := res("azurerm_key_vault", "v", map[string]ir.Value{"public_network_access_enabled": kv(false, 3)})
+	if len(runRule(keyVaultPublicAccess{}, r)) != 0 {
+		t.Fatal("AEGIS-AZURE-039: expected 0 findings")
+	}
 }
 
 // TestAZURE040_SecretNoExpiryFires verifies secret expiration.

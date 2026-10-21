@@ -1,0 +1,136 @@
+{
+    "check_type": "dockerfile",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_DOCKER_2",
+                "bc_check_id": "BC_DKR_2",
+                "check_name": "Ensure that HEALTHCHECK instructions have been added to container images",
+                "check_result": {
+                    "result": "FAILED",
+                    "results_configuration": null
+                },
+                "code_block": [
+                    [
+                        1,
+                        "FROM node:20.14.0-alpine3.20 AS builder\n"
+                    ],
+                    [
+                        2,
+                        "\n"
+                    ],
+                    [
+                        3,
+                        "WORKDIR /src\n"
+                    ],
+                    [
+                        4,
+                        "COPY package*.json ./\n"
+                    ],
+                    [
+                        5,
+                        "RUN npm ci\n"
+                    ],
+                    [
+                        6,
+                        "COPY . .\n"
+                    ],
+                    [
+                        7,
+                        "RUN npm run build\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "FROM node:20.14.0-alpine3.20\n"
+                    ],
+                    [
+                        10,
+                        "\n"
+                    ],
+                    [
+                        11,
+                        "RUN adduser -D -u 10001 appuser\n"
+                    ],
+                    [
+                        12,
+                        "\n"
+                    ],
+                    [
+                        13,
+                        "WORKDIR /app\n"
+                    ],
+                    [
+                        14,
+                        "COPY --from=builder --chown=appuser:appuser /src/dist ./dist\n"
+                    ],
+                    [
+                        15,
+                        "COPY --from=builder --chown=appuser:appuser /src/node_modules ./node_modules\n"
+                    ],
+                    [
+                        16,
+                        "\n"
+                    ],
+                    [
+                        17,
+                        "USER appuser\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "EXPOSE 3000\n"
+                    ],
+                    [
+                        20,
+                        "\n"
+                    ],
+                    [
+                        21,
+                        "CMD [\"node\", \"dist/index.js\"]"
+                    ]
+                ],
+                "file_path": "/Dockerfile",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k064/Dockerfile",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k064/Dockerfile",
+                "file_line_range": [
+                    1,
+                    21
+                ],
+                "resource": "/Dockerfile.",
+                "evaluations": null,
+                "check_class": "checkov.dockerfile.checks.HealthcheckExists",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-that-healthcheck-instructions-have-been-added-to-container-images",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 59,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 1,
+        "checkov_version": "3.3.26"
+    }
+}

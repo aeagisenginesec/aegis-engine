@@ -1,0 +1,43 @@
+name: finance-storage
+runtime: yaml
+description: Hardened storage for finance exports.
+template:
+  configuration:
+    location:
+      type: String
+      default: westeurope
+  variables:
+    storageName: finrepstg
+    rgName: rg-finance-prod
+  resources:
+    resourceGroup:
+      type: azure-native:resources:ResourceGroup
+      properties:
+        resourceGroupName: ${rgName}
+        location: ${location}
+    storageAccount:
+      type: azure-native:storage:StorageAccount
+      properties:
+        accountName: ${storageName}
+        resourceGroupName: ${resourceGroup.name}
+        location: ${location}
+        sku:
+          name: Standard_GRS
+        kind: StorageV2
+        supportsHttpsTrafficOnly: true
+        minimumTlsVersion: TLS1_2
+        allowBlobPublicAccess: false
+        allowSharedKeyAccess: false
+        publicNetworkAccess: Disabled
+        networkRuleSet:
+          bypass: None
+          defaultAction: Deny
+        encryption:
+          keySource: Microsoft.Storage
+          services:
+            blob:
+              enabled: true
+            file:
+              enabled: true
+  outputs:
+    storageAccountId: ${storageAccount.id}

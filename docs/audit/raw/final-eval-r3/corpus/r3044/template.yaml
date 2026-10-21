@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Webhook function
+Resources:
+  HookFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: hook-619eaf
+      Role: arn:aws:iam::123456789012:role/lambda-exec
+      Runtime: python3.11
+      Handler: index.handler
+      Code:
+        ZipFile: "def handler(e, c): return {}"
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt HookFn.Arn
+      AuthType: NONE
+
+  WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c55b159cbfafe1f0
+      InstanceType: t3.micro
+      MetadataOptions:
+        HttpTokens: required
+        HttpEndpoint: enabled
+      Tags: [{Key: Name, Value: web-619eaf}]

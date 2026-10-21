@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-75cdd3
+  labels:
+    app: api-75cdd3
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-75cdd3
+  template:
+    metadata:
+      labels:
+        app: api-75cdd3
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            limits: {cpu: "500m", memory: 256Mi}
+            requests: {cpu: "250m", memory: 128Mi}
+          livenessProbe:
+            httpGet: {path: /health, port: 8080}
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet: {path: /ready, port: 8080}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-75cdd3
+  labels:
+    app: api-75cdd3
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-75cdd3
+  template:
+    metadata:
+      labels:
+        app: api-75cdd3
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          env:
+            - name: DB_PASSWORD
+              value: Sup3rSecret!-prod-2024
+            - name: API_TOKEN
+              value: tok_live_9f8a7b6c5d4e3f2a1b0c

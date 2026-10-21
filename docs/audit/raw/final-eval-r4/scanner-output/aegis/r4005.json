@@ -1,0 +1,541 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 34,
+    "critical": 1,
+    "high": 3,
+    "medium": 10,
+    "low": 20
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-GCP-003",
+      "severity": "medium",
+      "title": "Cloud SQL instance without automated backups",
+      "description": "Cloud SQL instances should enable automated backups via settings.backup_configuration.enabled for point-in-time recovery.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 6,
+      "evidence": "settings.backup_configuration.enabled = false",
+      "expected": "settings { backup_configuration { enabled = true } }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://cloud.google.com/backup-disaster-recovery/docs"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-007",
+      "severity": "high",
+      "title": "Cloud SQL instance with public IP",
+      "description": "google_sql_database_instance with settings.ip_configuration.ipv4_enabled = true exposes the database to the internet. Use private IP with VPC peering instead.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 18,
+      "evidence": "settings.ip_configuration.ipv4_enabled = true",
+      "expected": "ipv4_enabled = false (private IP only)",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public IPs / public access, and use Private Service Connect / VPC Service Controls if external access is required. Verify with `gcloud compute firewall-rules list`.",
+      "references": [
+        "https://cloud.google.com/vpc/docs/firewalls"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-008",
+      "severity": "high",
+      "title": "Cloud SQL instance without SSL enforcement",
+      "description": "google_sql_database_instance with settings.ip_configuration.require_ssl = false accepts plaintext database connections.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.ip_configuration.require_ssl = absent",
+      "expected": "require_ssl = true",
+      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS_1_2\"` / `minimum_tls_version`, replace HTTP with HTTPS, and redirect HTTP→HTTPS.",
+      "references": [
+        "https://cloud.google.com/load-balancing/docs/ssl-policies-concepts"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-008",
+      "severity": "high",
+      "title": "Cloud SQL instance without SSL enforcement",
+      "description": "google_sql_database_instance with settings.ip_configuration.require_ssl = false accepts plaintext database connections.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.ip_configuration.require_ssl = absent",
+      "expected": "require_ssl = true",
+      "remediation": "Enforce TLS 1.2+. Set `min_tls_version = \"TLS_1_2\"` / `minimum_tls_version`, replace HTTP with HTTPS, and redirect HTTP→HTTPS.",
+      "references": [
+        "https://cloud.google.com/load-balancing/docs/ssl-policies-concepts"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-019",
+      "severity": "medium",
+      "title": "Cloud SQL instance without deletion protection",
+      "description": "google_sql_database_instance with deletion_protection = false (the provider default) can be destroyed accidentally. Enable deletion protection for production databases.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "deletion_protection = absent (provider default: false)",
+      "expected": "deletion_protection = true",
+      "remediation": "Enable deletion protection to prevent accidental destruction. For Cloud SQL and Compute instances set `deletion_protection = true`. For GCS buckets there is no deletion_protection argument — instead remove `force_destroy = true` (or omit it; the default is false) and consider a `retention_policy` or a resource-manager lien for critical data.",
+      "references": [
+        "https://cloud.google.com/resource-manager/docs/creating-managing-liens"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-019",
+      "severity": "medium",
+      "title": "Cloud SQL instance without deletion protection",
+      "description": "google_sql_database_instance with deletion_protection = false (the provider default) can be destroyed accidentally. Enable deletion protection for production databases.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "deletion_protection = absent (provider default: false)",
+      "expected": "deletion_protection = true",
+      "remediation": "Enable deletion protection to prevent accidental destruction. For Cloud SQL and Compute instances set `deletion_protection = true`. For GCS buckets there is no deletion_protection argument — instead remove `force_destroy = true` (or omit it; the default is false) and consider a `retention_policy` or a resource-manager lien for critical data.",
+      "references": [
+        "https://cloud.google.com/resource-manager/docs/creating-managing-liens"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-040",
+      "severity": "critical",
+      "title": "Cloud SQL instance allows connections from the internet",
+      "description": "google_sql_database_instance ip_configuration authorized_networks with 0.0.0.0/0 exposes the database to the internet.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 19,
+      "evidence": "authorized_networks.value = 0.0.0.0/0",
+      "expected": "restricted CIDR ranges",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-042",
+      "severity": "low",
+      "title": "Cloud SQL instance without maintenance window",
+      "description": "google_sql_database_instance with no maintenance_window lets GCP apply disruptive maintenance at any time; hygiene finding.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.maintenance_window = absent",
+      "expected": "maintenance_window { day = 7 hour = 3 }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-042",
+      "severity": "low",
+      "title": "Cloud SQL instance without maintenance window",
+      "description": "google_sql_database_instance with no maintenance_window lets GCP apply disruptive maintenance at any time; hygiene finding.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.maintenance_window = absent",
+      "expected": "maintenance_window { day = 7 hour = 3 }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-044",
+      "severity": "medium",
+      "title": "Cloud SQL instance without IAM database authentication",
+      "description": "google_sql_database_instance without database flag cloudsql.iam_authentication=on forces password-only auth.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.database_flags = cloudsql.iam_authentication not enabled",
+      "expected": "database_flags { name = \"cloudsql.iam_authentication\" value = \"on\" }",
+      "remediation": "Apply least privilege. Replace broad roles with the minimum predefined or custom IAM roles the workload needs. Use Workload Identity Federation and service accounts with minimal scopes.",
+      "references": [
+        "https://cloud.google.com/iam/docs/using-iam-securely"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-044",
+      "severity": "medium",
+      "title": "Cloud SQL instance without IAM database authentication",
+      "description": "google_sql_database_instance without database flag cloudsql.iam_authentication=on forces password-only auth.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.database_flags = cloudsql.iam_authentication not enabled",
+      "expected": "database_flags { name = \"cloudsql.iam_authentication\" value = \"on\" }",
+      "remediation": "Apply least privilege. Replace broad roles with the minimum predefined or custom IAM roles the workload needs. Use Workload Identity Federation and service accounts with minimal scopes.",
+      "references": [
+        "https://cloud.google.com/iam/docs/using-iam-securely"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-046",
+      "severity": "low",
+      "title": "Cloud SQL instance without log_disconnections",
+      "description": "google_sql_database_instance without database flag log_disconnections=on misses session audit data; hygiene finding.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.database_flags = log_disconnections not enabled",
+      "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-046",
+      "severity": "low",
+      "title": "Cloud SQL instance without log_disconnections",
+      "description": "google_sql_database_instance without database flag log_disconnections=on misses session audit data; hygiene finding.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.database_flags = log_disconnections not enabled",
+      "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-101",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_checkpoints",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_checkpoints=on misses checkpoint timing and buffer-write audit data.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.database_flags = log_checkpoints not set",
+      "expected": "database_flags { name = \"log_checkpoints\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-101",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_checkpoints",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_checkpoints=on misses checkpoint timing and buffer-write audit data.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.database_flags = log_checkpoints not set",
+      "expected": "database_flags { name = \"log_checkpoints\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-102",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_connections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_connections=on misses connection-attempt audit data.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.database_flags = log_connections not set",
+      "expected": "database_flags { name = \"log_connections\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-102",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_connections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_connections=on misses connection-attempt audit data.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.database_flags = log_connections not set",
+      "expected": "database_flags { name = \"log_connections\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-103",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_disconnections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_disconnections=on misses session-termination audit data.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.database_flags = log_disconnections not set",
+      "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-103",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_disconnections",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_disconnections=on misses session-termination audit data.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.database_flags = log_disconnections not set",
+      "expected": "database_flags { name = \"log_disconnections\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-104",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_lock_waits",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_lock_waits=on misses deadlock-risk visibility into sessions waiting longer than deadlock_timeout.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.database_flags = log_lock_waits not set",
+      "expected": "database_flags { name = \"log_lock_waits\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-104",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_lock_waits",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_lock_waits=on misses deadlock-risk visibility into sessions waiting longer than deadlock_timeout.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.database_flags = log_lock_waits not set",
+      "expected": "database_flags { name = \"log_lock_waits\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-105",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_duration",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_duration=on misses per-statement duration logging needed to detect anomalous query timing.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.database_flags = log_duration not set",
+      "expected": "database_flags { name = \"log_duration\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-105",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL without log_duration",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_duration=on misses per-statement duration logging needed to detect anomalous query timing.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.database_flags = log_duration not set",
+      "expected": "database_flags { name = \"log_duration\" value = \"on\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-106",
+      "severity": "medium",
+      "title": "Cloud SQL PostgreSQL without pgAudit logging",
+      "description": "google_sql_database_instance (PostgreSQL) without pgAudit (pgaudit.log with READ,WRITE or shared_preload_libraries containing pgaudit) misses detailed session/object audit logging.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.database_flags = pgAudit not enabled",
+      "expected": "database_flags { name = \"pgaudit.log\" value = \"READ,WRITE\" } and database_flags { name = \"shared_preload_libraries\" value = \"pgaudit\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-106",
+      "severity": "medium",
+      "title": "Cloud SQL PostgreSQL without pgAudit logging",
+      "description": "google_sql_database_instance (PostgreSQL) without pgAudit (pgaudit.log with READ,WRITE or shared_preload_libraries containing pgaudit) misses detailed session/object audit logging.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.database_flags = pgAudit not enabled",
+      "expected": "database_flags { name = \"pgaudit.log\" value = \"READ,WRITE\" } and database_flags { name = \"shared_preload_libraries\" value = \"pgaudit\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-107",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL log_min_messages not set appropriately",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_min_messages set to WARNING or more severe emits overly verbose logs (or none at all), burying security-relevant messages.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.database_flags = log_min_messages not set",
+      "expected": "database_flags { name = \"log_min_messages\" value = \"WARNING\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-107",
+      "severity": "low",
+      "title": "Cloud SQL PostgreSQL log_min_messages not set appropriately",
+      "description": "google_sql_database_instance (PostgreSQL) without database flag log_min_messages set to WARNING or more severe emits overly verbose logs (or none at all), burying security-relevant messages.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.database_flags = log_min_messages not set",
+      "expected": "database_flags { name = \"log_min_messages\" value = \"WARNING\" }",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-153",
+      "severity": "low",
+      "title": "Cloud SQL instance without Query Insights",
+      "description": "google_sql_database_instance with no settings.insights_config block has no Query Insights: slow or abusive queries go undetected, hiding both performance and security anomalies. Enable Query Insights.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.insights_config = absent",
+      "expected": "settings { insights_config { query_insights_enabled = true } }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-153",
+      "severity": "low",
+      "title": "Cloud SQL instance without Query Insights",
+      "description": "google_sql_database_instance with no settings.insights_config block has no Query Insights: slow or abusive queries go undetected, hiding both performance and security anomalies. Enable Query Insights.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.insights_config = absent",
+      "expected": "settings { insights_config { query_insights_enabled = true } }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-154",
+      "severity": "medium",
+      "title": "Cloud SQL instance not highly available",
+      "description": "google_sql_database_instance with settings.availability_type other than REGIONAL (the default is ZONAL) has no standby in another zone: a zonal outage takes the database offline. Use availability_type = \"REGIONAL\" for production.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.availability_type = absent (provider default: ZONAL)",
+      "expected": "settings { availability_type = \"REGIONAL\" }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-154",
+      "severity": "medium",
+      "title": "Cloud SQL instance not highly available",
+      "description": "google_sql_database_instance with settings.availability_type other than REGIONAL (the default is ZONAL) has no standby in another zone: a zonal outage takes the database offline. Use availability_type = \"REGIONAL\" for production.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.availability_type = absent (provider default: ZONAL)",
+      "expected": "settings { availability_type = \"REGIONAL\" }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-157",
+      "severity": "low",
+      "title": "Cloud SQL instance without password validation policy",
+      "description": "google_sql_database_instance with no settings.password_validation_policy block accepts weak database passwords (short, no complexity requirements). Enforce a password validation policy.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.password_validation_policy = [REDACTED]",
+      "expected": "settings { password_validation_policy { min_length = 12 ... } }",
+      "remediation": "Apply least privilege. Replace broad roles with the minimum predefined or custom IAM roles the workload needs. Use Workload Identity Federation and service accounts with minimal scopes.",
+      "references": [
+        "https://cloud.google.com/iam/docs/using-iam-securely"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-157",
+      "severity": "low",
+      "title": "Cloud SQL instance without password validation policy",
+      "description": "google_sql_database_instance with no settings.password_validation_policy block accepts weak database passwords (short, no complexity requirements). Enforce a password validation policy.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 11,
+      "evidence": "settings.password_validation_policy = [REDACTED]",
+      "expected": "settings { password_validation_policy { min_length = 12 ... } }",
+      "remediation": "Apply least privilege. Replace broad roles with the minimum predefined or custom IAM roles the workload needs. Use Workload Identity Federation and service accounts with minimal scopes.",
+      "references": [
+        "https://cloud.google.com/iam/docs/using-iam-securely"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-160",
+      "severity": "medium",
+      "title": "Cloud SQL MySQL instance without binary logging",
+      "description": "google_sql_database_instance with a backup_configuration block but binary_log_enabled not true keeps no binary logs: MySQL point-in-time recovery and change auditing are impossible. Enable binary logging.",
+      "resource": "google_sql_database_instance.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+      "line": 1,
+      "evidence": "settings.backup_configuration.binary_log_enabled = absent (provider default: false)",
+      "expected": "binary_log_enabled = true",
+      "remediation": "Enable audit logging. Turn on Cloud Audit Logs (Admin Activity + Data Access), VPC flow logs, and Security Command Center. Ship logs to a dedicated project with locked retention.",
+      "references": [
+        "https://cloud.google.com/logging/docs/audit"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4005/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

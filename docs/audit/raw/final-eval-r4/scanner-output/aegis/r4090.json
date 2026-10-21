@@ -1,0 +1,256 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090",
+  "summary": {
+    "resources": 2,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 15,
+    "critical": 0,
+    "high": 2,
+    "medium": 9,
+    "low": 4
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-028",
+      "severity": "medium",
+      "title": "Storage account without blob versioning",
+      "description": "azurerm_storage_account blob_properties without versioning_enabled loses protection against accidental overwrite or deletion. Enable versioning.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "blob_properties = absent",
+      "expected": "blob_properties { versioning_enabled = true }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time restore / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/backup/backup-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-029",
+      "severity": "medium",
+      "title": "Storage account without blob soft delete",
+      "description": "azurerm_storage_account blob_properties without delete_retention_policy cannot recover accidentally deleted blobs. Enable soft delete.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "blob_properties = absent",
+      "expected": "blob_properties { delete_retention_policy { days = 7 } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-031",
+      "severity": "medium",
+      "title": "Storage account allows shared key access",
+      "description": "azurerm_storage_account with shared_access_key_enabled = true permits storage account key authentication. Prefer Microsoft Entra ID and disable shared key access.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "shared_access_key_enabled = [REDACTED]",
+      "expected": "shared_access_key_enabled = false",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-032",
+      "severity": "medium",
+      "title": "Storage account without infrastructure encryption",
+      "description": "azurerm_storage_account without infrastructure_encryption_enabled lacks double encryption at the infrastructure layer. Enable it for defense in depth.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "infrastructure_encryption_enabled = absent",
+      "expected": "infrastructure_encryption_enabled = true",
+      "remediation": "Enable encryption at rest. For storage accounts set `infrastructure_encryption_enabled = true` and use a customer-managed key via `azurerm_key_vault_key`. For regulated data use a customer-managed key in Key Vault with purge protection and key rotation.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-atrest"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-033",
+      "severity": "low",
+      "title": "Storage account without customer-managed key",
+      "description": "azurerm_storage_account without customer_managed_key block uses Microsoft-managed keys. Use a customer-managed key in Key Vault for sensitive data.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "customer_managed_key = [REDACTED]",
+      "expected": "customer_managed_key { key_vault_key_id = ... }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-034",
+      "severity": "low",
+      "title": "Storage account queue without logging",
+      "description": "azurerm_storage_account queue_properties without logging loses audit trail for queue operations. Enable queue logging.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "queue_properties = absent",
+      "expected": "queue_properties { logging { read = true } }",
+      "remediation": "Enable audit logging. Turn on Azure Monitor diagnostic settings, the Activity Log, and Defender for Cloud. Ship logs to a Log Analytics workspace in a security subscription.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-038",
+      "severity": "medium",
+      "title": "Key Vault not using RBAC authorization",
+      "description": "azurerm_key_vault with enable_rbac_authorization = false uses legacy access policies. Prefer Azure RBAC for centralized access control.",
+      "resource": "azurerm_key_vault.kv-9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "enable_rbac_authorization = absent",
+      "expected": "enable_rbac_authorization = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-124",
+      "severity": "medium",
+      "title": "Storage account without private endpoint",
+      "description": "azurerm_storage_account with no azurerm_private_endpoint targeting it is reachable over the public endpoint. Connect it via a private endpoint on the storage subresource (blob, dfs, queue, table, or file).",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "private_endpoint = no azurerm_private_endpoint targets this account",
+      "expected": "azurerm_private_endpoint { private_service_connection { private_connection_resource_id = azurerm_storage_account.this.id subresource_names = [\"blob\"] } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-125",
+      "severity": "low",
+      "title": "Storage account without SAS expiry policy",
+      "description": "azurerm_storage_account without a sas_policy block issues shared access signatures with no enforced expiry. Set sas_policy { expiration_period and expiration_action } to bound SAS lifetimes.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "sas_policy = absent",
+      "expected": "sas_policy { expiration_period = \"90.00:00:00\" expiration_action = \"Log\" }",
+      "remediation": "Set a SAS expiry policy on the storage account so shared access signatures\ncannot be minted without an expiration:\nresource \"azurerm_storage_account\" \"this\" {\n  # ...\n  sas_policy {\n    expiration_period = \"00.01:00:00\"\n    expiration_action = \"Log\"\n  }\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account#sas_policy"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-147",
+      "severity": "low",
+      "title": "Storage account without blob change feed",
+      "description": "azurerm_storage_account blob_properties without change_feed_enabled = true records no ordered log of blob create/update/delete events, blinding incident response to data tampering. Enable the blob change feed.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "blob_properties.change_feed_enabled = absent (default false)",
+      "expected": "blob_properties { change_feed_enabled = true }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-148",
+      "severity": "high",
+      "title": "Storage account with public network access (default)",
+      "description": "azurerm_storage_account without public_network_access_enabled = false exposes the storage endpoint to the internet by default. Disable public network access and use private endpoints instead. (Strict complement of AEGIS-AZURE-006, which covers an explicit true value.)",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "public_network_access_enabled = absent (default true)",
+      "expected": "public_network_access_enabled = false",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-149",
+      "severity": "medium",
+      "title": "Storage account without network rules",
+      "description": "azurerm_storage_account without a network_rules block accepts storage traffic from any network by default. Add network_rules with default_action = \"Deny\" and explicit allow rules. (Strict complement of AEGIS-AZURE-021, which covers an explicit Allow default action.)",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "network_rules = absent (default allow all)",
+      "expected": "network_rules { default_action = \"Deny\" ... }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-181",
+      "severity": "medium",
+      "title": "Storage account without managed identity",
+      "description": "azurerm_storage_account without an identity block cannot use customer-managed keys stored in Key Vault. Enable a system-assigned identity when CMK encryption is required.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "identity = absent (no managed identity)",
+      "expected": "identity { type = \"SystemAssigned\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-187",
+      "severity": "high",
+      "title": "Key Vault network ACLs allow public traffic",
+      "description": "azurerm_key_vault without a network_acls block (default allow) or with default_action other than \"Deny\" accepts secret/key operations from any network. Set default_action = \"Deny\" with explicit allowances.",
+      "resource": "azurerm_key_vault.kv-9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "network_acls = absent (default: allow all)",
+      "expected": "network_acls { default_action = \"Deny\" }",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-192",
+      "severity": "medium",
+      "title": "Storage account not defaulting to OAuth authentication",
+      "description": "azurerm_storage_account without default_to_oauth_authentication = true lets clients fall back to Shared Key auth. Default to Entra ID OAuth for data-plane operations.",
+      "resource": "azurerm_storage_account.data9ec2b8",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+      "line": 1,
+      "evidence": "default_to_oauth_authentication = absent (provider default: false)",
+      "expected": "default_to_oauth_authentication = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4090/main.bicep",
+        "status": "parsed",
+        "format": "bicep"
+      }
+    ]
+  }
+}

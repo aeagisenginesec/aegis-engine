@@ -1,0 +1,819 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_174",
+                "bc_check_id": "BC_AWS_NETWORKING_63",
+                "check_name": "Verify CloudFront Distribution Viewer Certificate is using TLS v1.2 or higher",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/DistributionConfig/ViewerCertificate/MinimumProtocolVersion"
+                    ]
+                },
+                "code_block": [
+                    [
+                        60,
+                        "  DocsDistribution:\n"
+                    ],
+                    [
+                        61,
+                        "    Type: AWS::CloudFront::Distribution\n"
+                    ],
+                    [
+                        62,
+                        "    Properties:\n"
+                    ],
+                    [
+                        63,
+                        "      DistributionConfig:\n"
+                    ],
+                    [
+                        64,
+                        "        Enabled: true\n"
+                    ],
+                    [
+                        65,
+                        "        Comment: !Sub 'Docs portal (${Environment})'\n"
+                    ],
+                    [
+                        66,
+                        "        PriceClass: !FindInMap [PriceClassMap, !Ref Environment, Class]\n"
+                    ],
+                    [
+                        67,
+                        "        DefaultRootObject: index.html\n"
+                    ],
+                    [
+                        68,
+                        "        Origins:\n"
+                    ],
+                    [
+                        69,
+                        "          - Id: docs-s3-origin\n"
+                    ],
+                    [
+                        70,
+                        "            DomainName: !GetAtt DocsBucket.RegionalDomainName\n"
+                    ],
+                    [
+                        71,
+                        "            S3OriginConfig:\n"
+                    ],
+                    [
+                        72,
+                        "              OriginAccessIdentity: ''\n"
+                    ],
+                    [
+                        73,
+                        "            OriginAccessControlId: !Ref OriginAccessControl\n"
+                    ],
+                    [
+                        74,
+                        "        DefaultCacheBehavior:\n"
+                    ],
+                    [
+                        75,
+                        "          TargetOriginId: docs-s3-origin\n"
+                    ],
+                    [
+                        76,
+                        "          ViewerProtocolPolicy: allow-all\n"
+                    ],
+                    [
+                        77,
+                        "          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6\n"
+                    ],
+                    [
+                        78,
+                        "          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf\n"
+                    ],
+                    [
+                        79,
+                        "        Logging: !If\n"
+                    ],
+                    [
+                        80,
+                        "          - LoggingOn\n"
+                    ],
+                    [
+                        81,
+                        "          - Bucket: !GetAtt DocsBucket.RegionalDomainName\n"
+                    ],
+                    [
+                        82,
+                        "            Prefix: !Sub 'cdn-logs/${Environment}/'\n"
+                    ],
+                    [
+                        83,
+                        "          - !Ref 'AWS::NoValue'\n"
+                    ]
+                ],
+                "file_path": "/s3-cloudfront.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                "file_line_range": [
+                    60,
+                    83
+                ],
+                "resource": "AWS::CloudFront::Distribution.DocsDistribution",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.CloudFrontTLS12",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-networking-63",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DistributionConfig.PriceClass.Fn::FindInMap.1": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.PriceClass.Fn::FindInMap": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.PriceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Comment": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If.1.Prefix": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If.1": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_34",
+                "bc_check_id": "BC_AWS_NETWORKING_32",
+                "check_name": "Ensure CloudFront Distribution ViewerProtocolPolicy is set to HTTPS",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/DistributionConfig/DefaultCacheBehavior/ViewerProtocolPolicy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        60,
+                        "  DocsDistribution:\n"
+                    ],
+                    [
+                        61,
+                        "    Type: AWS::CloudFront::Distribution\n"
+                    ],
+                    [
+                        62,
+                        "    Properties:\n"
+                    ],
+                    [
+                        63,
+                        "      DistributionConfig:\n"
+                    ],
+                    [
+                        64,
+                        "        Enabled: true\n"
+                    ],
+                    [
+                        65,
+                        "        Comment: !Sub 'Docs portal (${Environment})'\n"
+                    ],
+                    [
+                        66,
+                        "        PriceClass: !FindInMap [PriceClassMap, !Ref Environment, Class]\n"
+                    ],
+                    [
+                        67,
+                        "        DefaultRootObject: index.html\n"
+                    ],
+                    [
+                        68,
+                        "        Origins:\n"
+                    ],
+                    [
+                        69,
+                        "          - Id: docs-s3-origin\n"
+                    ],
+                    [
+                        70,
+                        "            DomainName: !GetAtt DocsBucket.RegionalDomainName\n"
+                    ],
+                    [
+                        71,
+                        "            S3OriginConfig:\n"
+                    ],
+                    [
+                        72,
+                        "              OriginAccessIdentity: ''\n"
+                    ],
+                    [
+                        73,
+                        "            OriginAccessControlId: !Ref OriginAccessControl\n"
+                    ],
+                    [
+                        74,
+                        "        DefaultCacheBehavior:\n"
+                    ],
+                    [
+                        75,
+                        "          TargetOriginId: docs-s3-origin\n"
+                    ],
+                    [
+                        76,
+                        "          ViewerProtocolPolicy: allow-all\n"
+                    ],
+                    [
+                        77,
+                        "          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6\n"
+                    ],
+                    [
+                        78,
+                        "          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf\n"
+                    ],
+                    [
+                        79,
+                        "        Logging: !If\n"
+                    ],
+                    [
+                        80,
+                        "          - LoggingOn\n"
+                    ],
+                    [
+                        81,
+                        "          - Bucket: !GetAtt DocsBucket.RegionalDomainName\n"
+                    ],
+                    [
+                        82,
+                        "            Prefix: !Sub 'cdn-logs/${Environment}/'\n"
+                    ],
+                    [
+                        83,
+                        "          - !Ref 'AWS::NoValue'\n"
+                    ]
+                ],
+                "file_path": "/s3-cloudfront.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                "file_line_range": [
+                    60,
+                    83
+                ],
+                "resource": "AWS::CloudFront::Distribution.DocsDistribution",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.CloudfrontDistributionEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-32",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DistributionConfig.PriceClass.Fn::FindInMap.1": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.PriceClass.Fn::FindInMap": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.PriceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Comment": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If.1.Prefix": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If.1": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_86",
+                "bc_check_id": "BC_AWS_LOGGING_20",
+                "check_name": "Ensure CloudFront Distribution has Access Logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/DistributionConfig/Logging/Bucket"
+                    ]
+                },
+                "code_block": [
+                    [
+                        60,
+                        "  DocsDistribution:\n"
+                    ],
+                    [
+                        61,
+                        "    Type: AWS::CloudFront::Distribution\n"
+                    ],
+                    [
+                        62,
+                        "    Properties:\n"
+                    ],
+                    [
+                        63,
+                        "      DistributionConfig:\n"
+                    ],
+                    [
+                        64,
+                        "        Enabled: true\n"
+                    ],
+                    [
+                        65,
+                        "        Comment: !Sub 'Docs portal (${Environment})'\n"
+                    ],
+                    [
+                        66,
+                        "        PriceClass: !FindInMap [PriceClassMap, !Ref Environment, Class]\n"
+                    ],
+                    [
+                        67,
+                        "        DefaultRootObject: index.html\n"
+                    ],
+                    [
+                        68,
+                        "        Origins:\n"
+                    ],
+                    [
+                        69,
+                        "          - Id: docs-s3-origin\n"
+                    ],
+                    [
+                        70,
+                        "            DomainName: !GetAtt DocsBucket.RegionalDomainName\n"
+                    ],
+                    [
+                        71,
+                        "            S3OriginConfig:\n"
+                    ],
+                    [
+                        72,
+                        "              OriginAccessIdentity: ''\n"
+                    ],
+                    [
+                        73,
+                        "            OriginAccessControlId: !Ref OriginAccessControl\n"
+                    ],
+                    [
+                        74,
+                        "        DefaultCacheBehavior:\n"
+                    ],
+                    [
+                        75,
+                        "          TargetOriginId: docs-s3-origin\n"
+                    ],
+                    [
+                        76,
+                        "          ViewerProtocolPolicy: allow-all\n"
+                    ],
+                    [
+                        77,
+                        "          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6\n"
+                    ],
+                    [
+                        78,
+                        "          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf\n"
+                    ],
+                    [
+                        79,
+                        "        Logging: !If\n"
+                    ],
+                    [
+                        80,
+                        "          - LoggingOn\n"
+                    ],
+                    [
+                        81,
+                        "          - Bucket: !GetAtt DocsBucket.RegionalDomainName\n"
+                    ],
+                    [
+                        82,
+                        "            Prefix: !Sub 'cdn-logs/${Environment}/'\n"
+                    ],
+                    [
+                        83,
+                        "          - !Ref 'AWS::NoValue'\n"
+                    ]
+                ],
+                "file_path": "/s3-cloudfront.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                "file_line_range": [
+                    60,
+                    83
+                ],
+                "resource": "AWS::CloudFront::Distribution.DocsDistribution",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.CloudfrontDistributionLogging",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-20",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DistributionConfig.PriceClass.Fn::FindInMap.1": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.PriceClass.Fn::FindInMap": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.PriceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Comment": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If.1.Prefix": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If.1": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_68",
+                "bc_check_id": "BC_AWS_GENERAL_27",
+                "check_name": "CloudFront Distribution should have WAF enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/DistributionConfig/WebACLId"
+                    ]
+                },
+                "code_block": [
+                    [
+                        60,
+                        "  DocsDistribution:\n"
+                    ],
+                    [
+                        61,
+                        "    Type: AWS::CloudFront::Distribution\n"
+                    ],
+                    [
+                        62,
+                        "    Properties:\n"
+                    ],
+                    [
+                        63,
+                        "      DistributionConfig:\n"
+                    ],
+                    [
+                        64,
+                        "        Enabled: true\n"
+                    ],
+                    [
+                        65,
+                        "        Comment: !Sub 'Docs portal (${Environment})'\n"
+                    ],
+                    [
+                        66,
+                        "        PriceClass: !FindInMap [PriceClassMap, !Ref Environment, Class]\n"
+                    ],
+                    [
+                        67,
+                        "        DefaultRootObject: index.html\n"
+                    ],
+                    [
+                        68,
+                        "        Origins:\n"
+                    ],
+                    [
+                        69,
+                        "          - Id: docs-s3-origin\n"
+                    ],
+                    [
+                        70,
+                        "            DomainName: !GetAtt DocsBucket.RegionalDomainName\n"
+                    ],
+                    [
+                        71,
+                        "            S3OriginConfig:\n"
+                    ],
+                    [
+                        72,
+                        "              OriginAccessIdentity: ''\n"
+                    ],
+                    [
+                        73,
+                        "            OriginAccessControlId: !Ref OriginAccessControl\n"
+                    ],
+                    [
+                        74,
+                        "        DefaultCacheBehavior:\n"
+                    ],
+                    [
+                        75,
+                        "          TargetOriginId: docs-s3-origin\n"
+                    ],
+                    [
+                        76,
+                        "          ViewerProtocolPolicy: allow-all\n"
+                    ],
+                    [
+                        77,
+                        "          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6\n"
+                    ],
+                    [
+                        78,
+                        "          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf\n"
+                    ],
+                    [
+                        79,
+                        "        Logging: !If\n"
+                    ],
+                    [
+                        80,
+                        "          - LoggingOn\n"
+                    ],
+                    [
+                        81,
+                        "          - Bucket: !GetAtt DocsBucket.RegionalDomainName\n"
+                    ],
+                    [
+                        82,
+                        "            Prefix: !Sub 'cdn-logs/${Environment}/'\n"
+                    ],
+                    [
+                        83,
+                        "          - !Ref 'AWS::NoValue'\n"
+                    ]
+                ],
+                "file_path": "/s3-cloudfront.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                "file_line_range": [
+                    60,
+                    83
+                ],
+                "resource": "AWS::CloudFront::Distribution.DocsDistribution",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.WAFEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-27",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "DistributionConfig.PriceClass.Fn::FindInMap.1": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.PriceClass.Fn::FindInMap": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.PriceClass": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Comment": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If.1.Prefix": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If.1": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging.Fn::If": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ],
+                    "DistributionConfig.Logging": [
+                        {
+                            "type": "parameters",
+                            "name": "Environment",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c011/s3-cloudfront.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 10,
+        "failed": 4,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 4,
+        "checkov_version": "3.3.26"
+    }
+}

@@ -1,0 +1,1464 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_288",
+                "bc_check_id": "BC_AWS_IAM_83",
+                "check_name": "Ensure IAM policies does not allow data exfiltration",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        29,
+                        "resource \"aws_iam_role_policy\" \"api_wildcard\" {\n"
+                    ],
+                    [
+                        30,
+                        "  name = \"${var.project}-api-wildcard\"\n"
+                    ],
+                    [
+                        31,
+                        "  role = aws_iam_role.api.id\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        34,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        35,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        36,
+                        "      {\n"
+                    ],
+                    [
+                        37,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        38,
+                        "        Action   = [\"dynamodb:*\", \"logs:*\", \"secretsmanager:*\", \"s3:*\"]\n"
+                    ],
+                    [
+                        39,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        40,
+                        "      }\n"
+                    ],
+                    [
+                        41,
+                        "    ]\n"
+                    ],
+                    [
+                        42,
+                        "  })\n"
+                    ],
+                    [
+                        43,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf",
+                "file_line_range": [
+                    29,
+                    43
+                ],
+                "resource": "aws_iam_role_policy.api_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMDataExfiltration",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-288",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_289",
+                "bc_check_id": "BC_AWS_IAM_84",
+                "check_name": "Ensure IAM policies does not allow permissions management / resource exposure without constraints",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        29,
+                        "resource \"aws_iam_role_policy\" \"api_wildcard\" {\n"
+                    ],
+                    [
+                        30,
+                        "  name = \"${var.project}-api-wildcard\"\n"
+                    ],
+                    [
+                        31,
+                        "  role = aws_iam_role.api.id\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        34,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        35,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        36,
+                        "      {\n"
+                    ],
+                    [
+                        37,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        38,
+                        "        Action   = [\"dynamodb:*\", \"logs:*\", \"secretsmanager:*\", \"s3:*\"]\n"
+                    ],
+                    [
+                        39,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        40,
+                        "      }\n"
+                    ],
+                    [
+                        41,
+                        "    ]\n"
+                    ],
+                    [
+                        42,
+                        "  })\n"
+                    ],
+                    [
+                        43,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf",
+                "file_line_range": [
+                    29,
+                    43
+                ],
+                "resource": "aws_iam_role_policy.api_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMPermissionsManagement",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-289",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_355",
+                "bc_check_id": "BC_AWS_IAM_88",
+                "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's resource for restrictable actions",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        29,
+                        "resource \"aws_iam_role_policy\" \"api_wildcard\" {\n"
+                    ],
+                    [
+                        30,
+                        "  name = \"${var.project}-api-wildcard\"\n"
+                    ],
+                    [
+                        31,
+                        "  role = aws_iam_role.api.id\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        34,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        35,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        36,
+                        "      {\n"
+                    ],
+                    [
+                        37,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        38,
+                        "        Action   = [\"dynamodb:*\", \"logs:*\", \"secretsmanager:*\", \"s3:*\"]\n"
+                    ],
+                    [
+                        39,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        40,
+                        "      }\n"
+                    ],
+                    [
+                        41,
+                        "    ]\n"
+                    ],
+                    [
+                        42,
+                        "  })\n"
+                    ],
+                    [
+                        43,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf",
+                "file_line_range": [
+                    29,
+                    43
+                ],
+                "resource": "aws_iam_role_policy.api_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMStarResourcePolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-355",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_290",
+                "bc_check_id": "BC_AWS_IAM_85",
+                "check_name": "Ensure IAM policies does not allow write access without constraints",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        29,
+                        "resource \"aws_iam_role_policy\" \"api_wildcard\" {\n"
+                    ],
+                    [
+                        30,
+                        "  name = \"${var.project}-api-wildcard\"\n"
+                    ],
+                    [
+                        31,
+                        "  role = aws_iam_role.api.id\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        34,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        35,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        36,
+                        "      {\n"
+                    ],
+                    [
+                        37,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        38,
+                        "        Action   = [\"dynamodb:*\", \"logs:*\", \"secretsmanager:*\", \"s3:*\"]\n"
+                    ],
+                    [
+                        39,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        40,
+                        "      }\n"
+                    ],
+                    [
+                        41,
+                        "    ]\n"
+                    ],
+                    [
+                        42,
+                        "  })\n"
+                    ],
+                    [
+                        43,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf",
+                "file_line_range": [
+                    29,
+                    43
+                ],
+                "resource": "aws_iam_role_policy.api_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMWriteAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-290",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_119",
+                "bc_check_id": "BC_AWS_GENERAL_52",
+                "check_name": "Ensure DynamoDB Tables are encrypted using a KMS Customer Managed CMK",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "server_side_encryption/[0]/enabled",
+                        "server_side_encryption/[0]/kms_key_arn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_dynamodb_table\" \"api\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name         = var.table_name\n"
+                    ],
+                    [
+                        3,
+                        "  billing_mode = \"PAY_PER_REQUEST\"\n"
+                    ],
+                    [
+                        4,
+                        "  hash_key     = \"pk\"\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  attribute {\n"
+                    ],
+                    [
+                        7,
+                        "    name = \"pk\"\n"
+                    ],
+                    [
+                        8,
+                        "    type = \"S\"\n"
+                    ],
+                    [
+                        9,
+                        "  }\n"
+                    ],
+                    [
+                        10,
+                        "\n"
+                    ],
+                    [
+                        11,
+                        "  tags = {\n"
+                    ],
+                    [
+                        12,
+                        "    Project = var.project\n"
+                    ],
+                    [
+                        13,
+                        "  }\n"
+                    ],
+                    [
+                        14,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/lambda.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "file_line_range": [
+                    1,
+                    14
+                ],
+                "resource": "aws_dynamodb_table.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.DynamoDBTablesEncrypted",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Project": "var.project"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-52",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf"
+            },
+            {
+                "check_id": "CKV_AWS_28",
+                "bc_check_id": "BC_AWS_GENERAL_6",
+                "check_name": "Ensure DynamoDB point in time recovery (backup) is enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "point_in_time_recovery/[0]/enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_dynamodb_table\" \"api\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name         = var.table_name\n"
+                    ],
+                    [
+                        3,
+                        "  billing_mode = \"PAY_PER_REQUEST\"\n"
+                    ],
+                    [
+                        4,
+                        "  hash_key     = \"pk\"\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  attribute {\n"
+                    ],
+                    [
+                        7,
+                        "    name = \"pk\"\n"
+                    ],
+                    [
+                        8,
+                        "    type = \"S\"\n"
+                    ],
+                    [
+                        9,
+                        "  }\n"
+                    ],
+                    [
+                        10,
+                        "\n"
+                    ],
+                    [
+                        11,
+                        "  tags = {\n"
+                    ],
+                    [
+                        12,
+                        "    Project = var.project\n"
+                    ],
+                    [
+                        13,
+                        "  }\n"
+                    ],
+                    [
+                        14,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/lambda.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "file_line_range": [
+                    1,
+                    14
+                ],
+                "resource": "aws_dynamodb_table.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.DynamodbRecovery",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Project": "var.project"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-6",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf"
+            },
+            {
+                "check_id": "CKV_AWS_272",
+                "bc_check_id": "BC_AWS_General_201",
+                "check_name": "Ensure AWS Lambda function is configured to validate code-signing",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "code_signing_config_arn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        16,
+                        "resource \"aws_lambda_function\" \"api\" {\n"
+                    ],
+                    [
+                        17,
+                        "  function_name = var.function_name\n"
+                    ],
+                    [
+                        18,
+                        "  role          = aws_iam_role.api.arn\n"
+                    ],
+                    [
+                        19,
+                        "  handler       = \"main.handler\"\n"
+                    ],
+                    [
+                        20,
+                        "  runtime       = \"python3.12\"\n"
+                    ],
+                    [
+                        21,
+                        "  filename      = \"api.zip\"\n"
+                    ],
+                    [
+                        22,
+                        "  timeout       = 30\n"
+                    ],
+                    [
+                        23,
+                        "\n"
+                    ],
+                    [
+                        24,
+                        "  environment {\n"
+                    ],
+                    [
+                        25,
+                        "    variables = {\n"
+                    ],
+                    [
+                        26,
+                        "      DB_USER     = \"api_svc\"\n"
+                    ],
+                    [
+                        27,
+                        "      DB_PASSWORD = \"ApiSvc2026!\"\n"
+                    ],
+                    [
+                        28,
+                        "      TABLE_NAME  = aws_dynamodb_table.api.name\n"
+                    ],
+                    [
+                        29,
+                        "      AWS_REGION  = var.region\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  tags = {\n"
+                    ],
+                    [
+                        34,
+                        "    Project = var.project\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/lambda.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "file_line_range": [
+                    16,
+                    36
+                ],
+                "resource": "aws_lambda_function.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LambdaCodeSigningConfigured",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Project": "var.project"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-272",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "breadcrumbs": {
+                    "environment.variables.TABLE_NAME": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "environment.variables": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_116",
+                "bc_check_id": "BC_AWS_GENERAL_64",
+                "check_name": "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "dead_letter_config/[0]/target_arn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        16,
+                        "resource \"aws_lambda_function\" \"api\" {\n"
+                    ],
+                    [
+                        17,
+                        "  function_name = var.function_name\n"
+                    ],
+                    [
+                        18,
+                        "  role          = aws_iam_role.api.arn\n"
+                    ],
+                    [
+                        19,
+                        "  handler       = \"main.handler\"\n"
+                    ],
+                    [
+                        20,
+                        "  runtime       = \"python3.12\"\n"
+                    ],
+                    [
+                        21,
+                        "  filename      = \"api.zip\"\n"
+                    ],
+                    [
+                        22,
+                        "  timeout       = 30\n"
+                    ],
+                    [
+                        23,
+                        "\n"
+                    ],
+                    [
+                        24,
+                        "  environment {\n"
+                    ],
+                    [
+                        25,
+                        "    variables = {\n"
+                    ],
+                    [
+                        26,
+                        "      DB_USER     = \"api_svc\"\n"
+                    ],
+                    [
+                        27,
+                        "      DB_PASSWORD = \"ApiSvc2026!\"\n"
+                    ],
+                    [
+                        28,
+                        "      TABLE_NAME  = aws_dynamodb_table.api.name\n"
+                    ],
+                    [
+                        29,
+                        "      AWS_REGION  = var.region\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  tags = {\n"
+                    ],
+                    [
+                        34,
+                        "    Project = var.project\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/lambda.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "file_line_range": [
+                    16,
+                    36
+                ],
+                "resource": "aws_lambda_function.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LambdaDLQConfigured",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Project": "var.project"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-a-dead-letter-queue-dlq",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "breadcrumbs": {
+                    "environment.variables.TABLE_NAME": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "environment.variables": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_173",
+                "bc_check_id": "BC_AWS_SERVERLESS_5",
+                "check_name": "Check encryption settings for Lambda environmental variable",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "kms_key_arn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        16,
+                        "resource \"aws_lambda_function\" \"api\" {\n"
+                    ],
+                    [
+                        17,
+                        "  function_name = var.function_name\n"
+                    ],
+                    [
+                        18,
+                        "  role          = aws_iam_role.api.arn\n"
+                    ],
+                    [
+                        19,
+                        "  handler       = \"main.handler\"\n"
+                    ],
+                    [
+                        20,
+                        "  runtime       = \"python3.12\"\n"
+                    ],
+                    [
+                        21,
+                        "  filename      = \"api.zip\"\n"
+                    ],
+                    [
+                        22,
+                        "  timeout       = 30\n"
+                    ],
+                    [
+                        23,
+                        "\n"
+                    ],
+                    [
+                        24,
+                        "  environment {\n"
+                    ],
+                    [
+                        25,
+                        "    variables = {\n"
+                    ],
+                    [
+                        26,
+                        "      DB_USER     = \"api_svc\"\n"
+                    ],
+                    [
+                        27,
+                        "      DB_PASSWORD = \"ApiSvc2026!\"\n"
+                    ],
+                    [
+                        28,
+                        "      TABLE_NAME  = aws_dynamodb_table.api.name\n"
+                    ],
+                    [
+                        29,
+                        "      AWS_REGION  = var.region\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  tags = {\n"
+                    ],
+                    [
+                        34,
+                        "    Project = var.project\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/lambda.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "file_line_range": [
+                    16,
+                    36
+                ],
+                "resource": "aws_lambda_function.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LambdaEnvironmentEncryptionSettings",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Project": "var.project"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-serverless-policies/bc-aws-serverless-5",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "breadcrumbs": {
+                    "environment.variables.TABLE_NAME": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "environment.variables": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_115",
+                "bc_check_id": "BC_AWS_GENERAL_63",
+                "check_name": "Ensure that AWS Lambda function is configured for function-level concurrent execution limit",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "reserved_concurrent_executions/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        16,
+                        "resource \"aws_lambda_function\" \"api\" {\n"
+                    ],
+                    [
+                        17,
+                        "  function_name = var.function_name\n"
+                    ],
+                    [
+                        18,
+                        "  role          = aws_iam_role.api.arn\n"
+                    ],
+                    [
+                        19,
+                        "  handler       = \"main.handler\"\n"
+                    ],
+                    [
+                        20,
+                        "  runtime       = \"python3.12\"\n"
+                    ],
+                    [
+                        21,
+                        "  filename      = \"api.zip\"\n"
+                    ],
+                    [
+                        22,
+                        "  timeout       = 30\n"
+                    ],
+                    [
+                        23,
+                        "\n"
+                    ],
+                    [
+                        24,
+                        "  environment {\n"
+                    ],
+                    [
+                        25,
+                        "    variables = {\n"
+                    ],
+                    [
+                        26,
+                        "      DB_USER     = \"api_svc\"\n"
+                    ],
+                    [
+                        27,
+                        "      DB_PASSWORD = \"ApiSvc2026!\"\n"
+                    ],
+                    [
+                        28,
+                        "      TABLE_NAME  = aws_dynamodb_table.api.name\n"
+                    ],
+                    [
+                        29,
+                        "      AWS_REGION  = var.region\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  tags = {\n"
+                    ],
+                    [
+                        34,
+                        "    Project = var.project\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/lambda.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "file_line_range": [
+                    16,
+                    36
+                ],
+                "resource": "aws_lambda_function.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LambdaFunctionLevelConcurrentExecutionLimit",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Project": "var.project"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-function-level-concurrent-execution-limit",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "breadcrumbs": {
+                    "environment.variables.TABLE_NAME": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "environment.variables": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_117",
+                "bc_check_id": "BC_AWS_GENERAL_65",
+                "check_name": "Ensure that AWS Lambda function is configured inside a VPC",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "vpc_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        16,
+                        "resource \"aws_lambda_function\" \"api\" {\n"
+                    ],
+                    [
+                        17,
+                        "  function_name = var.function_name\n"
+                    ],
+                    [
+                        18,
+                        "  role          = aws_iam_role.api.arn\n"
+                    ],
+                    [
+                        19,
+                        "  handler       = \"main.handler\"\n"
+                    ],
+                    [
+                        20,
+                        "  runtime       = \"python3.12\"\n"
+                    ],
+                    [
+                        21,
+                        "  filename      = \"api.zip\"\n"
+                    ],
+                    [
+                        22,
+                        "  timeout       = 30\n"
+                    ],
+                    [
+                        23,
+                        "\n"
+                    ],
+                    [
+                        24,
+                        "  environment {\n"
+                    ],
+                    [
+                        25,
+                        "    variables = {\n"
+                    ],
+                    [
+                        26,
+                        "      DB_USER     = \"api_svc\"\n"
+                    ],
+                    [
+                        27,
+                        "      DB_PASSWORD = \"ApiSvc2026!\"\n"
+                    ],
+                    [
+                        28,
+                        "      TABLE_NAME  = aws_dynamodb_table.api.name\n"
+                    ],
+                    [
+                        29,
+                        "      AWS_REGION  = var.region\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  tags = {\n"
+                    ],
+                    [
+                        34,
+                        "    Project = var.project\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/lambda.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "file_line_range": [
+                    16,
+                    36
+                ],
+                "resource": "aws_lambda_function.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LambdaInVPC",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Project": "var.project"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-inside-a-vpc-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "breadcrumbs": {
+                    "environment.variables.TABLE_NAME": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "environment.variables": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_50",
+                "bc_check_id": "BC_AWS_SERVERLESS_4",
+                "check_name": "X-Ray tracing is enabled for Lambda",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "tracing_config/[0]/mode"
+                    ]
+                },
+                "code_block": [
+                    [
+                        16,
+                        "resource \"aws_lambda_function\" \"api\" {\n"
+                    ],
+                    [
+                        17,
+                        "  function_name = var.function_name\n"
+                    ],
+                    [
+                        18,
+                        "  role          = aws_iam_role.api.arn\n"
+                    ],
+                    [
+                        19,
+                        "  handler       = \"main.handler\"\n"
+                    ],
+                    [
+                        20,
+                        "  runtime       = \"python3.12\"\n"
+                    ],
+                    [
+                        21,
+                        "  filename      = \"api.zip\"\n"
+                    ],
+                    [
+                        22,
+                        "  timeout       = 30\n"
+                    ],
+                    [
+                        23,
+                        "\n"
+                    ],
+                    [
+                        24,
+                        "  environment {\n"
+                    ],
+                    [
+                        25,
+                        "    variables = {\n"
+                    ],
+                    [
+                        26,
+                        "      DB_USER     = \"api_svc\"\n"
+                    ],
+                    [
+                        27,
+                        "      DB_PASSWORD = \"ApiSvc2026!\"\n"
+                    ],
+                    [
+                        28,
+                        "      TABLE_NAME  = aws_dynamodb_table.api.name\n"
+                    ],
+                    [
+                        29,
+                        "      AWS_REGION  = var.region\n"
+                    ],
+                    [
+                        30,
+                        "    }\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  tags = {\n"
+                    ],
+                    [
+                        34,
+                        "    Project = var.project\n"
+                    ],
+                    [
+                        35,
+                        "  }\n"
+                    ],
+                    [
+                        36,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/lambda.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "file_line_range": [
+                    16,
+                    36
+                ],
+                "resource": "aws_lambda_function.api",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.LambdaXrayEnabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Project": "var.project"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-serverless-policies/bc-aws-serverless-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                "breadcrumbs": {
+                    "environment.variables.TABLE_NAME": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "environment.variables": [
+                        {
+                            "type": "resource",
+                            "name": "aws_dynamodb_table.api",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t028/lambda.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 14,
+        "failed": 12,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 4,
+        "checkov_version": "3.3.26"
+    }
+}

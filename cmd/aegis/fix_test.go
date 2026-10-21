@@ -193,9 +193,27 @@ func TestFixApplyRoundTrip(t *testing.T) {
 	}
 }
 
-// TestFixApplyUsesValidationGate ensures --apply never writes a patch that
-// did not validate cleanly: dry-run proposals that report would-fix=false
-// must leave the file byte-identical after --apply.
+// TestFixApplyJSONIsPureJSON: `fix --apply --format=json` must emit a
+// parseable JSON document (Phase 7 F1: the re-scan summary used to be
+// appended to stdout, corrupting the JSON).
+func TestFixApplyJSONIsPureJSON(t *testing.T) {
+	dir := writeFixtures(t)
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"fix", dir, "--apply", "--format=json"}, &stdout, &stderr)
+	if code == 2 {
+		t.Fatalf("fix --apply failed: %s", stderr.String())
+	}
+	var env map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("stdout is not valid JSON: %v\n%s", err, stdout.String())
+	}
+	if _, ok := env["patches"]; !ok {
+		t.Errorf("missing patches key in JSON envelope")
+	}
+	if !strings.Contains(stderr.String(), "re-scan") {
+		t.Errorf("expected re-scan summary on stderr in JSON mode, got stderr:\n%s", stderr.String())
+	}
+}
 func TestFixApplyUsesValidationGate(t *testing.T) {
 	dir := writeFixtures(t)
 	target := filepath.Join(dir, "vuln.tf")

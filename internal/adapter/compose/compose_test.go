@@ -163,3 +163,34 @@ func TestParseNoServices(t *testing.T) {
 		t.Fatalf("expected warning diag and no resources, got %d/%d", len(rs), len(diags))
 	}
 }
+
+// Parity (item 2): an unknown service key must produce a warning
+// diagnostic, never vanish silently. A typo'd security key
+// (priviliged) is the motivating case: without the warning, a
+// privileged container scans clean.
+func TestUnknownServiceKeyWarns(t *testing.T) {
+	a := New()
+	src := "services:\n  app:\n    image: ubuntu:latest\n    priviliged: true\n    user: \"0\"\n"
+	_, diags, err := a.Parse("docker-compose.yml", []byte(src))
+	if err != nil {
+		t.Fatalf("Parse error: %v", err)
+	}
+	found := false
+	for _, d := range diags {
+		if d.Level == "warning" && strings.Contains(d.Message, "priviliged") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected warning diagnostic for unknown key priviliged, got %v", diags)
+	}
+	// Known keys (including x-* extensions) stay silent.
+	src2 := "services:\n  app:\n    image: ubuntu:latest\n    restart: unless-stopped\n    x-custom: true\n"
+	_, diags2, err := a.Parse("docker-compose.yml", []byte(src2))
+	if err != nil {
+		t.Fatalf("Parse error: %v", err)
+	}
+	if len(diags2) != 0 {
+		t.Errorf("expected no diagnostics for known keys, got %v", diags2)
+	}
+}

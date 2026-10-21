@@ -1,0 +1,1721 @@
+[
+ {
+  "sample_id": "checkov-00000",
+  "project": "c001",
+  "rule": "CKV_AWS_18",
+  "title": "Ensure the S3 bucket has access logging enabled",
+  "verdict": "TP",
+  "justification": "c001/template.yaml SiteBucket (AWS::S3::Bucket): no LoggingConfiguration; missing access logging is GT-firm detection class -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00005",
+  "project": "c001",
+  "rule": "CKV_AWS_56",
+  "title": "Ensure S3 bucket has RestrictPublicBuckets enabled",
+  "verdict": "FP",
+  "justification": "SiteBucket is intentionally public (AccessControl PublicRead plus Principal '*' bucket policy for the marketing site); RestrictPublicBuckets is by-design off."
+ },
+ {
+  "sample_id": "checkov-00010",
+  "project": "c003",
+  "rule": "CKV_AWS_108",
+  "title": "Ensure IAM policies does not allow data exfiltration",
+  "verdict": "TP",
+  "justification": "DeployRole combines the AdministratorAccess managed policy with an inline Action '*' on Resource '*' statement, enabling data exfiltration such as s3:GetObject on *."
+ },
+ {
+  "sample_id": "checkov-00015",
+  "project": "c004",
+  "rule": "CKV_AWS_158",
+  "title": "Ensure that CloudWatch Log Group is encrypted by KMS",
+  "verdict": "FP",
+  "justification": "FunctionLogGroup lacks a KMS key, but CloudWatch encrypts log data by default; a CMK is defense-in-depth, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00020",
+  "project": "c007",
+  "rule": "CKV_AWS_118",
+  "title": "Ensure that enhanced monitoring is enabled for Amazon RDS instances",
+  "verdict": "TP",
+  "justification": "c007/rds.yaml: ReportingDb has no enhanced monitoring \u2014 factually correct; missing detection control: enhanced monitoring, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "checkov-00025",
+  "project": "c008",
+  "rule": "CKV_AWS_161",
+  "title": "Ensure RDS database has IAM authentication enabled",
+  "verdict": "FP",
+  "justification": "OrdersDb omits IAM database authentication but uses a Secrets-Manager-managed password with KMS; IAM auth is an optional auth method, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00030",
+  "project": "c009",
+  "rule": "CKV_AWS_109",
+  "title": "Ensure IAM policies does not allow permissions management without constraints",
+  "verdict": "TP",
+  "justification": "WebhookRole's inline policy allows Action '*' on Resource '*', including iam:* permissions-management actions without constraints."
+ },
+ {
+  "sample_id": "checkov-00035",
+  "project": "c009",
+  "rule": "CKV_AWS_173",
+  "title": "Check encryption settings for Lambda environment variable",
+  "verdict": "FP",
+  "justification": "WebhookFunction sets env vars without a CMK, but Lambda encrypts environment variables with an AWS-managed key by default."
+ },
+ {
+  "sample_id": "checkov-00040",
+  "project": "c011",
+  "rule": "CKV_AWS_34",
+  "title": "Ensure CloudFront Distribution ViewerProtocolPolicy is set to HTTPS",
+  "verdict": "TP",
+  "justification": "DocsDistribution sets ViewerProtocolPolicy to allow-all, serving the docs portal over plain HTTP (the template admits it 'still answers plain HTTP')."
+ },
+ {
+  "sample_id": "checkov-00045",
+  "project": "c013",
+  "rule": "CKV_AWS_56",
+  "title": "Ensure S3 bucket has RestrictPublicBuckets enabled",
+  "verdict": "FP",
+  "justification": "AccessLogsBucket has no PublicAccessBlock, but its only bucket policy grants s3:PutObject to the log-delivery service; nothing is publicly exposed."
+ },
+ {
+  "sample_id": "checkov-00050",
+  "project": "c016",
+  "rule": "CKV_AWS_23",
+  "title": "Ensure every security groups rule has a description",
+  "verdict": "HYGIENE",
+  "justification": "AppSecurityGroup ingress rule lacks a Description; firewall rule descriptions are one of the 9 reclassified hygiene types."
+ },
+ {
+  "sample_id": "checkov-00055",
+  "project": "c017",
+  "rule": "CKV_AWS_23",
+  "title": "Ensure every security groups rule has a description",
+  "verdict": "HYGIENE",
+  "justification": "AnalyticsDbSg ingress rule lacks a Description; firewall rule descriptions are one of the 9 reclassified hygiene types."
+ },
+ {
+  "sample_id": "checkov-00060",
+  "project": "c018",
+  "rule": "CKV_AWS_116",
+  "title": "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)",
+  "verdict": "FP",
+  "justification": "ResizerFunction has no DeadLetterConfig; a DLQ is reliability/operability, not a security control."
+ },
+ {
+  "sample_id": "checkov-00065",
+  "project": "c019",
+  "rule": "CKV_AWS_161",
+  "title": "Ensure RDS database has IAM authentication enabled",
+  "verdict": "FP",
+  "justification": "SharedPostgres omits IAM database authentication but uses password auth; IAM auth is optional, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00070",
+  "project": "c021",
+  "rule": "CKV_AWS_54",
+  "title": "Ensure S3 bucket has block public policy enabled",
+  "verdict": "FP",
+  "justification": "AssetsBucket is intentionally public (website config plus Principal '*' policy; 'objects must be world readable'); blocking public policy is by-design off."
+ },
+ {
+  "sample_id": "checkov-00075",
+  "project": "c022",
+  "rule": "CKV_AWS_108",
+  "title": "Ensure IAM policies does not allow data exfiltration",
+  "verdict": "TP",
+  "justification": "SupportAdminPolicy grants Action '*' on Resource '*' to the support group, enabling data exfiltration such as s3:GetObject on *."
+ },
+ {
+  "sample_id": "checkov-00080",
+  "project": "c024",
+  "rule": "CKV_AWS_23",
+  "title": "Ensure every security groups rule has a description",
+  "verdict": "HYGIENE",
+  "justification": "CustomerDbSg ingress rule lacks a Description; firewall rule descriptions are one of the 9 reclassified hygiene types."
+ },
+ {
+  "sample_id": "checkov-00085",
+  "project": "c025",
+  "rule": "CKV_AWS_115",
+  "title": "Ensure that AWS Lambda function is configured for function-level concurrent execution limit",
+  "verdict": "FP",
+  "justification": "PartnerFunction sets no ReservedConcurrentExecutions; concurrency limits are availability/operability, not security."
+ },
+ {
+  "sample_id": "checkov-00090",
+  "project": "c026",
+  "rule": "CKV_AZURE_35",
+  "title": "Ensure default network access rule for Storage Accounts is set to deny",
+  "verdict": "TP",
+  "justification": "Storage account defines no networkAcls, so the default network action is Allow; combined with allowBlobPublicAccess true the account is internet-exposed."
+ },
+ {
+  "sample_id": "checkov-00095",
+  "project": "c027",
+  "rule": "CKV_AZURE_36",
+  "title": "Ensure 'Trusted Microsoft Services' is enabled for Storage Account access",
+  "verdict": "FP",
+  "justification": "Storage account already denies by default (defaultAction Deny, publicNetworkAccess Disabled); 'Trusted Microsoft Services' bypass is a functionality nicety."
+ },
+ {
+  "sample_id": "checkov-00100",
+  "project": "c030",
+  "rule": "CKV_AZURE_23",
+  "title": "Ensure that 'Auditing' is set to 'Enabled' for SQL servers",
+  "verdict": "TP",
+  "justification": "c030/azuredeploy.json: SQL server has no auditingSettings \u2014 factually correct; missing detection control: audit logging, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "checkov-00105",
+  "project": "c030",
+  "rule": "CKV_AZURE_26",
+  "title": "Ensure that 'Send Alerts To' is enabled for MSSQL servers",
+  "verdict": "FP",
+  "justification": "'Send Alerts To' threat-detection email alerting is detective monitoring, not a security weakness."
+ },
+ {
+  "sample_id": "checkov-00110",
+  "project": "c031",
+  "rule": "CKV_AZURE_229",
+  "title": "Ensure the Azure SQL Database Namespace is zone redundant",
+  "verdict": "FP",
+  "justification": "Database is not zone-redundant; zone redundancy is availability/resilience, not security."
+ },
+ {
+  "sample_id": "checkov-00115",
+  "project": "c034",
+  "rule": "CKV_AZURE_36",
+  "title": "Ensure 'Trusted Microsoft Services' is enabled for Storage Account access",
+  "verdict": "FP",
+  "justification": "Storage account already denies by default (defaultAction Deny, publicNetworkAccess Disabled); trusted-services bypass is a functionality nicety."
+ },
+ {
+  "sample_id": "checkov-00120",
+  "project": "c035",
+  "rule": "CKV_AZURE_24",
+  "title": "Ensure that 'Auditing' Retention is 'greater than 90 days' for SQL servers",
+  "verdict": "TP",
+  "justification": "c035/azuredeploy.json: auditing retention is 30 days, not >90 \u2014 factually correct; missing detection control: log retention, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "checkov-00125",
+  "project": "c035",
+  "rule": "CKV_AZURE_27",
+  "title": "Ensure that 'Email service and co-administrators' is 'Enabled' for MSSQL servers",
+  "verdict": "FP",
+  "justification": "'Email service and co-administrators' alert routing is detective notification hygiene, not a security weakness."
+ },
+ {
+  "sample_id": "checkov-00130",
+  "project": "c037",
+  "rule": "CKV_AZURE_9",
+  "title": "Ensure that RDP access is restricted from the internet",
+  "verdict": "TP",
+  "justification": "NSG rule Allow-All-Inbound permits protocol '*' from sourceAddressPrefix '*' to destination '*', including RDP 3389 from the internet."
+ },
+ {
+  "sample_id": "checkov-00135",
+  "project": "c038",
+  "rule": "CKV_AZURE_44",
+  "title": "Ensure Storage Account is using the latest version of TLS encryption",
+  "verdict": "TP",
+  "justification": "minimumTlsVersion is TLS1_0 with supportsHttpsTrafficOnly false; outdated TLS on a storage account is a real transport weakness."
+ },
+ {
+  "sample_id": "checkov-00140",
+  "project": "c039",
+  "rule": "CKV_AZURE_50",
+  "title": "Ensure Virtual Machine Extensions are not Installed",
+  "verdict": "FP",
+  "justification": "No VM extensions are installed anywhere in the template; the finding fires only because allowExtensionOperations is unset (defaults true) - no actual extension attack surface."
+ },
+ {
+  "sample_id": "checkov-00145",
+  "project": "c041",
+  "rule": "CKV_AZURE_35",
+  "title": "Ensure default network access rule for Storage Accounts is set to deny",
+  "verdict": "TP",
+  "justification": "Storage account defines no networkAcls, so the default network action is Allow; the account is internet-reachable."
+ },
+ {
+  "sample_id": "checkov-00150",
+  "project": "c041",
+  "rule": "CKV_AZURE_34",
+  "title": "Ensure that 'Public access level' is set to Private for blob containers",
+  "verdict": "FP",
+  "justification": "Container publicAccess is 'Blob' by design for the public gallery app (code comment: 'Media storage for the public gallery app'); no sensitive-data context."
+ },
+ {
+  "sample_id": "checkov-00155",
+  "project": "c044",
+  "rule": "CKV_AZURE_26",
+  "title": "Ensure that 'Send Alerts To' is enabled for MSSQL servers",
+  "verdict": "FP",
+  "justification": "No securityAlertPolicies on the server; threat-detection alerting is detective monitoring, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00160",
+  "project": "c044",
+  "rule": "CKV_AZURE_25",
+  "title": "Azure SQL Server threat detection alerts are enabled for all threat types",
+  "verdict": "FP",
+  "justification": "No threat-detection policy on the server; threat detection is detective monitoring, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00165",
+  "project": "c045",
+  "rule": "CKV_AZURE_43",
+  "title": "Ensure Storage Accounts adhere to the naming rules",
+  "verdict": "FP",
+  "justification": "Account name is take(...,24) of lowercase alphanumerics (at most 24 chars), which complies with naming rules - the finding is factually wrong."
+ },
+ {
+  "sample_id": "checkov-00170",
+  "project": "c046",
+  "rule": "CKV_AZURE_206",
+  "title": "Ensure that Storage Accounts use replication",
+  "verdict": "FP",
+  "justification": "SKU is Standard_LRS, which replicates data 3x locally; the check demands geo-replication (availability), so 'no replication' is factually wrong."
+ },
+ {
+  "sample_id": "checkov-00175",
+  "project": "c048",
+  "rule": "CKV_AZURE_41",
+  "title": "Ensure that the expiration date is set on all secrets",
+  "verdict": "FP",
+  "justification": "Secret has no expirationDate and its value is 'PLACEHOLDER_ROTATE_ME'; expiry is rotation hygiene, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00180",
+  "project": "c051",
+  "rule": "CKV_AZURE_25",
+  "title": "Azure SQL Server threat detection alerts are enabled for all threat types",
+  "verdict": "FP",
+  "justification": "No threat-detection policy on the server; detective monitoring, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00185",
+  "project": "c052",
+  "rule": "CKV_AZURE_43",
+  "title": "Ensure Storage Accounts adhere to the naming rules",
+  "verdict": "FP",
+  "justification": "Account name 'finance' plus uniqueString is 20 lowercase alphanumeric chars, complying with naming rules - factually wrong."
+ },
+ {
+  "sample_id": "checkov-00190",
+  "project": "k002",
+  "rule": "CKV_DOCKER_2",
+  "title": "Ensure that HEALTHCHECK instructions have been added to container images",
+  "verdict": "TP",
+  "justification": "no HEALTHCHECK instruction anywhere in Dockerfile; finding factually correct. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00195",
+  "project": "k004",
+  "rule": "CKV_DOCKER_3",
+  "title": "Ensure that a user for the container has been created",
+  "verdict": "TP",
+  "justification": "Dockerfile sets no USER and the base image debian:bookworm-slim defaults to root; the container runs as root."
+ },
+ {
+  "sample_id": "checkov-00200",
+  "project": "k008",
+  "rule": "CKV_DOCKER_2",
+  "title": "Ensure that HEALTHCHECK instructions have been added to container images",
+  "verdict": "TP",
+  "justification": "no HEALTHCHECK instruction anywhere in Dockerfile; finding factually correct. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00205",
+  "project": "k011",
+  "rule": "CKV_DOCKER_3",
+  "title": "Ensure that a user for the container has been created",
+  "verdict": "TP",
+  "justification": "Dockerfile sets no USER and the base image ubuntu:22.04 defaults to root; the container runs as root."
+ },
+ {
+  "sample_id": "checkov-00210",
+  "project": "k014",
+  "rule": "CKV_DOCKER_3",
+  "title": "Ensure that a user for the container has been created",
+  "verdict": "TP",
+  "justification": "Dockerfile sets no USER and the base image python:3.12 defaults to root; the container runs as root."
+ },
+ {
+  "sample_id": "checkov-00215",
+  "project": "k018",
+  "rule": "CKV_DOCKER_2",
+  "title": "Ensure that HEALTHCHECK instructions have been added to container images",
+  "verdict": "TP",
+  "justification": "no HEALTHCHECK instruction anywhere in Dockerfile; finding factually correct. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00220",
+  "project": "k020",
+  "rule": "CKV2_DOCKER_17",
+  "title": "Ensure that 'chpasswd' is not used to set or remove passwords",
+  "verdict": "TP",
+  "justification": "Dockerfile RUN pipe uses chpasswd to set the root password to the hardcoded value 'changeme123'."
+ },
+ {
+  "sample_id": "checkov-00225",
+  "project": "k021",
+  "rule": "CKV_K8S_21",
+  "title": "The default namespace should not be used",
+  "verdict": "FP",
+  "justification": "Deployment is in the default namespace; namespace choice is organizational, not a security weakness."
+ },
+ {
+  "sample_id": "checkov-00230",
+  "project": "k021",
+  "rule": "CKV_K8S_37",
+  "title": "Minimize the admission of containers with capabilities assigned",
+  "verdict": "TP",
+  "justification": "Container has no securityContext capabilities drop; it runs as root with the full default Linux capability set."
+ },
+ {
+  "sample_id": "checkov-00235",
+  "project": "k021",
+  "rule": "CKV_K8S_40",
+  "title": "Containers should run as a high UID to avoid host conflict",
+  "verdict": "TP",
+  "justification": "No runAsUser is set, so the container runs as uid 0 (root); running as root is a real weakness even though the check frames it as 'high UID'."
+ },
+ {
+  "sample_id": "checkov-00240",
+  "project": "k022",
+  "rule": "CKV_K8S_10",
+  "title": "CPU requests should be set",
+  "verdict": "TP",
+  "justification": "container(s) ['agent'] in Pod/node-agent lack CPU requests; factually correct. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00245",
+  "project": "k022",
+  "rule": "CKV_K8S_8",
+  "title": "Liveness Probe Should be Configured",
+  "verdict": "TP",
+  "justification": "k022/pod.yaml Pod node-agent: no livenessProbe configured; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00250",
+  "project": "k022",
+  "rule": "CKV_K8S_22",
+  "title": "Use read-only filesystem for containers where possible",
+  "verdict": "FP",
+  "justification": "No readOnlyRootFilesystem, but the pod is privileged with hostPath '/' mounted - the control is immaterial next to those holes."
+ },
+ {
+  "sample_id": "checkov-00255",
+  "project": "k022",
+  "rule": "CKV_K8S_38",
+  "title": "Ensure that Service Account Tokens are only mounted where necessary",
+  "verdict": "FP",
+  "justification": "automountServiceAccountToken is unset on a privileged pod with the host root mounted; token mounting is immaterial next to privileged plus hostPath."
+ },
+ {
+  "sample_id": "checkov-00260",
+  "project": "k023",
+  "rule": "CKV_K8S_38",
+  "title": "Ensure that Service Account Tokens are only mounted where necessary",
+  "verdict": "TP",
+  "justification": "Hardened api pod omits automountServiceAccountToken, so the default service-account token is mounted into the container - a real residual credential-exposure gap."
+ },
+ {
+  "sample_id": "checkov-00265",
+  "project": "k024",
+  "rule": "CKV_K8S_21",
+  "title": "The default namespace should not be used",
+  "verdict": "FP",
+  "justification": "Deployment is in the default namespace; organizational, not a security weakness."
+ },
+ {
+  "sample_id": "checkov-00270",
+  "project": "k024",
+  "rule": "CKV_K8S_12",
+  "title": "Memory requests should be set",
+  "verdict": "TP",
+  "justification": "container(s) ['monitor'] in Deployment/monitor lack memory requests; factually correct. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00275",
+  "project": "k024",
+  "rule": "CKV_K8S_23",
+  "title": "Minimize the admission of root containers",
+  "verdict": "TP",
+  "justification": "monitor container sets no runAsNonRoot and runs as root with hostNetwork and hostPID - real privileged-execution weakness."
+ },
+ {
+  "sample_id": "checkov-00280",
+  "project": "k025",
+  "rule": "CKV_K8S_15",
+  "title": "Image Pull Policy should be Always",
+  "verdict": "FP",
+  "justification": "No imagePullPolicy set (tag 2.2.0, defaults to IfNotPresent); pull policy is deployment hygiene, not security."
+ },
+ {
+  "sample_id": "checkov-00285",
+  "project": "k026",
+  "rule": "CKV_K8S_43",
+  "title": "Image should use digest",
+  "verdict": "FP",
+  "justification": "Image uses the 'latest' tag without a digest; digest pinning is version pinning, classified as non-security pedantry."
+ },
+ {
+  "sample_id": "checkov-00290",
+  "project": "k027",
+  "rule": "CKV_K8S_42",
+  "title": "Ensure that default service accounts are not actively used",
+  "verdict": "TP",
+  "justification": "ClusterRoleBinding grants cluster-admin to the default service account in the default namespace - a full cluster-takeover path."
+ },
+ {
+  "sample_id": "checkov-00295",
+  "project": "k029",
+  "rule": "CKV_K8S_15",
+  "title": "Image Pull Policy should be Always",
+  "verdict": "FP",
+  "justification": "No imagePullPolicy set; deployment hygiene, not security."
+ },
+ {
+  "sample_id": "checkov-00300",
+  "project": "k029",
+  "rule": "CKV_K8S_23",
+  "title": "Minimize the admission of root containers",
+  "verdict": "TP",
+  "justification": "profiler container is privileged true and runs as root - real privileged-execution weakness."
+ },
+ {
+  "sample_id": "checkov-00305",
+  "project": "k030",
+  "rule": "CKV_K8S_11",
+  "title": "CPU limits should be set",
+  "verdict": "TP",
+  "justification": "container(s) ['payments'] in Deployment/payments lack CPU limits; factually correct. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00310",
+  "project": "k030",
+  "rule": "CKV_K8S_43",
+  "title": "Image should use digest",
+  "verdict": "FP",
+  "justification": "Image tag without digest; version-pinning pedantry."
+ },
+ {
+  "sample_id": "checkov-00315",
+  "project": "k030",
+  "rule": "CKV_K8S_29",
+  "title": "Apply security context to your pods and containers",
+  "verdict": "TP",
+  "justification": "payments pod defines no pod- or container-level securityContext and runs as root - missing baseline hardening on a payments workload."
+ },
+ {
+  "sample_id": "checkov-00320",
+  "project": "k030",
+  "rule": "CKV_K8S_31",
+  "title": "Ensure that the seccomp profile is set to docker/default or runtime/default",
+  "verdict": "TP",
+  "justification": "payments pod sets no seccompProfile and runs as root with no security context - a real missing hardening control."
+ },
+ {
+  "sample_id": "checkov-00325",
+  "project": "k031",
+  "rule": "CKV_K8S_31",
+  "title": "Ensure that the seccomp profile is set to docker/default or runtime/default",
+  "verdict": "FP",
+  "justification": "Pod-level securityContext already sets seccompProfile type RuntimeDefault; the finding is factually wrong about the effective config."
+ },
+ {
+  "sample_id": "checkov-00330",
+  "project": "k032",
+  "rule": "CKV_K8S_21",
+  "title": "The default namespace should not be used",
+  "verdict": "FP",
+  "justification": "DaemonSet is in the default namespace; organizational, not security."
+ },
+ {
+  "sample_id": "checkov-00335",
+  "project": "k032",
+  "rule": "CKV_K8S_12",
+  "title": "Memory requests should be set",
+  "verdict": "FP",
+  "justification": "No memory requests; ops hygiene."
+ },
+ {
+  "sample_id": "checkov-00340",
+  "project": "k032",
+  "rule": "CKV_K8S_23",
+  "title": "Minimize the admission of root containers",
+  "verdict": "TP",
+  "justification": "logshipper container explicitly sets runAsUser 0 and mounts hostPath '/' - runs as root with host filesystem access."
+ },
+ {
+  "sample_id": "checkov-00345",
+  "project": "k033",
+  "rule": "CKV_K8S_43",
+  "title": "Image should use digest",
+  "verdict": "FP",
+  "justification": "Image tag without digest; version-pinning pedantry."
+ },
+ {
+  "sample_id": "checkov-00350",
+  "project": "k034",
+  "rule": "CKV_K8S_10",
+  "title": "CPU requests should be set",
+  "verdict": "FP",
+  "justification": "No CPU requests; ops hygiene."
+ },
+ {
+  "sample_id": "checkov-00355",
+  "project": "k034",
+  "rule": "CKV_K8S_12",
+  "title": "Memory requests should be set",
+  "verdict": "FP",
+  "justification": "No memory requests; ops hygiene."
+ },
+ {
+  "sample_id": "checkov-00360",
+  "project": "k034",
+  "rule": "CKV_K8S_38",
+  "title": "Ensure that Service Account Tokens are only mounted where necessary",
+  "verdict": "TP",
+  "justification": "Hardened frontend pod omits automountServiceAccountToken, so the default service-account token is mounted - a real residual gap."
+ },
+ {
+  "sample_id": "checkov-00365",
+  "project": "k035",
+  "rule": "CKV_K8S_21",
+  "title": "The default namespace should not be used",
+  "verdict": "FP",
+  "justification": "Default namespace; organizational, not security."
+ },
+ {
+  "sample_id": "checkov-00370",
+  "project": "k035",
+  "rule": "CKV_K8S_13",
+  "title": "Memory limits should be set",
+  "verdict": "FP",
+  "justification": "No memory limits; ops hygiene."
+ },
+ {
+  "sample_id": "checkov-00375",
+  "project": "k035",
+  "rule": "CKV_K8S_9",
+  "title": "Readiness Probe Should be Configured",
+  "verdict": "TP",
+  "justification": "k035/deployment.yaml Deployment ci-runner: no readinessProbe configured; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00380",
+  "project": "k036",
+  "rule": "CKV_K8S_20",
+  "title": "Containers should not run with allowPrivilegeEscalation",
+  "verdict": "FP",
+  "justification": "No explicit allowPrivilegeEscalation, but the pod is already privileged true - the flag is immaterial noise."
+ },
+ {
+  "sample_id": "checkov-00385",
+  "project": "k036",
+  "rule": "CKV_K8S_43",
+  "title": "Image should use digest",
+  "verdict": "FP",
+  "justification": "Image tag without digest; version-pinning pedantry."
+ },
+ {
+  "sample_id": "checkov-00390",
+  "project": "k036",
+  "rule": "CKV_K8S_29",
+  "title": "Apply security context to your pods and containers",
+  "verdict": "FP",
+  "justification": "Container already has a securityContext (privileged, readOnlyRootFilesystem, runAsUser 0); on an intentionally privileged debug pod the check is noise."
+ },
+ {
+  "sample_id": "checkov-00395",
+  "project": "k036",
+  "rule": "CKV_K8S_31",
+  "title": "Ensure that the seccomp profile is set to docker/default or runtime/default",
+  "verdict": "FP",
+  "justification": "No seccompProfile on an already-privileged debug pod; immaterial next to privileged true."
+ },
+ {
+  "sample_id": "checkov-00400",
+  "project": "k037",
+  "rule": "CKV_K8S_9",
+  "title": "Readiness Probe Should be Configured",
+  "verdict": "TP",
+  "justification": "k037/deployment.yaml Deployment gateway: no readinessProbe configured; Probes missing: GT-firm concept \"No liveness or readiness probes\" -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00405",
+  "project": "k038",
+  "rule": "CKV_K8S_30",
+  "title": "Apply security context to your containers",
+  "verdict": "TP",
+  "justification": "batch pod defines no securityContext at all and runs as root - missing baseline container hardening."
+ },
+ {
+  "sample_id": "checkov-00410",
+  "project": "k038",
+  "rule": "CKV_K8S_12",
+  "title": "Memory requests should be set",
+  "verdict": "FP",
+  "justification": "No memory requests; ops hygiene."
+ },
+ {
+  "sample_id": "checkov-00415",
+  "project": "k038",
+  "rule": "CKV_K8S_23",
+  "title": "Minimize the admission of root containers",
+  "verdict": "TP",
+  "justification": "batch container sets no runAsNonRoot and runs as root - real weakness."
+ },
+ {
+  "sample_id": "checkov-00420",
+  "project": "k039",
+  "rule": "CKV_K8S_43",
+  "title": "Image should use digest",
+  "verdict": "FP",
+  "justification": "Image tag without digest; version-pinning pedantry."
+ },
+ {
+  "sample_id": "checkov-00425",
+  "project": "k040",
+  "rule": "CKV_K8S_20",
+  "title": "Containers should not run with allowPrivilegeEscalation",
+  "verdict": "FP",
+  "justification": "No explicit allowPrivilegeEscalation, but the container adds SYS_ADMIN/SYS_PTRACE/NET_ADMIN with hostPID - the flag is noise next to those."
+ },
+ {
+  "sample_id": "checkov-00430",
+  "project": "k040",
+  "rule": "CKV_K8S_21",
+  "title": "The default namespace should not be used",
+  "verdict": "FP",
+  "justification": "Default namespace; organizational."
+ },
+ {
+  "sample_id": "checkov-00435",
+  "project": "k040",
+  "rule": "CKV_K8S_12",
+  "title": "Memory requests should be set",
+  "verdict": "FP",
+  "justification": "No memory requests; ops hygiene."
+ },
+ {
+  "sample_id": "checkov-00440",
+  "project": "k040",
+  "rule": "CKV_K8S_40",
+  "title": "Containers should run as a high UID to avoid host conflict",
+  "verdict": "TP",
+  "justification": "sysconf-agent container explicitly sets runAsUser 0 (root) while adding dangerous capabilities SYS_ADMIN, SYS_PTRACE, NET_ADMIN."
+ },
+ {
+  "sample_id": "checkov-00445",
+  "project": "k042",
+  "rule": "CKV_SECRET_2",
+  "title": "AWS Access Key",
+  "verdict": "FP",
+  "justification": "Flagged resource '25910f981e85ca04baf359199dd0bd4a3ae738b6' appears nowhere in docker-compose.yml; the AWS key values are '<redacted>' and the AWS documentation example key - factually wrong."
+ },
+ {
+  "sample_id": "checkov-00450",
+  "project": "k053",
+  "rule": "CKV_K8S_11",
+  "title": "CPU Limits should be set",
+  "verdict": "FP",
+  "justification": "No CPU limits on the Terraform-managed deployment; ops hygiene."
+ },
+ {
+  "sample_id": "checkov-00455",
+  "project": "k053",
+  "rule": "CKV_K8S_15",
+  "title": "Image Pull Policy should be Always",
+  "verdict": "FP",
+  "justification": "No image_pull_policy; deployment hygiene."
+ },
+ {
+  "sample_id": "checkov-00460",
+  "project": "k053",
+  "rule": "CKV_K8S_42",
+  "title": "Ensure that default service accounts are not actively used",
+  "verdict": "TP",
+  "justification": "kubernetes_cluster_role_binding grants cluster-admin to the default service account - a full cluster-takeover path."
+ },
+ {
+  "sample_id": "checkov-00465",
+  "project": "k056",
+  "rule": "CKV_K8S_10",
+  "title": "CPU requests should be set",
+  "verdict": "FP",
+  "justification": "No CPU requests; ops hygiene."
+ },
+ {
+  "sample_id": "checkov-00470",
+  "project": "k056",
+  "rule": "CKV_K8S_13",
+  "title": "Memory requests should be set",
+  "verdict": "FP",
+  "justification": "No memory requests; ops hygiene."
+ },
+ {
+  "sample_id": "checkov-00475",
+  "project": "k056",
+  "rule": "CKV_K8S_15",
+  "title": "Image Pull Policy should be Always",
+  "verdict": "FP",
+  "justification": "No imagePullPolicy; deployment hygiene."
+ },
+ {
+  "sample_id": "checkov-00480",
+  "project": "k058",
+  "rule": "CKV_DOCKER_2",
+  "title": "Ensure that HEALTHCHECK instructions have been added to container images",
+  "verdict": "TP",
+  "justification": "no HEALTHCHECK instruction anywhere in Dockerfile; finding factually correct. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00485",
+  "project": "k059",
+  "rule": "CKV_K8S_30",
+  "title": "Apply security context to your containers",
+  "verdict": "TP",
+  "justification": "legacy-app pod defines no securityContext and runs as root with hostNetwork - missing baseline hardening."
+ },
+ {
+  "sample_id": "checkov-00490",
+  "project": "k059",
+  "rule": "CKV_K8S_8",
+  "title": "Liveness Probe Should be Configured",
+  "verdict": "FP",
+  "justification": "No liveness probe; reliability."
+ },
+ {
+  "sample_id": "checkov-00495",
+  "project": "k059",
+  "rule": "CKV_K8S_22",
+  "title": "Use read-only filesystem for containers where possible",
+  "verdict": "TP",
+  "justification": "legacy-app container sets no readOnlyRootFilesystem and runs as root in a non-privileged pod - a real missing hardening control."
+ },
+ {
+  "sample_id": "checkov-00500",
+  "project": "k059",
+  "rule": "CKV_K8S_38",
+  "title": "Ensure that Service Account Tokens are only mounted where necessary",
+  "verdict": "TP",
+  "justification": "legacy-app pod omits automountServiceAccountToken, so the default service-account token is mounted - a real residual gap."
+ },
+ {
+  "sample_id": "checkov-00505",
+  "project": "k061",
+  "rule": "CKV_DOCKER_3",
+  "title": "Ensure that a user for the container has been created",
+  "verdict": "TP",
+  "justification": "Dockerfile sets no USER and the base image docker:26.1-cli defaults to root; the container runs as root."
+ },
+ {
+  "sample_id": "checkov-00510",
+  "project": "k063",
+  "rule": "CKV_DOCKER_2",
+  "title": "Ensure that HEALTHCHECK instructions have been added to container images",
+  "verdict": "TP",
+  "justification": "no HEALTHCHECK instruction anywhere in Dockerfile; finding factually correct. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00515",
+  "project": "k065",
+  "rule": "CKV_K8S_15",
+  "title": "Image Pull Policy should be Always",
+  "verdict": "FP",
+  "justification": "No imagePullPolicy; deployment hygiene."
+ },
+ {
+  "sample_id": "checkov-00520",
+  "project": "t001",
+  "rule": "CKV2_AWS_6",
+  "title": "Ensure that S3 bucket has a Public Access block",
+  "verdict": "FP",
+  "justification": "Bucket is intentionally public (acl public-read plus Principal '*' policy for the marketing site); a public-access block is by-design off."
+ },
+ {
+  "sample_id": "checkov-00525",
+  "project": "t001",
+  "rule": "CKV_AWS_145",
+  "title": "Ensure that S3 buckets are encrypted with KMS by default",
+  "verdict": "FP",
+  "justification": "Bucket has no KMS config, but S3 encrypts by default with SSE-S3; a missing CMK is not a weakness."
+ },
+ {
+  "sample_id": "checkov-00530",
+  "project": "t002",
+  "rule": "CKV_AWS_18",
+  "title": "Ensure the S3 bucket has access logging enabled",
+  "verdict": "FP",
+  "justification": "Backups bucket has no access logging; detective/observability hygiene, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00535",
+  "project": "t003",
+  "rule": "CKV_AWS_79",
+  "title": "Ensure Instance Metadata Service Version 1 is not enabled",
+  "verdict": "TP",
+  "justification": "bastion instance defines no metadata_options, so IMDSv1 stays enabled - an SSRF credential-theft path on an internet-facing bastion."
+ },
+ {
+  "sample_id": "checkov-00540",
+  "project": "t005",
+  "rule": "CKV_AWS_62",
+  "title": "Ensure IAM policies that allow full \"*-*\" administrative privileges are not created",
+  "verdict": "TP",
+  "justification": "deploy_wildcard policy allows Action '*' on Resource '*' - full '*-*' administrative privileges."
+ },
+ {
+  "sample_id": "checkov-00545",
+  "project": "t005",
+  "rule": "CKV_AWS_286",
+  "title": "Ensure IAM policies does not allow privilege escalation",
+  "verdict": "TP",
+  "justification": "Action '*' on '*' includes iam:* permissions-management actions, enabling privilege escalation."
+ },
+ {
+  "sample_id": "checkov-00550",
+  "project": "t006",
+  "rule": "CKV_AWS_61",
+  "title": "Ensure AWS IAM policy does not allow assume role permission across all services",
+  "verdict": "FP",
+  "justification": "Trust allows only account 123456789012 root and requires MFA (aws:MultiFactorAuthPresent true), while the role grants read-only scoped actions - no real assume-role weakness."
+ },
+ {
+  "sample_id": "checkov-00555",
+  "project": "t007",
+  "rule": "CKV_AWS_16",
+  "title": "Ensure all data stored in the RDS is securely encrypted at rest",
+  "verdict": "TP",
+  "justification": "shop DB instance has storage_encrypted false - a publicly accessible MySQL instance with unencrypted storage."
+ },
+ {
+  "sample_id": "checkov-00560",
+  "project": "t007",
+  "rule": "CKV_AWS_23",
+  "title": "Ensure every security group and rule has a description",
+  "verdict": "HYGIENE",
+  "justification": "db_open SG rules lack descriptions; firewall rule descriptions are one of the 9 reclassified hygiene types."
+ },
+ {
+  "sample_id": "checkov-00565",
+  "project": "t008",
+  "rule": "CKV_AWS_118",
+  "title": "Ensure that enhanced monitoring is enabled for Amazon RDS instances",
+  "verdict": "TP",
+  "justification": "t008/main.tf: analytics DB has no enhanced monitoring \u2014 factually correct; missing detection control: enhanced monitoring, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "checkov-00570",
+  "project": "t008",
+  "rule": "CKV2_AWS_69",
+  "title": "Ensure AWS RDS database instance configured with encryption in transit",
+  "verdict": "FP",
+  "justification": "RDS encrypts in transit with TLS by default; no explicit transit-encryption parameter is required - pedantry."
+ },
+ {
+  "sample_id": "checkov-00575",
+  "project": "t009",
+  "rule": "CKV_AWS_290",
+  "title": "Ensure IAM policies does not allow write access without constraints",
+  "verdict": "TP",
+  "justification": "resizer_wildcard allows s3:*, dynamodb:*, logs:* on Resource '*' - unconstrained write access."
+ },
+ {
+  "sample_id": "checkov-00580",
+  "project": "t009",
+  "rule": "CKV_AWS_117",
+  "title": "Ensure that AWS Lambda function is configured inside a VPC",
+  "verdict": "FP",
+  "justification": "resizer Lambda has no vpc_config, but it only calls S3/DynamoDB public APIs; VPC attachment is by-design unnecessary."
+ },
+ {
+  "sample_id": "checkov-00585",
+  "project": "t009",
+  "rule": "CKV_AWS_144",
+  "title": "Ensure that S3 bucket has cross-region replication enabled",
+  "verdict": "FP",
+  "justification": "uploads bucket has no cross-region replication; CRR is availability/resilience, not security."
+ },
+ {
+  "sample_id": "checkov-00590",
+  "project": "t010",
+  "rule": "CKV_AWS_27",
+  "title": "Ensure all data stored in the SQS queue is encrypted",
+  "verdict": "FP",
+  "justification": "orders_dlq queue has no encryption block, but AWS encrypts SQS with SSE-SQS by default - factually wrong about the effective state."
+ },
+ {
+  "sample_id": "checkov-00595",
+  "project": "t010",
+  "rule": "CKV_AWS_272",
+  "title": "Ensure AWS Lambda function is configured to validate code-signing",
+  "verdict": "FP",
+  "justification": "orders Lambda has no code-signing config; code signing is an opt-in supply-chain control, not a weakness in the config."
+ },
+ {
+  "sample_id": "checkov-00600",
+  "project": "t011",
+  "rule": "CKV_AWS_58",
+  "title": "Ensure EKS Cluster has Secrets Encryption Enabled",
+  "verdict": "TP",
+  "justification": "EKS cluster defines no encryption_config, so Kubernetes secrets are stored unencrypted in etcd."
+ },
+ {
+  "sample_id": "checkov-00605",
+  "project": "t014",
+  "rule": "CKV_AWS_252",
+  "title": "Ensure CloudTrail defines an SNS Topic",
+  "verdict": "FP",
+  "justification": "CloudTrail defines no SNS topic; notification fan-out is operability hygiene, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00610",
+  "project": "t014",
+  "rule": "CKV2_AWS_10",
+  "title": "Ensure CloudTrail trails are integrated with CloudWatch Logs",
+  "verdict": "TP",
+  "justification": "t014/main.tf: CloudTrail has no CloudWatch Logs integration (no cloudwatch_log_group_arn) \u2014 factually correct; missing detection control: log exports, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "checkov-00615",
+  "project": "t014",
+  "rule": "CKV_AWS_18",
+  "title": "Ensure the S3 bucket has access logging enabled",
+  "verdict": "FP",
+  "justification": "trail bucket has no access logging; detective hygiene, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00620",
+  "project": "t015",
+  "rule": "CKV2_AWS_62",
+  "title": "Ensure S3 buckets should have event notifications enabled",
+  "verdict": "FP",
+  "justification": "trail bucket has no event notifications; eventing is operability, not security."
+ },
+ {
+  "sample_id": "checkov-00625",
+  "project": "t015",
+  "rule": "CKV_AWS_18",
+  "title": "Ensure the S3 bucket has access logging enabled",
+  "verdict": "FP",
+  "justification": "trail bucket has no access logging; detective hygiene."
+ },
+ {
+  "sample_id": "checkov-00630",
+  "project": "t018",
+  "rule": "CKV_AWS_260",
+  "title": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80",
+  "verdict": "FP",
+  "justification": "SG allows 0.0.0.0/0 on port 80 by design for the internet-facing web ALB; port 80 must be open to serve HTTP."
+ },
+ {
+  "sample_id": "checkov-00635",
+  "project": "t018",
+  "rule": "CKV2_AWS_28",
+  "title": "Ensure public facing ALB are protected by WAF",
+  "verdict": "FP",
+  "justification": "Public ALB has no WAF association; WAF is optional defense-in-depth, and its absence is not a misconfiguration."
+ },
+ {
+  "sample_id": "checkov-00640",
+  "project": "t019",
+  "rule": "CKV2_AWS_62",
+  "title": "Ensure S3 buckets should have event notifications enabled",
+  "verdict": "FP",
+  "justification": "alb_logs bucket has no event notifications; operability, not security."
+ },
+ {
+  "sample_id": "checkov-00645",
+  "project": "t019",
+  "rule": "CKV_AWS_145",
+  "title": "Ensure that S3 buckets are encrypted with KMS by default",
+  "verdict": "FP",
+  "justification": "alb_logs bucket has no KMS config, but S3 encrypts by default with SSE-S3; a missing CMK is not a weakness."
+ },
+ {
+  "sample_id": "checkov-00650",
+  "project": "t020",
+  "rule": "CKV_AWS_28",
+  "title": "Ensure DynamoDB point in time recovery (backup) is enabled",
+  "verdict": "TP",
+  "justification": "t020/main.tf: audit_events table has no point-in-time recovery \u2014 factually correct; missing availability control: backups (PITR), covered by the protocol: availability controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "checkov-00655",
+  "project": "t023",
+  "rule": "CKV_AWS_26",
+  "title": "Ensure all data stored in the SNS topic is encrypted",
+  "verdict": "TP",
+  "justification": "orders SNS topic sets no kms_master_key_id and SNS has no default encryption - messages are stored unencrypted."
+ },
+ {
+  "sample_id": "checkov-00660",
+  "project": "t025",
+  "rule": "CKV_AWS_287",
+  "title": "Ensure IAM policies does not allow credentials exposure",
+  "verdict": "TP",
+  "justification": "admin_wildcard allows Action '*' on '*', including iam:CreateAccessKey and similar credential-exposure actions."
+ },
+ {
+  "sample_id": "checkov-00665",
+  "project": "t025",
+  "rule": "CKV_AWS_355",
+  "title": "Ensure no IAM policies documents allow \"*\" as a statement's resource for restrictable actions",
+  "verdict": "TP",
+  "justification": "admin_wildcard allows Action '*' on Resource '*' - a '*' resource on restrictable actions."
+ },
+ {
+  "sample_id": "checkov-00670",
+  "project": "t025",
+  "rule": "CKV2_AWS_40",
+  "title": "Ensure AWS IAM policy does not allow full IAM privileges",
+  "verdict": "TP",
+  "justification": "admin_wildcard allows Action '*' including full iam:* privileges."
+ },
+ {
+  "sample_id": "checkov-00675",
+  "project": "t026",
+  "rule": "CKV_AWS_353",
+  "title": "Ensure that RDS instances have performance insights enabled",
+  "verdict": "TP",
+  "justification": "t026/rds.tf: billing DB has no Performance Insights \u2014 factually correct; missing detection control: Performance Insights, covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "checkov-00680",
+  "project": "t026",
+  "rule": "CKV2_AWS_64",
+  "title": "Ensure KMS key Policy is defined",
+  "verdict": "FP",
+  "justification": "KMS key defines no explicit key policy, but AWS applies a default key policy when none is given - effectively pedantry."
+ },
+ {
+  "sample_id": "checkov-00685",
+  "project": "t026",
+  "rule": "CKV_AWS_144",
+  "title": "Ensure that S3 bucket has cross-region replication enabled",
+  "verdict": "FP",
+  "justification": "export bucket has no cross-region replication; availability, not security (the bucket is intentionally public for snapshot export)."
+ },
+ {
+  "sample_id": "checkov-00690",
+  "project": "t027",
+  "rule": "CKV2_AWS_41",
+  "title": "Ensure an IAM role is attached to EC2 instance",
+  "verdict": "FP",
+  "justification": "Instance has no IAM instance profile, so there are no instance credentials to steal; a missing role is not a weakness."
+ },
+ {
+  "sample_id": "checkov-00695",
+  "project": "t028",
+  "rule": "CKV_AWS_290",
+  "title": "Ensure IAM policies does not allow write access without constraints",
+  "verdict": "TP",
+  "justification": "api_wildcard allows dynamodb:*, logs:*, secretsmanager:*, s3:* on Resource '*' - unconstrained write including secrets access."
+ },
+ {
+  "sample_id": "checkov-00700",
+  "project": "t028",
+  "rule": "CKV_AWS_173",
+  "title": "Check encryption settings for Lambda environmental variable",
+  "verdict": "FP",
+  "justification": "api Lambda sets env vars without a CMK, but Lambda encrypts environment variables with an AWS-managed key by default."
+ },
+ {
+  "sample_id": "checkov-00705",
+  "project": "t029",
+  "rule": "CKV_AWS_37",
+  "title": "Ensure Amazon EKS control plane logging is enabled for all log types",
+  "verdict": "FP",
+  "justification": "t029/main.tf: enabled_cluster_log_types = [\"api\", \"audit\"] \u2014 the security-relevant control-plane log types ARE on; the check's demand for scheduler/controllerManager types is observability pedantry, not a missing detection control. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "checkov-00710",
+  "project": "t030",
+  "rule": "CKV_AWS_131",
+  "title": "Ensure that ALB drops HTTP headers",
+  "verdict": "FP",
+  "justification": "ALB does not set drop_invalid_header_fields; minor header-hardening nicety, not a real weakness."
+ },
+ {
+  "sample_id": "checkov-00715",
+  "project": "t030",
+  "rule": "CKV_AWS_103",
+  "title": "Ensure that load balancer is using at least TLS 1.2",
+  "verdict": "TP",
+  "justification": "http listener serves plain HTTP on port 80 with no HTTPS listener defined - cleartext traffic on a public ALB."
+ },
+ {
+  "sample_id": "checkov-00720",
+  "project": "t031",
+  "rule": "CKV_AZURE_206",
+  "title": "Ensure that Storage Accounts use replication",
+  "verdict": "FP",
+  "justification": "account_replication_type is LRS, which replicates data 3x locally; the check demands geo-replication (availability), so 'no replication' is factually wrong."
+ },
+ {
+  "sample_id": "checkov-00725",
+  "project": "t031",
+  "rule": "CKV2_AZURE_38",
+  "title": "Ensure soft-delete is enabled on Azure storage account",
+  "verdict": "TP",
+  "justification": "t031/main.tf azurerm_storage_account media: no blob_properties/delete_retention_policy; GT-firm class -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00730",
+  "project": "t032",
+  "rule": "CKV_AZURE_190",
+  "title": "Ensure that Storage blobs restrict public access",
+  "verdict": "FP",
+  "justification": "backups account sets allow_blob_public_access to false, so anonymous blob access is already blocked - the finding is factually wrong."
+ },
+ {
+  "sample_id": "checkov-00735",
+  "project": "t032",
+  "rule": "CKV2_AZURE_31",
+  "title": "Ensure VNET subnet is configured with a Network Security Group (NSG)",
+  "verdict": "TP",
+  "justification": "data subnet has no NSG association - missing subnet-level network filtering."
+ },
+ {
+  "sample_id": "checkov-00740",
+  "project": "t034",
+  "rule": "CKV2_AZURE_31",
+  "title": "Ensure VNET subnet is configured with a Network Security Group (NSG)",
+  "verdict": "TP",
+  "justification": "vault subnet has no NSG association - missing subnet-level network filtering."
+ },
+ {
+  "sample_id": "checkov-00745",
+  "project": "t035",
+  "rule": "CKV2_AZURE_45",
+  "title": "Ensure Microsoft SQL server is configured with private endpoint",
+  "verdict": "TP",
+  "justification": "SQL server has public_network_access_enabled true with an allow-all 0.0.0.0-255.255.255.255 firewall rule and no private endpoint - an internet-exposed database."
+ },
+ {
+  "sample_id": "checkov-00750",
+  "project": "t036",
+  "rule": "CKV_AZURE_33",
+  "title": "Ensure Storage logging is enabled for Queue service for read, write and delete requests",
+  "verdict": "FP",
+  "justification": "No queue-service diagnostic logging on the storage account; detective logging hygiene, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00755",
+  "project": "t036",
+  "rule": "CKV2_AZURE_45",
+  "title": "Ensure Microsoft SQL server is configured with private endpoint",
+  "verdict": "FP",
+  "justification": "SQL server already has public_network_access_enabled false, so there is no exposure for a private endpoint to fix - no security impact."
+ },
+ {
+  "sample_id": "checkov-00760",
+  "project": "t036",
+  "rule": "CKV2_AZURE_38",
+  "title": "Ensure soft-delete is enabled on Azure storage account",
+  "verdict": "TP",
+  "justification": "t036/main.tf azurerm_storage_account audit: no blob_properties/delete_retention_policy; GT-firm class -> TP. [re-adjudicated: GT-consistency]",
+  "prior_verdict2": "FP"
+ },
+ {
+  "sample_id": "checkov-00765",
+  "project": "t037",
+  "rule": "CKV_AZURE_211",
+  "title": "Ensure App Service plan suitable for production use",
+  "verdict": "FP",
+  "justification": "Service plan SKU is B1; SKU sizing is cost/ops, not security."
+ },
+ {
+  "sample_id": "checkov-00770",
+  "project": "t037",
+  "rule": "CKV_AZURE_66",
+  "title": "Ensure that App service enables failed request tracing",
+  "verdict": "FP",
+  "justification": "No failed-request tracing on the web app; diagnostic logging hygiene, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00775",
+  "project": "t037",
+  "rule": "CKV_AZURE_16",
+  "title": "Ensure that Register with Azure Active Directory is enabled on App Service",
+  "verdict": "FP",
+  "justification": "No App Service Authentication on a public shop storefront; platform-level auth is by-design off for public apps."
+ },
+ {
+  "sample_id": "checkov-00780",
+  "project": "t037",
+  "rule": "CKV_AZURE_88",
+  "title": "Ensure that app services use Azure Files",
+  "verdict": "FP",
+  "justification": "App service does not use Azure Files; the storage-mount choice is operability, not security."
+ },
+ {
+  "sample_id": "checkov-00785",
+  "project": "t038",
+  "rule": "CKV_AZURE_65",
+  "title": "Ensure that App service enables detailed error messages",
+  "verdict": "HYGIENE",
+  "justification": "api web app has no detailed-error-messages config; this matches the reclassified 'detailed error messages disabled' hygiene type."
+ },
+ {
+  "sample_id": "checkov-00790",
+  "project": "t038",
+  "rule": "CKV_AZURE_213",
+  "title": "Ensure that App Service configures health check",
+  "verdict": "FP",
+  "justification": "No App Service health-check path; reliability, not security."
+ },
+ {
+  "sample_id": "checkov-00795",
+  "project": "t039",
+  "rule": "CKV_AZURE_226",
+  "title": "Ensure ephemeral disks are used for OS disks",
+  "verdict": "FP",
+  "justification": "AKS node pool does not use ephemeral OS disks; disk type is availability/cost, not security."
+ },
+ {
+  "sample_id": "checkov-00800",
+  "project": "t039",
+  "rule": "CKV_AZURE_7",
+  "title": "Ensure AKS cluster has Network Policy configured",
+  "verdict": "TP",
+  "justification": "AKS cluster defines no network_profile, so no Kubernetes network policy exists - flat pod network with no segmentation."
+ },
+ {
+  "sample_id": "checkov-00805",
+  "project": "t039",
+  "rule": "CKV_AZURE_116",
+  "title": "Ensure that AKS uses Azure Policies Add-on",
+  "verdict": "FP",
+  "justification": "AKS does not enable the Azure Policy add-on; governance/policy tooling, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00810",
+  "project": "t040",
+  "rule": "CKV_AZURE_226",
+  "title": "Ensure ephemeral disks are used for OS disks",
+  "verdict": "FP",
+  "justification": "No ephemeral OS disks; availability/cost, not security."
+ },
+ {
+  "sample_id": "checkov-00815",
+  "project": "t040",
+  "rule": "CKV_AZURE_116",
+  "title": "Ensure that AKS uses Azure Policies Add-on",
+  "verdict": "FP",
+  "justification": "No Azure Policy add-on; governance, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00820",
+  "project": "t040",
+  "rule": "CKV2_AZURE_31",
+  "title": "Ensure VNET subnet is configured with a Network Security Group (NSG)",
+  "verdict": "TP",
+  "justification": "user subnet has no NSG association - missing subnet-level network filtering."
+ },
+ {
+  "sample_id": "checkov-00825",
+  "project": "t044",
+  "rule": "CKV_AZURE_99",
+  "title": "Ensure Cosmos DB accounts have restricted access",
+  "verdict": "TP",
+  "justification": "Cosmos DB account has public_network_access_enabled true; the ip_range_filter uses documentation range 203.0.113.0/24, a placeholder rather than a real restriction."
+ },
+ {
+  "sample_id": "checkov-00830",
+  "project": "t045",
+  "rule": "CKV_AZURE_59",
+  "title": "Ensure that Storage accounts disallow public access",
+  "verdict": "FP",
+  "justification": "Storage account network_rules already default to Deny; the check only inspects the public_network_access_enabled flag, so its claim is effectively wrong."
+ },
+ {
+  "sample_id": "checkov-00835",
+  "project": "t045",
+  "rule": "CKV2_AZURE_47",
+  "title": "Ensure storage account is configured without blob anonymous access",
+  "verdict": "FP",
+  "justification": "allow_blob_public_access false already blocks anonymous blob access; the check demands the newer allow_nested_items_to_be_public flag - effectively wrong."
+ },
+ {
+  "sample_id": "checkov-00840",
+  "project": "t046",
+  "rule": "CKV_AZURE_13",
+  "title": "Ensure App Service Authentication is set on Azure App Service",
+  "verdict": "FP",
+  "justification": "No App Service Authentication on the portal web app; application-level auth is by-design, platform Easy Auth is not a required control."
+ },
+ {
+  "sample_id": "checkov-00845",
+  "project": "t046",
+  "rule": "CKV_AZURE_18",
+  "title": "Ensure that 'HTTP Version' is the latest if used to run the web app",
+  "verdict": "FP",
+  "justification": "HTTP version not pinned to the latest; protocol-version recency is pedantry, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00850",
+  "project": "t046",
+  "rule": "CKV_AZURE_229",
+  "title": "Ensure the Azure SQL Database Namespace is zone redundant",
+  "verdict": "FP",
+  "justification": "portaldb is not zone-redundant; availability, not security."
+ },
+ {
+  "sample_id": "checkov-00855",
+  "project": "t048",
+  "rule": "CKV_AZURE_163",
+  "title": "Enable vulnerability scanning for container images.",
+  "verdict": "FP",
+  "justification": "ACR has no Defender vulnerability scanning; a subscription-level opt-in feature, not a weakness in the registry config."
+ },
+ {
+  "sample_id": "checkov-00860",
+  "project": "t048",
+  "rule": "CKV_AZURE_165",
+  "title": "Ensure geo-replicated container registries to match multi-region container deployments.",
+  "verdict": "FP",
+  "justification": "ACR is not geo-replicated; availability, not security."
+ },
+ {
+  "sample_id": "checkov-00865",
+  "project": "t048",
+  "rule": "CKV_AZURE_227",
+  "title": "Ensure that the AKS cluster encrypt temp disks, caches, and data flows between Compute and Storage resources",
+  "verdict": "FP",
+  "justification": "AKS does not enable host-level temp-disk encryption; Azure platform encryption applies by default - a defense-in-depth nicety."
+ },
+ {
+  "sample_id": "checkov-00870",
+  "project": "t048",
+  "rule": "CKV_AZURE_168",
+  "title": "Ensure Azure Kubernetes Cluster (AKS) nodes should use a minimum number of 50 pods.",
+  "verdict": "FP",
+  "justification": "No minimum-50-pods setting on the node pool; capacity planning, not security."
+ },
+ {
+  "sample_id": "checkov-00875",
+  "project": "t048",
+  "rule": "CKV_AZURE_117",
+  "title": "Ensure that AKS uses disk encryption set",
+  "verdict": "FP",
+  "justification": "AKS has no disk-encryption-set (CMK); platform-managed disk encryption applies by default - CMK is optional."
+ },
+ {
+  "sample_id": "checkov-00880",
+  "project": "t051",
+  "rule": "CKV_GCP_62",
+  "title": "Bucket should log access",
+  "verdict": "FP",
+  "justification": "assets bucket has no access logging; detective hygiene, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00885",
+  "project": "t052",
+  "rule": "CKV_GCP_82",
+  "title": "Ensure KMS keys are protected from deletion",
+  "verdict": "FP",
+  "justification": "KMS key has no destroy_scheduled_duration; key-lifecycle hygiene, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00890",
+  "project": "t053",
+  "rule": "CKV_GCP_31",
+  "title": "Ensure that instances are not configured to use the default service account with full access to all Cloud APIs",
+  "verdict": "TP",
+  "justification": "legacy_app uses the default service account with cloud-platform scope - full GCP API access from the VM."
+ },
+ {
+  "sample_id": "checkov-00895",
+  "project": "t053",
+  "rule": "CKV_GCP_30",
+  "title": "Ensure that instances are not configured to use the default service account",
+  "verdict": "TP",
+  "justification": "legacy_batch uses the default service account with cloud-platform scope - full GCP API access from the VM."
+ },
+ {
+  "sample_id": "checkov-00900",
+  "project": "t054",
+  "rule": "CKV_GCP_38",
+  "title": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)",
+  "verdict": "FP",
+  "justification": "VM boot disk has no CSEK, but GCE encrypts disks by default with Google-managed keys - effectively not unencrypted."
+ },
+ {
+  "sample_id": "checkov-00905",
+  "project": "t054",
+  "rule": "CKV_GCP_30",
+  "title": "Ensure that instances are not configured to use the default service account",
+  "verdict": "FP",
+  "justification": "worker uses the default service account but scoped to logging-write and monitoring-write only; no excessive privilege - by-design."
+ },
+ {
+  "sample_id": "checkov-00910",
+  "project": "t055",
+  "rule": "CKV_GCP_20",
+  "title": "Ensure master authorized networks is set to enabled in GKE clusters",
+  "verdict": "TP",
+  "justification": "GKE cluster defines no master_authorized_networks_config, leaving the public control-plane endpoint open to the internet."
+ },
+ {
+  "sample_id": "checkov-00915",
+  "project": "t055",
+  "rule": "CKV_GCP_70",
+  "title": "Ensure the GKE Release Channel is set",
+  "verdict": "HYGIENE",
+  "justification": "GKE cluster defines no release_channel; GKE release channel is one of the 9 reclassified hygiene types."
+ },
+ {
+  "sample_id": "checkov-00920",
+  "project": "t056",
+  "rule": "CKV_GCP_13",
+  "title": "Ensure client certificate authentication to Kubernetes Engine Clusters is disabled",
+  "verdict": "FP",
+  "justification": "t056 cluster defines no master_auth block, so no client certificates are issued at all - the finding is factually wrong about the effective state."
+ },
+ {
+  "sample_id": "checkov-00925",
+  "project": "t056",
+  "rule": "CKV_GCP_69",
+  "title": "Ensure the GKE Metadata Server is Enabled",
+  "verdict": "TP",
+  "justification": "secure node pool sets no workload_metadata_config, so legacy metadata endpoints remain reachable from pods."
+ },
+ {
+  "sample_id": "checkov-00930",
+  "project": "t057",
+  "rule": "CKV_GCP_51",
+  "title": "Ensure PostgreSQL database 'log_checkpoints' flag is set to 'on'",
+  "verdict": "FP",
+  "justification": "No log_checkpoints database flag; PostgreSQL log-flag tuning is observability, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00935",
+  "project": "t057",
+  "rule": "CKV_GCP_109",
+  "title": "Ensure the GCP PostgreSQL database log levels are set to ERROR or lower",
+  "verdict": "FP",
+  "justification": "No log-level database flags; observability, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00940",
+  "project": "t058",
+  "rule": "CKV_GCP_82",
+  "title": "Ensure KMS keys are protected from deletion",
+  "verdict": "FP",
+  "justification": "KMS key has no destroy_scheduled_duration; key-lifecycle hygiene."
+ },
+ {
+  "sample_id": "checkov-00945",
+  "project": "t058",
+  "rule": "CKV_GCP_53",
+  "title": "Ensure PostgreSQL database 'log_disconnections' flag is set to 'on'",
+  "verdict": "FP",
+  "justification": "No log_disconnections flag; observability."
+ },
+ {
+  "sample_id": "checkov-00950",
+  "project": "t058",
+  "rule": "CKV2_GCP_18",
+  "title": "Ensure GCP network defines a firewall and does not use the default firewall",
+  "verdict": "FP",
+  "justification": "db-vpc is a custom VPC with no firewall resource; GCP implied rules deny all ingress by default, so there is no exposure - pedantry."
+ },
+ {
+  "sample_id": "checkov-00955",
+  "project": "t059",
+  "rule": "CKV_GCP_49",
+  "title": "Ensure roles do not impersonate or manage Service Accounts used at project level",
+  "verdict": "TP",
+  "justification": "devs_editor grants roles/editor, a primitive role in the check's impersonation list, to a group - over-broad project-level privilege."
+ },
+ {
+  "sample_id": "checkov-00960",
+  "project": "t063",
+  "rule": "CKV_GCP_38",
+  "title": "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)",
+  "verdict": "FP",
+  "justification": "etl boot disk has no CSEK; GCE default encryption applies - not unencrypted."
+ },
+ {
+  "sample_id": "checkov-00965",
+  "project": "t064",
+  "rule": "CKV_GCP_66",
+  "title": "Ensure use of Binary Authorization",
+  "verdict": "FP",
+  "justification": "GKE cluster has no binary_authorization; Binary Authorization is an opt-in supply-chain control, not a weakness."
+ },
+ {
+  "sample_id": "checkov-00970",
+  "project": "t064",
+  "rule": "CKV_GCP_20",
+  "title": "Ensure master authorized networks is set to enabled in GKE clusters",
+  "verdict": "TP",
+  "justification": "app cluster defines no master_authorized_networks_config - public control-plane endpoint unrestricted."
+ },
+ {
+  "sample_id": "checkov-00975",
+  "project": "t064",
+  "rule": "CKV_GCP_69",
+  "title": "Ensure the GKE Metadata Server is Enabled",
+  "verdict": "TP",
+  "justification": "app node pool sets no workload_metadata_config - legacy metadata endpoints reachable from pods."
+ },
+ {
+  "sample_id": "checkov-00980",
+  "project": "t064",
+  "rule": "CKV_GCP_110",
+  "title": "Ensure pgAudit is enabled for your GCP PostgreSQL database",
+  "verdict": "TP",
+  "justification": "t064: no pgAudit database flag (zero pgaudit mentions) \u2014 factually correct; missing detection control: audit logging (pgAudit), covered by the protocol: detection controls are explicitly in scope. [re-adjudicated: protocol incl. availability/detection controls]",
+  "prior_verdict": "FP"
+ },
+ {
+  "sample_id": "checkov-00985",
+  "project": "t064",
+  "rule": "CKV_GCP_54",
+  "title": "Ensure PostgreSQL database 'log_lock_waits' flag is set to 'on'",
+  "verdict": "FP",
+  "justification": "No log_lock_waits flag; observability."
+ },
+ {
+  "sample_id": "checkov-00990",
+  "project": "t065",
+  "rule": "CKV_GCP_32",
+  "title": "Ensure 'Block Project-wide SSH keys' is enabled for VM instances",
+  "verdict": "TP",
+  "justification": "dev VM sets instance ssh-keys metadata without block-project-ssh-keys - an unmanaged SSH access path."
+ },
+ {
+  "sample_id": "checkov-00995",
+  "project": "t065",
+  "rule": "CKV_GCP_39",
+  "title": "Ensure Compute instances are launched with Shielded VM enabled",
+  "verdict": "FP",
+  "justification": "dev VM has no shielded_instance_config; Shielded VM is optional hardening, not a weakness."
+ },
+ {
+  "sample_id": "checkov-01000",
+  "project": "t065",
+  "rule": "CKV_GCP_40",
+  "title": "Ensure that Compute instances do not have public IP addresses",
+  "verdict": "TP",
+  "justification": "qa VM has an access_config block, assigning an ephemeral public IP - an internet-exposed instance."
+ },
+ {
+  "sample_id": "checkov-01005",
+  "project": "t067",
+  "rule": "CKV_GCP_13",
+  "title": "Ensure client certificate authentication to Kubernetes Engine Clusters is disabled",
+  "verdict": "FP",
+  "justification": "t067 cluster defines no master_auth block, so no client certificates are issued - factually wrong."
+ },
+ {
+  "sample_id": "checkov-01010",
+  "project": "t067",
+  "rule": "CKV_GCP_69",
+  "title": "Ensure the GKE Metadata Server is Enabled",
+  "verdict": "TP",
+  "justification": "workload-pool node pool sets no workload_metadata_config - legacy metadata endpoints reachable from pods."
+ },
+ {
+  "sample_id": "checkov-01015",
+  "project": "t067",
+  "rule": "CKV_GCP_69",
+  "title": "Ensure the GKE Metadata Server is Enabled",
+  "verdict": "TP",
+  "justification": "Cluster-level finding for the same gap: node pool main lacks workload_metadata_config, leaving legacy metadata endpoints reachable."
+ },
+ {
+  "sample_id": "checkov-01020",
+  "project": "t069",
+  "rule": "CKV_GCP_79",
+  "title": "Ensure SQL database is using latest Major version",
+  "verdict": "FP",
+  "justification": "Instance runs POSTGRES_15 rather than the latest major; version recency is version-pinning pedantry, not a weakness."
+ },
+ {
+  "sample_id": "checkov-01025",
+  "project": "t069",
+  "rule": "CKV_GCP_108",
+  "title": "Ensure hostnames are logged for GCP PostgreSQL databases",
+  "verdict": "FP",
+  "justification": "No log_hostname flag; observability."
+ },
+ {
+  "sample_id": "checkov-01030",
+  "project": "t069",
+  "rule": "CKV2_GCP_13",
+  "title": "Ensure PostgreSQL database flag 'log_duration' is set to 'on'",
+  "verdict": "FP",
+  "justification": "No log_duration flag; observability."
+ },
+ {
+  "sample_id": "checkov-01035",
+  "project": "t070",
+  "rule": "CKV_GCP_65",
+  "title": "Manage Kubernetes RBAC users with Google Groups for GKE",
+  "verdict": "FP",
+  "justification": "No Google Groups RBAC config; identity-management nicety, not a weakness."
+ },
+ {
+  "sample_id": "checkov-01040",
+  "project": "t070",
+  "rule": "CKV_GCP_69",
+  "title": "Ensure the GKE Metadata Server is Enabled",
+  "verdict": "TP",
+  "justification": "pools node pool sets no workload_metadata_config - legacy metadata endpoints reachable from pods."
+ },
+ {
+  "sample_id": "checkov-01045",
+  "project": "t070",
+  "rule": "CKV_GCP_74",
+  "title": "Ensure that private_ip_google_access is enabled for Subnet",
+  "verdict": "FP",
+  "justification": "Subnet lacks private_ip_google_access; private Google access is connectivity/functionality, not a security weakness."
+ },
+ {
+  "sample_id": "checkov-01050",
+  "project": "t070",
+  "rule": "CKV_GCP_53",
+  "title": "Ensure PostgreSQL database 'log_disconnections' flag is set to 'on'",
+  "verdict": "FP",
+  "justification": "No log_disconnections flag; observability."
+ },
+ {
+  "sample_id": "checkov-01055",
+  "project": "t070",
+  "rule": "CKV_GCP_6",
+  "title": "Ensure all Cloud SQL database instance requires all incoming connections to use SSL",
+  "verdict": "TP",
+  "justification": "app SQL instance sets no require_ssl with ipv4_enabled true - cleartext database connections are allowed."
+ }
+]

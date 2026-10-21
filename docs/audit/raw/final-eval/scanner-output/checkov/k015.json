@@ -1,0 +1,165 @@
+{
+    "check_type": "dockerfile",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_DOCKER_7",
+                "bc_check_id": "BC_DKR_7",
+                "check_name": "Ensure the base image uses a non latest version tag",
+                "check_result": {
+                    "result": "FAILED",
+                    "results_configuration": [
+                        {
+                            "instruction": "FROM",
+                            "startline": 0,
+                            "endline": 0,
+                            "content": "FROM ubuntu:latest\n",
+                            "value": "ubuntu:latest"
+                        }
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "FROM ubuntu:latest\n"
+                    ]
+                ],
+                "file_path": "/Dockerfile",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k015/Dockerfile",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k015/Dockerfile",
+                "file_line_range": [
+                    1,
+                    1
+                ],
+                "resource": "/Dockerfile.FROM",
+                "evaluations": null,
+                "check_class": "checkov.dockerfile.checks.ReferenceLatestTag",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-the-base-image-uses-a-non-latest-version-tag",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_DOCKER_2",
+                "bc_check_id": "BC_DKR_2",
+                "check_name": "Ensure that HEALTHCHECK instructions have been added to container images",
+                "check_result": {
+                    "result": "FAILED",
+                    "results_configuration": null
+                },
+                "code_block": [
+                    [
+                        1,
+                        "FROM ubuntu:latest\n"
+                    ],
+                    [
+                        2,
+                        "\n"
+                    ],
+                    [
+                        3,
+                        "RUN apt-get update && apt-get install -y nodejs npm \\\n"
+                    ],
+                    [
+                        4,
+                        "    && rm -rf /var/lib/apt/lists/* \\\n"
+                    ],
+                    [
+                        5,
+                        "    && useradd --create-home --uid 10001 appuser\n"
+                    ],
+                    [
+                        6,
+                        "\n"
+                    ],
+                    [
+                        7,
+                        "WORKDIR /app\n"
+                    ],
+                    [
+                        8,
+                        "COPY --chown=appuser:appuser package*.json ./\n"
+                    ],
+                    [
+                        9,
+                        "\n"
+                    ],
+                    [
+                        10,
+                        "USER appuser\n"
+                    ],
+                    [
+                        11,
+                        "RUN npm ci --omit=dev\n"
+                    ],
+                    [
+                        12,
+                        "COPY --chown=appuser:appuser . .\n"
+                    ],
+                    [
+                        13,
+                        "\n"
+                    ],
+                    [
+                        14,
+                        "EXPOSE 3000\n"
+                    ],
+                    [
+                        15,
+                        "\n"
+                    ],
+                    [
+                        16,
+                        "CMD [\"node\", \"server.js\"]"
+                    ]
+                ],
+                "file_path": "/Dockerfile",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k015/Dockerfile",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k015/Dockerfile",
+                "file_line_range": [
+                    1,
+                    16
+                ],
+                "resource": "/Dockerfile.",
+                "evaluations": null,
+                "check_class": "checkov.dockerfile.checks.HealthcheckExists",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-that-healthcheck-instructions-have-been-added-to-container-images",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 41,
+        "failed": 2,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 1,
+        "checkov_version": "3.3.26"
+    }
+}

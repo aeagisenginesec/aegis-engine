@@ -399,3 +399,72 @@ func TestNoPanicSweep(t *testing.T) {
 		}
 	}
 }
+
+// R5 regression (K8S-027 cross-document attribution): two Deployments
+// with the SAME name in one file (r5180). Resource spans used to carry
+// the document INDEX + 1 as the line, so a finding against the second
+// Deployment pointed at line 2 — inside the first document. Spans must
+// carry each document's real start line (doc 2 begins at line 29 in
+// this fixture, exactly as in r5180's deployment.yaml).
+const twoSameNameDeployments = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop-f7ad07
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shop
+  template:
+    metadata:
+      labels:
+        app: shop
+    spec:
+      containers:
+        - name: shop
+          image: shop:1.0
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shop-f7ad07
+spec:
+  template:
+    metadata:
+      labels:
+        app: shop
+    spec:
+      containers:
+        - name: shop
+          image: shop:1.0
+`
+
+func TestMultiDocSpanIsDocumentStartLine(t *testing.T) {
+	rs, diags := mustParse(t, "deployment.yaml", twoSameNameDeployments)
+	if len(diags) != 0 {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 resources, got %d", len(rs))
+	}
+	if rs[0].Address() != rs[1].Address() {
+		t.Fatalf("fixture must hold two instances of one name, got %q and %q",
+			rs[0].Address(), rs[1].Address())
+	}
+	if rs[0].Span.StartLine != 1 {
+		t.Errorf("first document span line = %d, want 1", rs[0].Span.StartLine)
+	}
+	if rs[1].Span.StartLine != 29 {
+		t.Errorf("second document span line = %d, want 29 (its real start line)", rs[1].Span.StartLine)
+	}
+}

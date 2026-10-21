@@ -1,0 +1,384 @@
+{
+    "check_type": "bicep",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_10",
+                "bc_check_id": "BC_AZR_NETWORKING_3",
+                "check_name": "Ensure that SSH access is restricted from the internet",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource web 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {\n"
+                    ],
+                    [
+                        2,
+                        "  name: 'web-15de64'\n"
+                    ],
+                    [
+                        3,
+                        "  location: 'westeurope'\n"
+                    ],
+                    [
+                        4,
+                        "  properties: {\n"
+                    ],
+                    [
+                        5,
+                        "    securityRules: [\n"
+                    ],
+                    [
+                        6,
+                        "      {\n"
+                    ],
+                    [
+                        7,
+                        "        name: 'allow-ssh'\n"
+                    ],
+                    [
+                        8,
+                        "        properties: {\n"
+                    ],
+                    [
+                        9,
+                        "          priority: 100\n"
+                    ],
+                    [
+                        10,
+                        "          direction: 'Inbound'\n"
+                    ],
+                    [
+                        11,
+                        "          access: 'Allow'\n"
+                    ],
+                    [
+                        12,
+                        "          protocol: 'Tcp'\n"
+                    ],
+                    [
+                        13,
+                        "          sourcePortRange: '*'\n"
+                    ],
+                    [
+                        14,
+                        "          destinationPortRange: '22'\n"
+                    ],
+                    [
+                        15,
+                        "          sourceAddressPrefix: '*'\n"
+                    ],
+                    [
+                        16,
+                        "          destinationAddressPrefix: '*'\n"
+                    ],
+                    [
+                        17,
+                        "        }\n"
+                    ],
+                    [
+                        18,
+                        "      }\n"
+                    ],
+                    [
+                        19,
+                        "    ]\n"
+                    ],
+                    [
+                        20,
+                        "  }\n"
+                    ],
+                    [
+                        21,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.bicep",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4091/main.bicep",
+                "repo_file_path": "/corpus/r4091/main.bicep",
+                "file_line_range": [
+                    1,
+                    21
+                ],
+                "resource": "Microsoft.Network/networkSecurityGroups.web",
+                "evaluations": null,
+                "check_class": "checkov.arm.checks.resource.NSGRuleSSHAccessRestricted",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-3",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AZURE_35",
+                "bc_check_id": "BC_AZR_NETWORKING_15",
+                "check_name": "Ensure default network access rule for Storage Accounts is set to deny",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "properties/networkAcls/defaultAction"
+                    ]
+                },
+                "code_block": [
+                    [
+                        23,
+                        "resource legacy 'Microsoft.Storage/storageAccounts@2023-01-01' = {\n"
+                    ],
+                    [
+                        24,
+                        "  name: 'legacy15de64'\n"
+                    ],
+                    [
+                        25,
+                        "  location: 'westeurope'\n"
+                    ],
+                    [
+                        26,
+                        "  kind: 'StorageV2'\n"
+                    ],
+                    [
+                        27,
+                        "  sku: { name: 'Standard_LRS' }\n"
+                    ],
+                    [
+                        28,
+                        "  properties: {\n"
+                    ],
+                    [
+                        29,
+                        "    allowBlobPublicAccess: false\n"
+                    ],
+                    [
+                        30,
+                        "    minimumTlsVersion: 'TLS1_0'\n"
+                    ],
+                    [
+                        31,
+                        "    supportsHttpsTrafficOnly: true\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.bicep",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4091/main.bicep",
+                "repo_file_path": "/corpus/r4091/main.bicep",
+                "file_line_range": [
+                    23,
+                    33
+                ],
+                "resource": "Microsoft.Storage/storageAccounts.legacy",
+                "evaluations": null,
+                "check_class": "checkov.bicep.checks.resource.azure.StorageAccountDefaultNetworkAccessDeny",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/set-default-network-access-rule-for-storage-accounts-to-deny",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AZURE_44",
+                "bc_check_id": "BC_AZR_STORAGE_2",
+                "check_name": "Ensure Storage Account is using the latest version of TLS encryption",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "properties",
+                        "properties/minimumTlsVersion"
+                    ]
+                },
+                "code_block": [
+                    [
+                        23,
+                        "resource legacy 'Microsoft.Storage/storageAccounts@2023-01-01' = {\n"
+                    ],
+                    [
+                        24,
+                        "  name: 'legacy15de64'\n"
+                    ],
+                    [
+                        25,
+                        "  location: 'westeurope'\n"
+                    ],
+                    [
+                        26,
+                        "  kind: 'StorageV2'\n"
+                    ],
+                    [
+                        27,
+                        "  sku: { name: 'Standard_LRS' }\n"
+                    ],
+                    [
+                        28,
+                        "  properties: {\n"
+                    ],
+                    [
+                        29,
+                        "    allowBlobPublicAccess: false\n"
+                    ],
+                    [
+                        30,
+                        "    minimumTlsVersion: 'TLS1_0'\n"
+                    ],
+                    [
+                        31,
+                        "    supportsHttpsTrafficOnly: true\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.bicep",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4091/main.bicep",
+                "repo_file_path": "/corpus/r4091/main.bicep",
+                "file_line_range": [
+                    23,
+                    33
+                ],
+                "resource": "Microsoft.Storage/storageAccounts.legacy",
+                "evaluations": null,
+                "check_class": "checkov.arm.checks.resource.StorageAccountMinimumTlsVersion",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-storage-policies/bc-azr-storage-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AZURE_206",
+                "bc_check_id": "BC_AZR_GENERAL_111",
+                "check_name": "Ensure that Storage Accounts use replication",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        23,
+                        "resource legacy 'Microsoft.Storage/storageAccounts@2023-01-01' = {\n"
+                    ],
+                    [
+                        24,
+                        "  name: 'legacy15de64'\n"
+                    ],
+                    [
+                        25,
+                        "  location: 'westeurope'\n"
+                    ],
+                    [
+                        26,
+                        "  kind: 'StorageV2'\n"
+                    ],
+                    [
+                        27,
+                        "  sku: { name: 'Standard_LRS' }\n"
+                    ],
+                    [
+                        28,
+                        "  properties: {\n"
+                    ],
+                    [
+                        29,
+                        "    allowBlobPublicAccess: false\n"
+                    ],
+                    [
+                        30,
+                        "    minimumTlsVersion: 'TLS1_0'\n"
+                    ],
+                    [
+                        31,
+                        "    supportsHttpsTrafficOnly: true\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.bicep",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4091/main.bicep",
+                "repo_file_path": "/corpus/r4091/main.bicep",
+                "file_line_range": [
+                    23,
+                    33
+                ],
+                "resource": "Microsoft.Storage/storageAccounts.legacy",
+                "evaluations": null,
+                "check_class": "checkov.arm.checks.resource.StorageAccountsUseReplication",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/azr-general-206",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 6,
+        "failed": 4,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

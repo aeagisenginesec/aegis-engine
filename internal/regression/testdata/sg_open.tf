@@ -1,5 +1,8 @@
 # Web-tier security group: SSH and RDP open to the world, plus unrestricted
-# egress. Each overly-permissive rule should be a finding.
+# egress. Each overly-permissive rule should be a finding. The instance
+# below attaches the group, so the egress rule carries traffic and 005
+# fires; a standalone group would stay quiet for egress (attachment
+# gate — see TestSGEgress_CheckAllStandaloneQuiet).
 resource "aws_security_group" "web" {
   name        = "web-tier-sg"
   description = "Web tier - overly permissive"
@@ -32,4 +35,10 @@ resource "aws_security_group" "web" {
   tags = {
     Environment = "prod"
   }
+}
+
+resource "aws_instance" "web" {
+  ami                    = "ami-0123456789abcdef0"
+  instance_type          = "t3.micro"
+  vpc_security_group_ids = [aws_security_group.web.id]
 }

@@ -310,9 +310,18 @@ func (s3NoPublicAccessBlock) CheckAll(resources []ir.Resource) []ir.Finding {
 	// Buckets that serve as log-delivery targets are logging infrastructure,
 	// not data buckets: skip them.
 	logTargets := logDeliveryBuckets(sorted)
+	publicSet := publicBucketScopeKeys(sorted)
 	var out []ir.Finding
 	for _, b := range sorted {
 		if b.Type != "aws_s3_bucket" {
+			continue
+		}
+		// Intentionally-public buckets must NOT be told to enable a
+		// public access block: PAB would break the public access the
+		// bucket exists to provide (website hosting, public ACL, or a
+		// public-granting bucket policy). Recommending it is wrong
+		// advice, not a hardening gap.
+		if bucketIntentionallyPublicSet(b, publicSet) {
 			continue
 		}
 		protected := false
@@ -322,7 +331,7 @@ func (s3NoPublicAccessBlock) CheckAll(resources []ir.Resource) []ir.Finding {
 				break
 			}
 		}
-		if protected || uncertain || logTargets[b.Address()] {
+		if protected || uncertain || logTargets[scopeKey(b)] {
 			continue
 		}
 		out = append(out, ir.Finding{
@@ -346,13 +355,28 @@ var _ ir.CrossResourceRule = s3NoPublicAccessBlock{}
 
 // pabBucketAddr resolves which bucket a public-access-block targets via its
 // `bucket` attribute: a reference ("aws_s3_bucket.assets.id") or a known
-// name matched against the bucket set. Unresolvable -> false.
+// name matched against the bucket set. A CloudFormation !Ref to a resource
+// logical ID ("cfn.resource.X") matches by the bucket's Name (its CFN
+// logical ID), mirroring linkedBucketAddr in helpers.go. Unresolvable -> false.
 func pabBucketAddr(r ir.Resource, buckets []ir.Resource) (string, bool) {
 	v, ok := r.Attributes["bucket"]
 	if !ok {
 		return "", false
 	}
 	if v.IsRef() {
+		// CloudFormation !Ref to a resource logical ID: "cfn.resource.X".
+		if strings.HasPrefix(v.Ref, "cfn.resource.") {
+			lid := strings.TrimPrefix(v.Ref, "cfn.resource.")
+			for _, b := range buckets {
+				if b.Type != "aws_s3_bucket" || !sameScope(r, b) {
+					continue
+				}
+				if b.Name == lid {
+					return scopeKey(b), true
+				}
+			}
+			return "", false
+		}
 		return refAddrOf(v.Ref)
 	}
 	name, ok := v.AsString()

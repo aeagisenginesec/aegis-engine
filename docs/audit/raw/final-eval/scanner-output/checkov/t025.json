@@ -1,0 +1,1334 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_62",
+                "bc_check_id": "BC_AWS_IAM_47",
+                "check_name": "Ensure IAM policies that allow full \"*-*\" administrative privileges are not created",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy",
+                        "inline_policy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"aws_iam_policy\" \"admin_wildcard\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name = \"app-admin-wildcard\"\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        43,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        44,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        45,
+                        "      {\n"
+                    ],
+                    [
+                        46,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        47,
+                        "        Action   = \"*\"\n"
+                    ],
+                    [
+                        48,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        49,
+                        "      }\n"
+                    ],
+                    [
+                        50,
+                        "    ]\n"
+                    ],
+                    [
+                        51,
+                        "  })\n"
+                    ],
+                    [
+                        52,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "file_line_range": [
+                    39,
+                    52
+                ],
+                "resource": "aws_iam_policy.admin_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMAdminPolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-iam-45",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_287",
+                "bc_check_id": "BC_AWS_IAM_82",
+                "check_name": "Ensure IAM policies does not allow credentials exposure",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"aws_iam_policy\" \"admin_wildcard\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name = \"app-admin-wildcard\"\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        43,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        44,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        45,
+                        "      {\n"
+                    ],
+                    [
+                        46,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        47,
+                        "        Action   = \"*\"\n"
+                    ],
+                    [
+                        48,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        49,
+                        "      }\n"
+                    ],
+                    [
+                        50,
+                        "    ]\n"
+                    ],
+                    [
+                        51,
+                        "  })\n"
+                    ],
+                    [
+                        52,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "file_line_range": [
+                    39,
+                    52
+                ],
+                "resource": "aws_iam_policy.admin_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMCredentialsExposure",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-287",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_288",
+                "bc_check_id": "BC_AWS_IAM_83",
+                "check_name": "Ensure IAM policies does not allow data exfiltration",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"aws_iam_policy\" \"admin_wildcard\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name = \"app-admin-wildcard\"\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        43,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        44,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        45,
+                        "      {\n"
+                    ],
+                    [
+                        46,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        47,
+                        "        Action   = \"*\"\n"
+                    ],
+                    [
+                        48,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        49,
+                        "      }\n"
+                    ],
+                    [
+                        50,
+                        "    ]\n"
+                    ],
+                    [
+                        51,
+                        "  })\n"
+                    ],
+                    [
+                        52,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "file_line_range": [
+                    39,
+                    52
+                ],
+                "resource": "aws_iam_policy.admin_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMDataExfiltration",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-288",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_289",
+                "bc_check_id": "BC_AWS_IAM_84",
+                "check_name": "Ensure IAM policies does not allow permissions management / resource exposure without constraints",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"aws_iam_policy\" \"admin_wildcard\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name = \"app-admin-wildcard\"\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        43,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        44,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        45,
+                        "      {\n"
+                    ],
+                    [
+                        46,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        47,
+                        "        Action   = \"*\"\n"
+                    ],
+                    [
+                        48,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        49,
+                        "      }\n"
+                    ],
+                    [
+                        50,
+                        "    ]\n"
+                    ],
+                    [
+                        51,
+                        "  })\n"
+                    ],
+                    [
+                        52,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "file_line_range": [
+                    39,
+                    52
+                ],
+                "resource": "aws_iam_policy.admin_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMPermissionsManagement",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-289",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_286",
+                "bc_check_id": "BC_AWS_IAM_81",
+                "check_name": "Ensure IAM policies does not allow privilege escalation",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"aws_iam_policy\" \"admin_wildcard\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name = \"app-admin-wildcard\"\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        43,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        44,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        45,
+                        "      {\n"
+                    ],
+                    [
+                        46,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        47,
+                        "        Action   = \"*\"\n"
+                    ],
+                    [
+                        48,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        49,
+                        "      }\n"
+                    ],
+                    [
+                        50,
+                        "    ]\n"
+                    ],
+                    [
+                        51,
+                        "  })\n"
+                    ],
+                    [
+                        52,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "file_line_range": [
+                    39,
+                    52
+                ],
+                "resource": "aws_iam_policy.admin_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMPrivilegeEscalation",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-286",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_63",
+                "bc_check_id": "BC_AWS_IAM_48",
+                "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's actions",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy",
+                        "inline_policy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"aws_iam_policy\" \"admin_wildcard\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name = \"app-admin-wildcard\"\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        43,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        44,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        45,
+                        "      {\n"
+                    ],
+                    [
+                        46,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        47,
+                        "        Action   = \"*\"\n"
+                    ],
+                    [
+                        48,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        49,
+                        "      }\n"
+                    ],
+                    [
+                        50,
+                        "    ]\n"
+                    ],
+                    [
+                        51,
+                        "  })\n"
+                    ],
+                    [
+                        52,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "file_line_range": [
+                    39,
+                    52
+                ],
+                "resource": "aws_iam_policy.admin_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMStarActionPolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/iam-48",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_355",
+                "bc_check_id": "BC_AWS_IAM_88",
+                "check_name": "Ensure no IAM policies documents allow \"*\" as a statement's resource for restrictable actions",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"aws_iam_policy\" \"admin_wildcard\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name = \"app-admin-wildcard\"\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        43,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        44,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        45,
+                        "      {\n"
+                    ],
+                    [
+                        46,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        47,
+                        "        Action   = \"*\"\n"
+                    ],
+                    [
+                        48,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        49,
+                        "      }\n"
+                    ],
+                    [
+                        50,
+                        "    ]\n"
+                    ],
+                    [
+                        51,
+                        "  })\n"
+                    ],
+                    [
+                        52,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "file_line_range": [
+                    39,
+                    52
+                ],
+                "resource": "aws_iam_policy.admin_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMStarResourcePolicyDocument",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-355",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_290",
+                "bc_check_id": "BC_AWS_IAM_85",
+                "check_name": "Ensure IAM policies does not allow write access without constraints",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy/Statement/[0]/Action"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"aws_iam_policy\" \"admin_wildcard\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name = \"app-admin-wildcard\"\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        43,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        44,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        45,
+                        "      {\n"
+                    ],
+                    [
+                        46,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        47,
+                        "        Action   = \"*\"\n"
+                    ],
+                    [
+                        48,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        49,
+                        "      }\n"
+                    ],
+                    [
+                        50,
+                        "    ]\n"
+                    ],
+                    [
+                        51,
+                        "  })\n"
+                    ],
+                    [
+                        52,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "file_line_range": [
+                    39,
+                    52
+                ],
+                "resource": "aws_iam_policy.admin_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMWriteAccess",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-290",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf"
+            },
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security group and rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"app\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name   = \"app-sg\"\n"
+                    ],
+                    [
+                        16,
+                        "  vpc_id = \"vpc-5e6f7a8b9c0d12435\"\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "  ingress {\n"
+                    ],
+                    [
+                        19,
+                        "    description = \"SSH from allowed range\"\n"
+                    ],
+                    [
+                        20,
+                        "    from_port   = 22\n"
+                    ],
+                    [
+                        21,
+                        "    to_port     = 22\n"
+                    ],
+                    [
+                        22,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        23,
+                        "    cidr_blocks = [var.allowed_ssh_cidr]\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  ingress {\n"
+                    ],
+                    [
+                        27,
+                        "    description = \"App traffic\"\n"
+                    ],
+                    [
+                        28,
+                        "    from_port   = 8080\n"
+                    ],
+                    [
+                        29,
+                        "    to_port     = 8080\n"
+                    ],
+                    [
+                        30,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        31,
+                        "    cidr_blocks = [var.allowed_ssh_cidr]\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "\n"
+                    ],
+                    [
+                        34,
+                        "  egress {\n"
+                    ],
+                    [
+                        35,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        36,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        37,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        38,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/main.tf",
+                "file_line_range": [
+                    14,
+                    40
+                ],
+                "resource": "aws_security_group.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_382",
+                "bc_check_id": "BC_AWS_IAM_93",
+                "check_name": "Ensure no security groups allow egress from 0.0.0.0:0 to port -1",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "egress/[0]/from_port",
+                        "egress/[0]/to_port",
+                        "egress/[0]/cidr_blocks",
+                        "egress/[0]/ipv6_cidr_blocks"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_security_group\" \"app\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name   = \"app-sg\"\n"
+                    ],
+                    [
+                        16,
+                        "  vpc_id = \"vpc-5e6f7a8b9c0d12435\"\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "  ingress {\n"
+                    ],
+                    [
+                        19,
+                        "    description = \"SSH from allowed range\"\n"
+                    ],
+                    [
+                        20,
+                        "    from_port   = 22\n"
+                    ],
+                    [
+                        21,
+                        "    to_port     = 22\n"
+                    ],
+                    [
+                        22,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        23,
+                        "    cidr_blocks = [var.allowed_ssh_cidr]\n"
+                    ],
+                    [
+                        24,
+                        "  }\n"
+                    ],
+                    [
+                        25,
+                        "\n"
+                    ],
+                    [
+                        26,
+                        "  ingress {\n"
+                    ],
+                    [
+                        27,
+                        "    description = \"App traffic\"\n"
+                    ],
+                    [
+                        28,
+                        "    from_port   = 8080\n"
+                    ],
+                    [
+                        29,
+                        "    to_port     = 8080\n"
+                    ],
+                    [
+                        30,
+                        "    protocol    = \"tcp\"\n"
+                    ],
+                    [
+                        31,
+                        "    cidr_blocks = [var.allowed_ssh_cidr]\n"
+                    ],
+                    [
+                        32,
+                        "  }\n"
+                    ],
+                    [
+                        33,
+                        "\n"
+                    ],
+                    [
+                        34,
+                        "  egress {\n"
+                    ],
+                    [
+                        35,
+                        "    from_port   = 0\n"
+                    ],
+                    [
+                        36,
+                        "    to_port     = 0\n"
+                    ],
+                    [
+                        37,
+                        "    protocol    = \"-1\"\n"
+                    ],
+                    [
+                        38,
+                        "    cidr_blocks = [\"0.0.0.0/0\"]\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/main.tf",
+                "file_line_range": [
+                    14,
+                    40
+                ],
+                "resource": "aws_security_group.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SecurityGroupUnrestrictedEgressAny",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/bc-aws-382",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_135",
+                "bc_check_id": "BC_AWS_GENERAL_68",
+                "check_name": "Ensure that EC2 is EBS optimized",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "ebs_optimized"
+                    ]
+                },
+                "code_block": [
+                    [
+                        42,
+                        "resource \"aws_instance\" \"app\" {\n"
+                    ],
+                    [
+                        43,
+                        "  ami                    = data.aws_ami.al2023.id\n"
+                    ],
+                    [
+                        44,
+                        "  instance_type          = var.instance_type\n"
+                    ],
+                    [
+                        45,
+                        "  key_name               = var.key_name\n"
+                    ],
+                    [
+                        46,
+                        "  iam_instance_profile   = aws_iam_instance_profile.app.name\n"
+                    ],
+                    [
+                        47,
+                        "  vpc_security_group_ids = [aws_security_group.app.id]\n"
+                    ],
+                    [
+                        48,
+                        "  monitoring             = true\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  metadata_options {\n"
+                    ],
+                    [
+                        51,
+                        "    http_tokens = \"required\"\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "\n"
+                    ],
+                    [
+                        54,
+                        "  root_block_device {\n"
+                    ],
+                    [
+                        55,
+                        "    volume_size = 40\n"
+                    ],
+                    [
+                        56,
+                        "    volume_type = \"gp3\"\n"
+                    ],
+                    [
+                        57,
+                        "    encrypted   = true\n"
+                    ],
+                    [
+                        58,
+                        "  }\n"
+                    ],
+                    [
+                        59,
+                        "\n"
+                    ],
+                    [
+                        60,
+                        "  tags = {\n"
+                    ],
+                    [
+                        61,
+                        "    Name = \"app-server\"\n"
+                    ],
+                    [
+                        62,
+                        "  }\n"
+                    ],
+                    [
+                        63,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/main.tf",
+                "file_line_range": [
+                    42,
+                    63
+                ],
+                "resource": "aws_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.EC2EBSOptimized",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "app-server"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-ec2-is-ebs-optimized",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/main.tf",
+                "breadcrumbs": {
+                    "iam_instance_profile": [
+                        {
+                            "type": "resource",
+                            "name": "aws_iam_instance_profile.app",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AWS_40",
+                "bc_check_id": "BC_AWS_IAM_73",
+                "check_name": "Ensure AWS IAM policy does not allow full IAM privileges",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_iam_policy": {
+                            "admin_wildcard": {
+                                "__end_line__": 52,
+                                "__start_line__": 39,
+                                "name": [
+                                    "app-admin-wildcard"
+                                ],
+                                "policy": [
+                                    {
+                                        "Version": "2012-10-17",
+                                        "Statement": [
+                                            {
+                                                "Effect": "Allow",
+                                                "Action": "*",
+                                                "Resource": "*"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "__address__": "aws_iam_policy.admin_wildcard"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "policy/Statement[?(@/Effect == Allow)]/Action[*]",
+                        "inline_policy/Statement[?(@/Effect == Allow)]/Action[*]",
+                        "statement[?(@/effect == Allow)]/actions[*]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        39,
+                        "resource \"aws_iam_policy\" \"admin_wildcard\" {\n"
+                    ],
+                    [
+                        40,
+                        "  name = \"app-admin-wildcard\"\n"
+                    ],
+                    [
+                        41,
+                        "\n"
+                    ],
+                    [
+                        42,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        43,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        44,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        45,
+                        "      {\n"
+                    ],
+                    [
+                        46,
+                        "        Effect   = \"Allow\"\n"
+                    ],
+                    [
+                        47,
+                        "        Action   = \"*\"\n"
+                    ],
+                    [
+                        48,
+                        "        Resource = \"*\"\n"
+                    ],
+                    [
+                        49,
+                        "      }\n"
+                    ],
+                    [
+                        50,
+                        "    ]\n"
+                    ],
+                    [
+                        51,
+                        "  })\n"
+                    ],
+                    [
+                        52,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/iam.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf",
+                "file_line_range": [
+                    39,
+                    52
+                ],
+                "resource": "aws_iam_policy.admin_wildcard",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-2-40",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t025/iam.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 29,
+        "failed": 12,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 8,
+        "checkov_version": "3.3.26"
+    }
+}

@@ -78,7 +78,7 @@
   {
     "rule_id": "AEGIS-AWS-311",
     "title": "RDS without IAM database authentication",
-    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene.",
+    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene. Engine-scoped: only mysql, postgres and mariadb instances support IAM database authentication; aurora engines are covered by the cluster rules.",
     "severity": "medium",
     "resource": "aws_db_instance.legacy",
     "evidence": {
@@ -97,7 +97,7 @@
   {
     "rule_id": "AEGIS-AWS-311",
     "title": "RDS without IAM database authentication",
-    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene.",
+    "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene. Engine-scoped: only mysql, postgres and mariadb instances support IAM database authentication; aurora engines are covered by the cluster rules.",
     "severity": "medium",
     "resource": "aws_db_instance.orders",
     "evidence": {
@@ -171,44 +171,6 @@
     }
   },
   {
-    "rule_id": "AEGIS-AWS-540",
-    "title": "RDS MySQL/Postgres instance without IAM database authentication",
-    "description": "MySQL and Postgres RDS instances support IAM database authentication, which replaces long-lived passwords with short-lived IAM credentials. With iam_database_authentication_enabled absent or false, access relies on static passwords. Engine-scoped: only fires for mysql/postgres engines; aurora and unknown engines are out of scope.",
-    "severity": "high",
-    "resource": "aws_db_instance.legacy",
-    "evidence": {
-      "attribute": "iam_database_authentication_enabled",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 5,
-        "start_col": 1,
-        "end_line": 18,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: disabled)",
-      "expected": "iam_database_authentication_enabled = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-540",
-    "title": "RDS MySQL/Postgres instance without IAM database authentication",
-    "description": "MySQL and Postgres RDS instances support IAM database authentication, which replaces long-lived passwords with short-lived IAM credentials. With iam_database_authentication_enabled absent or false, access relies on static passwords. Engine-scoped: only fires for mysql/postgres engines; aurora and unknown engines are out of scope.",
-    "severity": "high",
-    "resource": "aws_db_instance.orders",
-    "evidence": {
-      "attribute": "iam_database_authentication_enabled",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 20,
-        "start_col": 1,
-        "end_line": 32,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: disabled)",
-      "expected": "iam_database_authentication_enabled = true"
-    }
-  },
-  {
     "rule_id": "AEGIS-AWS-543",
     "title": "RDS instance without CloudWatch log exports",
     "description": "Hygiene: RDS instances should export database logs to CloudWatch via enabled_cloudwatch_logs_exports for auditing and troubleshooting. Without log exports, forensic analysis after an incident is limited.",
@@ -244,44 +206,6 @@
       },
       "actual": "absent",
       "expected": "enabled_cloudwatch_logs_exports with engine log types"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-544",
-    "title": "RDS instance without auto minor version upgrades",
-    "description": "Hygiene: RDS instances should enable auto_minor_version_upgrade so security patches are applied automatically during maintenance windows. Without it, the engine can drift behind on security fixes.",
-    "severity": "low",
-    "resource": "aws_db_instance.legacy",
-    "evidence": {
-      "attribute": "auto_minor_version_upgrade",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 5,
-        "start_col": 1,
-        "end_line": 18,
-        "end_col": 2
-      },
-      "actual": "absent",
-      "expected": "auto_minor_version_upgrade = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-544",
-    "title": "RDS instance without auto minor version upgrades",
-    "description": "Hygiene: RDS instances should enable auto_minor_version_upgrade so security patches are applied automatically during maintenance windows. Without it, the engine can drift behind on security fixes.",
-    "severity": "low",
-    "resource": "aws_db_instance.orders",
-    "evidence": {
-      "attribute": "auto_minor_version_upgrade",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 20,
-        "start_col": 1,
-        "end_line": 32,
-        "end_col": 2
-      },
-      "actual": "absent",
-      "expected": "auto_minor_version_upgrade = true"
     }
   },
   {
@@ -363,11 +287,11 @@
   {
     "rule_id": "AEGIS-AWS-607",
     "title": "RDS Postgres instance without query logging",
-    "description": "Hygiene: RDS Postgres instances should export postgresql logs to CloudWatch for query auditing. Add \"postgresql\" to enabled_cloudwatch_logs_log_exports.",
+    "description": "Hygiene: RDS Postgres instances should export postgresql logs to CloudWatch for query auditing. Add \"postgresql\" to enabled_cloudwatch_logs_exports.",
     "severity": "low",
     "resource": "aws_db_instance.orders",
     "evidence": {
-      "attribute": "enabled_cloudwatch_logs_log_exports",
+      "attribute": "enabled_cloudwatch_logs_exports",
       "span": {
         "file": "rds_mixed.tf",
         "start_line": 20,
@@ -376,7 +300,7 @@
         "end_col": 2
       },
       "actual": "absent",
-      "expected": "enabled_cloudwatch_logs_log_exports including \"postgresql\""
+      "expected": "enabled_cloudwatch_logs_exports including \"postgresql\""
     }
   },
   {
@@ -415,44 +339,6 @@
       },
       "actual": "absent",
       "expected": "performance_insights_enabled = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-702",
-    "title": "RDS instance snapshots do not copy tags",
-    "description": "copy_tags_to_snapshot is absent or false, so automated snapshots lose the instance's tags (owner, environment, cost center), which breaks tag-based access control and cost allocation on restores.",
-    "severity": "low",
-    "resource": "aws_db_instance.legacy",
-    "evidence": {
-      "attribute": "copy_tags_to_snapshot",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 5,
-        "start_col": 1,
-        "end_line": 18,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: false)",
-      "expected": "copy_tags_to_snapshot = true"
-    }
-  },
-  {
-    "rule_id": "AEGIS-AWS-702",
-    "title": "RDS instance snapshots do not copy tags",
-    "description": "copy_tags_to_snapshot is absent or false, so automated snapshots lose the instance's tags (owner, environment, cost center), which breaks tag-based access control and cost allocation on restores.",
-    "severity": "low",
-    "resource": "aws_db_instance.orders",
-    "evidence": {
-      "attribute": "copy_tags_to_snapshot",
-      "span": {
-        "file": "rds_mixed.tf",
-        "start_line": 20,
-        "start_col": 1,
-        "end_line": 32,
-        "end_col": 2
-      },
-      "actual": "absent (provider default: false)",
-      "expected": "copy_tags_to_snapshot = true"
     }
   },
   {

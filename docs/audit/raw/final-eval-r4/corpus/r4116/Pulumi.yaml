@@ -1,0 +1,30 @@
+name: r4116-stack
+runtime: yaml
+description: Pulumi stack (toplevel layout)
+resources:
+    dataAccount:
+      type: azure-native:storage:StorageAccount
+      properties:
+        accountName: data554801
+        resourceGroupName: rg-data
+        location: westeurope
+        kind: StorageV2
+        sku:
+          name: Standard_LRS
+        allowBlobPublicAccess: false
+        minimumTlsVersion: TLS1_2
+        supportsHttpsTrafficOnly: true
+
+    mainVault:
+      type: azure-native:keyvault:Vault
+      properties:
+        vaultName: kv-554801
+        resourceGroupName: rg-kv
+        location: westeurope
+        properties:
+          sku:
+            family: A
+            name: standard
+          tenantId: 00000000-0000-0000-0000-000000000000
+          enablePurgeProtection: true
+          enableSoftDelete: true

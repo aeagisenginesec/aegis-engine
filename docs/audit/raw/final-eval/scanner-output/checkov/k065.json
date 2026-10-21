@@ -1,0 +1,1515 @@
+[
+    {
+        "check_type": "kubernetes",
+        "results": {
+            "failed_checks": [
+                {
+                    "check_id": "CKV_K8S_21",
+                    "bc_check_id": "BC_K8S_20",
+                    "check_name": "The default namespace should not be used",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": []
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "apiVersion: apps/v1\n"
+                        ],
+                        [
+                            2,
+                            "kind: Deployment\n"
+                        ],
+                        [
+                            3,
+                            "metadata:\n"
+                        ],
+                        [
+                            4,
+                            "  name: hello\n"
+                        ],
+                        [
+                            5,
+                            "  labels:\n"
+                        ],
+                        [
+                            6,
+                            "    app: hello\n"
+                        ],
+                        [
+                            7,
+                            "spec:\n"
+                        ],
+                        [
+                            8,
+                            "  replicas: 2\n"
+                        ],
+                        [
+                            9,
+                            "  selector:\n"
+                        ],
+                        [
+                            10,
+                            "    matchLabels:\n"
+                        ],
+                        [
+                            11,
+                            "      app: hello\n"
+                        ],
+                        [
+                            12,
+                            "  template:\n"
+                        ],
+                        [
+                            13,
+                            "    metadata:\n"
+                        ],
+                        [
+                            14,
+                            "      labels:\n"
+                        ],
+                        [
+                            15,
+                            "        app: hello\n"
+                        ],
+                        [
+                            16,
+                            "    spec:\n"
+                        ],
+                        [
+                            17,
+                            "      securityContext:\n"
+                        ],
+                        [
+                            18,
+                            "        runAsNonRoot: true\n"
+                        ],
+                        [
+                            19,
+                            "        runAsUser: 10001\n"
+                        ],
+                        [
+                            20,
+                            "        runAsGroup: 10001\n"
+                        ],
+                        [
+                            21,
+                            "        fsGroup: 10001\n"
+                        ],
+                        [
+                            22,
+                            "        seccompProfile:\n"
+                        ],
+                        [
+                            23,
+                            "          type: RuntimeDefault\n"
+                        ],
+                        [
+                            24,
+                            "      containers:\n"
+                        ],
+                        [
+                            25,
+                            "        - name: hello\n"
+                        ],
+                        [
+                            26,
+                            "          image: example/hello:1.0.0\n"
+                        ],
+                        [
+                            27,
+                            "          ports:\n"
+                        ],
+                        [
+                            28,
+                            "            - containerPort: 8000\n"
+                        ],
+                        [
+                            29,
+                            "          securityContext:\n"
+                        ],
+                        [
+                            30,
+                            "            allowPrivilegeEscalation: false\n"
+                        ],
+                        [
+                            31,
+                            "            readOnlyRootFilesystem: true\n"
+                        ],
+                        [
+                            32,
+                            "            capabilities:\n"
+                        ],
+                        [
+                            33,
+                            "              drop: [\"ALL\"]\n"
+                        ],
+                        [
+                            34,
+                            "          resources:\n"
+                        ],
+                        [
+                            35,
+                            "            requests:\n"
+                        ],
+                        [
+                            36,
+                            "              cpu: \"50m\"\n"
+                        ],
+                        [
+                            37,
+                            "              memory: \"64Mi\"\n"
+                        ],
+                        [
+                            38,
+                            "            limits:\n"
+                        ],
+                        [
+                            39,
+                            "              cpu: \"250m\"\n"
+                        ],
+                        [
+                            40,
+                            "              memory: \"256Mi\"\n"
+                        ]
+                    ],
+                    "file_path": "/deployment.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "file_line_range": [
+                        1,
+                        40
+                    ],
+                    "resource": "Deployment.default.hello",
+                    "evaluations": {},
+                    "check_class": "checkov.kubernetes.checks.resource.k8s.DefaultNamespace",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-20",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_K8S_43",
+                    "bc_check_id": "BC_K8S_39",
+                    "check_name": "Image should use digest",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "spec/template/spec/containers/[0]/image"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "apiVersion: apps/v1\n"
+                        ],
+                        [
+                            2,
+                            "kind: Deployment\n"
+                        ],
+                        [
+                            3,
+                            "metadata:\n"
+                        ],
+                        [
+                            4,
+                            "  name: hello\n"
+                        ],
+                        [
+                            5,
+                            "  labels:\n"
+                        ],
+                        [
+                            6,
+                            "    app: hello\n"
+                        ],
+                        [
+                            7,
+                            "spec:\n"
+                        ],
+                        [
+                            8,
+                            "  replicas: 2\n"
+                        ],
+                        [
+                            9,
+                            "  selector:\n"
+                        ],
+                        [
+                            10,
+                            "    matchLabels:\n"
+                        ],
+                        [
+                            11,
+                            "      app: hello\n"
+                        ],
+                        [
+                            12,
+                            "  template:\n"
+                        ],
+                        [
+                            13,
+                            "    metadata:\n"
+                        ],
+                        [
+                            14,
+                            "      labels:\n"
+                        ],
+                        [
+                            15,
+                            "        app: hello\n"
+                        ],
+                        [
+                            16,
+                            "    spec:\n"
+                        ],
+                        [
+                            17,
+                            "      securityContext:\n"
+                        ],
+                        [
+                            18,
+                            "        runAsNonRoot: true\n"
+                        ],
+                        [
+                            19,
+                            "        runAsUser: 10001\n"
+                        ],
+                        [
+                            20,
+                            "        runAsGroup: 10001\n"
+                        ],
+                        [
+                            21,
+                            "        fsGroup: 10001\n"
+                        ],
+                        [
+                            22,
+                            "        seccompProfile:\n"
+                        ],
+                        [
+                            23,
+                            "          type: RuntimeDefault\n"
+                        ],
+                        [
+                            24,
+                            "      containers:\n"
+                        ],
+                        [
+                            25,
+                            "        - name: hello\n"
+                        ],
+                        [
+                            26,
+                            "          image: example/hello:1.0.0\n"
+                        ],
+                        [
+                            27,
+                            "          ports:\n"
+                        ],
+                        [
+                            28,
+                            "            - containerPort: 8000\n"
+                        ],
+                        [
+                            29,
+                            "          securityContext:\n"
+                        ],
+                        [
+                            30,
+                            "            allowPrivilegeEscalation: false\n"
+                        ],
+                        [
+                            31,
+                            "            readOnlyRootFilesystem: true\n"
+                        ],
+                        [
+                            32,
+                            "            capabilities:\n"
+                        ],
+                        [
+                            33,
+                            "              drop: [\"ALL\"]\n"
+                        ],
+                        [
+                            34,
+                            "          resources:\n"
+                        ],
+                        [
+                            35,
+                            "            requests:\n"
+                        ],
+                        [
+                            36,
+                            "              cpu: \"50m\"\n"
+                        ],
+                        [
+                            37,
+                            "              memory: \"64Mi\"\n"
+                        ],
+                        [
+                            38,
+                            "            limits:\n"
+                        ],
+                        [
+                            39,
+                            "              cpu: \"250m\"\n"
+                        ],
+                        [
+                            40,
+                            "              memory: \"256Mi\"\n"
+                        ]
+                    ],
+                    "file_path": "/deployment.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "file_line_range": [
+                        1,
+                        40
+                    ],
+                    "resource": "Deployment.default.hello",
+                    "evaluations": {},
+                    "check_class": "checkov.kubernetes.checks.resource.k8s.ImageDigest",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-39",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_K8S_15",
+                    "bc_check_id": "BC_K8S_14",
+                    "check_name": "Image Pull Policy should be Always",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "spec/template/spec/containers/[0]/image",
+                            "spec/template/spec/containers/[0]/imagePullPolicy"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "apiVersion: apps/v1\n"
+                        ],
+                        [
+                            2,
+                            "kind: Deployment\n"
+                        ],
+                        [
+                            3,
+                            "metadata:\n"
+                        ],
+                        [
+                            4,
+                            "  name: hello\n"
+                        ],
+                        [
+                            5,
+                            "  labels:\n"
+                        ],
+                        [
+                            6,
+                            "    app: hello\n"
+                        ],
+                        [
+                            7,
+                            "spec:\n"
+                        ],
+                        [
+                            8,
+                            "  replicas: 2\n"
+                        ],
+                        [
+                            9,
+                            "  selector:\n"
+                        ],
+                        [
+                            10,
+                            "    matchLabels:\n"
+                        ],
+                        [
+                            11,
+                            "      app: hello\n"
+                        ],
+                        [
+                            12,
+                            "  template:\n"
+                        ],
+                        [
+                            13,
+                            "    metadata:\n"
+                        ],
+                        [
+                            14,
+                            "      labels:\n"
+                        ],
+                        [
+                            15,
+                            "        app: hello\n"
+                        ],
+                        [
+                            16,
+                            "    spec:\n"
+                        ],
+                        [
+                            17,
+                            "      securityContext:\n"
+                        ],
+                        [
+                            18,
+                            "        runAsNonRoot: true\n"
+                        ],
+                        [
+                            19,
+                            "        runAsUser: 10001\n"
+                        ],
+                        [
+                            20,
+                            "        runAsGroup: 10001\n"
+                        ],
+                        [
+                            21,
+                            "        fsGroup: 10001\n"
+                        ],
+                        [
+                            22,
+                            "        seccompProfile:\n"
+                        ],
+                        [
+                            23,
+                            "          type: RuntimeDefault\n"
+                        ],
+                        [
+                            24,
+                            "      containers:\n"
+                        ],
+                        [
+                            25,
+                            "        - name: hello\n"
+                        ],
+                        [
+                            26,
+                            "          image: example/hello:1.0.0\n"
+                        ],
+                        [
+                            27,
+                            "          ports:\n"
+                        ],
+                        [
+                            28,
+                            "            - containerPort: 8000\n"
+                        ],
+                        [
+                            29,
+                            "          securityContext:\n"
+                        ],
+                        [
+                            30,
+                            "            allowPrivilegeEscalation: false\n"
+                        ],
+                        [
+                            31,
+                            "            readOnlyRootFilesystem: true\n"
+                        ],
+                        [
+                            32,
+                            "            capabilities:\n"
+                        ],
+                        [
+                            33,
+                            "              drop: [\"ALL\"]\n"
+                        ],
+                        [
+                            34,
+                            "          resources:\n"
+                        ],
+                        [
+                            35,
+                            "            requests:\n"
+                        ],
+                        [
+                            36,
+                            "              cpu: \"50m\"\n"
+                        ],
+                        [
+                            37,
+                            "              memory: \"64Mi\"\n"
+                        ],
+                        [
+                            38,
+                            "            limits:\n"
+                        ],
+                        [
+                            39,
+                            "              cpu: \"250m\"\n"
+                        ],
+                        [
+                            40,
+                            "              memory: \"256Mi\"\n"
+                        ]
+                    ],
+                    "file_path": "/deployment.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "file_line_range": [
+                        1,
+                        40
+                    ],
+                    "resource": "Deployment.default.hello",
+                    "evaluations": {},
+                    "check_class": "checkov.kubernetes.checks.resource.k8s.ImagePullPolicyAlways",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-14",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_K8S_8",
+                    "bc_check_id": "BC_K8S_7",
+                    "check_name": "Liveness Probe Should be Configured",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "spec/template/spec/containers/[0]/livenessProbe"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "apiVersion: apps/v1\n"
+                        ],
+                        [
+                            2,
+                            "kind: Deployment\n"
+                        ],
+                        [
+                            3,
+                            "metadata:\n"
+                        ],
+                        [
+                            4,
+                            "  name: hello\n"
+                        ],
+                        [
+                            5,
+                            "  labels:\n"
+                        ],
+                        [
+                            6,
+                            "    app: hello\n"
+                        ],
+                        [
+                            7,
+                            "spec:\n"
+                        ],
+                        [
+                            8,
+                            "  replicas: 2\n"
+                        ],
+                        [
+                            9,
+                            "  selector:\n"
+                        ],
+                        [
+                            10,
+                            "    matchLabels:\n"
+                        ],
+                        [
+                            11,
+                            "      app: hello\n"
+                        ],
+                        [
+                            12,
+                            "  template:\n"
+                        ],
+                        [
+                            13,
+                            "    metadata:\n"
+                        ],
+                        [
+                            14,
+                            "      labels:\n"
+                        ],
+                        [
+                            15,
+                            "        app: hello\n"
+                        ],
+                        [
+                            16,
+                            "    spec:\n"
+                        ],
+                        [
+                            17,
+                            "      securityContext:\n"
+                        ],
+                        [
+                            18,
+                            "        runAsNonRoot: true\n"
+                        ],
+                        [
+                            19,
+                            "        runAsUser: 10001\n"
+                        ],
+                        [
+                            20,
+                            "        runAsGroup: 10001\n"
+                        ],
+                        [
+                            21,
+                            "        fsGroup: 10001\n"
+                        ],
+                        [
+                            22,
+                            "        seccompProfile:\n"
+                        ],
+                        [
+                            23,
+                            "          type: RuntimeDefault\n"
+                        ],
+                        [
+                            24,
+                            "      containers:\n"
+                        ],
+                        [
+                            25,
+                            "        - name: hello\n"
+                        ],
+                        [
+                            26,
+                            "          image: example/hello:1.0.0\n"
+                        ],
+                        [
+                            27,
+                            "          ports:\n"
+                        ],
+                        [
+                            28,
+                            "            - containerPort: 8000\n"
+                        ],
+                        [
+                            29,
+                            "          securityContext:\n"
+                        ],
+                        [
+                            30,
+                            "            allowPrivilegeEscalation: false\n"
+                        ],
+                        [
+                            31,
+                            "            readOnlyRootFilesystem: true\n"
+                        ],
+                        [
+                            32,
+                            "            capabilities:\n"
+                        ],
+                        [
+                            33,
+                            "              drop: [\"ALL\"]\n"
+                        ],
+                        [
+                            34,
+                            "          resources:\n"
+                        ],
+                        [
+                            35,
+                            "            requests:\n"
+                        ],
+                        [
+                            36,
+                            "              cpu: \"50m\"\n"
+                        ],
+                        [
+                            37,
+                            "              memory: \"64Mi\"\n"
+                        ],
+                        [
+                            38,
+                            "            limits:\n"
+                        ],
+                        [
+                            39,
+                            "              cpu: \"250m\"\n"
+                        ],
+                        [
+                            40,
+                            "              memory: \"256Mi\"\n"
+                        ]
+                    ],
+                    "file_path": "/deployment.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "file_line_range": [
+                        1,
+                        40
+                    ],
+                    "resource": "Deployment.default.hello",
+                    "evaluations": {},
+                    "check_class": "checkov.kubernetes.checks.resource.k8s.LivenessProbe",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-7",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_K8S_9",
+                    "bc_check_id": "BC_K8S_8",
+                    "check_name": "Readiness Probe Should be Configured",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "spec/template/spec/containers/[0]/readinessProbe"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "apiVersion: apps/v1\n"
+                        ],
+                        [
+                            2,
+                            "kind: Deployment\n"
+                        ],
+                        [
+                            3,
+                            "metadata:\n"
+                        ],
+                        [
+                            4,
+                            "  name: hello\n"
+                        ],
+                        [
+                            5,
+                            "  labels:\n"
+                        ],
+                        [
+                            6,
+                            "    app: hello\n"
+                        ],
+                        [
+                            7,
+                            "spec:\n"
+                        ],
+                        [
+                            8,
+                            "  replicas: 2\n"
+                        ],
+                        [
+                            9,
+                            "  selector:\n"
+                        ],
+                        [
+                            10,
+                            "    matchLabels:\n"
+                        ],
+                        [
+                            11,
+                            "      app: hello\n"
+                        ],
+                        [
+                            12,
+                            "  template:\n"
+                        ],
+                        [
+                            13,
+                            "    metadata:\n"
+                        ],
+                        [
+                            14,
+                            "      labels:\n"
+                        ],
+                        [
+                            15,
+                            "        app: hello\n"
+                        ],
+                        [
+                            16,
+                            "    spec:\n"
+                        ],
+                        [
+                            17,
+                            "      securityContext:\n"
+                        ],
+                        [
+                            18,
+                            "        runAsNonRoot: true\n"
+                        ],
+                        [
+                            19,
+                            "        runAsUser: 10001\n"
+                        ],
+                        [
+                            20,
+                            "        runAsGroup: 10001\n"
+                        ],
+                        [
+                            21,
+                            "        fsGroup: 10001\n"
+                        ],
+                        [
+                            22,
+                            "        seccompProfile:\n"
+                        ],
+                        [
+                            23,
+                            "          type: RuntimeDefault\n"
+                        ],
+                        [
+                            24,
+                            "      containers:\n"
+                        ],
+                        [
+                            25,
+                            "        - name: hello\n"
+                        ],
+                        [
+                            26,
+                            "          image: example/hello:1.0.0\n"
+                        ],
+                        [
+                            27,
+                            "          ports:\n"
+                        ],
+                        [
+                            28,
+                            "            - containerPort: 8000\n"
+                        ],
+                        [
+                            29,
+                            "          securityContext:\n"
+                        ],
+                        [
+                            30,
+                            "            allowPrivilegeEscalation: false\n"
+                        ],
+                        [
+                            31,
+                            "            readOnlyRootFilesystem: true\n"
+                        ],
+                        [
+                            32,
+                            "            capabilities:\n"
+                        ],
+                        [
+                            33,
+                            "              drop: [\"ALL\"]\n"
+                        ],
+                        [
+                            34,
+                            "          resources:\n"
+                        ],
+                        [
+                            35,
+                            "            requests:\n"
+                        ],
+                        [
+                            36,
+                            "              cpu: \"50m\"\n"
+                        ],
+                        [
+                            37,
+                            "              memory: \"64Mi\"\n"
+                        ],
+                        [
+                            38,
+                            "            limits:\n"
+                        ],
+                        [
+                            39,
+                            "              cpu: \"250m\"\n"
+                        ],
+                        [
+                            40,
+                            "              memory: \"256Mi\"\n"
+                        ]
+                    ],
+                    "file_path": "/deployment.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "file_line_range": [
+                        1,
+                        40
+                    ],
+                    "resource": "Deployment.default.hello",
+                    "evaluations": {},
+                    "check_class": "checkov.kubernetes.checks.resource.k8s.ReadinessProbe",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-8",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV_K8S_38",
+                    "bc_check_id": "BC_K8S_35",
+                    "check_name": "Ensure that Service Account Tokens are only mounted where necessary",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": []
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "apiVersion: apps/v1\n"
+                        ],
+                        [
+                            2,
+                            "kind: Deployment\n"
+                        ],
+                        [
+                            3,
+                            "metadata:\n"
+                        ],
+                        [
+                            4,
+                            "  name: hello\n"
+                        ],
+                        [
+                            5,
+                            "  labels:\n"
+                        ],
+                        [
+                            6,
+                            "    app: hello\n"
+                        ],
+                        [
+                            7,
+                            "spec:\n"
+                        ],
+                        [
+                            8,
+                            "  replicas: 2\n"
+                        ],
+                        [
+                            9,
+                            "  selector:\n"
+                        ],
+                        [
+                            10,
+                            "    matchLabels:\n"
+                        ],
+                        [
+                            11,
+                            "      app: hello\n"
+                        ],
+                        [
+                            12,
+                            "  template:\n"
+                        ],
+                        [
+                            13,
+                            "    metadata:\n"
+                        ],
+                        [
+                            14,
+                            "      labels:\n"
+                        ],
+                        [
+                            15,
+                            "        app: hello\n"
+                        ],
+                        [
+                            16,
+                            "    spec:\n"
+                        ],
+                        [
+                            17,
+                            "      securityContext:\n"
+                        ],
+                        [
+                            18,
+                            "        runAsNonRoot: true\n"
+                        ],
+                        [
+                            19,
+                            "        runAsUser: 10001\n"
+                        ],
+                        [
+                            20,
+                            "        runAsGroup: 10001\n"
+                        ],
+                        [
+                            21,
+                            "        fsGroup: 10001\n"
+                        ],
+                        [
+                            22,
+                            "        seccompProfile:\n"
+                        ],
+                        [
+                            23,
+                            "          type: RuntimeDefault\n"
+                        ],
+                        [
+                            24,
+                            "      containers:\n"
+                        ],
+                        [
+                            25,
+                            "        - name: hello\n"
+                        ],
+                        [
+                            26,
+                            "          image: example/hello:1.0.0\n"
+                        ],
+                        [
+                            27,
+                            "          ports:\n"
+                        ],
+                        [
+                            28,
+                            "            - containerPort: 8000\n"
+                        ],
+                        [
+                            29,
+                            "          securityContext:\n"
+                        ],
+                        [
+                            30,
+                            "            allowPrivilegeEscalation: false\n"
+                        ],
+                        [
+                            31,
+                            "            readOnlyRootFilesystem: true\n"
+                        ],
+                        [
+                            32,
+                            "            capabilities:\n"
+                        ],
+                        [
+                            33,
+                            "              drop: [\"ALL\"]\n"
+                        ],
+                        [
+                            34,
+                            "          resources:\n"
+                        ],
+                        [
+                            35,
+                            "            requests:\n"
+                        ],
+                        [
+                            36,
+                            "              cpu: \"50m\"\n"
+                        ],
+                        [
+                            37,
+                            "              memory: \"64Mi\"\n"
+                        ],
+                        [
+                            38,
+                            "            limits:\n"
+                        ],
+                        [
+                            39,
+                            "              cpu: \"250m\"\n"
+                        ],
+                        [
+                            40,
+                            "              memory: \"256Mi\"\n"
+                        ]
+                    ],
+                    "file_path": "/deployment.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "file_line_range": [
+                        1,
+                        40
+                    ],
+                    "resource": "Deployment.default.hello",
+                    "evaluations": {},
+                    "check_class": "checkov.kubernetes.checks.resource.k8s.ServiceAccountTokens",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-35",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                },
+                {
+                    "check_id": "CKV2_K8S_6",
+                    "bc_check_id": null,
+                    "check_name": "Minimize the admission of pods which lack an associated NetworkPolicy",
+                    "check_result": {
+                        "result": "FAILED",
+                        "evaluated_keys": [
+                            "resource_type"
+                        ]
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "apiVersion: apps/v1\n"
+                        ],
+                        [
+                            2,
+                            "kind: Deployment\n"
+                        ],
+                        [
+                            3,
+                            "metadata:\n"
+                        ],
+                        [
+                            4,
+                            "  name: hello\n"
+                        ],
+                        [
+                            5,
+                            "  labels:\n"
+                        ],
+                        [
+                            6,
+                            "    app: hello\n"
+                        ],
+                        [
+                            7,
+                            "spec:\n"
+                        ],
+                        [
+                            8,
+                            "  replicas: 2\n"
+                        ],
+                        [
+                            9,
+                            "  selector:\n"
+                        ],
+                        [
+                            10,
+                            "    matchLabels:\n"
+                        ],
+                        [
+                            11,
+                            "      app: hello\n"
+                        ],
+                        [
+                            12,
+                            "  template:\n"
+                        ],
+                        [
+                            13,
+                            "    metadata:\n"
+                        ],
+                        [
+                            14,
+                            "      labels:\n"
+                        ],
+                        [
+                            15,
+                            "        app: hello\n"
+                        ],
+                        [
+                            16,
+                            "    spec:\n"
+                        ],
+                        [
+                            17,
+                            "      securityContext:\n"
+                        ],
+                        [
+                            18,
+                            "        runAsNonRoot: true\n"
+                        ],
+                        [
+                            19,
+                            "        runAsUser: 10001\n"
+                        ],
+                        [
+                            20,
+                            "        runAsGroup: 10001\n"
+                        ],
+                        [
+                            21,
+                            "        fsGroup: 10001\n"
+                        ],
+                        [
+                            22,
+                            "        seccompProfile:\n"
+                        ],
+                        [
+                            23,
+                            "          type: RuntimeDefault\n"
+                        ],
+                        [
+                            24,
+                            "      containers:\n"
+                        ],
+                        [
+                            25,
+                            "        - name: hello\n"
+                        ],
+                        [
+                            26,
+                            "          image: example/hello:1.0.0\n"
+                        ],
+                        [
+                            27,
+                            "          ports:\n"
+                        ],
+                        [
+                            28,
+                            "            - containerPort: 8000\n"
+                        ],
+                        [
+                            29,
+                            "          securityContext:\n"
+                        ],
+                        [
+                            30,
+                            "            allowPrivilegeEscalation: false\n"
+                        ],
+                        [
+                            31,
+                            "            readOnlyRootFilesystem: true\n"
+                        ],
+                        [
+                            32,
+                            "            capabilities:\n"
+                        ],
+                        [
+                            33,
+                            "              drop: [\"ALL\"]\n"
+                        ],
+                        [
+                            34,
+                            "          resources:\n"
+                        ],
+                        [
+                            35,
+                            "            requests:\n"
+                        ],
+                        [
+                            36,
+                            "              cpu: \"50m\"\n"
+                        ],
+                        [
+                            37,
+                            "              memory: \"64Mi\"\n"
+                        ],
+                        [
+                            38,
+                            "            limits:\n"
+                        ],
+                        [
+                            39,
+                            "              cpu: \"250m\"\n"
+                        ],
+                        [
+                            40,
+                            "              memory: \"256Mi\"\n"
+                        ]
+                    ],
+                    "file_path": "/deployment.yaml",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/deployment.yaml",
+                    "file_line_range": [
+                        1,
+                        40
+                    ],
+                    "resource": "Pod.default.hello.app-hello",
+                    "evaluations": {},
+                    "check_class": "checkov.common.graph.checks_infra.base_check",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": null,
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                }
+            ]
+        },
+        "summary": {
+            "passed": 82,
+            "failed": 7,
+            "skipped": 0,
+            "parsing_errors": 0,
+            "resource_count": 2,
+            "checkov_version": "3.3.26"
+        }
+    },
+    {
+        "check_type": "dockerfile",
+        "results": {
+            "failed_checks": [
+                {
+                    "check_id": "CKV_DOCKER_2",
+                    "bc_check_id": "BC_DKR_2",
+                    "check_name": "Ensure that HEALTHCHECK instructions have been added to container images",
+                    "check_result": {
+                        "result": "FAILED",
+                        "results_configuration": null
+                    },
+                    "code_block": [
+                        [
+                            1,
+                            "FROM python:3.11.9-slim-bookworm\n"
+                        ],
+                        [
+                            2,
+                            "\n"
+                        ],
+                        [
+                            3,
+                            "RUN useradd --create-home --uid 10001 appuser\n"
+                        ],
+                        [
+                            4,
+                            "\n"
+                        ],
+                        [
+                            5,
+                            "WORKDIR /app\n"
+                        ],
+                        [
+                            6,
+                            "COPY requirements.txt .\n"
+                        ],
+                        [
+                            7,
+                            "RUN pip install --no-cache-dir -r requirements.txt\n"
+                        ],
+                        [
+                            8,
+                            "COPY --chown=appuser:appuser . .\n"
+                        ],
+                        [
+                            9,
+                            "\n"
+                        ],
+                        [
+                            10,
+                            "USER appuser\n"
+                        ],
+                        [
+                            11,
+                            "\n"
+                        ],
+                        [
+                            12,
+                            "EXPOSE 8000\n"
+                        ],
+                        [
+                            13,
+                            "\n"
+                        ],
+                        [
+                            14,
+                            "CMD [\"python\", \"server.py\"]"
+                        ]
+                    ],
+                    "file_path": "/Dockerfile",
+                    "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/Dockerfile",
+                    "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k065/Dockerfile",
+                    "file_line_range": [
+                        1,
+                        14
+                    ],
+                    "resource": "/Dockerfile.",
+                    "evaluations": null,
+                    "check_class": "checkov.dockerfile.checks.HealthcheckExists",
+                    "fixed_definition": null,
+                    "entity_tags": null,
+                    "caller_file_path": null,
+                    "caller_file_line_range": null,
+                    "resource_address": null,
+                    "severity": null,
+                    "bc_category": null,
+                    "benchmarks": null,
+                    "description": null,
+                    "short_description": null,
+                    "vulnerability_details": null,
+                    "connected_node": null,
+                    "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-that-healthcheck-instructions-have-been-added-to-container-images",
+                    "details": [],
+                    "check_len": null,
+                    "definition_context_file_path": null
+                }
+            ]
+        },
+        "summary": {
+            "passed": 42,
+            "failed": 1,
+            "skipped": 0,
+            "parsing_errors": 0,
+            "resource_count": 1,
+            "checkov_version": "3.3.26"
+        }
+    }
+]

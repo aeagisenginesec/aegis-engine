@@ -19,16 +19,18 @@ func TestAZURE044_TDEQuiet(t *testing.T) {
 	}
 }
 
-// TestAZURE045_NoAuditingFires verifies auditing detection.
-func TestAZURE045_NoAuditingFires(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{})
-	mustFinding(t, runRule(mssqlNoAuditing{}, r), "AEGIS-AZURE-045")
+// TestAZURE049_NoTDEFires verifies TDE detection.
+func TestAZURE049_NoTDEFires(t *testing.T) {
+	r := res("azurerm_mssql_database", "d", map[string]ir.Value{"transparent_data_encryption_enabled": kv(false, 3)})
+	mustFinding(t, runRule(mssqlDBNoTDE{}, r), "AEGIS-AZURE-049")
 }
 
-// TestAZURE048_PublicAccessFires verifies public access detection.
-func TestAZURE048_PublicAccessFires(t *testing.T) {
-	r := res("azurerm_mssql_server", "s", map[string]ir.Value{"public_network_access_enabled": kv(true, 3)})
-	mustFinding(t, runRule(mssqlPublicAccess{}, r), "AEGIS-AZURE-048")
+// TestAZURE049_TDEQuiet verifies an encrypted MSSQL database stays quiet.
+func TestAZURE049_TDEQuiet(t *testing.T) {
+	r := res("azurerm_mssql_database", "d", map[string]ir.Value{"transparent_data_encryption_enabled": kv(true, 3)})
+	if len(runRule(mssqlDBNoTDE{}, r)) != 0 {
+		t.Fatal("AEGIS-AZURE-049: expected 0 findings")
+	}
 }
 
 // TestAZURE050_FirewallOpenFires verifies open firewall rule.
@@ -87,6 +89,20 @@ func TestAZURE054_SSHPublicFires(t *testing.T) {
 	mustFinding(t, runRule(nsgSSHPublic{}, r), "AEGIS-AZURE-054")
 }
 
+// TestAZURE054_SSHPrivateQuiet verifies SSH open to a private range stays quiet.
+func TestAZURE054_SSHPrivateQuiet(t *testing.T) {
+	r := res("azurerm_network_security_rule", "r", map[string]ir.Value{
+		"direction":              ks("Inbound", 3),
+		"access":                 ks("Allow", 4),
+		"protocol":               ks("Tcp", 5),
+		"destination_port_range": ks("22", 6),
+		"source_address_prefix":  ks("10.0.0.0/8", 7),
+	})
+	if len(runRule(nsgSSHPublic{}, r)) != 0 {
+		t.Fatal("AEGIS-AZURE-054: expected 0 findings")
+	}
+}
+
 // TestAZURE055_WildcardPortFires verifies wildcard port detection.
 func TestAZURE055_WildcardPortFires(t *testing.T) {
 	r := res("azurerm_network_security_rule", "r", map[string]ir.Value{
@@ -97,6 +113,20 @@ func TestAZURE055_WildcardPortFires(t *testing.T) {
 		"source_address_prefix":  ks("*", 7),
 	})
 	mustFinding(t, runRule(nsgWildcardPort{}, r), "AEGIS-AZURE-055")
+}
+
+// TestAZURE055_ScopedPortQuiet verifies a scoped destination port stays quiet.
+func TestAZURE055_ScopedPortQuiet(t *testing.T) {
+	r := res("azurerm_network_security_rule", "r", map[string]ir.Value{
+		"direction":              ks("Inbound", 3),
+		"access":                 ks("Allow", 4),
+		"protocol":               ks("Tcp", 5),
+		"destination_port_range": ks("443", 6),
+		"source_address_prefix":  ks("0.0.0.0/0", 7),
+	})
+	if len(runRule(nsgWildcardPort{}, r)) != 0 {
+		t.Fatal("AEGIS-AZURE-055: expected 0 findings")
+	}
 }
 
 // TestAZURE057_NoDDoSFires verifies DDoS protection detection.

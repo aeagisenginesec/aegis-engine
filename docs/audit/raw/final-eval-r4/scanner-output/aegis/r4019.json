@@ -1,0 +1,238 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019",
+  "summary": {
+    "resources": 4,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 11,
+    "critical": 0,
+    "high": 4,
+    "medium": 4,
+    "low": 3
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-012",
+      "severity": "medium",
+      "title": "S3 bucket without versioning",
+      "description": "Versioning protects against accidental deletion and overwrites and is required for reliable recovery. Provider default is disabled.",
+      "resource": "aws_s3_bucket.vault",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 6,
+      "evidence": "versioning = absent (provider default: disabled)",
+      "expected": "versioning { enabled = true }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time recovery / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-206",
+      "severity": "high",
+      "title": "S3 bucket without public access block",
+      "description": "Without an aws_s3_bucket_public_access_block enabling all four protections (block_public_acls, block_public_policy, ignore_public_acls, restrict_public_buckets), a single permissive ACL or policy can expose the bucket. Fail-safe: only a proven all-four-true block silences this rule.",
+      "resource": "aws_s3_bucket.vault",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 6,
+      "evidence": "aws_s3_bucket_public_access_block = absent or not all four protections enabled",
+      "expected": "public access block with all four settings = true",
+      "remediation": "Add the public access block resource (see AEGIS-AWS-003 fix). All four settings\nmust be true for full protection.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "2.1.5"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-3"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-335",
+      "severity": "high",
+      "title": "KMS key without rotation",
+      "description": "Customer-managed KMS keys should rotate annually. enable_key_rotation defaults to false. (AWS-managed keys rotate automatically and cannot set this flag; a narrow false positive is possible if an AWS-managed key is declared explicitly.)",
+      "resource": "aws_kms_key.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 3,
+      "evidence": "enable_key_rotation = [REDACTED]",
+      "expected": "true",
+      "remediation": "Enable automatic annual rotation on the KMS key:\nresource \"aws_kms_key\" \"this\" {\n  enable_key_rotation = true\n  # ...\n}",
+      "references": [
+        "https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "3.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-12"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "3.6.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-443",
+      "severity": "high",
+      "title": "S3 bucket policy does not enforce TLS (SecureTransport)",
+      "description": "Without an explicit Deny on aws:SecureTransport=false, bucket objects can be fetched over plaintext HTTP. Add a bucket policy statement denying s3:* when SecureTransport is false.",
+      "resource": "aws_s3_bucket.vault",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 6,
+      "evidence": "policy = no Deny on aws:SecureTransport=false",
+      "expected": "bucket policy denying s3:* when SecureTransport is false",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "2.1.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-8"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "4.2.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-445",
+      "severity": "medium",
+      "title": "S3 bucket without server access logging",
+      "description": "Server access logging records requests against the bucket, which is essential for audit and incident response.",
+      "resource": "aws_s3_bucket.vault",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 6,
+      "evidence": "logging = absent",
+      "expected": "logging { target_bucket = ... }",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-601",
+      "severity": "low",
+      "title": "S3 bucket without lifecycle configuration",
+      "description": "Hygiene: S3 buckets should define lifecycle rules to transition or expire objects, controlling long-term storage costs. Add a lifecycle_rule block or an aws_s3_bucket_lifecycle_configuration resource.",
+      "resource": "aws_s3_bucket.vault",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 6,
+      "evidence": "lifecycle_rule = absent",
+      "expected": "lifecycle_rule block or aws_s3_bucket_lifecycle_configuration",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-057",
+      "severity": "medium",
+      "title": "Compute instance with IP forwarding enabled",
+      "description": "google_compute_instance with can_ip_forward = true can route traffic for other hosts, enabling MITM positioning.",
+      "resource": "google_compute_instance.nat",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 24,
+      "evidence": "can_ip_forward = true",
+      "expected": "false (or omitted)",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-059",
+      "severity": "medium",
+      "title": "Compute instance without secure boot",
+      "description": "google_compute_instance shielded_instance_config without enable_secure_boot = true misses boot integrity verification.",
+      "resource": "google_compute_instance.nat",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 20,
+      "evidence": "shielded_instance_config = absent",
+      "expected": "shielded_instance_config { enable_secure_boot = true }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-061",
+      "severity": "high",
+      "title": "Compute instance boot disk without customer-managed encryption",
+      "description": "google_compute_instance boot_disk initialize_params without kms_key_self_link uses Google-managed disk encryption.",
+      "resource": "google_compute_instance.nat",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 20,
+      "evidence": "boot_disk.initialize_params.kms_key_self_link = [REDACTED]",
+      "expected": "kms_key_self_link = ...",
+      "remediation": "Enable encryption at rest. Google-managed keys apply by default; for regulated data use customer-managed keys (CMEK) via Cloud KMS with key rotation.",
+      "references": [
+        "https://cloud.google.com/security/encryption/default-encryption"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-065",
+      "severity": "low",
+      "title": "Compute instance allows project-wide SSH keys",
+      "description": "google_compute_instance metadata without block-project-ssh-keys = TRUE accepts project-wide SSH keys.",
+      "resource": "google_compute_instance.nat",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 20,
+      "evidence": "metadata.block-project-ssh-keys = [REDACTED]",
+      "expected": "block-project-ssh-keys = \"TRUE\"",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-GCP-173",
+      "severity": "low",
+      "title": "Compute instance without Confidential VM",
+      "description": "google_compute_instance with no confidential_instance_config block runs without memory encryption and remote attestation: in-use data is visible to the hypervisor layer. Enable Confidential VM for sensitive workloads.",
+      "resource": "google_compute_instance.nat",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+      "line": 20,
+      "evidence": "confidential_instance_config = absent",
+      "expected": "confidential_instance_config { enable_confidential_compute = true }",
+      "remediation": "Review the flagged configuration against Google Cloud security best practices and the CIS Google Cloud Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://cloud.google.com/security/best-practices"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4019/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

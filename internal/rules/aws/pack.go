@@ -67,14 +67,20 @@ func Rules() []ir.Rule {
 	base = append(base, Databases3Rules()...)             // 631-636
 	base = append(base, Search2Rules()...)                // 637-644
 	base = append(base, Lambda2Rules()...)                // 645-649
-	base = append(base, IAMDeepRules()...)               // 650-679
-	base = append(base, ComputeDeepRules()...)           // 680-699
-	base = append(base, DatabasesDeepRules()...)         // 700-719
-	base = append(base, LambdaDeepRules()...)            // 720-739
-	base = append(base, NetworkDeepRules()...)           // 740-759
-	base = append(base, GovernanceDeepRules()...)        // 760-779
-	base = append(base, KMSSecretsDeepRules()...)        // 780-799
-	base = append(base, ServicesDeepRules()...)          // 800-824
-	base = append(base, EdgeDeepRules()...)              // 825-849
+	base = append(base, IAMDeepRules()...)                // 650-679
+	base = append(base, ComputeDeepRules()...)            // 680-699
+	base = append(base, DatabasesDeepRules()...)          // 700-719
+	base = append(base, LambdaDeepRules()...)             // 720-739
+	base = append(base, NetworkDeepRules()...)            // 740-759
+	base = append(base, GovernanceDeepRules()...)         // 760-779
+	base = append(base, KMSSecretsDeepRules()...)         // 780-799
+	base = append(base, ServicesDeepRules()...)           // 800-824
+	base = append(base, EdgeDeepRules()...)               // 825-849
+	base = append(base, WeakPasswordRules()...)           // AEGIS-AWS-850
+	base = append(base, CloudTrailCloudWatchRules()...)   // AEGIS-AWS-851
+	base = append(base, CMKRefinementRules()...)          // AEGIS-AWS-852..855
+	base = append(base, EOLImageRules()...)               // AEGIS-AWS-856
+	base = append(base, CFNParameterSecretRules()...)     // AEGIS-AWS-857
+	base = append(base, sgDatabasePort{})                 // AEGIS-AWS-858
 	return base
 }

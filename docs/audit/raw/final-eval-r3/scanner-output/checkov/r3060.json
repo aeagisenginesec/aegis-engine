@@ -1,0 +1,390 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_7",
+                "bc_check_id": "BC_AWS_LOGGING_8",
+                "check_name": "Ensure rotation for customer created CMKs is enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/EnableKeyRotation"
+                    ]
+                },
+                "code_block": [
+                    [
+                        4,
+                        "  DataKey:\n"
+                    ],
+                    [
+                        5,
+                        "    Type: AWS::KMS::Key\n"
+                    ],
+                    [
+                        6,
+                        "    Properties:\n"
+                    ],
+                    [
+                        7,
+                        "      Description: data-key-dd0286\n"
+                    ],
+                    [
+                        8,
+                        "      EnableKeyRotation: false\n"
+                    ],
+                    [
+                        9,
+                        "      KeyPolicy:\n"
+                    ],
+                    [
+                        10,
+                        "        Version: \"2012-10-17\"\n"
+                    ],
+                    [
+                        11,
+                        "        Statement:\n"
+                    ],
+                    [
+                        12,
+                        "          - Effect: Allow\n"
+                    ],
+                    [
+                        13,
+                        "            Principal:\n"
+                    ],
+                    [
+                        14,
+                        "              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root\n"
+                    ],
+                    [
+                        15,
+                        "            Action: kms:*\n"
+                    ],
+                    [
+                        16,
+                        "            Resource: \"*\"\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3060/template.yaml",
+                "repo_file_path": "/corpus/r3060/template.yaml",
+                "file_line_range": [
+                    4,
+                    16
+                ],
+                "resource": "AWS::KMS::Key.DataKey",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.KMSRotation",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/logging-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_116",
+                "bc_check_id": "BC_AWS_GENERAL_64",
+                "check_name": "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/DeadLetterConfig/TargetArn"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "  HookFn:\n"
+                    ],
+                    [
+                        19,
+                        "    Type: AWS::Lambda::Function\n"
+                    ],
+                    [
+                        20,
+                        "    Properties:\n"
+                    ],
+                    [
+                        21,
+                        "      FunctionName: hook-dd0286\n"
+                    ],
+                    [
+                        22,
+                        "      Role: arn:aws:iam::123456789012:role/lambda-exec\n"
+                    ],
+                    [
+                        23,
+                        "      Runtime: python3.11\n"
+                    ],
+                    [
+                        24,
+                        "      Handler: index.handler\n"
+                    ],
+                    [
+                        25,
+                        "      Code:\n"
+                    ],
+                    [
+                        26,
+                        "        ZipFile: \"def handler(e, c): return {}\"\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3060/template.yaml",
+                "repo_file_path": "/corpus/r3060/template.yaml",
+                "file_line_range": [
+                    18,
+                    26
+                ],
+                "resource": "AWS::Lambda::Function.HookFn",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.LambdaDLQConfigured",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-a-dead-letter-queue-dlq",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_115",
+                "bc_check_id": "BC_AWS_GENERAL_63",
+                "check_name": "Ensure that AWS Lambda function is configured for function-level concurrent execution limit",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/ReservedConcurrentExecutions"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "  HookFn:\n"
+                    ],
+                    [
+                        19,
+                        "    Type: AWS::Lambda::Function\n"
+                    ],
+                    [
+                        20,
+                        "    Properties:\n"
+                    ],
+                    [
+                        21,
+                        "      FunctionName: hook-dd0286\n"
+                    ],
+                    [
+                        22,
+                        "      Role: arn:aws:iam::123456789012:role/lambda-exec\n"
+                    ],
+                    [
+                        23,
+                        "      Runtime: python3.11\n"
+                    ],
+                    [
+                        24,
+                        "      Handler: index.handler\n"
+                    ],
+                    [
+                        25,
+                        "      Code:\n"
+                    ],
+                    [
+                        26,
+                        "        ZipFile: \"def handler(e, c): return {}\"\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3060/template.yaml",
+                "repo_file_path": "/corpus/r3060/template.yaml",
+                "file_line_range": [
+                    18,
+                    26
+                ],
+                "resource": "AWS::Lambda::Function.HookFn",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.LambdaFunctionLevelConcurrentExecutionLimit",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-for-function-level-concurrent-execution-limit",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_117",
+                "bc_check_id": "BC_AWS_GENERAL_65",
+                "check_name": "Ensure that AWS Lambda function is configured inside a VPC",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/VpcConfig"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "  HookFn:\n"
+                    ],
+                    [
+                        19,
+                        "    Type: AWS::Lambda::Function\n"
+                    ],
+                    [
+                        20,
+                        "    Properties:\n"
+                    ],
+                    [
+                        21,
+                        "      FunctionName: hook-dd0286\n"
+                    ],
+                    [
+                        22,
+                        "      Role: arn:aws:iam::123456789012:role/lambda-exec\n"
+                    ],
+                    [
+                        23,
+                        "      Runtime: python3.11\n"
+                    ],
+                    [
+                        24,
+                        "      Handler: index.handler\n"
+                    ],
+                    [
+                        25,
+                        "      Code:\n"
+                    ],
+                    [
+                        26,
+                        "        ZipFile: \"def handler(e, c): return {}\"\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3060/template.yaml",
+                "repo_file_path": "/corpus/r3060/template.yaml",
+                "file_line_range": [
+                    18,
+                    26
+                ],
+                "resource": "AWS::Lambda::Function.HookFn",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.LambdaInVPC",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-that-aws-lambda-function-is-configured-inside-a-vpc-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_258",
+                "bc_check_id": "BC_AWS_GENERAL_132",
+                "check_name": "Ensure that Lambda function URLs AuthType is not None",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/AuthType"
+                    ]
+                },
+                "code_block": [
+                    [
+                        27,
+                        "  HookUrl:\n"
+                    ],
+                    [
+                        28,
+                        "    Type: AWS::Lambda::Url\n"
+                    ],
+                    [
+                        29,
+                        "    Properties:\n"
+                    ],
+                    [
+                        30,
+                        "      TargetFunctionArn: !GetAtt HookFn.Arn\n"
+                    ],
+                    [
+                        31,
+                        "      AuthType: NONE\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3060/template.yaml",
+                "repo_file_path": "/corpus/r3060/template.yaml",
+                "file_line_range": [
+                    27,
+                    31
+                ],
+                "resource": "AWS::Lambda::Url.HookUrl",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.LambdaFunctionURLAuth",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-aws-authtype-for-your-lambda-function-urls-is-defined",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 5,
+        "failed": 5,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 3,
+        "checkov_version": "3.3.26"
+    }
+}

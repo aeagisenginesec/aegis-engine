@@ -128,6 +128,70 @@ func TestS3JSON(t *testing.T) {
 	}
 }
 
+// TestS3BucketPolicyPreservesCase: a CFN BucketPolicy PolicyDocument must
+// keep IAM key casing (Statement/Principal/Action). The converter used to
+// snake_case the document (statement/principal), which silently broke
+// public-principal detection (AEGIS-AWS-003) and the intentionally-public
+// correlation for SSE/PAB.
+func TestS3BucketPolicyPreservesCase(t *testing.T) {
+	src := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: data-32a737
+  DataPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DataBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: arn:aws:s3:::data-32a737/*
+`
+	findings := scanTemplate(t, "template.yaml", src)
+	ids := ruleIDs(findings)
+	if !ids["AEGIS-AWS-003"] {
+		t.Fatalf("expected AEGIS-AWS-003 on CFN public bucket policy, got %v", findings)
+	}
+	// The bucket is intentionally public: SSE (001) and PAB (206) must
+	// stay quiet on it.
+	if ids["AEGIS-AWS-001"] || ids["AEGIS-AWS-206"] {
+		t.Fatalf("001/206 must stay quiet on intentionally-public CFN bucket, got %v", findings)
+	}
+}
+
+// TestLambdaUrlPublic: CFN AWS::Lambda::Url with AuthType NONE must map
+// to aws_lambda_function_url with authorization_type NONE so 407 fires;
+// AWS_IAM stays quiet.
+func TestLambdaUrlPublic(t *testing.T) {
+	public := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: arn:aws:lambda:us-east-1:123456789012:function:hook
+      AuthType: NONE
+`
+	if ids := ruleIDs(scanTemplate(t, "template.yaml", public)); !ids["AEGIS-AWS-407"] {
+		t.Fatal("expected AEGIS-AWS-407 on CFN Lambda Url with AuthType NONE")
+	}
+	iam := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: arn:aws:lambda:us-east-1:123456789012:function:hook
+      AuthType: AWS_IAM
+`
+	if ids := ruleIDs(scanTemplate(t, "template.yaml", iam)); ids["AEGIS-AWS-407"] {
+		t.Fatal("407 must stay quiet on CFN Lambda Url with AuthType AWS_IAM")
+	}
+}
+
 func TestIAMRoleWildcard(t *testing.T) {
 	src := `AWSTemplateFormatVersion: '2010-09-09'
 Resources:
@@ -347,8 +411,10 @@ Resources:
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(resources) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(resources))
+	// 1 bucket + 1 synthetic cfn_parameter (EnvName has a default;
+	// NoDefault has none and emits nothing).
+	if len(resources) != 2 {
+		t.Fatalf("expected 2 resources, got %d", len(resources))
 	}
 	attrs := resources[0].Attributes
 	bn, ok := attrs["bucket"]
@@ -480,5 +546,242 @@ Outputs:
 	}
 	if v.Known {
 		t.Errorf("expected GetAtt output to be unknown")
+	}
+}
+
+// Parity (item 2): a CFN BucketPolicy linked via !Ref must attribute to
+// its bucket, so the exfiltration-path rule (AWS-104) fires on a
+// policy-only public grant, not just when a public ACL is also present.
+func TestS3BucketPolicyRefAttribution(t *testing.T) {
+	src := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: probe-policy-only
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DataBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicRead
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource: "arn:aws:s3:::probe-policy-only/*"
+`
+	findings := scanTemplate(t, "template.yaml", src)
+	if !ruleIDs(findings)["AEGIS-AWS-104"] {
+		t.Errorf("expected AEGIS-AWS-104 (policy-only public grant via !Ref), got %v", ruleIDs(findings))
+	}
+}
+
+// Parity (item 2): a standalone AWS::S3::PublicAccessBlock resource linked
+// via !Ref must attribute to its bucket, so AWS-206 stays quiet on a
+// protected private bucket (previously the type was unmapped -> dropped
+// with a warning -> 206 false-positive).
+func TestS3PublicAccessBlockRefAttribution(t *testing.T) {
+	src := `AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: probe-pab
+  Pab:
+    Type: AWS::S3::PublicAccessBlock
+    Properties:
+      Bucket: !Ref DataBucket
+      BlockPublicAcls: true
+      BlockPublicPolicy: true
+      IgnorePublicAcls: true
+      RestrictPublicBuckets: true
+`
+	findings := scanTemplate(t, "template.yaml", src)
+	if ruleIDs(findings)["AEGIS-AWS-206"] {
+		t.Errorf("did not expect AEGIS-AWS-206 on bucket protected by a !Ref-linked PublicAccessBlock")
+	}
+}
+
+// TestDuplicateTopLevelKeys: a generated template that repeats the
+// top-level "Resources:" key (empty first, real second, with Parameters
+// in between) must still parse the real resources. Previously
+// mappingGet returned the FIRST match (the empty block) and the adapter
+// silently produced zero resources, dropping every finding in such
+// templates (R4 r4049/r4058/r4059/r4064/r4067).
+func TestDuplicateTopLevelKeys(t *testing.T) {
+	src := `AWSTemplateFormatVersion: "2010-09-09"
+Description: App stack
+Resources:
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+    Description: Database password
+Resources:
+  AppDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: app-dup
+      AllocatedStorage: "20"
+      StorageEncrypted: true
+      MasterUsername: appadmin
+      MasterUserPassword: !Ref DbPassword
+  DataKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: data-key-dup
+      EnableKeyRotation: false
+  HookUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: arn:aws:lambda:us-east-1:123456789012:function:hook
+      AuthType: NONE
+`
+	ids := ruleIDs(scanTemplate(t, "template.yaml", src))
+	for _, want := range []string{"AEGIS-AWS-339", "AEGIS-AWS-335", "AEGIS-AWS-407"} {
+		if !ids[want] {
+			t.Errorf("expected %s on duplicate-Resources template, got %v", want, ids)
+		}
+	}
+}
+
+func TestParametersEmitSyntheticResources(t *testing.T) {
+	src := `AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  DbPassword:
+    Type: String
+    Default: Sup3rSecret!-prod-2024
+  InstanceType:
+    Type: String
+    Default: t3.micro
+  NoDefault:
+    Type: String
+Resources:
+  B:
+    Type: AWS::S3::Bucket
+`
+	ad := New()
+	path := filepath.Join(t.TempDir(), "t.yaml")
+	resources, _, err := ad.Parse(path, []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var params []*ir.Resource
+	for i := range resources {
+		if resources[i].Type == "cfn_parameter" {
+			params = append(params, &resources[i])
+		}
+	}
+	// DbPassword + InstanceType have defaults; NoDefault must not emit.
+	if len(params) != 2 {
+		t.Fatalf("expected 2 cfn_parameter resources, got %d", len(params))
+	}
+	byName := map[string]*ir.Resource{}
+	for _, p := range params {
+		byName[p.Name] = p
+	}
+	pw := byName["DbPassword"]
+	if pw == nil {
+		t.Fatalf("cfn_parameter DbPassword missing")
+	}
+	def, ok := pw.Attributes["default"]
+	if !ok || !def.Known {
+		t.Fatalf("DbPassword default missing or unknown")
+	}
+	s, ok := def.AsString()
+	if !ok || s != "Sup3rSecret!-prod-2024" {
+		t.Fatalf("DbPassword default = %q, want the plaintext default", s)
+	}
+}
+
+func TestHandlesContent(t *testing.T) {
+	ad := New()
+	cfnYAML := []byte("AWSTemplateFormatVersion: '2010-09-09'\nResources:\n  B:\n    Type: AWS::S3::Bucket\n")
+	if !ad.HandlesContent("template.yaml", cfnYAML) {
+		t.Errorf("HandlesContent should accept CFN YAML bytes")
+	}
+	// Structural (no AWSTemplateFormatVersion marker).
+	cfnStruct := []byte("Resources:\n  B:\n    Type: AWS::S3::Bucket\n    Properties:\n      BucketName: x\n")
+	if !ad.HandlesContent("template.yaml", cfnStruct) {
+		t.Errorf("HandlesContent should accept structural CFN YAML bytes")
+	}
+	plainYAML := []byte("foo: bar\nbaz: 1\n")
+	if ad.HandlesContent("template.yaml", plainYAML) {
+		t.Errorf("HandlesContent should reject non-CFN YAML bytes")
+	}
+	if ad.HandlesContent("notes.txt", cfnYAML) {
+		t.Errorf("HandlesContent should reject non-template extensions")
+	}
+	if ad.HandlesContent("plan.plan.json", cfnYAML) {
+		t.Errorf("HandlesContent should reject .plan.json")
+	}
+	var _ ir.ContentSniffer = ad
+}
+
+func TestEC2InstanceBlockDeviceMappings(t *testing.T) {
+	src := `
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  Srv:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-12345
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 50
+            Encrypted: false
+        - DeviceName: /dev/sdb
+          Ebs:
+            VolumeSize: 100
+            Encrypted: true
+`
+	ad := New()
+	path := filepath.Join(t.TempDir(), "t.yaml")
+	resources, _, err := ad.Parse(path, []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var inst *ir.Resource
+	for i := range resources {
+		if resources[i].Type == "aws_instance" {
+			inst = &resources[i]
+		}
+	}
+	if inst == nil {
+		t.Fatal("no aws_instance parsed")
+	}
+	// Root device (/dev/sda1) -> root_block_device with encrypted=false.
+	rb, ok := inst.Attributes["root_block_device"]
+	if !ok {
+		t.Fatal("missing root_block_device")
+	}
+	l, ok := rb.AsList()
+	if !ok || len(l) != 1 {
+		t.Fatalf("root_block_device should be a 1-block list, got %#v", rb.Raw)
+	}
+	m, ok := l[0].AsMap()
+	if !ok {
+		t.Fatalf("root_block_device block not a map: %#v", l[0].Raw)
+	}
+	enc, ok := m["encrypted"]
+	if !ok || !enc.Known {
+		t.Fatalf("root_block_device.encrypted missing/unknown: %#v", m)
+	}
+	if b, _ := enc.AsBool(); b {
+		t.Errorf("root_block_device.encrypted = true, want false")
+	}
+	// Non-root device -> ebs_block_device.
+	eb, ok := inst.Attributes["ebs_block_device"]
+	if !ok {
+		t.Fatal("missing ebs_block_device")
+	}
+	el, ok := eb.AsList()
+	if !ok || len(el) != 1 {
+		t.Fatalf("ebs_block_device should be a 1-block list, got %#v", eb.Raw)
 	}
 }

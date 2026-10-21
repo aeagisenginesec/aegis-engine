@@ -1,0 +1,77 @@
+name: app-vpc
+runtime: yaml
+description: Two-tier VPC. Private subnets are locked down; the public NACL was left wide open for debugging.
+template:
+  configuration:
+    vpcCidr:
+      type: String
+      default: 10.20.0.0/16
+    environment:
+      type: String
+      default: prod
+  variables:
+    vpcName: ${environment}-vpc
+  resources:
+    vpc:
+      type: aws:ec2:Vpc
+      properties:
+        cidrBlock: ${vpcCidr}
+        enableDnsSupport: true
+        enableDnsHostnames: true
+        tags:
+          Name: ${vpcName}
+    igw:
+      type: aws:ec2:InternetGateway
+      properties:
+        vpcId: ${vpc.id}
+        tags:
+          Name: ${environment}-igw
+    publicSubnetA:
+      type: aws:ec2:Subnet
+      properties:
+        vpcId: ${vpc.id}
+        cidrBlock: 10.20.0.0/24
+        availabilityZone: ${availabilityZoneA}
+        mapPublicIpOnLaunch: true
+        tags:
+          Name: ${environment}-public-a
+    privateSubnetA:
+      type: aws:ec2:Subnet
+      properties:
+        vpcId: ${vpc.id}
+        cidrBlock: 10.20.10.0/24
+        availabilityZone: ${availabilityZoneA}
+        tags:
+          Name: ${environment}-private-a
+    publicNacl:
+      type: aws:ec2:NetworkAcl
+      properties:
+        vpcId: ${vpc.id}
+        tags:
+          Name: ${environment}-public-nacl
+    publicNaclAllowAll:
+      type: aws:ec2:NetworkAclRule
+      properties:
+        networkAclId: ${publicNacl.id}
+        ruleNumber: 100
+        protocol: "-1"
+        ruleAction: allow
+        egress: false
+        cidrBlock: 0.0.0.0/0
+    privateNacl:
+      type: aws:ec2:NetworkAcl
+      properties:
+        vpcId: ${vpc.id}
+        tags:
+          Name: ${environment}-private-nacl
+    privateNaclDenyAll:
+      type: aws:ec2:NetworkAclRule
+      properties:
+        networkAclId: ${privateNacl.id}
+        ruleNumber: 100
+        protocol: "-1"
+        ruleAction: deny
+        egress: false
+        cidrBlock: 0.0.0.0/0
+  outputs:
+    vpcId: ${vpc.id}

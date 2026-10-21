@@ -1,0 +1,2216 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_227",
+                "bc_check_id": "BC_AZR_KUBERNETES_18",
+                "check_name": "Ensure that the AKS cluster encrypt temp disks, caches, and data flows between Compute and Storage resources",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "default_node_pool/[0]/enable_host_encryption",
+                        "default_node_pool/[0]/host_encryption_enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "resource \"azurerm_kubernetes_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        14,
+                        "  name                = var.cluster_name\n"
+                    ],
+                    [
+                        15,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        16,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        17,
+                        "  dns_prefix          = var.dns_prefix\n"
+                    ],
+                    [
+                        18,
+                        "  private_cluster_enabled = true\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  default_node_pool {\n"
+                    ],
+                    [
+                        21,
+                        "    name                         = \"system\"\n"
+                    ],
+                    [
+                        22,
+                        "    node_count                   = 3\n"
+                    ],
+                    [
+                        23,
+                        "    vm_size                      = \"Standard_D4s_v5\"\n"
+                    ],
+                    [
+                        24,
+                        "    vnet_subnet_id               = azurerm_subnet.system.id\n"
+                    ],
+                    [
+                        25,
+                        "    only_critical_addons_enabled = true\n"
+                    ],
+                    [
+                        26,
+                        "    os_disk_size_gb              = 128\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  identity {\n"
+                    ],
+                    [
+                        30,
+                        "    type = \"SystemAssigned\"\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  role_based_access_control_enabled = true\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  azure_active_directory_role_based_access_control {\n"
+                    ],
+                    [
+                        36,
+                        "    managed            = true\n"
+                    ],
+                    [
+                        37,
+                        "    tenant_id          = var.tenant_id\n"
+                    ],
+                    [
+                        38,
+                        "    azure_rbac_enabled = true\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "  network_profile {\n"
+                    ],
+                    [
+                        42,
+                        "    network_plugin = \"azure\"\n"
+                    ],
+                    [
+                        43,
+                        "    network_policy = \"calico\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "\n"
+                    ],
+                    [
+                        46,
+                        "  oms_agent {\n"
+                    ],
+                    [
+                        47,
+                        "    log_analytics_workspace_id = var.log_analytics_id\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  key_vault_secrets_provider {\n"
+                    ],
+                    [
+                        51,
+                        "    secret_rotation_enabled = true\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "file_line_range": [
+                    13,
+                    53
+                ],
+                "resource": "azurerm_kubernetes_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSEncryptionAtHostEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-kubernetes-policies/bc-azure-227",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_226",
+                "bc_check_id": "BC_AZR_KUBERNETES_17",
+                "check_name": "Ensure ephemeral disks are used for OS disks",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "default_node_pool/[0]/os_disk_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "resource \"azurerm_kubernetes_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        14,
+                        "  name                = var.cluster_name\n"
+                    ],
+                    [
+                        15,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        16,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        17,
+                        "  dns_prefix          = var.dns_prefix\n"
+                    ],
+                    [
+                        18,
+                        "  private_cluster_enabled = true\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  default_node_pool {\n"
+                    ],
+                    [
+                        21,
+                        "    name                         = \"system\"\n"
+                    ],
+                    [
+                        22,
+                        "    node_count                   = 3\n"
+                    ],
+                    [
+                        23,
+                        "    vm_size                      = \"Standard_D4s_v5\"\n"
+                    ],
+                    [
+                        24,
+                        "    vnet_subnet_id               = azurerm_subnet.system.id\n"
+                    ],
+                    [
+                        25,
+                        "    only_critical_addons_enabled = true\n"
+                    ],
+                    [
+                        26,
+                        "    os_disk_size_gb              = 128\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  identity {\n"
+                    ],
+                    [
+                        30,
+                        "    type = \"SystemAssigned\"\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  role_based_access_control_enabled = true\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  azure_active_directory_role_based_access_control {\n"
+                    ],
+                    [
+                        36,
+                        "    managed            = true\n"
+                    ],
+                    [
+                        37,
+                        "    tenant_id          = var.tenant_id\n"
+                    ],
+                    [
+                        38,
+                        "    azure_rbac_enabled = true\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "  network_profile {\n"
+                    ],
+                    [
+                        42,
+                        "    network_plugin = \"azure\"\n"
+                    ],
+                    [
+                        43,
+                        "    network_policy = \"calico\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "\n"
+                    ],
+                    [
+                        46,
+                        "  oms_agent {\n"
+                    ],
+                    [
+                        47,
+                        "    log_analytics_workspace_id = var.log_analytics_id\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  key_vault_secrets_provider {\n"
+                    ],
+                    [
+                        51,
+                        "    secret_rotation_enabled = true\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "file_line_range": [
+                    13,
+                    53
+                ],
+                "resource": "azurerm_kubernetes_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSEphemeralOSDisks",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-kubernetes-policies/bc-azure-226",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_170",
+                "bc_check_id": "BC_AZR_GENERAL_97",
+                "check_name": "Ensure that AKS use the Paid Sku for its SLA",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "sku_tier"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "resource \"azurerm_kubernetes_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        14,
+                        "  name                = var.cluster_name\n"
+                    ],
+                    [
+                        15,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        16,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        17,
+                        "  dns_prefix          = var.dns_prefix\n"
+                    ],
+                    [
+                        18,
+                        "  private_cluster_enabled = true\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  default_node_pool {\n"
+                    ],
+                    [
+                        21,
+                        "    name                         = \"system\"\n"
+                    ],
+                    [
+                        22,
+                        "    node_count                   = 3\n"
+                    ],
+                    [
+                        23,
+                        "    vm_size                      = \"Standard_D4s_v5\"\n"
+                    ],
+                    [
+                        24,
+                        "    vnet_subnet_id               = azurerm_subnet.system.id\n"
+                    ],
+                    [
+                        25,
+                        "    only_critical_addons_enabled = true\n"
+                    ],
+                    [
+                        26,
+                        "    os_disk_size_gb              = 128\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  identity {\n"
+                    ],
+                    [
+                        30,
+                        "    type = \"SystemAssigned\"\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  role_based_access_control_enabled = true\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  azure_active_directory_role_based_access_control {\n"
+                    ],
+                    [
+                        36,
+                        "    managed            = true\n"
+                    ],
+                    [
+                        37,
+                        "    tenant_id          = var.tenant_id\n"
+                    ],
+                    [
+                        38,
+                        "    azure_rbac_enabled = true\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "  network_profile {\n"
+                    ],
+                    [
+                        42,
+                        "    network_plugin = \"azure\"\n"
+                    ],
+                    [
+                        43,
+                        "    network_policy = \"calico\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "\n"
+                    ],
+                    [
+                        46,
+                        "  oms_agent {\n"
+                    ],
+                    [
+                        47,
+                        "    log_analytics_workspace_id = var.log_analytics_id\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  key_vault_secrets_provider {\n"
+                    ],
+                    [
+                        51,
+                        "    secret_rotation_enabled = true\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "file_line_range": [
+                    13,
+                    53
+                ],
+                "resource": "azurerm_kubernetes_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSIsPaidSku",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/azr-general-170",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_141",
+                "bc_check_id": "BC_AZR_IAM_3",
+                "check_name": "Ensure AKS local admin account is disabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "local_account_disabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "resource \"azurerm_kubernetes_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        14,
+                        "  name                = var.cluster_name\n"
+                    ],
+                    [
+                        15,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        16,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        17,
+                        "  dns_prefix          = var.dns_prefix\n"
+                    ],
+                    [
+                        18,
+                        "  private_cluster_enabled = true\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  default_node_pool {\n"
+                    ],
+                    [
+                        21,
+                        "    name                         = \"system\"\n"
+                    ],
+                    [
+                        22,
+                        "    node_count                   = 3\n"
+                    ],
+                    [
+                        23,
+                        "    vm_size                      = \"Standard_D4s_v5\"\n"
+                    ],
+                    [
+                        24,
+                        "    vnet_subnet_id               = azurerm_subnet.system.id\n"
+                    ],
+                    [
+                        25,
+                        "    only_critical_addons_enabled = true\n"
+                    ],
+                    [
+                        26,
+                        "    os_disk_size_gb              = 128\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  identity {\n"
+                    ],
+                    [
+                        30,
+                        "    type = \"SystemAssigned\"\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  role_based_access_control_enabled = true\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  azure_active_directory_role_based_access_control {\n"
+                    ],
+                    [
+                        36,
+                        "    managed            = true\n"
+                    ],
+                    [
+                        37,
+                        "    tenant_id          = var.tenant_id\n"
+                    ],
+                    [
+                        38,
+                        "    azure_rbac_enabled = true\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "  network_profile {\n"
+                    ],
+                    [
+                        42,
+                        "    network_plugin = \"azure\"\n"
+                    ],
+                    [
+                        43,
+                        "    network_policy = \"calico\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "\n"
+                    ],
+                    [
+                        46,
+                        "  oms_agent {\n"
+                    ],
+                    [
+                        47,
+                        "    log_analytics_workspace_id = var.log_analytics_id\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  key_vault_secrets_provider {\n"
+                    ],
+                    [
+                        51,
+                        "    secret_rotation_enabled = true\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "file_line_range": [
+                    13,
+                    53
+                ],
+                "resource": "azurerm_kubernetes_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSLocalAdminDisabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-iam-policies/ensure-azure-kubernetes-service-aks-local-admin-account-is-disabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_168",
+                "bc_check_id": "BC_AZR_KUBERNETES_15",
+                "check_name": "Ensure Azure Kubernetes Cluster (AKS) nodes should use a minimum number of 50 pods.",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "default_node_pool/max_pods"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "resource \"azurerm_kubernetes_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        14,
+                        "  name                = var.cluster_name\n"
+                    ],
+                    [
+                        15,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        16,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        17,
+                        "  dns_prefix          = var.dns_prefix\n"
+                    ],
+                    [
+                        18,
+                        "  private_cluster_enabled = true\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  default_node_pool {\n"
+                    ],
+                    [
+                        21,
+                        "    name                         = \"system\"\n"
+                    ],
+                    [
+                        22,
+                        "    node_count                   = 3\n"
+                    ],
+                    [
+                        23,
+                        "    vm_size                      = \"Standard_D4s_v5\"\n"
+                    ],
+                    [
+                        24,
+                        "    vnet_subnet_id               = azurerm_subnet.system.id\n"
+                    ],
+                    [
+                        25,
+                        "    only_critical_addons_enabled = true\n"
+                    ],
+                    [
+                        26,
+                        "    os_disk_size_gb              = 128\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  identity {\n"
+                    ],
+                    [
+                        30,
+                        "    type = \"SystemAssigned\"\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  role_based_access_control_enabled = true\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  azure_active_directory_role_based_access_control {\n"
+                    ],
+                    [
+                        36,
+                        "    managed            = true\n"
+                    ],
+                    [
+                        37,
+                        "    tenant_id          = var.tenant_id\n"
+                    ],
+                    [
+                        38,
+                        "    azure_rbac_enabled = true\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "  network_profile {\n"
+                    ],
+                    [
+                        42,
+                        "    network_plugin = \"azure\"\n"
+                    ],
+                    [
+                        43,
+                        "    network_policy = \"calico\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "\n"
+                    ],
+                    [
+                        46,
+                        "  oms_agent {\n"
+                    ],
+                    [
+                        47,
+                        "    log_analytics_workspace_id = var.log_analytics_id\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  key_vault_secrets_provider {\n"
+                    ],
+                    [
+                        51,
+                        "    secret_rotation_enabled = true\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "file_line_range": [
+                    13,
+                    53
+                ],
+                "resource": "azurerm_kubernetes_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSMaxPodsMinimum",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-kubernetes-policies/azr-kubernetes-168",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_171",
+                "bc_check_id": "BC_AZR_NETWORKING_66",
+                "check_name": "Ensure AKS cluster upgrade channel is chosen",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "automatic_upgrade_channel",
+                        "automatic_channel_upgrade"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "resource \"azurerm_kubernetes_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        14,
+                        "  name                = var.cluster_name\n"
+                    ],
+                    [
+                        15,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        16,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        17,
+                        "  dns_prefix          = var.dns_prefix\n"
+                    ],
+                    [
+                        18,
+                        "  private_cluster_enabled = true\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  default_node_pool {\n"
+                    ],
+                    [
+                        21,
+                        "    name                         = \"system\"\n"
+                    ],
+                    [
+                        22,
+                        "    node_count                   = 3\n"
+                    ],
+                    [
+                        23,
+                        "    vm_size                      = \"Standard_D4s_v5\"\n"
+                    ],
+                    [
+                        24,
+                        "    vnet_subnet_id               = azurerm_subnet.system.id\n"
+                    ],
+                    [
+                        25,
+                        "    only_critical_addons_enabled = true\n"
+                    ],
+                    [
+                        26,
+                        "    os_disk_size_gb              = 128\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  identity {\n"
+                    ],
+                    [
+                        30,
+                        "    type = \"SystemAssigned\"\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  role_based_access_control_enabled = true\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  azure_active_directory_role_based_access_control {\n"
+                    ],
+                    [
+                        36,
+                        "    managed            = true\n"
+                    ],
+                    [
+                        37,
+                        "    tenant_id          = var.tenant_id\n"
+                    ],
+                    [
+                        38,
+                        "    azure_rbac_enabled = true\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "  network_profile {\n"
+                    ],
+                    [
+                        42,
+                        "    network_plugin = \"azure\"\n"
+                    ],
+                    [
+                        43,
+                        "    network_policy = \"calico\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "\n"
+                    ],
+                    [
+                        46,
+                        "  oms_agent {\n"
+                    ],
+                    [
+                        47,
+                        "    log_analytics_workspace_id = var.log_analytics_id\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  key_vault_secrets_provider {\n"
+                    ],
+                    [
+                        51,
+                        "    secret_rotation_enabled = true\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "file_line_range": [
+                    13,
+                    53
+                ],
+                "resource": "azurerm_kubernetes_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSUpgradeChannel",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-171",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_116",
+                "bc_check_id": "BC_AZR_KUBERNETES_7",
+                "check_name": "Ensure that AKS uses Azure Policies Add-on",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "addon_profile/[0]/azure_policy/[0]/enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "resource \"azurerm_kubernetes_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        14,
+                        "  name                = var.cluster_name\n"
+                    ],
+                    [
+                        15,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        16,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        17,
+                        "  dns_prefix          = var.dns_prefix\n"
+                    ],
+                    [
+                        18,
+                        "  private_cluster_enabled = true\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  default_node_pool {\n"
+                    ],
+                    [
+                        21,
+                        "    name                         = \"system\"\n"
+                    ],
+                    [
+                        22,
+                        "    node_count                   = 3\n"
+                    ],
+                    [
+                        23,
+                        "    vm_size                      = \"Standard_D4s_v5\"\n"
+                    ],
+                    [
+                        24,
+                        "    vnet_subnet_id               = azurerm_subnet.system.id\n"
+                    ],
+                    [
+                        25,
+                        "    only_critical_addons_enabled = true\n"
+                    ],
+                    [
+                        26,
+                        "    os_disk_size_gb              = 128\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  identity {\n"
+                    ],
+                    [
+                        30,
+                        "    type = \"SystemAssigned\"\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  role_based_access_control_enabled = true\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  azure_active_directory_role_based_access_control {\n"
+                    ],
+                    [
+                        36,
+                        "    managed            = true\n"
+                    ],
+                    [
+                        37,
+                        "    tenant_id          = var.tenant_id\n"
+                    ],
+                    [
+                        38,
+                        "    azure_rbac_enabled = true\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "  network_profile {\n"
+                    ],
+                    [
+                        42,
+                        "    network_plugin = \"azure\"\n"
+                    ],
+                    [
+                        43,
+                        "    network_policy = \"calico\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "\n"
+                    ],
+                    [
+                        46,
+                        "  oms_agent {\n"
+                    ],
+                    [
+                        47,
+                        "    log_analytics_workspace_id = var.log_analytics_id\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  key_vault_secrets_provider {\n"
+                    ],
+                    [
+                        51,
+                        "    secret_rotation_enabled = true\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "file_line_range": [
+                    13,
+                    53
+                ],
+                "resource": "azurerm_kubernetes_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSUsesAzurePoliciesAddon",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-kubernetes-policies/ensure-that-aks-uses-azure-policies-add-on",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_117",
+                "bc_check_id": "BC_AZR_KUBERNETES_8",
+                "check_name": "Ensure that AKS uses disk encryption set",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "disk_encryption_set_id"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "resource \"azurerm_kubernetes_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        14,
+                        "  name                = var.cluster_name\n"
+                    ],
+                    [
+                        15,
+                        "  location            = azurerm_resource_group.main.location\n"
+                    ],
+                    [
+                        16,
+                        "  resource_group_name = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        17,
+                        "  dns_prefix          = var.dns_prefix\n"
+                    ],
+                    [
+                        18,
+                        "  private_cluster_enabled = true\n"
+                    ],
+                    [
+                        19,
+                        "\n"
+                    ],
+                    [
+                        20,
+                        "  default_node_pool {\n"
+                    ],
+                    [
+                        21,
+                        "    name                         = \"system\"\n"
+                    ],
+                    [
+                        22,
+                        "    node_count                   = 3\n"
+                    ],
+                    [
+                        23,
+                        "    vm_size                      = \"Standard_D4s_v5\"\n"
+                    ],
+                    [
+                        24,
+                        "    vnet_subnet_id               = azurerm_subnet.system.id\n"
+                    ],
+                    [
+                        25,
+                        "    only_critical_addons_enabled = true\n"
+                    ],
+                    [
+                        26,
+                        "    os_disk_size_gb              = 128\n"
+                    ],
+                    [
+                        27,
+                        "  }\n"
+                    ],
+                    [
+                        28,
+                        "\n"
+                    ],
+                    [
+                        29,
+                        "  identity {\n"
+                    ],
+                    [
+                        30,
+                        "    type = \"SystemAssigned\"\n"
+                    ],
+                    [
+                        31,
+                        "  }\n"
+                    ],
+                    [
+                        32,
+                        "\n"
+                    ],
+                    [
+                        33,
+                        "  role_based_access_control_enabled = true\n"
+                    ],
+                    [
+                        34,
+                        "\n"
+                    ],
+                    [
+                        35,
+                        "  azure_active_directory_role_based_access_control {\n"
+                    ],
+                    [
+                        36,
+                        "    managed            = true\n"
+                    ],
+                    [
+                        37,
+                        "    tenant_id          = var.tenant_id\n"
+                    ],
+                    [
+                        38,
+                        "    azure_rbac_enabled = true\n"
+                    ],
+                    [
+                        39,
+                        "  }\n"
+                    ],
+                    [
+                        40,
+                        "\n"
+                    ],
+                    [
+                        41,
+                        "  network_profile {\n"
+                    ],
+                    [
+                        42,
+                        "    network_plugin = \"azure\"\n"
+                    ],
+                    [
+                        43,
+                        "    network_policy = \"calico\"\n"
+                    ],
+                    [
+                        44,
+                        "  }\n"
+                    ],
+                    [
+                        45,
+                        "\n"
+                    ],
+                    [
+                        46,
+                        "  oms_agent {\n"
+                    ],
+                    [
+                        47,
+                        "    log_analytics_workspace_id = var.log_analytics_id\n"
+                    ],
+                    [
+                        48,
+                        "  }\n"
+                    ],
+                    [
+                        49,
+                        "\n"
+                    ],
+                    [
+                        50,
+                        "  key_vault_secrets_provider {\n"
+                    ],
+                    [
+                        51,
+                        "    secret_rotation_enabled = true\n"
+                    ],
+                    [
+                        52,
+                        "  }\n"
+                    ],
+                    [
+                        53,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "file_line_range": [
+                    13,
+                    53
+                ],
+                "resource": "azurerm_kubernetes_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSUsesDiskEncryptionSet",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-kubernetes-policies/ensure-that-aks-uses-disk-encryption-set",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/main.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "location": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AZURE_227",
+                "bc_check_id": "BC_AZR_KUBERNETES_18",
+                "check_name": "Ensure that the AKS cluster encrypt temp disks, caches, and data flows between Compute and Storage resources",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "enable_host_encryption",
+                        "host_encryption_enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"azurerm_kubernetes_cluster_node_pool\" \"user\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name                  = \"user\"\n"
+                    ],
+                    [
+                        3,
+                        "  kubernetes_cluster_id = azurerm_kubernetes_cluster.main.id\n"
+                    ],
+                    [
+                        4,
+                        "  vm_size               = \"Standard_D8s_v5\"\n"
+                    ],
+                    [
+                        5,
+                        "  node_count            = 3\n"
+                    ],
+                    [
+                        6,
+                        "  vnet_subnet_id        = azurerm_subnet.user.id\n"
+                    ],
+                    [
+                        7,
+                        "  mode                  = \"User\"\n"
+                    ],
+                    [
+                        8,
+                        "  os_disk_size_gb       = 128\n"
+                    ],
+                    [
+                        9,
+                        "\n"
+                    ],
+                    [
+                        10,
+                        "  node_taints = [\n"
+                    ],
+                    [
+                        11,
+                        "    \"workload=user:NoSchedule\"\n"
+                    ],
+                    [
+                        12,
+                        "  ]\n"
+                    ],
+                    [
+                        13,
+                        "\n"
+                    ],
+                    [
+                        14,
+                        "  tags = {\n"
+                    ],
+                    [
+                        15,
+                        "    pool = \"user\"\n"
+                    ],
+                    [
+                        16,
+                        "  }\n"
+                    ],
+                    [
+                        17,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/nodepools.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/nodepools.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/nodepools.tf",
+                "file_line_range": [
+                    1,
+                    17
+                ],
+                "resource": "azurerm_kubernetes_cluster_node_pool.user",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSEncryptionAtHostEnabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "pool": "user"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-kubernetes-policies/bc-azure-227",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/nodepools.tf"
+            },
+            {
+                "check_id": "CKV_AZURE_168",
+                "bc_check_id": "BC_AZR_KUBERNETES_15",
+                "check_name": "Ensure Azure Kubernetes Cluster (AKS) nodes should use a minimum number of 50 pods.",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "max_pods"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"azurerm_kubernetes_cluster_node_pool\" \"user\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name                  = \"user\"\n"
+                    ],
+                    [
+                        3,
+                        "  kubernetes_cluster_id = azurerm_kubernetes_cluster.main.id\n"
+                    ],
+                    [
+                        4,
+                        "  vm_size               = \"Standard_D8s_v5\"\n"
+                    ],
+                    [
+                        5,
+                        "  node_count            = 3\n"
+                    ],
+                    [
+                        6,
+                        "  vnet_subnet_id        = azurerm_subnet.user.id\n"
+                    ],
+                    [
+                        7,
+                        "  mode                  = \"User\"\n"
+                    ],
+                    [
+                        8,
+                        "  os_disk_size_gb       = 128\n"
+                    ],
+                    [
+                        9,
+                        "\n"
+                    ],
+                    [
+                        10,
+                        "  node_taints = [\n"
+                    ],
+                    [
+                        11,
+                        "    \"workload=user:NoSchedule\"\n"
+                    ],
+                    [
+                        12,
+                        "  ]\n"
+                    ],
+                    [
+                        13,
+                        "\n"
+                    ],
+                    [
+                        14,
+                        "  tags = {\n"
+                    ],
+                    [
+                        15,
+                        "    pool = \"user\"\n"
+                    ],
+                    [
+                        16,
+                        "  }\n"
+                    ],
+                    [
+                        17,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/nodepools.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/nodepools.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/nodepools.tf",
+                "file_line_range": [
+                    1,
+                    17
+                ],
+                "resource": "azurerm_kubernetes_cluster_node_pool.user",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.azure.AKSMaxPodsMinimum",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "pool": "user"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-kubernetes-policies/azr-kubernetes-168",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/nodepools.tf"
+            },
+            {
+                "check_id": "CKV2_AZURE_31",
+                "bc_check_id": "BC_AZR_GENERAL_124",
+                "check_name": "Ensure VNET subnet is configured with a Network Security Group (NSG)",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "azurerm_subnet": {
+                            "system": {
+                                "__end_line__": 18,
+                                "__start_line__": 13,
+                                "address_prefixes": [
+                                    [
+                                        "10.61.1.0/24"
+                                    ]
+                                ],
+                                "name": [
+                                    "snet-system"
+                                ],
+                                "resource_group_name": [
+                                    "rg-${var.cluster_name}"
+                                ],
+                                "virtual_network_name": [
+                                    "vnet-${var.cluster_name}"
+                                ],
+                                "__address__": "azurerm_subnet.system"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "delegation/service_delegation/name",
+                        "name",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "resource \"azurerm_subnet\" \"system\" {\n"
+                    ],
+                    [
+                        14,
+                        "  name                 = \"snet-system\"\n"
+                    ],
+                    [
+                        15,
+                        "  resource_group_name  = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        16,
+                        "  virtual_network_name = azurerm_virtual_network.main.name\n"
+                    ],
+                    [
+                        17,
+                        "  address_prefixes     = [\"10.61.1.0/24\"]\n"
+                    ],
+                    [
+                        18,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/network.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                "file_line_range": [
+                    13,
+                    18
+                ],
+                "resource": "azurerm_subnet.system",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/bc-azure-2-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "virtual_network_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_virtual_network.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_AZURE_31",
+                "bc_check_id": "BC_AZR_GENERAL_124",
+                "check_name": "Ensure VNET subnet is configured with a Network Security Group (NSG)",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "azurerm_subnet": {
+                            "user": {
+                                "__end_line__": 25,
+                                "__start_line__": 20,
+                                "address_prefixes": [
+                                    [
+                                        "10.61.2.0/24"
+                                    ]
+                                ],
+                                "name": [
+                                    "snet-user"
+                                ],
+                                "resource_group_name": [
+                                    "rg-${var.cluster_name}"
+                                ],
+                                "virtual_network_name": [
+                                    "vnet-${var.cluster_name}"
+                                ],
+                                "__address__": "azurerm_subnet.user"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "delegation/service_delegation/name",
+                        "name",
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        20,
+                        "resource \"azurerm_subnet\" \"user\" {\n"
+                    ],
+                    [
+                        21,
+                        "  name                 = \"snet-user\"\n"
+                    ],
+                    [
+                        22,
+                        "  resource_group_name  = azurerm_resource_group.main.name\n"
+                    ],
+                    [
+                        23,
+                        "  virtual_network_name = azurerm_virtual_network.main.name\n"
+                    ],
+                    [
+                        24,
+                        "  address_prefixes     = [\"10.61.2.0/24\"]\n"
+                    ],
+                    [
+                        25,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/network.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                "file_line_range": [
+                    20,
+                    25
+                ],
+                "resource": "azurerm_subnet.user",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/bc-azure-2-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                "breadcrumbs": {
+                    "resource_group_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_resource_group.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "virtual_network_name": [
+                        {
+                            "type": "resource",
+                            "name": "azurerm_virtual_network.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t040/network.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 14,
+        "failed": 12,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 6,
+        "checkov_version": "3.3.26"
+    }
+}

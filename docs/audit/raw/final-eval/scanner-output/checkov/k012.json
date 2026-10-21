@@ -1,0 +1,108 @@
+{
+    "check_type": "dockerfile",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_DOCKER_3",
+                "bc_check_id": "BC_DKR_3",
+                "check_name": "Ensure that a user for the container has been created",
+                "check_result": {
+                    "result": "FAILED",
+                    "results_configuration": null
+                },
+                "code_block": [
+                    [
+                        1,
+                        "FROM alpine:3.20.2\n"
+                    ],
+                    [
+                        2,
+                        "\n"
+                    ],
+                    [
+                        3,
+                        "RUN apk add --no-cache nginx \\\n"
+                    ],
+                    [
+                        4,
+                        "    && mkdir -p /run/nginx /var/www/html\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "COPY nginx.conf /etc/nginx/nginx.conf\n"
+                    ],
+                    [
+                        7,
+                        "COPY html/ /var/www/html/\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "EXPOSE 80\n"
+                    ],
+                    [
+                        10,
+                        "\n"
+                    ],
+                    [
+                        11,
+                        "HEALTHCHECK --interval=30s --timeout=3s \\\n"
+                    ],
+                    [
+                        12,
+                        "    CMD wget -qO- http://localhost/ || exit 1\n"
+                    ],
+                    [
+                        13,
+                        "\n"
+                    ],
+                    [
+                        14,
+                        "CMD [\"nginx\", \"-g\", \"daemon off;\"]"
+                    ]
+                ],
+                "file_path": "/Dockerfile",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k012/Dockerfile",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k012/Dockerfile",
+                "file_line_range": [
+                    1,
+                    14
+                ],
+                "resource": "/Dockerfile.",
+                "evaluations": null,
+                "check_class": "checkov.dockerfile.checks.UserExists",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/docker-policies/docker-policy-index/ensure-that-a-user-for-the-container-has-been-created",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 23,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 1,
+        "checkov_version": "3.3.26"
+    }
+}

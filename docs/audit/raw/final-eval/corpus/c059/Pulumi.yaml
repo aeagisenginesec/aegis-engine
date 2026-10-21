@@ -1,0 +1,44 @@
+name: customer-db
+runtime: yaml
+description: Customer database. Encryption is on, but the instance is publicly reachable for the BI tool.
+template:
+  configuration:
+    dbPassword:
+      type: String
+      secret: true
+    vpcId:
+      type: String
+  variables:
+    dbName: customerdb
+  resources:
+    dbSg:
+      type: aws:ec2:SecurityGroup
+      properties:
+        name: ${dbName}-sg
+        description: Customer database access
+        vpcId: ${vpcId}
+        ingress:
+          - protocol: tcp
+            fromPort: 5432
+            toPort: 5432
+            cidrBlocks: ["0.0.0.0/0"]
+    customerDb:
+      type: aws:rds:Instance
+      properties:
+        identifier: ${dbName}
+        engine: postgres
+        engineVersion: "15.4"
+        instanceClass: db.t3.large
+        allocatedStorage: 100
+        dbName: customers
+        username: dbadmin
+        password: ${dbPassword}
+        storageEncrypted: true
+        publiclyAccessible: true
+        backupRetentionPeriod: 7
+        copyTagsToSnapshot: true
+        vpcSecurityGroupIds: ["${dbSg.id}"]
+        tags:
+          Name: ${dbName}
+  outputs:
+    endpoint: ${customerDb.endpoint}

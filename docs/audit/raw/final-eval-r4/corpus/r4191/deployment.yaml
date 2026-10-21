@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-bf4cda
+  labels:
+    app: api-bf4cda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-bf4cda
+  template:
+    metadata:
+      labels:
+        app: api-bf4cda
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: api
+          image: registry.example.com/api:3.2.0
+          volumeMounts:
+            - {name: hostroot, mountPath: /host}
+      volumes:
+        - name: hostroot
+          hostPath: {path: /, type: Directory}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-bf4cda
+  labels:
+    app: job-bf4cda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: job-bf4cda
+  template:
+    metadata:
+      labels:
+        app: job-bf4cda
+    spec:
+      automountServiceAccountToken: true
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: job
+          image: registry.example.com/job:1.0.0

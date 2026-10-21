@@ -94,19 +94,6 @@ func blockMaps(r ir.Resource, name string) []map[string]ir.Value {
 	return out
 }
 
-// blockStr extracts a known string from a block map.
-func blockStr(m map[string]ir.Value, name string) (string, ir.Span, bool) {
-	v, present := m[name]
-	if !present {
-		return "", ir.Span{}, false
-	}
-	s, known := v.AsString()
-	if !known {
-		return "", ir.Span{}, false
-	}
-	return s, v.Span, true
-}
-
 // evSpan prefers the attribute span, falling back to the resource span.
 func evSpan(attrSpan, resSpan ir.Span) ir.Span {
 	if attrSpan.File != "" {

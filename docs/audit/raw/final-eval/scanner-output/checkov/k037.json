@@ -1,0 +1,1169 @@
+{
+    "check_type": "kubernetes",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_K8S_21",
+                "bc_check_id": "BC_K8S_20",
+                "check_name": "The default namespace should not be used",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: gateway\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: gateway\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: gateway\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: gateway\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      automountServiceAccountToken: false\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 65532\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 65532\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 65532\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: gateway\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/gateway:2.7.3\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8443\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ],
+                    [
+                        42,
+                        "          livenessProbe:\n"
+                    ],
+                    [
+                        43,
+                        "            httpGet:\n"
+                    ],
+                    [
+                        44,
+                        "              path: /healthz\n"
+                    ],
+                    [
+                        45,
+                        "              port: 8443\n"
+                    ],
+                    [
+                        46,
+                        "              scheme: HTTPS\n"
+                    ],
+                    [
+                        47,
+                        "            initialDelaySeconds: 10\n"
+                    ],
+                    [
+                        48,
+                        "            periodSeconds: 30\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    48
+                ],
+                "resource": "Deployment.default.gateway",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.DefaultNamespace",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-20",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_43",
+                "bc_check_id": "BC_K8S_39",
+                "check_name": "Image should use digest",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/image"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: gateway\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: gateway\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: gateway\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: gateway\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      automountServiceAccountToken: false\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 65532\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 65532\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 65532\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: gateway\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/gateway:2.7.3\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8443\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ],
+                    [
+                        42,
+                        "          livenessProbe:\n"
+                    ],
+                    [
+                        43,
+                        "            httpGet:\n"
+                    ],
+                    [
+                        44,
+                        "              path: /healthz\n"
+                    ],
+                    [
+                        45,
+                        "              port: 8443\n"
+                    ],
+                    [
+                        46,
+                        "              scheme: HTTPS\n"
+                    ],
+                    [
+                        47,
+                        "            initialDelaySeconds: 10\n"
+                    ],
+                    [
+                        48,
+                        "            periodSeconds: 30\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    48
+                ],
+                "resource": "Deployment.default.gateway",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ImageDigest",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-39",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_15",
+                "bc_check_id": "BC_K8S_14",
+                "check_name": "Image Pull Policy should be Always",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/image",
+                        "spec/template/spec/containers/[0]/imagePullPolicy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: gateway\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: gateway\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: gateway\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: gateway\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      automountServiceAccountToken: false\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 65532\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 65532\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 65532\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: gateway\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/gateway:2.7.3\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8443\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ],
+                    [
+                        42,
+                        "          livenessProbe:\n"
+                    ],
+                    [
+                        43,
+                        "            httpGet:\n"
+                    ],
+                    [
+                        44,
+                        "              path: /healthz\n"
+                    ],
+                    [
+                        45,
+                        "              port: 8443\n"
+                    ],
+                    [
+                        46,
+                        "              scheme: HTTPS\n"
+                    ],
+                    [
+                        47,
+                        "            initialDelaySeconds: 10\n"
+                    ],
+                    [
+                        48,
+                        "            periodSeconds: 30\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    48
+                ],
+                "resource": "Deployment.default.gateway",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ImagePullPolicyAlways",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-14",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_K8S_9",
+                "bc_check_id": "BC_K8S_8",
+                "check_name": "Readiness Probe Should be Configured",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "spec/template/spec/containers/[0]/readinessProbe"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: gateway\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: gateway\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: gateway\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: gateway\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      automountServiceAccountToken: false\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 65532\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 65532\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 65532\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: gateway\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/gateway:2.7.3\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8443\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ],
+                    [
+                        42,
+                        "          livenessProbe:\n"
+                    ],
+                    [
+                        43,
+                        "            httpGet:\n"
+                    ],
+                    [
+                        44,
+                        "              path: /healthz\n"
+                    ],
+                    [
+                        45,
+                        "              port: 8443\n"
+                    ],
+                    [
+                        46,
+                        "              scheme: HTTPS\n"
+                    ],
+                    [
+                        47,
+                        "            initialDelaySeconds: 10\n"
+                    ],
+                    [
+                        48,
+                        "            periodSeconds: 30\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    48
+                ],
+                "resource": "Deployment.default.gateway",
+                "evaluations": {},
+                "check_class": "checkov.kubernetes.checks.resource.k8s.ReadinessProbe",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/kubernetes-policies/kubernetes-policy-index/bc-k8s-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV2_K8S_6",
+                "bc_check_id": null,
+                "check_name": "Minimize the admission of pods which lack an associated NetworkPolicy",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "apiVersion: apps/v1\n"
+                    ],
+                    [
+                        2,
+                        "kind: Deployment\n"
+                    ],
+                    [
+                        3,
+                        "metadata:\n"
+                    ],
+                    [
+                        4,
+                        "  name: gateway\n"
+                    ],
+                    [
+                        5,
+                        "  labels:\n"
+                    ],
+                    [
+                        6,
+                        "    app: gateway\n"
+                    ],
+                    [
+                        7,
+                        "spec:\n"
+                    ],
+                    [
+                        8,
+                        "  replicas: 2\n"
+                    ],
+                    [
+                        9,
+                        "  selector:\n"
+                    ],
+                    [
+                        10,
+                        "    matchLabels:\n"
+                    ],
+                    [
+                        11,
+                        "      app: gateway\n"
+                    ],
+                    [
+                        12,
+                        "  template:\n"
+                    ],
+                    [
+                        13,
+                        "    metadata:\n"
+                    ],
+                    [
+                        14,
+                        "      labels:\n"
+                    ],
+                    [
+                        15,
+                        "        app: gateway\n"
+                    ],
+                    [
+                        16,
+                        "    spec:\n"
+                    ],
+                    [
+                        17,
+                        "      automountServiceAccountToken: false\n"
+                    ],
+                    [
+                        18,
+                        "      securityContext:\n"
+                    ],
+                    [
+                        19,
+                        "        runAsNonRoot: true\n"
+                    ],
+                    [
+                        20,
+                        "        runAsUser: 65532\n"
+                    ],
+                    [
+                        21,
+                        "        runAsGroup: 65532\n"
+                    ],
+                    [
+                        22,
+                        "        fsGroup: 65532\n"
+                    ],
+                    [
+                        23,
+                        "        seccompProfile:\n"
+                    ],
+                    [
+                        24,
+                        "          type: RuntimeDefault\n"
+                    ],
+                    [
+                        25,
+                        "      containers:\n"
+                    ],
+                    [
+                        26,
+                        "        - name: gateway\n"
+                    ],
+                    [
+                        27,
+                        "          image: example/gateway:2.7.3\n"
+                    ],
+                    [
+                        28,
+                        "          ports:\n"
+                    ],
+                    [
+                        29,
+                        "            - containerPort: 8443\n"
+                    ],
+                    [
+                        30,
+                        "          securityContext:\n"
+                    ],
+                    [
+                        31,
+                        "            allowPrivilegeEscalation: false\n"
+                    ],
+                    [
+                        32,
+                        "            readOnlyRootFilesystem: true\n"
+                    ],
+                    [
+                        33,
+                        "            capabilities:\n"
+                    ],
+                    [
+                        34,
+                        "              drop: [\"ALL\"]\n"
+                    ],
+                    [
+                        35,
+                        "          resources:\n"
+                    ],
+                    [
+                        36,
+                        "            requests:\n"
+                    ],
+                    [
+                        37,
+                        "              cpu: \"100m\"\n"
+                    ],
+                    [
+                        38,
+                        "              memory: \"128Mi\"\n"
+                    ],
+                    [
+                        39,
+                        "            limits:\n"
+                    ],
+                    [
+                        40,
+                        "              cpu: \"500m\"\n"
+                    ],
+                    [
+                        41,
+                        "              memory: \"512Mi\"\n"
+                    ],
+                    [
+                        42,
+                        "          livenessProbe:\n"
+                    ],
+                    [
+                        43,
+                        "            httpGet:\n"
+                    ],
+                    [
+                        44,
+                        "              path: /healthz\n"
+                    ],
+                    [
+                        45,
+                        "              port: 8443\n"
+                    ],
+                    [
+                        46,
+                        "              scheme: HTTPS\n"
+                    ],
+                    [
+                        47,
+                        "            initialDelaySeconds: 10\n"
+                    ],
+                    [
+                        48,
+                        "            periodSeconds: 30\n"
+                    ]
+                ],
+                "file_path": "/deployment.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/k037/deployment.yaml",
+                "file_line_range": [
+                    1,
+                    48
+                ],
+                "resource": "Pod.default.gateway.app-gateway",
+                "evaluations": {},
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": null,
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 84,
+        "failed": 5,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

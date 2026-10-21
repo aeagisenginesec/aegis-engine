@@ -1,0 +1,21 @@
+{
+ "labelers": "two sequential passes (A: whole-file regex; B: unit-segmented scan), same agent; B run without opening A file; both blind to scanner output and sealed injection plan",
+ "n_firm_A": 135,
+ "n_firm_B": 138,
+ "pre_adjudication_key_agreement": "114/159 (71.7%) Jaccard at (project, class, resource); class-level agreement 133/137 (97.1%) - remaining key disagreements are resource attribution, not class.",
+ "adjudication_decisions": [
+  "GT = Pass B set. Pass B unit segmentation attributes to the exact resource unit; Pass A whole-file regex misattributes in ARM/CFN (nearest-preceding-declaration heuristic). B resource accepted in every (project, class) pair present in both.",
+  "B-only imdsv1 r4061/r4066/r4068/r4115: accepted \u2014 EC2 without metadata options verified in code; Pass A dropped them via buggy pop of (imdsv1, unknown) for non-TF formats.",
+  "A-only r4201 k8s-rbac-broad on ClusterRole + Deployment: REJECTED \u2014 the binding is the ClusterRoleBinding (B).",
+  "A-only r4072/r4075 nsg-open on storage/KV resources: REJECTED attribution \u2014 B attributes to the NSG unit (verified in code).",
+  "CFN secret-hardcoded attributed to the parameter unit (String.DbPassword) \u2014 the parameter IS the secret.",
+  "CFN cfn_iam_admin: generator intent was iam-admin but the code implements admin via wildcard Action \"*\" on Resource \"*\" \u2014 labeled iam-wildcard (code facts win over intent).",
+  "ARM Cosmos DB: labeled cosmosdb-public only (condition rephrased to \"public access and no IP range filter\"); the generator-intent class and the labeler class agree after the rephrase.",
+  "Labeler bugs found by QA and fixed before adjudication: (1) egress 0.0.0.0/0 mislabeled as SG-open \u2014 fixed with ingress-only spans; (2) compose secrets: file refs mislabeled as hardcoded secrets \u2014 fixed with environment-section scoping; (3) Pass A imdsv1 lookahead bug labeling EC2 WITH MetadataOptions \u2014 dict patterns removed; (4) k8s-/compose-/docker- patterns leaking across formats \u2014 format scoping added; (5) EBS/RDS encryption conflation (volume-unencrypted on RDS) \u2014 gated on EBS volume presence; (6) quote-variant misses (TF snake_case, Bicep single quotes, ARM JSON quoted keys) \u2014 quote-tolerant patterns.",
+  "Generator quirk (same as R3): single-file formats (dockerfile/compose) list 2 blocks in the injection plan but only blocks[0] is written to disk. Injection plan corrected to blocks_written for those projects; GT is labeled from the files on disk.",
+  "Round 2 of labeling QA: CFN ingress-span bug (span ran past SecurityGroupEgress into Parameters, mislabeling sg-open-world on cfn_sg_intrinsic) fixed; TF resource-declaration quote bug fixed for gke/no-waf/no-flowlog/no-audit/gcp-cmek rules; eks-public-api CFN + s3-public-acl Pulumi patterns added (prior patch was a silent no-op); volume-unencrypted gate extended to inline BlockDeviceMappings (CFN EBS); r4061 imdsv1 accepted (EC2 with inline unencrypted EBS, no metadata options - generator did not intend it, code fact wins); r4124 git-exposed NOT labeled (dk_gitexposed block contains no .git evidence - generator block defect, disclosed).",
+  "GT dedupe: at most one concept per (project, condition) (R3 GT standard: zero duplicates). r4028 alb-public x3 (aws_lb + listener + target-group, one load balancer) deduped to 1 (aws_lb.web)."
+ ],
+ "n_firm_concepts": 136,
+ "limitation": "single agent performed both passes; independence is procedural, not personal (protocol \u00a73). Passes use different implementations (whole-file regex vs unit segmentation)."
+}

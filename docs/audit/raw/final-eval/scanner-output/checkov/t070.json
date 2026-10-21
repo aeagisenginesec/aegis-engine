@@ -1,0 +1,3810 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_GCP_66",
+                "bc_check_id": "BC_GCP_KUBERNETES_21",
+                "check_name": "Ensure use of Binary Authorization",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "binary_authorization",
+                        "enable_binary_authorization"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_container_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name                     = var.cluster_name\n"
+                    ],
+                    [
+                        24,
+                        "  location                 = var.region\n"
+                    ],
+                    [
+                        25,
+                        "  network                  = module.network.network_id\n"
+                    ],
+                    [
+                        26,
+                        "  subnetwork               = module.network.subnetwork_id\n"
+                    ],
+                    [
+                        27,
+                        "  remove_default_node_pool = true\n"
+                    ],
+                    [
+                        28,
+                        "  initial_node_count       = 1\n"
+                    ],
+                    [
+                        29,
+                        "\n"
+                    ],
+                    [
+                        30,
+                        "  private_cluster_config {\n"
+                    ],
+                    [
+                        31,
+                        "    enable_private_nodes    = true\n"
+                    ],
+                    [
+                        32,
+                        "    enable_private_endpoint = true\n"
+                    ],
+                    [
+                        33,
+                        "    master_ipv4_cidr_block  = \"172.16.0.0/28\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  workload_identity_config {\n"
+                    ],
+                    [
+                        37,
+                        "    workload_pool = \"${var.project}.svc.id.goog\"\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  ip_allocation_policy {\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    22,
+                    42
+                ],
+                "resource": "google_container_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKEBinaryAuthorization",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-use-of-binary-authorization",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "network": [
+                        {
+                            "type": "output",
+                            "name": "network_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "subnetwork": [
+                        {
+                            "type": "output",
+                            "name": "subnetwork_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_13",
+                "bc_check_id": "BC_GCP_KUBERNETES_8",
+                "check_name": "Ensure client certificate authentication to Kubernetes Engine Clusters is disabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "master_auth/[0]/client_certificate_config/[0]/issue_client_certificate/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_container_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name                     = var.cluster_name\n"
+                    ],
+                    [
+                        24,
+                        "  location                 = var.region\n"
+                    ],
+                    [
+                        25,
+                        "  network                  = module.network.network_id\n"
+                    ],
+                    [
+                        26,
+                        "  subnetwork               = module.network.subnetwork_id\n"
+                    ],
+                    [
+                        27,
+                        "  remove_default_node_pool = true\n"
+                    ],
+                    [
+                        28,
+                        "  initial_node_count       = 1\n"
+                    ],
+                    [
+                        29,
+                        "\n"
+                    ],
+                    [
+                        30,
+                        "  private_cluster_config {\n"
+                    ],
+                    [
+                        31,
+                        "    enable_private_nodes    = true\n"
+                    ],
+                    [
+                        32,
+                        "    enable_private_endpoint = true\n"
+                    ],
+                    [
+                        33,
+                        "    master_ipv4_cidr_block  = \"172.16.0.0/28\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  workload_identity_config {\n"
+                    ],
+                    [
+                        37,
+                        "    workload_pool = \"${var.project}.svc.id.goog\"\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  ip_allocation_policy {\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    22,
+                    42
+                ],
+                "resource": "google_container_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKEClientCertificateDisabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-8",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "network": [
+                        {
+                            "type": "output",
+                            "name": "network_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "subnetwork": [
+                        {
+                            "type": "output",
+                            "name": "subnetwork_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_61",
+                "bc_check_id": "BC_GCP_KUBERNETES_18",
+                "check_name": "Enable VPC Flow Logs and Intranode Visibility",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "enable_intranode_visibility"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_container_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name                     = var.cluster_name\n"
+                    ],
+                    [
+                        24,
+                        "  location                 = var.region\n"
+                    ],
+                    [
+                        25,
+                        "  network                  = module.network.network_id\n"
+                    ],
+                    [
+                        26,
+                        "  subnetwork               = module.network.subnetwork_id\n"
+                    ],
+                    [
+                        27,
+                        "  remove_default_node_pool = true\n"
+                    ],
+                    [
+                        28,
+                        "  initial_node_count       = 1\n"
+                    ],
+                    [
+                        29,
+                        "\n"
+                    ],
+                    [
+                        30,
+                        "  private_cluster_config {\n"
+                    ],
+                    [
+                        31,
+                        "    enable_private_nodes    = true\n"
+                    ],
+                    [
+                        32,
+                        "    enable_private_endpoint = true\n"
+                    ],
+                    [
+                        33,
+                        "    master_ipv4_cidr_block  = \"172.16.0.0/28\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  workload_identity_config {\n"
+                    ],
+                    [
+                        37,
+                        "    workload_pool = \"${var.project}.svc.id.goog\"\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  ip_allocation_policy {\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    22,
+                    42
+                ],
+                "resource": "google_container_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKEEnableVPCFlowLogs",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/enable-vpc-flow-logs-and-intranode-visibility",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "network": [
+                        {
+                            "type": "output",
+                            "name": "network_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "subnetwork": [
+                        {
+                            "type": "output",
+                            "name": "subnetwork_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_21",
+                "bc_check_id": "BC_GCP_KUBERNETES_13",
+                "check_name": "Ensure Kubernetes Clusters are configured with Labels",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "resource_labels"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_container_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name                     = var.cluster_name\n"
+                    ],
+                    [
+                        24,
+                        "  location                 = var.region\n"
+                    ],
+                    [
+                        25,
+                        "  network                  = module.network.network_id\n"
+                    ],
+                    [
+                        26,
+                        "  subnetwork               = module.network.subnetwork_id\n"
+                    ],
+                    [
+                        27,
+                        "  remove_default_node_pool = true\n"
+                    ],
+                    [
+                        28,
+                        "  initial_node_count       = 1\n"
+                    ],
+                    [
+                        29,
+                        "\n"
+                    ],
+                    [
+                        30,
+                        "  private_cluster_config {\n"
+                    ],
+                    [
+                        31,
+                        "    enable_private_nodes    = true\n"
+                    ],
+                    [
+                        32,
+                        "    enable_private_endpoint = true\n"
+                    ],
+                    [
+                        33,
+                        "    master_ipv4_cidr_block  = \"172.16.0.0/28\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  workload_identity_config {\n"
+                    ],
+                    [
+                        37,
+                        "    workload_pool = \"${var.project}.svc.id.goog\"\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  ip_allocation_policy {\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    22,
+                    42
+                ],
+                "resource": "google_container_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKEHasLabels",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-13",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "network": [
+                        {
+                            "type": "output",
+                            "name": "network_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "subnetwork": [
+                        {
+                            "type": "output",
+                            "name": "subnetwork_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_65",
+                "bc_check_id": "BC_GCP_KUBERNETES_20",
+                "check_name": "Manage Kubernetes RBAC users with Google Groups for GKE",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "authenticator_groups_config/[0]/security_group"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_container_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name                     = var.cluster_name\n"
+                    ],
+                    [
+                        24,
+                        "  location                 = var.region\n"
+                    ],
+                    [
+                        25,
+                        "  network                  = module.network.network_id\n"
+                    ],
+                    [
+                        26,
+                        "  subnetwork               = module.network.subnetwork_id\n"
+                    ],
+                    [
+                        27,
+                        "  remove_default_node_pool = true\n"
+                    ],
+                    [
+                        28,
+                        "  initial_node_count       = 1\n"
+                    ],
+                    [
+                        29,
+                        "\n"
+                    ],
+                    [
+                        30,
+                        "  private_cluster_config {\n"
+                    ],
+                    [
+                        31,
+                        "    enable_private_nodes    = true\n"
+                    ],
+                    [
+                        32,
+                        "    enable_private_endpoint = true\n"
+                    ],
+                    [
+                        33,
+                        "    master_ipv4_cidr_block  = \"172.16.0.0/28\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  workload_identity_config {\n"
+                    ],
+                    [
+                        37,
+                        "    workload_pool = \"${var.project}.svc.id.goog\"\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  ip_allocation_policy {\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    22,
+                    42
+                ],
+                "resource": "google_container_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKEKubernetesRBACGoogleGroups",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/manage-kubernetes-rbac-users-with-google-groups-for-gke",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "network": [
+                        {
+                            "type": "output",
+                            "name": "network_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "subnetwork": [
+                        {
+                            "type": "output",
+                            "name": "subnetwork_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_20",
+                "bc_check_id": "BC_GCP_KUBERNETES_12",
+                "check_name": "Ensure master authorized networks is set to enabled in GKE clusters",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "master_authorized_networks_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_container_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name                     = var.cluster_name\n"
+                    ],
+                    [
+                        24,
+                        "  location                 = var.region\n"
+                    ],
+                    [
+                        25,
+                        "  network                  = module.network.network_id\n"
+                    ],
+                    [
+                        26,
+                        "  subnetwork               = module.network.subnetwork_id\n"
+                    ],
+                    [
+                        27,
+                        "  remove_default_node_pool = true\n"
+                    ],
+                    [
+                        28,
+                        "  initial_node_count       = 1\n"
+                    ],
+                    [
+                        29,
+                        "\n"
+                    ],
+                    [
+                        30,
+                        "  private_cluster_config {\n"
+                    ],
+                    [
+                        31,
+                        "    enable_private_nodes    = true\n"
+                    ],
+                    [
+                        32,
+                        "    enable_private_endpoint = true\n"
+                    ],
+                    [
+                        33,
+                        "    master_ipv4_cidr_block  = \"172.16.0.0/28\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  workload_identity_config {\n"
+                    ],
+                    [
+                        37,
+                        "    workload_pool = \"${var.project}.svc.id.goog\"\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  ip_allocation_policy {\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    22,
+                    42
+                ],
+                "resource": "google_container_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKEMasterAuthorizedNetworksEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-12",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "network": [
+                        {
+                            "type": "output",
+                            "name": "network_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "subnetwork": [
+                        {
+                            "type": "output",
+                            "name": "subnetwork_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_69",
+                "bc_check_id": "BC_GCP_KUBERNETES_23",
+                "check_name": "Ensure the GKE Metadata Server is Enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "node_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_container_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name                     = var.cluster_name\n"
+                    ],
+                    [
+                        24,
+                        "  location                 = var.region\n"
+                    ],
+                    [
+                        25,
+                        "  network                  = module.network.network_id\n"
+                    ],
+                    [
+                        26,
+                        "  subnetwork               = module.network.subnetwork_id\n"
+                    ],
+                    [
+                        27,
+                        "  remove_default_node_pool = true\n"
+                    ],
+                    [
+                        28,
+                        "  initial_node_count       = 1\n"
+                    ],
+                    [
+                        29,
+                        "\n"
+                    ],
+                    [
+                        30,
+                        "  private_cluster_config {\n"
+                    ],
+                    [
+                        31,
+                        "    enable_private_nodes    = true\n"
+                    ],
+                    [
+                        32,
+                        "    enable_private_endpoint = true\n"
+                    ],
+                    [
+                        33,
+                        "    master_ipv4_cidr_block  = \"172.16.0.0/28\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  workload_identity_config {\n"
+                    ],
+                    [
+                        37,
+                        "    workload_pool = \"${var.project}.svc.id.goog\"\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  ip_allocation_policy {\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    22,
+                    42
+                ],
+                "resource": "google_container_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKEMetadataServerIsEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-the-gke-metadata-server-is-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "network": [
+                        {
+                            "type": "output",
+                            "name": "network_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "subnetwork": [
+                        {
+                            "type": "output",
+                            "name": "subnetwork_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_12",
+                "bc_check_id": "BC_GCP_KUBERNETES_7",
+                "check_name": "Ensure Network Policy is enabled on Kubernetes Engine Clusters",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "network_policy/[0]/enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_container_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name                     = var.cluster_name\n"
+                    ],
+                    [
+                        24,
+                        "  location                 = var.region\n"
+                    ],
+                    [
+                        25,
+                        "  network                  = module.network.network_id\n"
+                    ],
+                    [
+                        26,
+                        "  subnetwork               = module.network.subnetwork_id\n"
+                    ],
+                    [
+                        27,
+                        "  remove_default_node_pool = true\n"
+                    ],
+                    [
+                        28,
+                        "  initial_node_count       = 1\n"
+                    ],
+                    [
+                        29,
+                        "\n"
+                    ],
+                    [
+                        30,
+                        "  private_cluster_config {\n"
+                    ],
+                    [
+                        31,
+                        "    enable_private_nodes    = true\n"
+                    ],
+                    [
+                        32,
+                        "    enable_private_endpoint = true\n"
+                    ],
+                    [
+                        33,
+                        "    master_ipv4_cidr_block  = \"172.16.0.0/28\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  workload_identity_config {\n"
+                    ],
+                    [
+                        37,
+                        "    workload_pool = \"${var.project}.svc.id.goog\"\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  ip_allocation_policy {\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    22,
+                    42
+                ],
+                "resource": "google_container_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKENetworkPolicyEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-7",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "network": [
+                        {
+                            "type": "output",
+                            "name": "network_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "subnetwork": [
+                        {
+                            "type": "output",
+                            "name": "subnetwork_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_70",
+                "bc_check_id": "BC_GCP_KUBERNETES_26",
+                "check_name": "Ensure the GKE Release Channel is set",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "release_channel/[0]/channel"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_container_cluster\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name                     = var.cluster_name\n"
+                    ],
+                    [
+                        24,
+                        "  location                 = var.region\n"
+                    ],
+                    [
+                        25,
+                        "  network                  = module.network.network_id\n"
+                    ],
+                    [
+                        26,
+                        "  subnetwork               = module.network.subnetwork_id\n"
+                    ],
+                    [
+                        27,
+                        "  remove_default_node_pool = true\n"
+                    ],
+                    [
+                        28,
+                        "  initial_node_count       = 1\n"
+                    ],
+                    [
+                        29,
+                        "\n"
+                    ],
+                    [
+                        30,
+                        "  private_cluster_config {\n"
+                    ],
+                    [
+                        31,
+                        "    enable_private_nodes    = true\n"
+                    ],
+                    [
+                        32,
+                        "    enable_private_endpoint = true\n"
+                    ],
+                    [
+                        33,
+                        "    master_ipv4_cidr_block  = \"172.16.0.0/28\"\n"
+                    ],
+                    [
+                        34,
+                        "  }\n"
+                    ],
+                    [
+                        35,
+                        "\n"
+                    ],
+                    [
+                        36,
+                        "  workload_identity_config {\n"
+                    ],
+                    [
+                        37,
+                        "    workload_pool = \"${var.project}.svc.id.goog\"\n"
+                    ],
+                    [
+                        38,
+                        "  }\n"
+                    ],
+                    [
+                        39,
+                        "\n"
+                    ],
+                    [
+                        40,
+                        "  ip_allocation_policy {\n"
+                    ],
+                    [
+                        41,
+                        "  }\n"
+                    ],
+                    [
+                        42,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    22,
+                    42
+                ],
+                "resource": "google_container_cluster.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKEReleaseChannel",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-the-gke-release-channel-is-set",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "network": [
+                        {
+                            "type": "output",
+                            "name": "network_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "subnetwork": [
+                        {
+                            "type": "output",
+                            "name": "subnetwork_id",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_69",
+                "bc_check_id": "BC_GCP_KUBERNETES_23",
+                "check_name": "Ensure the GKE Metadata Server is Enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "node_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        44,
+                        "resource \"google_container_node_pool\" \"pools\" {\n"
+                    ],
+                    [
+                        45,
+                        "  for_each   = var.node_pools\n"
+                    ],
+                    [
+                        46,
+                        "  name       = each.key\n"
+                    ],
+                    [
+                        47,
+                        "  cluster    = google_container_cluster.main.name\n"
+                    ],
+                    [
+                        48,
+                        "  location   = var.region\n"
+                    ],
+                    [
+                        49,
+                        "  node_count = each.value.node_count\n"
+                    ],
+                    [
+                        50,
+                        "\n"
+                    ],
+                    [
+                        51,
+                        "  node_config {\n"
+                    ],
+                    [
+                        52,
+                        "    machine_type = each.value.machine_type\n"
+                    ],
+                    [
+                        53,
+                        "\n"
+                    ],
+                    [
+                        54,
+                        "    oauth_scopes = [\n"
+                    ],
+                    [
+                        55,
+                        "      \"https://www.googleapis.com/auth/cloud-platform\"\n"
+                    ],
+                    [
+                        56,
+                        "    ]\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    44,
+                    58
+                ],
+                "resource": "google_container_node_pool.pools",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKEMetadataServerIsEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-the-gke-metadata-server-is-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "for_each": [
+                        {
+                            "type": "variable",
+                            "name": "node_pools",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/variables.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "cluster": [
+                        {
+                            "type": "resource",
+                            "name": "google_container_cluster.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_9",
+                "bc_check_id": "BC_GCP_KUBERNETES_4",
+                "check_name": "Ensure 'Automatic node repair' is enabled for Kubernetes Clusters",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "management/[0]/auto_repair/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        44,
+                        "resource \"google_container_node_pool\" \"pools\" {\n"
+                    ],
+                    [
+                        45,
+                        "  for_each   = var.node_pools\n"
+                    ],
+                    [
+                        46,
+                        "  name       = each.key\n"
+                    ],
+                    [
+                        47,
+                        "  cluster    = google_container_cluster.main.name\n"
+                    ],
+                    [
+                        48,
+                        "  location   = var.region\n"
+                    ],
+                    [
+                        49,
+                        "  node_count = each.value.node_count\n"
+                    ],
+                    [
+                        50,
+                        "\n"
+                    ],
+                    [
+                        51,
+                        "  node_config {\n"
+                    ],
+                    [
+                        52,
+                        "    machine_type = each.value.machine_type\n"
+                    ],
+                    [
+                        53,
+                        "\n"
+                    ],
+                    [
+                        54,
+                        "    oauth_scopes = [\n"
+                    ],
+                    [
+                        55,
+                        "      \"https://www.googleapis.com/auth/cloud-platform\"\n"
+                    ],
+                    [
+                        56,
+                        "    ]\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    44,
+                    58
+                ],
+                "resource": "google_container_node_pool.pools",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKENodePoolAutoRepairEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "for_each": [
+                        {
+                            "type": "variable",
+                            "name": "node_pools",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/variables.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "cluster": [
+                        {
+                            "type": "resource",
+                            "name": "google_container_cluster.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_10",
+                "bc_check_id": "BC_GCP_KUBERNETES_5",
+                "check_name": "Ensure 'Automatic node upgrade' is enabled for Kubernetes Clusters",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "management/[0]/auto_upgrade/[0]"
+                    ]
+                },
+                "code_block": [
+                    [
+                        44,
+                        "resource \"google_container_node_pool\" \"pools\" {\n"
+                    ],
+                    [
+                        45,
+                        "  for_each   = var.node_pools\n"
+                    ],
+                    [
+                        46,
+                        "  name       = each.key\n"
+                    ],
+                    [
+                        47,
+                        "  cluster    = google_container_cluster.main.name\n"
+                    ],
+                    [
+                        48,
+                        "  location   = var.region\n"
+                    ],
+                    [
+                        49,
+                        "  node_count = each.value.node_count\n"
+                    ],
+                    [
+                        50,
+                        "\n"
+                    ],
+                    [
+                        51,
+                        "  node_config {\n"
+                    ],
+                    [
+                        52,
+                        "    machine_type = each.value.machine_type\n"
+                    ],
+                    [
+                        53,
+                        "\n"
+                    ],
+                    [
+                        54,
+                        "    oauth_scopes = [\n"
+                    ],
+                    [
+                        55,
+                        "      \"https://www.googleapis.com/auth/cloud-platform\"\n"
+                    ],
+                    [
+                        56,
+                        "    ]\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    44,
+                    58
+                ],
+                "resource": "google_container_node_pool.pools",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKENodePoolAutoUpgradeEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-5",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "for_each": [
+                        {
+                            "type": "variable",
+                            "name": "node_pools",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/variables.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "cluster": [
+                        {
+                            "type": "resource",
+                            "name": "google_container_cluster.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_68",
+                "bc_check_id": "BC_GCP_KUBERNETES_17",
+                "check_name": "Ensure Secure Boot for Shielded GKE Nodes is Enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "node_config/[0]/shielded_instance_config/[0]/enable_secure_boot"
+                    ]
+                },
+                "code_block": [
+                    [
+                        44,
+                        "resource \"google_container_node_pool\" \"pools\" {\n"
+                    ],
+                    [
+                        45,
+                        "  for_each   = var.node_pools\n"
+                    ],
+                    [
+                        46,
+                        "  name       = each.key\n"
+                    ],
+                    [
+                        47,
+                        "  cluster    = google_container_cluster.main.name\n"
+                    ],
+                    [
+                        48,
+                        "  location   = var.region\n"
+                    ],
+                    [
+                        49,
+                        "  node_count = each.value.node_count\n"
+                    ],
+                    [
+                        50,
+                        "\n"
+                    ],
+                    [
+                        51,
+                        "  node_config {\n"
+                    ],
+                    [
+                        52,
+                        "    machine_type = each.value.machine_type\n"
+                    ],
+                    [
+                        53,
+                        "\n"
+                    ],
+                    [
+                        54,
+                        "    oauth_scopes = [\n"
+                    ],
+                    [
+                        55,
+                        "      \"https://www.googleapis.com/auth/cloud-platform\"\n"
+                    ],
+                    [
+                        56,
+                        "    ]\n"
+                    ],
+                    [
+                        57,
+                        "  }\n"
+                    ],
+                    [
+                        58,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "file_line_range": [
+                    44,
+                    58
+                ],
+                "resource": "google_container_node_pool.pools",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GKESecureBootforShieldedNodes",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-secure-boot-for-shielded-gke-nodes-is-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                "breadcrumbs": {
+                    "for_each": [
+                        {
+                            "type": "variable",
+                            "name": "node_pools",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/variables.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "cluster": [
+                        {
+                            "type": "resource",
+                            "name": "google_container_cluster.main",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "module_connection": false
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_26",
+                "bc_check_id": "BC_GCP_LOGGING_1",
+                "check_name": "Ensure that VPC Flow Logs is enabled for every subnet in a VPC Network",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "log_config"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_compute_subnetwork\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name          = \"${var.network_name}-subnet\"\n"
+                    ],
+                    [
+                        24,
+                        "  project       = var.project\n"
+                    ],
+                    [
+                        25,
+                        "  region        = var.region\n"
+                    ],
+                    [
+                        26,
+                        "  network       = google_compute_network.main.id\n"
+                    ],
+                    [
+                        27,
+                        "  ip_cidr_range = \"10.60.0.0/16\"\n"
+                    ],
+                    [
+                        28,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/modules/network/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                "file_line_range": [
+                    22,
+                    28
+                ],
+                "resource": "module.network.google_compute_subnetwork.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleSubnetworkLoggingEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": "/main.tf",
+                "caller_file_line_range": [
+                    15,
+                    20
+                ],
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-gcp-logging-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                "breadcrumbs": {
+                    "name": [
+                        {
+                            "type": "module",
+                            "name": "network",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "module_connection": false
+                        },
+                        {
+                            "type": "variable",
+                            "name": "network_name",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "source_module_": [
+                        {
+                            "type": "module",
+                            "name": "network",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "idx": 0,
+                            "source_module_object": null
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_74",
+                "bc_check_id": "BC_GCP_GENERAL_31",
+                "check_name": "Ensure that private_ip_google_access is enabled for Subnet",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "private_ip_google_access"
+                    ]
+                },
+                "code_block": [
+                    [
+                        22,
+                        "resource \"google_compute_subnetwork\" \"main\" {\n"
+                    ],
+                    [
+                        23,
+                        "  name          = \"${var.network_name}-subnet\"\n"
+                    ],
+                    [
+                        24,
+                        "  project       = var.project\n"
+                    ],
+                    [
+                        25,
+                        "  region        = var.region\n"
+                    ],
+                    [
+                        26,
+                        "  network       = google_compute_network.main.id\n"
+                    ],
+                    [
+                        27,
+                        "  ip_cidr_range = \"10.60.0.0/16\"\n"
+                    ],
+                    [
+                        28,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/modules/network/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                "file_line_range": [
+                    22,
+                    28
+                ],
+                "resource": "module.network.google_compute_subnetwork.main",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleSubnetworkPrivateGoogleEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": "/main.tf",
+                "caller_file_line_range": [
+                    15,
+                    20
+                ],
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/ensure-gcp-subnet-has-a-private-ip-google-access",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                "breadcrumbs": {
+                    "name": [
+                        {
+                            "type": "module",
+                            "name": "network",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "module_connection": false
+                        },
+                        {
+                            "type": "variable",
+                            "name": "network_name",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "source_module_": [
+                        {
+                            "type": "module",
+                            "name": "network",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "idx": 0,
+                            "source_module_object": null
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_GCP_79",
+                "bc_check_id": "BC_GCP_GENERAL_13",
+                "check_name": "Ensure SQL database is using latest Major version",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.CloudSqlMajorVersion",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/ensure-gcp-sql-database-uses-the-latest-major-version",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_110",
+                "bc_check_id": "BC_GCP_LOGGING_13",
+                "check_name": "Ensure pgAudit is enabled for your GCP PostgreSQL database",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlEnablePgaudit",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-110",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_51",
+                "bc_check_id": "BC_GCP_SQL_2",
+                "check_name": "Ensure PostgreSQL database 'log_checkpoints' flag is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogCheckpoints",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_52",
+                "bc_check_id": "BC_GCP_SQL_3",
+                "check_name": "Ensure PostgreSQL database 'log_connections' flag is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogConnection",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-3",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_53",
+                "bc_check_id": "BC_GCP_SQL_4",
+                "check_name": "Ensure PostgreSQL database 'log_disconnections' flag is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogDisconnection",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_108",
+                "bc_check_id": "BC_GCP_LOGGING_11",
+                "check_name": "Ensure hostnames are logged for GCP PostgreSQL databases",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogHostname",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-108",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_54",
+                "bc_check_id": "BC_GCP_SQL_5",
+                "check_name": "Ensure PostgreSQL database 'log_lock_waits' flag is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogLockWaits",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-5",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_109",
+                "bc_check_id": "BC_GCP_LOGGING_12",
+                "check_name": "Ensure the GCP PostgreSQL database log levels are set to ERROR or lower",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogMinErrorStatement",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-109",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_111",
+                "bc_check_id": "BC_GCP_LOGGING_14",
+                "check_name": "Ensure GCP PostgreSQL logs SQL statements",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/POSTGRES",
+                        "settings"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudPostgreSqlLogStatement",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-111",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_11",
+                "bc_check_id": "BC_GCP_NETWORKING_4",
+                "check_name": "Ensure that Cloud SQL database Instances are not open to the world",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "settings/[0]/ip_configuration/authorized_networks/[0]/value",
+                        "settings/[0]/ip_configuration/authorized_networks/[0]/[0]/value"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudSqlDatabasePubliclyAccessible",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_6",
+                "bc_check_id": "BC_GCP_GENERAL_5",
+                "check_name": "Ensure all Cloud SQL database instance requires all incoming connections to use SSL",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": []
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudSqlDatabaseRequireSsl",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-gcp-general-1",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV_GCP_60",
+                "bc_check_id": "BC_GCP_SQL_11",
+                "check_name": "Ensure Cloud SQL database does not have public IP",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "database_version/[0]/SQLSERVER",
+                        "settings/[0]/ip_configuration/[0]/ipv4_enabled"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.gcp.GoogleCloudSqlServerNoPublicIP",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-11",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            },
+            {
+                "check_id": "CKV2_GCP_18",
+                "bc_check_id": "BC_GCP_NETWORKING_22",
+                "check_name": "Ensure GCP network defines a firewall and does not use the default firewall",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "google_compute_network": {
+                            "main": {
+                                "__end_line__": 20,
+                                "__start_line__": 16,
+                                "auto_create_subnetworks": [
+                                    false
+                                ],
+                                "name": [
+                                    "${var.cluster_name}-net"
+                                ],
+                                "project": [
+                                    "var.project"
+                                ],
+                                "__address__": "module.network.google_compute_network.main",
+                                "__provider_address__": "google.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "resource_type"
+                    ]
+                },
+                "code_block": [
+                    [
+                        16,
+                        "resource \"google_compute_network\" \"main\" {\n"
+                    ],
+                    [
+                        17,
+                        "  name                    = var.network_name\n"
+                    ],
+                    [
+                        18,
+                        "  project                 = var.project\n"
+                    ],
+                    [
+                        19,
+                        "  auto_create_subnetworks = false\n"
+                    ],
+                    [
+                        20,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/modules/network/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                "file_line_range": [
+                    16,
+                    20
+                ],
+                "resource": "module.network.google_compute_network.main",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-2-18",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                "breadcrumbs": {
+                    "name": [
+                        {
+                            "type": "module",
+                            "name": "network",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "module_connection": false
+                        },
+                        {
+                            "type": "variable",
+                            "name": "network_name",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/modules/network/main.tf",
+                            "module_connection": false
+                        }
+                    ],
+                    "source_module_": [
+                        {
+                            "type": "module",
+                            "name": "network",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/main.tf",
+                            "idx": 0,
+                            "source_module_object": null
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV2_GCP_13",
+                "bc_check_id": "BC_GCP_LOGGING_6",
+                "check_name": "Ensure PostgreSQL database flag 'log_duration' is set to 'on'",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "google_sql_database_instance": {
+                            "app": {
+                                "__end_line__": 23,
+                                "__start_line__": 1,
+                                "database_version": [
+                                    "POSTGRES_15"
+                                ],
+                                "name": [
+                                    "${var.cluster_name}-db"
+                                ],
+                                "region": [
+                                    "var.region"
+                                ],
+                                "settings": [
+                                    {
+                                        "backup_configuration": [
+                                            {
+                                                "enabled": [
+                                                    true
+                                                ],
+                                                "point_in_time_recovery_enabled": [
+                                                    true
+                                                ]
+                                            }
+                                        ],
+                                        "ip_configuration": [
+                                            {
+                                                "authorized_networks": [
+                                                    {
+                                                        "name": [
+                                                            "internet"
+                                                        ],
+                                                        "value": [
+                                                            "0.0.0.0/0"
+                                                        ]
+                                                    }
+                                                ],
+                                                "ipv4_enabled": [
+                                                    true
+                                                ]
+                                            }
+                                        ],
+                                        "tier": [
+                                            "var.db_tier"
+                                        ]
+                                    }
+                                ],
+                                "__address__": "google_sql_database_instance.app"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "settings/database_flags[?(@/name == log_duration & @/value == on)]",
+                        "database_version"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"google_sql_database_instance\" \"app\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name             = \"${var.cluster_name}-db\"\n"
+                    ],
+                    [
+                        3,
+                        "  database_version = \"POSTGRES_15\"\n"
+                    ],
+                    [
+                        4,
+                        "  region           = var.region\n"
+                    ],
+                    [
+                        5,
+                        "\n"
+                    ],
+                    [
+                        6,
+                        "  settings {\n"
+                    ],
+                    [
+                        7,
+                        "    tier = var.db_tier\n"
+                    ],
+                    [
+                        8,
+                        "\n"
+                    ],
+                    [
+                        9,
+                        "    ip_configuration {\n"
+                    ],
+                    [
+                        10,
+                        "      ipv4_enabled = true\n"
+                    ],
+                    [
+                        11,
+                        "\n"
+                    ],
+                    [
+                        12,
+                        "      authorized_networks {\n"
+                    ],
+                    [
+                        13,
+                        "        name  = \"internet\"\n"
+                    ],
+                    [
+                        14,
+                        "        value = \"0.0.0.0/0\"\n"
+                    ],
+                    [
+                        15,
+                        "      }\n"
+                    ],
+                    [
+                        16,
+                        "    }\n"
+                    ],
+                    [
+                        17,
+                        "\n"
+                    ],
+                    [
+                        18,
+                        "    backup_configuration {\n"
+                    ],
+                    [
+                        19,
+                        "      enabled                        = true\n"
+                    ],
+                    [
+                        20,
+                        "      point_in_time_recovery_enabled = true\n"
+                    ],
+                    [
+                        21,
+                        "    }\n"
+                    ],
+                    [
+                        22,
+                        "  }\n"
+                    ],
+                    [
+                        23,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/sql.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf",
+                "file_line_range": [
+                    1,
+                    23
+                ],
+                "resource": "google_sql_database_instance.app",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-gcp-2-13",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t070/sql.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 21,
+        "failed": 29,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 5,
+        "checkov_version": "3.3.26"
+    }
+}

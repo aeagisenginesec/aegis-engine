@@ -1,0 +1,348 @@
+# Aegis IaC Security Gate — GitLab CI equivalent of .github/workflows/aegis.yml
+#
+# What it does (every merge-request pipeline + every push to main):
+#   1. Builds Aegis from source (never a checked-in binary — a checked-in
+#      binary can go stale vs HEAD; see docs/audit/08_CI_INTEGRATION_REPORT.md).
+#   2. Scans the tree twice (once as JSON for the gate + completeness audit,
+#      once as SARIF for the vulnerability report). Aegis is deterministic, so
+#      both runs see the same findings; the JSON run owns the gate verdict.
+#   3. Audits scan completeness: failed files, skipped files, and a coverage
+#      cross-check of on-disk IaC files vs the scanner's completeness list
+#      (catches files the scanner silently drops, e.g. files over the
+#      --max-file-size cap, which never appear in completeness at all).
+#   4. Publishes the SARIF via artifacts:reports:sarif and posts a summary
+#      note on the merge request (aegis-mr-note, only when AEGIS_MR_NOTE_TOKEN
+#      is set — see below).
+#
+# Exit-code contract (from `aegis --help`, verified in CI item 4):
+#   0  scan clean (or findings below --fail-on)
+#   1  findings at or above --fail-on threshold (gate FAIL)
+#   2  operational error (bad flag, unreadable target, --strict parse failure)
+#   3  incomplete scan (audit: failed or silently-missing files) — Aegis itself
+#      has no such code; this config synthesises it so an incomplete scan can
+#      never masquerade as a pass.
+#
+# Scanner limitations this config works around (all verified locally,
+# docs/audit/14_CI_CD_VALIDATION.md):
+#   - `*.tfvars` has no adapter: an unscanned .tfvars file is reported as
+#     FAILED, so --strict would fail every repo that contains one. The scan
+#     therefore uses --exclude="*.tfvars" (tfvars carry values, not resources;
+#     no rule reads them) and the audit still lists them as skipped.
+#   - `*.tf.json` (Terraform JSON syntax) is treated as a generic manifest and
+#     SKIPPED without analysis — even under --strict. The audit calls this out
+#     explicitly; do not assume .tf.json files are covered.
+#   - Files over --max-file-size (default 10 MiB) are silently absent from
+#     completeness under default flags. The coverage cross-check fails the job
+#     if any on-disk IaC file is missing from completeness.
+#   - SARIF output carries NO completeness/diagnostic data (runs[].tool +
+#     runs[].results only). The JSON artifact is the completeness evidence —
+#     always keep aegis.json, not just the SARIF.
+#   - `--color` does not exist (the binary rejects it with exit 2). Do not add it.
+#   - Do NOT point artifacts:reports:sast at aegis JSON/SARIF: `sast` expects
+#     GitLab's own security-report schema. SARIF goes in reports:sarif (the
+#     Vulnerability Report / MR security widget for it is Ultimate-only; on
+#     other tiers the file stays downloadable in artifacts:paths and the
+#     exit-code gate still works).
+#
+# Baseline: commit an accepted-findings baseline to .aegis/baseline.json
+# (generate with `aegis scan . --baseline-out=.aegis/baseline.json`, review it,
+# commit it). When the file exists the scan automatically applies
+# --baseline=.aegis/baseline.json and only NEW findings can fail the gate.
+# Refresh: run the manual `aegis-baseline` job, download its
+# .aegis/baseline.json artifact, review it, commit it. (A runner cannot safely
+# commit back to the repo on its own.)
+#
+# MR notes: `aegis-mr-note` posts the summary to the merge request. It needs a
+# project access token with `api` scope stored as masked CI/CD variable
+# AEGIS_MR_NOTE_TOKEN (Settings → CI/CD → Variables). Without it the job is
+# skipped by its rules and nothing else changes.
+stages:
+  - scan
+
+variables:
+  AEGIS_FAIL_ON: "high"
+  # .tfvars has no Aegis adapter (see header): exclude it so --strict does not
+  # fail on repos that contain variable files. Excluded files are still listed
+  # as `skipped` in scan completeness.
+  AEGIS_EXCLUDE: "*.tfvars"
+  BASELINE_FILE: .aegis/baseline.json
+
+# Shared scan prologue: build from source + self-check.
+.aegis_build: &aegis_build
+  - go build -o aegis ./cmd/aegis
+  - ./aegis doctor
+
+# Shared completeness + coverage audit script. Identical logic to the GitHub
+# workflow's audit (exit 0 complete, 3 incomplete, 2 usage/JSON error).
+# Writes audit.json + aegis-summary.md in the job working directory.
+.aegis_audit_script: &aegis_audit_script
+  - |
+    cat > /tmp/aegis_audit.py <<'PYEOF'
+    #!/usr/bin/env python3
+    """Aegis CI completeness + coverage audit.
+
+    Reads the JSON scan output, fails on incomplete scans, warns on
+    skipped files, and cross-checks on-disk IaC files against the
+    scanner's completeness list (catches files the scanner silently
+    drops, e.g. files over --max-file-size, which never appear in
+    completeness at all).
+
+    Usage: aegis_audit.py <aegis.json> <scan-dir> <own-output-file>...
+    Exit 0: scan complete. Exit 3: incomplete scan (failed/missing files).
+    Exit 2: usage / unreadable JSON.
+    Writes audit.json + aegis-summary.md next to aegis.json.
+    """
+    import json
+    import os
+    import sys
+    from collections import Counter
+
+    SCAN_EXTS = (".tf", ".tf.json", ".tfvars", ".yaml", ".yml", ".json", ".bicep")
+    SKIP_DIRS = {".git", "node_modules"}
+
+
+    def is_iac(path):
+        name = os.path.basename(path)
+        if name == "Dockerfile" or name.startswith("Dockerfile."):
+            return True
+        return name.lower().endswith(SCAN_EXTS)
+
+
+    def main():
+        if len(sys.argv) < 3:
+            print("usage: aegis_audit.py <aegis.json> <scan-dir> [own-output...]",
+                  file=sys.stderr)
+            return 2
+        json_path, scan_dir = sys.argv[1], sys.argv[2]
+        own_outputs = {os.path.abspath(os.path.join(scan_dir, p))
+                       for p in sys.argv[3:]}
+        try:
+            with open(json_path) as f:
+                doc = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            print(f"AUDIT ERROR: cannot read {json_path}: {e}", file=sys.stderr)
+            return 2
+
+        findings = doc.get("findings", [])
+        by_sev = dict(Counter(f.get("severity", "?") for f in findings))
+        comp = doc.get("scan_completeness", {}) or {}
+        entries = comp.get("files", []) or []
+        failed = [e for e in entries if e.get("status") == "failed"]
+        skipped = [e for e in entries if e.get("status") == "skipped"]
+
+        # Coverage cross-check: every IaC file on disk must appear in
+        # completeness (as parsed, skipped, or failed). A file that is
+        # missing was silently dropped by the scanner — fail loudly.
+        seen = set()
+        for e in entries:
+            p = e.get("path", "")
+            seen.add(os.path.abspath(p if os.path.isabs(p)
+                                     else os.path.join(scan_dir, p)))
+        missing = []
+        for root, dirs, files in os.walk(scan_dir):
+            dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+            for name in files:
+                full = os.path.abspath(os.path.join(root, name))
+                if full in own_outputs:
+                    continue
+                if is_iac(full) and full not in seen:
+                    missing.append(os.path.relpath(full, scan_dir))
+
+        tfjson_skipped = any(e.get("path", "").endswith(".tf.json")
+                             for e in skipped)
+        complete = not failed and not missing
+        audit = {
+            "findings_total": len(findings),
+            "by_severity": by_sev,
+            "files_discovered": comp.get("files_discovered"),
+            "files_parsed": comp.get("files_parsed"),
+            "files_skipped": comp.get("files_skipped"),
+            "files_failed": comp.get("files_failed"),
+            "failed_files": [{"path": e.get("path"), "reason": e.get("reason", "")}
+                             for e in failed],
+            "skipped_files": [{"path": e.get("path"), "reason": e.get("reason", "")}
+                              for e in skipped],
+            "missing_files": sorted(missing),
+            "tfjson_skipped": tfjson_skipped,
+            "complete": complete,
+        }
+        with open("audit.json", "w") as f:
+            json.dump(audit, f, indent=2, sort_keys=True)
+
+        lines = []
+        lines.append("## Aegis scan summary\n")
+        lines.append(f"- Findings: **{len(findings)}** "
+                     f"(critical={by_sev.get('critical', 0)}, "
+                     f"high={by_sev.get('high', 0)}, "
+                     f"medium={by_sev.get('medium', 0)}, "
+                     f"low={by_sev.get('low', 0)}, "
+                     f"info={by_sev.get('info', 0)})")
+        lines.append(f"- Files: discovered={comp.get('files_discovered')}, "
+                     f"parsed={comp.get('files_parsed')}, "
+                     f"skipped={comp.get('files_skipped')}, "
+                     f"failed={comp.get('files_failed')}")
+        lines.append(f"- Scan complete: **{'yes' if complete else 'NO — see below'}**")
+        if failed:
+            lines.append("\n### Failed files (parse errors)")
+            for e in failed:
+                lines.append(f"- `{e.get('path')}` — {e.get('reason', '')}")
+        if missing:
+            lines.append("\n### Silently missing files (on disk, absent from completeness)")
+            lines.append("These received ZERO coverage and the scanner did not "
+                         "report them. Common cause: file over --max-file-size.")
+            for m in missing:
+                lines.append(f"- `{m}`")
+        if skipped:
+            lines.append(f"\n### Skipped files ({len(skipped)})")
+            for e in skipped[:20]:
+                lines.append(f"- `{e.get('path')}` — {e.get('reason', '')}")
+            if len(skipped) > 20:
+                lines.append(f"- …and {len(skipped) - 20} more (see audit.json)")
+        if tfjson_skipped:
+            lines.append("\n> ⚠️ `.tf.json` (Terraform JSON syntax) files were "
+                         "SKIPPED: Aegis treats them as generic manifests and "
+                         "does not analyse them. Convert to `.tf` for coverage.")
+        with open("aegis-summary.md", "w") as f:
+            f.write("\n".join(lines) + "\n")
+        print("\n".join(lines))
+        if not complete:
+            print("AUDIT: INCOMPLETE SCAN — failing the job (exit 3)",
+                  file=sys.stderr)
+            return 3
+        print("AUDIT: scan complete")
+        return 0
+
+    if __name__ == "__main__":
+        sys.exit(main())
+    PYEOF
+
+aegis-scan:
+  stage: scan
+  image: golang:1.25
+  before_script:
+    # golang image ships no python3; the audit script needs it.
+    - apt-get update -qq && apt-get install -y -qq python3
+  script:
+    - *aegis_build
+    - |
+      # GitLab runs scripts with errexit; disable it here so exit codes can
+      # be captured into SCAN_EXIT/SARIF_EXIT instead of aborting the job.
+      set +e -u -o pipefail
+      BASELINE_ARGS=""
+      if [ -f "${BASELINE_FILE}" ]; then
+        echo "Using baseline ${BASELINE_FILE}"
+        BASELINE_ARGS="--baseline=${BASELINE_FILE}"
+      else
+        echo "No baseline at ${BASELINE_FILE}; all findings are live."
+      fi
+      # Scan 1 (JSON): owns the gate verdict + completeness evidence.
+      ./aegis scan . --format=json --fail-on="${AEGIS_FAIL_ON}" --strict \
+        --exclude="${AEGIS_EXCLUDE}" ${BASELINE_ARGS} > aegis.json
+      SCAN_EXIT=$?
+      echo "JSON scan exit: ${SCAN_EXIT}"
+      # Scan 2 (SARIF): for the vulnerability report. Deterministic, so it
+      # must agree with scan 1; a 2 here is an operational error.
+      ./aegis scan . --format=sarif --fail-on="${AEGIS_FAIL_ON}" --strict \
+        --exclude="${AEGIS_EXCLUDE}" ${BASELINE_ARGS} > aegis.sarif
+      SARIF_EXIT=$?
+      echo "SARIF scan exit: ${SARIF_EXIT}"
+      echo "SCAN_EXIT=${SCAN_EXIT}" > scan.env
+      echo "SARIF_EXIT=${SARIF_EXIT}" >> scan.env
+    - *aegis_audit_script
+    - |
+      # Errexit off: the audit's exit 3 must be captured, not abort the job.
+      set +e -u -o pipefail
+      source scan.env
+      python3 /tmp/aegis_audit.py aegis.json . \
+        aegis.json aegis.sarif aegis-summary.md audit.json scan.env
+      AUDIT_EXIT=$?
+      echo "Audit exit: ${AUDIT_EXIT}"
+      cat aegis-summary.md
+      if [ "${SCAN_EXIT}" -eq 2 ] || [ "${SARIF_EXIT}" -eq 2 ]; then
+        echo "GATE: operational error (exit 2)"
+        exit 2
+      fi
+      if [ "${AUDIT_EXIT}" -ne 0 ]; then
+        echo "GATE: incomplete scan (exit ${AUDIT_EXIT})"
+        exit "${AUDIT_EXIT}"
+      fi
+      echo "GATE: scan exit ${SCAN_EXIT} (0 clean, 1 findings at/above threshold)"
+      exit "${SCAN_EXIT}"
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - aegis.json
+      - aegis.sarif
+      - audit.json
+      - aegis-summary.md
+    reports:
+      # SARIF type (NOT sast — sast expects GitLab's own schema). The
+      # Vulnerability Report / MR widget for reports:sarif is Ultimate-only;
+      # on other tiers the file stays downloadable and the exit-code gate
+      # still works. GitLab documents no 5,000-result cap for reports:sarif,
+      # so the full SARIF is uploaded unsplit.
+      sarif: aegis.sarif
+  allow_failure: false
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+aegis-baseline:
+  stage: scan
+  image: golang:1.25
+  script:
+    - *aegis_build
+    - |
+      set -euo pipefail
+      mkdir -p .aegis
+      SCAN_EXIT=0
+      ./aegis scan . --format=json --strict \
+        --exclude="${AEGIS_EXCLUDE}" \
+        --baseline-out=.aegis/baseline.json > /tmp/baseline-scan.json || SCAN_EXIT=$?
+      if [ "${SCAN_EXIT}" -eq 2 ]; then
+        echo "Baseline regeneration hit an operational error (exit 2)."
+        exit 2
+      fi
+      echo "Baseline written (scan exit ${SCAN_EXIT}: findings are expected)."
+      echo "Download the .aegis/baseline.json artifact, REVIEW it, then commit it."
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - .aegis/baseline.json
+  when: manual
+  allow_failure: false
+
+aegis-mr-note:
+  stage: scan
+  image: alpine:3.20
+  # `when: always` (via rules below) so the note lands even when the gate
+  # FAILS — that is when it is most useful. The audit.json guard covers the
+  # case where the scan died before producing a summary.
+  needs:
+    - job: aegis-scan
+      artifacts: true
+  before_script:
+    - apk add --no-cache curl jq
+  script:
+    - |
+      set -euo pipefail
+      if [ ! -f audit.json ]; then
+        echo "No audit.json from aegis-scan; skipping MR note."
+        exit 0
+      fi
+      VERDICT=$(jq -r 'if .complete then (if .findings_total > 0 then "❌ FAIL — findings present (see pipeline)" else "✅ PASS" end) else "⛔ INCOMPLETE SCAN" end' audit.json)
+      SUMMARY=$(cat aegis-summary.md)
+      BODY="## Aegis IaC gate — ${VERDICT}\n\n${SUMMARY}\n\nFull JSON + SARIF in the pipeline artifacts."
+      # Post a new note per pipeline run (the API has no upsert; duplicates
+      # across re-runs are a known cosmetic limitation).
+      curl --fail --silent --show-error --request POST \
+        --header "PRIVATE-TOKEN: ${AEGIS_MR_NOTE_TOKEN}" \
+        --header "Content-Type: application/json" \
+        --data "$(jq -nc --arg body "$BODY" '{body: $body}')" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests/${CI_MERGE_REQUEST_IID}/notes"
+  rules:
+    - if: $CI_MERGE_REQUEST_IID && $AEGIS_MR_NOTE_TOKEN
+      when: always
+  allow_failure: true

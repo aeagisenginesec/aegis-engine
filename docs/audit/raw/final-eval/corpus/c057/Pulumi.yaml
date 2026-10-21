@@ -1,0 +1,48 @@
+name: dev-jumpbox
+runtime: yaml
+description: Dev jump box for troubleshooting sessions.
+template:
+  configuration:
+    amiId:
+      type: String
+    keyPairName:
+      type: String
+    officeCidr:
+      type: String
+      default: 0.0.0.0/0
+  variables:
+    boxName: dev-jumpbox
+  resources:
+    jumpSg:
+      type: aws:ec2:SecurityGroup
+      properties:
+        name: ${boxName}-sg
+        description: Jump box access
+        ingress:
+          - protocol: tcp
+            fromPort: 22
+            toPort: 22
+            cidrBlocks: ["${officeCidr}"]
+          - protocol: tcp
+            fromPort: 3389
+            toPort: 3389
+            cidrBlocks: ["0.0.0.0/0"]
+        egress:
+          - protocol: "-1"
+            fromPort: 0
+            toPort: 0
+            cidrBlocks: ["0.0.0.0/0"]
+    jumpBox:
+      type: aws:ec2:Instance
+      properties:
+        ami: ${amiId}
+        instanceType: t3.micro
+        keyName: ${keyPairName}
+        securityGroups: ["${jumpSg.name}"]
+        tags:
+          Name: ${boxName}
+      options:
+        dependsOn:
+          - ${jumpSg}
+  outputs:
+    publicIp: ${jumpBox.publicIp}

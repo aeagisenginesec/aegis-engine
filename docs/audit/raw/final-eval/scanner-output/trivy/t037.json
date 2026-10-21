@@ -1,0 +1,808 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1329c-8b56-79a1-8248-ce48a5183cb4",
+  "CreatedAt": "2026-10-13T00:14:42.518634344Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t037",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 54,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 7
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0001",
+          "Title": "Web App accepts incoming client certificate",
+          "Description": "The TLS mutual authentication technique in enterprise environments ensures the authenticity of clients to the server. If incoming client certificates are enabled only an authenticated client with valid certificates can access the app.\n",
+          "Message": "App service does not have client certificates enabled.",
+          "Namespace": "builtin.azure.appservice.azure0001",
+          "Query": "data.builtin.azure.appservice.azure0001.deny",
+          "Resolution": "Enable incoming certificates for clients",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0001",
+          "References": [
+            "https://avd.aquasec.com/misconfig/azu-0001"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_windows_web_app.shop",
+            "Provider": "Azure",
+            "Service": "appservice",
+            "StartLine": 26,
+            "EndLine": 43,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 26,
+                  "Content": "resource \"azurerm_windows_web_app\" \"shop\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_windows_web_app\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  name                = \"acme-shop-web\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m                = \u001b[38;5;37m\"acme-shop-web\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  resource_group_name = azurerm_resource_group.main.name",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mresource_group_name\u001b[0m = azurerm_resource_group.main.name",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "  location            = azurerm_service_plan.main.location",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mlocation\u001b[0m            = azurerm_service_plan.main.location",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "  service_plan_id     = azurerm_service_plan.main.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mservice_plan_id\u001b[0m     = azurerm_service_plan.main.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "  https_only          = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mhttps_only\u001b[0m          = \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "  site_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  site_config {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "    minimum_tls_version = \"1.0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mminimum_tls_version\u001b[0m = \u001b[38;5;37m\"1.0\"",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 35,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0002",
+          "Title": "Web App has registration with AD enabled",
+          "Description": "Registering the identity used by an App with AD allows it to interact with other services without using username and password\n",
+          "Message": "App service does not have an identity type.",
+          "Namespace": "builtin.azure.appservice.azure0002",
+          "Query": "data.builtin.azure.appservice.azure0002.deny",
+          "Resolution": "Register the app identity with AD",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0002",
+          "References": [
+            "https://avd.aquasec.com/misconfig/azu-0002"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_windows_web_app.shop",
+            "Provider": "Azure",
+            "Service": "appservice",
+            "StartLine": 26,
+            "EndLine": 43,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 26,
+                  "Content": "resource \"azurerm_windows_web_app\" \"shop\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_windows_web_app\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  name                = \"acme-shop-web\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m                = \u001b[38;5;37m\"acme-shop-web\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  resource_group_name = azurerm_resource_group.main.name",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mresource_group_name\u001b[0m = azurerm_resource_group.main.name",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "  location            = azurerm_service_plan.main.location",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mlocation\u001b[0m            = azurerm_service_plan.main.location",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "  service_plan_id     = azurerm_service_plan.main.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mservice_plan_id\u001b[0m     = azurerm_service_plan.main.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "  https_only          = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mhttps_only\u001b[0m          = \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "  site_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  site_config {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "    minimum_tls_version = \"1.0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mminimum_tls_version\u001b[0m = \u001b[38;5;37m\"1.0\"",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 35,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0003",
+          "Title": "App Service authentication is activated",
+          "Description": "Enabling authentication ensures that all communications in the application are authenticated. The auth_settings block needs to be filled out with the appropriate auth backend settings\n",
+          "Message": "App service does not have authentication enabled.",
+          "Namespace": "builtin.azure.appservice.azure0003",
+          "Query": "data.builtin.azure.appservice.azure0003.deny",
+          "Resolution": "Enable authentication to prevent anonymous request being accepted",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0003",
+          "References": [
+            "https://avd.aquasec.com/misconfig/azu-0003"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_windows_web_app.shop",
+            "Provider": "Azure",
+            "Service": "appservice",
+            "StartLine": 26,
+            "EndLine": 43,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 26,
+                  "Content": "resource \"azurerm_windows_web_app\" \"shop\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_windows_web_app\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "  name                = \"acme-shop-web\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mname\u001b[0m                = \u001b[38;5;37m\"acme-shop-web\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "  resource_group_name = azurerm_resource_group.main.name",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mresource_group_name\u001b[0m = azurerm_resource_group.main.name",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "  location            = azurerm_service_plan.main.location",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mlocation\u001b[0m            = azurerm_service_plan.main.location",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "  service_plan_id     = azurerm_service_plan.main.id",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mservice_plan_id\u001b[0m     = azurerm_service_plan.main.id",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "  https_only          = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mhttps_only\u001b[0m          = \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "  site_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  site_config {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "    minimum_tls_version = \"1.0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mminimum_tls_version\u001b[0m = \u001b[38;5;37m\"1.0\"",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 35,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0005",
+          "Title": "Web App uses the latest HTTP version",
+          "Description": "Use the latest version of HTTP to ensure you are benefiting from security fixes\n",
+          "Message": "App service does not have HTTP/2 enabled.",
+          "Namespace": "builtin.azure.appservice.azure0005",
+          "Query": "data.builtin.azure.appservice.azure0005.deny",
+          "Resolution": "Use the latest version of HTTP",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0005",
+          "References": [
+            "https://avd.aquasec.com/misconfig/azu-0005"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_windows_web_app.shop",
+            "Provider": "Azure",
+            "Service": "appservice",
+            "StartLine": 33,
+            "EndLine": 37,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 26,
+                  "Content": "resource \"azurerm_windows_web_app\" \"shop\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_windows_web_app\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 33,
+                  "Content": "  site_config {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  site_config {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "    minimum_tls_version = \"1.0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mminimum_tls_version\u001b[0m = \u001b[38;5;37m\"1.0\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
+                  "Content": "    ftps_state          = \"AllAllowed\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245mftps_state\u001b[0m          = \u001b[38;5;37m\"AllAllowed\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 36,
+                  "Content": "    always_on           = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245malways_on\u001b[0m           = \u001b[38;5;166mfalse",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 37,
+                  "Content": "  }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  }",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 42,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 43,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "azurerm_windows_web_app.shop",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 26,
+                  "EndLine": 43
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0006",
+          "Title": "Web App uses latest TLS version",
+          "Description": "Use a more recent TLS/SSL policy for the App Service\n",
+          "Message": "App service does not require a secure TLS version.",
+          "Namespace": "builtin.azure.appservice.azure0006",
+          "Query": "data.builtin.azure.appservice.azure0006.deny",
+          "Resolution": "The TLS version being outdated and has known vulnerabilities",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0006",
+          "References": [
+            "https://avd.aquasec.com/misconfig/azu-0006"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_windows_web_app.shop",
+            "Provider": "Azure",
+            "Service": "appservice",
+            "StartLine": 34,
+            "EndLine": 34,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 26,
+                  "Content": "resource \"azurerm_windows_web_app\" \"shop\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_windows_web_app\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 34,
+                  "Content": "    minimum_tls_version = \"1.0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;245mminimum_tls_version\u001b[0m = \u001b[38;5;37m\"1.0\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 42,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 43,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "site_config",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 33,
+                  "EndLine": 37
+                }
+              },
+              {
+                "Resource": "azurerm_windows_web_app.shop",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 26,
+                  "EndLine": 43
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0071",
+          "Title": "App Service FTPS Enforce Disabled",
+          "Description": "Allowing plain FTP risks credentials and data being transmitted unencrypted.\n",
+          "Message": "App service allows insecure FTP access. FTPS state is set to 'AllAllowed' but should be 'FtpsOnly' or 'Disabled'",
+          "Namespace": "builtin.azure.appservice.azure0071",
+          "Query": "data.builtin.azure.appservice.azure0071.deny",
+          "Resolution": "Set FTPS state to 'FTPS Only' in App Service settings to prevent plaintext FTP.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0071",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/app_service#ftps_state",
+            "https://avd.aquasec.com/misconfig/azu-0071"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_windows_web_app.shop",
+            "Provider": "Azure",
+            "Service": "appservice",
+            "StartLine": 35,
+            "EndLine": 35,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 26,
+                  "Content": "resource \"azurerm_windows_web_app\" \"shop\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_windows_web_app\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
+                  "Content": "    ftps_state          = \"AllAllowed\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m    \u001b[38;5;245mftps_state\u001b[0m          = \u001b[38;5;37m\"AllAllowed\"",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 42,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 43,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "site_config",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 33,
+                  "EndLine": 37
+                }
+              },
+              {
+                "Resource": "azurerm_windows_web_app.shop",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 26,
+                  "EndLine": 43
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AZU-0072",
+          "Title": "Web App Accepting Traffic Other Than HTTPS",
+          "Description": "Allowing HTTP undermines transport encryption and exposes user data.\n",
+          "Message": "App service does not have HTTPS enforced.",
+          "Namespace": "builtin.azure.appservice.azure0072",
+          "Query": "data.builtin.azure.appservice.azure0072.deny",
+          "Resolution": "Set 'HTTPS Only' to true in App Service TLS settings to force encrypted transport.",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0072",
+          "References": [
+            "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/app_service#https_only",
+            "https://avd.aquasec.com/misconfig/azu-0072"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "azurerm_windows_web_app.shop",
+            "Provider": "Azure",
+            "Service": "appservice",
+            "StartLine": 31,
+            "EndLine": 31,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 26,
+                  "Content": "resource \"azurerm_windows_web_app\" \"shop\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"azurerm_windows_web_app\"\u001b[0m \u001b[38;5;37m\"shop\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "  https_only          = false",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mhttps_only\u001b[0m          = \u001b[38;5;166mfalse",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 42,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 43,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "azurerm_windows_web_app.shop",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 26,
+                  "EndLine": 43
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

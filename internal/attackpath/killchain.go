@@ -35,12 +35,30 @@ func (b *Builder) BuildKillChains() []Chain {
 		iamByWorkload[ic.Workload.Resource] = append(iamByWorkload[ic.Workload.Resource], ic)
 	}
 
+	// Precompute every resource's SG attachment set once. The correlation
+	// loops below previously re-parsed securityGroupsOf per
+	// (data, workload, entry) triple — O(d*w*e) redundant parses of the
+	// same attributes. sgSets makes each lookup O(1).
+	sgSets := make(map[string]map[string]bool, len(b.byAddr))
+	for addr, r := range b.byAddr {
+		sgSets[addr] = securityGroupsOf(r)
+	}
+
+	// entriesReaching depends only on the workload, not the data store:
+	// memoize it per workload instead of recomputing it for every
+	// (data, workload) pair.
+	entryCache := make(map[string][]Hop)
+
 	// For each data store, find reachable workloads via graph edges,
 	// then find entry points that reach those workloads.
 	for _, data := range dataStores {
-		reaching := b.workloadsReaching(data.Resource, workloads)
+		reaching := b.workloadsReaching(data.Resource, workloads, sgSets)
 		for _, wl := range reaching {
-			entriesReaching := b.entriesReaching(wl.Resource, entries)
+			entriesReaching, ok := entryCache[wl.Resource]
+			if !ok {
+				entriesReaching = b.entriesReaching(wl.Resource, entries, sgSets)
+				entryCache[wl.Resource] = entriesReaching
+			}
 			for _, entry := range entriesReaching {
 				hops := []Hop{entry, wl}
 				// Attach IAM privilege hops if this workload has them.
@@ -76,13 +94,14 @@ func (b *Builder) BuildKillChains() []Chain {
 
 // workloadsReaching returns workload hops that have a graph path to the
 // data store address (direct reference edge or shared security group).
-func (b *Builder) workloadsReaching(dataAddr string, workloads []Hop) []Hop {
+// sgSets is the precomputed per-resource SG attachment index: every lookup
+// is O(1) instead of re-parsing the resource's attributes per pair.
+func (b *Builder) workloadsReaching(dataAddr string, workloads []Hop, sgSets map[string]map[string]bool) []Hop {
 	var out []Hop
-	data, ok := b.byAddr[dataAddr]
-	if !ok {
+	if _, ok := b.byAddr[dataAddr]; !ok {
 		return nil
 	}
-	dataSGs := securityGroupsOf(data)
+	dataSGs := sgSets[dataAddr]
 	for _, wl := range workloads {
 		// Direct graph edge: workload references data or vice versa.
 		if b.graph.HasEdge(wl.Resource, dataAddr) || b.graph.HasEdge(dataAddr, wl.Resource) {
@@ -90,11 +109,7 @@ func (b *Builder) workloadsReaching(dataAddr string, workloads []Hop) []Hop {
 			continue
 		}
 		// Shared security group: same SG attached to both.
-		wlr, ok := b.byAddr[wl.Resource]
-		if !ok {
-			continue
-		}
-		for sg := range securityGroupsOf(wlr) {
+		for sg := range sgSets[wl.Resource] {
 			if dataSGs[sg] {
 				out = append(out, wl)
 				break
@@ -105,8 +120,11 @@ func (b *Builder) workloadsReaching(dataAddr string, workloads []Hop) []Hop {
 }
 
 // entriesReaching returns entry hops that reach the workload.
-func (b *Builder) entriesReaching(workloadAddr string, entries []Hop) []Hop {
+// sgSets is the precomputed per-resource SG attachment index; the
+// workload's SG set is resolved once, not once per entry.
+func (b *Builder) entriesReaching(workloadAddr string, entries []Hop, sgSets map[string]map[string]bool) []Hop {
 	var out []Hop
+	wlSGs := sgSets[workloadAddr]
 	for _, e := range entries {
 		if e.Resource == "internet" {
 			continue
@@ -116,17 +134,8 @@ func (b *Builder) entriesReaching(workloadAddr string, entries []Hop) []Hop {
 			out = append(out, e)
 			continue
 		}
-		if e.Kind == KindNetwork {
-			wlr, ok := b.byAddr[workloadAddr]
-			if !ok {
-				continue
-			}
-			for sg := range securityGroupsOf(wlr) {
-				if sg == e.Resource {
-					out = append(out, e)
-					break
-				}
-			}
+		if e.Kind == KindNetwork && wlSGs[e.Resource] {
+			out = append(out, e)
 		}
 	}
 	return out

@@ -1,0 +1,428 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011",
+  "summary": {
+    "resources": 3,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 25,
+    "critical": 0,
+    "high": 3,
+    "medium": 11,
+    "low": 11
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-311",
+      "severity": "medium",
+      "title": "RDS without IAM database authentication",
+      "description": "With iam_database_authentication_enabled absent or false, database access relies on long-lived passwords instead of short-lived IAM credentials, weakening credential hygiene. Engine-scoped: only mysql, postgres and mariadb instances support IAM database authentication; aurora engines are covered by the cluster rules.",
+      "resource": "aws_db_instance.prod",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 1,
+      "evidence": "iam_database_authentication_enabled = absent (provider default: disabled)",
+      "expected": "iam_database_authentication_enabled = true",
+      "remediation": "Enable IAM database authentication on the RDS instance so access is granted\nvia IAM instead of static passwords:\nresource \"aws_db_instance\" \"this\" {\n  # ...\n  iam_database_authentication_enabled = true\n}",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-339",
+      "severity": "high",
+      "title": "Hardcoded credentials in resource config",
+      "description": "A database password written as a literal in Terraform config is stored in state, plan output, and version control. The same holds for a secret-like variable or local flowing into a credential attribute. Reference a secrets manager or a generated password instead. The secret value is never included in findings.",
+      "resource": "aws_db_instance.prod",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 10,
+      "evidence": "password = [REDACTED]",
+      "expected": "reference to a secrets manager or generated password",
+      "remediation": "Remove the hardcoded credential and rotate it immediately — it is compromised.\nReference a Secrets Manager secret instead:\ndata \"aws_secretsmanager_secret_version\" \"db\" {\n  secret_id = aws_secretsmanager_secret.db.id\n}\n# then: password = jsondecode(data.aws_secretsmanager_secret_version.db.secret_string)[\"password\"]\nIf the value was committed to git, purge it from history (BFG/truffleHog) and rotate.",
+      "references": [
+        "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-543",
+      "severity": "low",
+      "title": "RDS instance without CloudWatch log exports",
+      "description": "Hygiene: RDS instances should export database logs to CloudWatch via enabled_cloudwatch_logs_exports for auditing and troubleshooting. Without log exports, forensic analysis after an incident is limited.",
+      "resource": "aws_db_instance.prod",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 1,
+      "evidence": "enabled_cloudwatch_logs_exports = absent",
+      "expected": "enabled_cloudwatch_logs_exports with engine log types",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-546",
+      "severity": "low",
+      "title": "RDS instance without copy_tags_to_snapshot",
+      "description": "Hygiene: RDS instances should copy tags to snapshots so backup resources inherit cost-allocation and ownership tags. Set copy_tags_to_snapshot = true.",
+      "resource": "aws_db_instance.prod",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 1,
+      "evidence": "copy_tags_to_snapshot = absent",
+      "expected": "copy_tags_to_snapshot = true",
+      "remediation": "Copy resource tags to automated snapshots so they inherit ownership and\ncost-allocation metadata:\nresource \"aws_db_instance\" \"this\" {\n  # ...\n  copy_tags_to_snapshot = true\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#copy_tags_to_snapshot"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-605",
+      "severity": "low",
+      "title": "RDS instance without enhanced monitoring",
+      "description": "Hygiene: RDS instances should enable enhanced monitoring (monitoring_interval \u003e 0) for OS-level metrics that aid troubleshooting. Set monitoring_interval to 1, 5, 10, 15, 30 or 60.",
+      "resource": "aws_db_instance.prod",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 1,
+      "evidence": "monitoring_interval = absent",
+      "expected": "monitoring_interval set to 1, 5, 10, 15, 30 or 60",
+      "remediation": "Enable Enhanced Monitoring on the RDS instance (1-second OS metrics):\nresource \"aws_db_instance\" \"this\" {\n  # ...\n  monitoring_interval = 60\n  monitoring_role_arn = aws_iam_role.rds_enhanced_monitoring.arn\n}\nmonitoring_interval accepts 0, 1, 5, 10, 15, 30, or 60 (seconds); any\nnon-zero value requires a monitoring_role_arn with the\nrds-monitoring-role trust policy.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html"
+      ],
+      "compliance": [
+        {
+          "framework": "NIST-800-53",
+          "control": "AU-2"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-607",
+      "severity": "low",
+      "title": "RDS Postgres instance without query logging",
+      "description": "Hygiene: RDS Postgres instances should export postgresql logs to CloudWatch for query auditing. Add \"postgresql\" to enabled_cloudwatch_logs_exports.",
+      "resource": "aws_db_instance.prod",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 1,
+      "evidence": "enabled_cloudwatch_logs_exports = absent",
+      "expected": "enabled_cloudwatch_logs_exports including \"postgresql\"",
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-608",
+      "severity": "low",
+      "title": "RDS instance without Performance Insights",
+      "description": "Hygiene: RDS instances should enable Performance Insights for query-level performance analysis. Set performance_insights_enabled = true.",
+      "resource": "aws_db_instance.prod",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 1,
+      "evidence": "performance_insights_enabled = absent",
+      "expected": "performance_insights_enabled = true",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-706",
+      "severity": "low",
+      "title": "RDS instance on the default option group",
+      "description": "option_group_name is absent or a default group, so the instance runs with AWS's generic options (e.g. no OEM, no MariaDB audit plugin). Use a purpose-built option group.",
+      "resource": "aws_db_instance.prod",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 1,
+      "evidence": "option_group_name = absent (provider default: default option group)",
+      "expected": "option_group_name = \u003ccustom group\u003e",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-710",
+      "severity": "medium",
+      "title": "RDS master password not managed by Secrets Manager",
+      "description": "A plaintext master password is set without manage_master_user_password, so the credential sits in state and is never rotated automatically. Use manage_master_user_password = true so RDS manages rotation in Secrets Manager. The password value is never included in findings.",
+      "resource": "aws_db_instance.prod",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 10,
+      "evidence": "password = [REDACTED]",
+      "expected": "manage_master_user_password = true",
+      "remediation": "Remove the hardcoded secret immediately and rotate it. Store secrets in AWS Secrets Manager or SSM Parameter Store (SecureString) and reference them via data sources. Never commit secrets to version control — scan history with gitleaks if the value was ever committed.",
+      "references": [
+        "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.8"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "IA-5"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-028",
+      "severity": "medium",
+      "title": "Storage account without blob versioning",
+      "description": "azurerm_storage_account blob_properties without versioning_enabled loses protection against accidental overwrite or deletion. Enable versioning.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "blob_properties = absent",
+      "expected": "blob_properties { versioning_enabled = true }",
+      "remediation": "Enable data protection. Turn on versioning / point-in-time restore / automated backups with a retention period ≥ 7 days (30+ for production). Test restores regularly — untested backups are not backups.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/backup/backup-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-029",
+      "severity": "medium",
+      "title": "Storage account without blob soft delete",
+      "description": "azurerm_storage_account blob_properties without delete_retention_policy cannot recover accidentally deleted blobs. Enable soft delete.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "blob_properties = absent",
+      "expected": "blob_properties { delete_retention_policy { days = 7 } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-031",
+      "severity": "medium",
+      "title": "Storage account allows shared key access",
+      "description": "azurerm_storage_account with shared_access_key_enabled = true permits storage account key authentication. Prefer Microsoft Entra ID and disable shared key access.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "shared_access_key_enabled = [REDACTED]",
+      "expected": "shared_access_key_enabled = false",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-032",
+      "severity": "medium",
+      "title": "Storage account without infrastructure encryption",
+      "description": "azurerm_storage_account without infrastructure_encryption_enabled lacks double encryption at the infrastructure layer. Enable it for defense in depth.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "infrastructure_encryption_enabled = absent",
+      "expected": "infrastructure_encryption_enabled = true",
+      "remediation": "Enable encryption at rest. For storage accounts set `infrastructure_encryption_enabled = true` and use a customer-managed key via `azurerm_key_vault_key`. For regulated data use a customer-managed key in Key Vault with purge protection and key rotation.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/security/fundamentals/encryption-atrest"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-033",
+      "severity": "low",
+      "title": "Storage account without customer-managed key",
+      "description": "azurerm_storage_account without customer_managed_key block uses Microsoft-managed keys. Use a customer-managed key in Key Vault for sensitive data.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "customer_managed_key = [REDACTED]",
+      "expected": "customer_managed_key { key_vault_key_id = ... }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-034",
+      "severity": "low",
+      "title": "Storage account queue without logging",
+      "description": "azurerm_storage_account queue_properties without logging loses audit trail for queue operations. Enable queue logging.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "queue_properties = absent",
+      "expected": "queue_properties { logging { read = true } }",
+      "remediation": "Enable audit logging. Turn on Azure Monitor diagnostic settings, the Activity Log, and Defender for Cloud. Ship logs to a Log Analytics workspace in a security subscription.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/diagnostic-settings"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-038",
+      "severity": "medium",
+      "title": "Key Vault not using RBAC authorization",
+      "description": "azurerm_key_vault with enable_rbac_authorization = false uses legacy access policies. Prefer Azure RBAC for centralized access control.",
+      "resource": "azurerm_key_vault.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 27,
+      "evidence": "enable_rbac_authorization = absent",
+      "expected": "enable_rbac_authorization = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-043",
+      "severity": "low",
+      "title": "Key Vault not using premium SKU",
+      "description": "azurerm_key_vault with sku_name = \"standard\" lacks HSM-backed keys. Use premium SKU for hardware-protected keys.",
+      "resource": "azurerm_key_vault.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 31,
+      "evidence": "sku_name = standard",
+      "expected": "sku_name = \"premium\"",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-124",
+      "severity": "medium",
+      "title": "Storage account without private endpoint",
+      "description": "azurerm_storage_account with no azurerm_private_endpoint targeting it is reachable over the public endpoint. Connect it via a private endpoint on the storage subresource (blob, dfs, queue, table, or file).",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "private_endpoint = no azurerm_private_endpoint targets this account",
+      "expected": "azurerm_private_endpoint { private_service_connection { private_connection_resource_id = azurerm_storage_account.this.id subresource_names = [\"blob\"] } }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-125",
+      "severity": "low",
+      "title": "Storage account without SAS expiry policy",
+      "description": "azurerm_storage_account without a sas_policy block issues shared access signatures with no enforced expiry. Set sas_policy { expiration_period and expiration_action } to bound SAS lifetimes.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "sas_policy = absent",
+      "expected": "sas_policy { expiration_period = \"90.00:00:00\" expiration_action = \"Log\" }",
+      "remediation": "Set a SAS expiry policy on the storage account so shared access signatures\ncannot be minted without an expiration:\nresource \"azurerm_storage_account\" \"this\" {\n  # ...\n  sas_policy {\n    expiration_period = \"00.01:00:00\"\n    expiration_action = \"Log\"\n  }\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account#sas_policy"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-147",
+      "severity": "low",
+      "title": "Storage account without blob change feed",
+      "description": "azurerm_storage_account blob_properties without change_feed_enabled = true records no ordered log of blob create/update/delete events, blinding incident response to data tampering. Enable the blob change feed.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "blob_properties.change_feed_enabled = absent (default false)",
+      "expected": "blob_properties { change_feed_enabled = true }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-148",
+      "severity": "high",
+      "title": "Storage account with public network access (default)",
+      "description": "azurerm_storage_account without public_network_access_enabled = false exposes the storage endpoint to the internet by default. Disable public network access and use private endpoints instead. (Strict complement of AEGIS-AZURE-006, which covers an explicit true value.)",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "public_network_access_enabled = absent (default true)",
+      "expected": "public_network_access_enabled = false",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-149",
+      "severity": "medium",
+      "title": "Storage account without network rules",
+      "description": "azurerm_storage_account without a network_rules block accepts storage traffic from any network by default. Add network_rules with default_action = \"Deny\" and explicit allow rules. (Strict complement of AEGIS-AZURE-021, which covers an explicit Allow default action.)",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "network_rules = absent (default allow all)",
+      "expected": "network_rules { default_action = \"Deny\" ... }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-181",
+      "severity": "medium",
+      "title": "Storage account without managed identity",
+      "description": "azurerm_storage_account without an identity block cannot use customer-managed keys stored in Key Vault. Enable a system-assigned identity when CMK encryption is required.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "identity = absent (no managed identity)",
+      "expected": "identity { type = \"SystemAssigned\" }",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-187",
+      "severity": "high",
+      "title": "Key Vault network ACLs allow public traffic",
+      "description": "azurerm_key_vault without a network_acls block (default allow) or with default_action other than \"Deny\" accepts secret/key operations from any network. Set default_action = \"Deny\" with explicit allowances.",
+      "resource": "azurerm_key_vault.main",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 27,
+      "evidence": "network_acls = absent (default: allow all)",
+      "expected": "network_acls { default_action = \"Deny\" }",
+      "remediation": "Remove public exposure. Restrict ingress to known CIDR ranges, disable public network access (`public_network_access_enabled = false`), and use private endpoints / Private Link if external access is required. Verify with `az network nsg rule list`.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-192",
+      "severity": "medium",
+      "title": "Storage account not defaulting to OAuth authentication",
+      "description": "azurerm_storage_account without default_to_oauth_authentication = true lets clients fall back to Shared Key auth. Default to Entra ID OAuth for data-plane operations.",
+      "resource": "azurerm_storage_account.data",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+      "line": 17,
+      "evidence": "default_to_oauth_authentication = absent (provider default: false)",
+      "expected": "default_to_oauth_authentication = true",
+      "remediation": "Review the flagged configuration against Azure security best practices and the CIS Microsoft Azure Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://learn.microsoft.com/en-us/security/benchmark/azure/"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4011/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

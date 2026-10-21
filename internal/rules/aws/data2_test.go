@@ -3,7 +3,6 @@ package aws
 // Rule IDs covered in this file: AEGIS-AWS-411, AEGIS-AWS-412, AEGIS-AWS-414, AEGIS-AWS-415, AEGIS-AWS-416, AEGIS-AWS-420
 
 import (
-	"fmt"
 	"testing"
 
 	"aegis/internal/ir"
@@ -241,31 +240,6 @@ func Test417_UnknownQuiet(t *testing.T) {
 
 // --- 418: OpenSearch advanced security disabled ---
 
-func Test418_AbsentBlockFires(t *testing.T) {
-	r := res("aws_opensearch_domain", "logs", map[string]ir.Value{})
-	if fs := runRule(opensearchNoAdvancedSecurity{}, r); len(fs) != 1 {
-		t.Fatalf("got %d findings, want 1", len(fs))
-	}
-}
-
-func Test418_EnabledOK(t *testing.T) {
-	r := res("aws_opensearch_domain", "logs", map[string]ir.Value{
-		"advanced_security_options": blks(3, blk("enabled", kv(true, 4))),
-	})
-	if fs := runRule(opensearchNoAdvancedSecurity{}, r); len(fs) != 0 {
-		t.Fatalf("got %d findings, want 0", len(fs))
-	}
-}
-
-func Test418_UnknownQuiet(t *testing.T) {
-	r := res("aws_opensearch_domain", "logs", map[string]ir.Value{
-		"advanced_security_options": blks(3, blk("enabled", ku(4))),
-	})
-	if fs := runRule(opensearchNoAdvancedSecurity{}, r); len(fs) != 0 {
-		t.Fatalf("got %d findings, want 0", len(fs))
-	}
-}
-
 // --- 419: Athena workgroup configuration not enforced ---
 
 func Test419_NotEnforcedFires(t *testing.T) {
@@ -330,13 +304,18 @@ func Test420_UnknownQuiet(t *testing.T) {
 
 func TestData2Rules_IDOrder(t *testing.T) {
 	rules := Data2Rules()
-	if len(rules) != 10 {
-		t.Fatalf("want 10 rules, got %d", len(rules))
+	// 418 removed in Sprint 2 (subset of AEGIS-AWS-523).
+	want := []string{
+		"AEGIS-AWS-411", "AEGIS-AWS-412", "AEGIS-AWS-413", "AEGIS-AWS-414",
+		"AEGIS-AWS-415", "AEGIS-AWS-416", "AEGIS-AWS-417", "AEGIS-AWS-419",
+		"AEGIS-AWS-420",
+	}
+	if len(rules) != len(want) {
+		t.Fatalf("want %d rules, got %d", len(want), len(rules))
 	}
 	for i, r := range rules {
-		want := fmt.Sprintf("AEGIS-AWS-%d", 411+i)
-		if r.ID() != want {
-			t.Fatalf("index %d: want %s, got %s", i, want, r.ID())
+		if r.ID() != want[i] {
+			t.Fatalf("index %d: want %s, got %s", i, want[i], r.ID())
 		}
 	}
 }

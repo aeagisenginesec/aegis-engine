@@ -12,7 +12,6 @@ func spanAt(line int) ir.Span {
 	return ir.Span{File: "test.tf", StartLine: line, StartCol: 1, EndLine: line, EndCol: 20}
 }
 
-func kv(b bool, line int) ir.Value { return ir.Value{Raw: b, Known: true, Span: spanAt(line)} }
 func ks(s string, line int) ir.Value {
 	return ir.Value{Raw: s, Known: true, Span: spanAt(line)}
 }
@@ -302,4 +301,29 @@ func TestOCI008_ShortFires(t *testing.T) {
 func TestOCI008_LongQuiet(t *testing.T) {
 	r := res("oci_logging_log", "l", map[string]ir.Value{"retention_period": kn(365, 3)})
 	mustQuiet(t, runRule(logShortRetention{}, r))
+}
+
+// Regression test for the 2026-10-14 sampling audit: the three "no
+// customer-managed KMS key" rules (OCI-001 bucket, OCI-005 volume,
+// OCI-006 autonomous database) check the identical condition with the
+// identical risk statement, so they must share one severity (High).
+func TestOCI_CMEKRulesShareSeverity(t *testing.T) {
+	cases := []struct {
+		rule     ir.Rule
+		typ      string
+		severity ir.Severity
+	}{
+		{bucketNoKMS{}, "oci_objectstorage_bucket", ir.SeverityHigh},
+		{volumeNoKMS{}, "oci_core_volume", ir.SeverityHigh},
+		{adbNoKMS{}, "oci_database_autonomous_database", ir.SeverityHigh},
+	}
+	for _, tc := range cases {
+		f := runRule(tc.rule, res(tc.typ, "x", nil))
+		if len(f) != 1 {
+			t.Fatalf("%s: expected 1 finding, got %d", tc.rule.ID(), len(f))
+		}
+		if f[0].Severity != tc.severity {
+			t.Fatalf("%s: severity %s, want %s", tc.rule.ID(), f[0].Severity, tc.severity)
+		}
+	}
 }

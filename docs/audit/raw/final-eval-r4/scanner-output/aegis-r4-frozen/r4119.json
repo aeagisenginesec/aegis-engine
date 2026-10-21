@@ -1,0 +1,366 @@
+{
+  "aegis_version": "1.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119",
+  "resources_scanned": 2,
+  "findings": [
+    {
+      "rule_id": "AEGIS-AZURE-008",
+      "title": "SQL server without Azure AD authentication",
+      "description": "azurerm_mssql_server with no azuread_administrator block relies solely on SQL authentication. Configure an Azure AD administrator to enable centralized identity management and MFA.",
+      "severity": "high",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "azuread_administrator",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "azuread_administrator { login_username = ... }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-009",
+      "title": "SQL server without auditing",
+      "description": "azurerm_mssql_server / azurerm_sql_server with no extended_auditing_policy block produces no audit trail of database activity. Enable extended auditing for compliance and incident response.",
+      "severity": "high",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "extended_auditing_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "extended_auditing_policy { storage_endpoint = ... }"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-045",
+      "title": "MSSQL server without extended auditing",
+      "description": "azurerm_mssql_server without extended_auditing_policy loses database activity audit trail. Enable extended auditing.",
+      "severity": "medium",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "extended_auditing_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "extended_auditing_policy block with storage_endpoint"
+      },
+      "remediation": "Enable audit logging. Turn on CloudTrail (multi-region, log file validation, KMS-encrypted bucket), VPC flow logs, and service access logs. Ship logs to a dedicated, MFA-delete-protected bucket in a security account.",
+      "references": [
+        "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-user-guide.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-046",
+      "title": "MSSQL server without security alert policy",
+      "description": "azurerm_mssql_server without security_alert_policy misses advanced threat detection. Enable security alerts.",
+      "severity": "medium",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "security_alert_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "security_alert_policy block with state = \"Enabled\""
+      },
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-047",
+      "title": "MSSQL server without Azure AD administrator",
+      "description": "azurerm_mssql_server without azuread_administrator relies solely on SQL authentication. Configure an Azure AD admin for centralized identity.",
+      "severity": "medium",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "azuread_administrator",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "azuread_administrator block with login_username"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-054",
+      "title": "NSG rule allows SSH from the internet",
+      "description": "azurerm_network_security_rule allowing TCP 22 from * or 0.0.0.0/0 exposes SSH. Restrict source addresses or use Azure Bastion.",
+      "severity": "high",
+      "resource": "azurerm_network_security_group.webNsg",
+      "evidence": {
+        "attribute": "security_rule",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 6,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "SSH open to *",
+        "expected": "restrict source_address_prefix"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-101",
+      "title": "MSSQL server without auditing enabled",
+      "description": "azurerm_mssql_server with no azurerm_mssql_server_extended_auditing_policy referencing it loses the database activity audit trail. Attach an extended auditing policy with a storage endpoint.",
+      "severity": "medium",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "extended_auditing_policy",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "azurerm_mssql_server_extended_auditing_policy with server_id = azurerm_mssql_server.dbServer.id"
+      },
+      "remediation": "Attach an extended auditing policy to the server:\nresource \"azurerm_mssql_server_extended_auditing_policy\" \"audit\" {\n  server_id                  = azurerm_mssql_server.db.id\n  storage_endpoint           = azurerm_storage_account.audit.primary_blob_endpoint\n  storage_account_access_key = azurerm_storage_account.audit.primary_access_key\n  retention_in_days          = 90\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_extended_auditing_policy"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-102",
+      "title": "MSSQL auditing retention less than 90 days",
+      "description": "azurerm_mssql_server_extended_auditing_policy with retention_in_days \u003c 90 discards audit logs too early for investigation. Retain at least 90 days.",
+      "severity": "low",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "retention_in_days",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent or \u003c 90",
+        "expected": "retention_in_days \u003e= 90"
+      },
+      "remediation": "Raise the audit log retention on the extended auditing policy:\nresource \"azurerm_mssql_server_extended_auditing_policy\" \"audit\" {\n  retention_in_days = 90\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_extended_auditing_policy"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-105",
+      "title": "MSSQL server not using TLS 1.2",
+      "description": "azurerm_mssql_server with minimum_tls_version absent or below \"1.2\" permits older, weaker protocol versions in transit. Set minimum_tls_version = \"1.2\".",
+      "severity": "medium",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "minimum_tls_version",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (defaults below 1.2)",
+        "expected": "minimum_tls_version = \"1.2\""
+      },
+      "remediation": "Enforce TLS 1.2 on the server:\nresource \"azurerm_mssql_server\" \"db\" {\n  minimum_tls_version = \"1.2\"\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-106",
+      "title": "MSSQL server allows public network access",
+      "description": "azurerm_mssql_server with public_network_access_enabled true or absent (provider default is true) exposes the database endpoint. Set public_network_access_enabled = false and use private endpoints.",
+      "severity": "high",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "public_network_access_enabled",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (defaults to true)",
+        "expected": "public_network_access_enabled = false"
+      },
+      "remediation": "Disable public network access and front the server with a private endpoint:\nresource \"azurerm_mssql_server\" \"db\" {\n  public_network_access_enabled = false\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-107",
+      "title": "MSSQL server without Azure AD authentication",
+      "description": "azurerm_mssql_server with no azurerm_mssql_server_azuread_administrator referencing it relies solely on SQL authentication. Configure an Azure AD administrator for centralized identity.",
+      "severity": "medium",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "azuread_administrator",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "azurerm_mssql_server_azuread_administrator with server_id = azurerm_mssql_server.dbServer.id"
+      },
+      "remediation": "Add an Azure AD administrator to the server:\nresource \"azurerm_mssql_server_azuread_administrator\" \"ad\" {\n  server_id                   = azurerm_mssql_server.db.id\n  login_username              = \"sql-admin\"\n  object_id                   = data.azuread_user.admin.object_id\n  tenant_id                   = data.azurerm_client_config.current.tenant_id\n  azuread_authentication_only = true\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_azuread_administrator"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-108",
+      "title": "MSSQL server without private endpoint",
+      "description": "azurerm_mssql_server with no azurerm_private_endpoint whose private_service_connection targets it keeps database traffic off the private network. Add a private endpoint with subresource \"sqlServer\".",
+      "severity": "medium",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "private_endpoint",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent",
+        "expected": "azurerm_private_endpoint with private_service_connection targeting azurerm_mssql_server.dbServer"
+      },
+      "remediation": "Create a private endpoint for the SQL server subresource:\nresource \"azurerm_private_endpoint\" \"sql\" {\n  subnet_id = azurerm_subnet.db.id\n  private_service_connection {\n    name                           = \"sql-privatelink\"\n    private_connection_resource_id = azurerm_mssql_server.db.id\n    subresource_names              = [\"sqlServer\"]\n    is_manual_connection           = false\n  }\n}",
+      "references": [
+        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-180",
+      "title": "SQL server without managed identity",
+      "description": "azurerm_mssql_server without an identity block cannot use customer-managed keys for transparent data encryption or Entra ID authentication cleanly. Enable a system-assigned identity.",
+      "severity": "medium",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "identity",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (no managed identity)",
+        "expected": "identity { type = \"SystemAssigned\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-225",
+      "title": "SQL server without Entra ID administrator",
+      "description": "azurerm_mssql_server without an azuread_administrator block cannot use Entra ID authentication and relies on SQL logins. Configure an Entra ID admin and prefer Entra-only authentication.",
+      "severity": "medium",
+      "resource": "azurerm_mssql_server.dbServer",
+      "evidence": {
+        "attribute": "azuread_administrator",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 24,
+          "start_col": 7,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "absent (SQL logins only)",
+        "expected": "azuread_administrator { login_username = \"...\" }"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AZURE-244",
+      "title": "NSG inline security rule open to the internet",
+      "description": "azurerm_network_security_group security_rule blocks with inbound Allow and a source of *, 0.0.0.0/0 or Internet expose the subnet to the world. Restrict inline rule sources.",
+      "severity": "high",
+      "resource": "azurerm_network_security_group.webNsg",
+      "evidence": {
+        "attribute": "security_rule",
+        "span": {
+          "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+          "start_line": 12,
+          "start_col": 11,
+          "end_line": 0,
+          "end_col": 0
+        },
+        "actual": "inline rule source *",
+        "expected": "restricted source address prefix"
+      },
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4119/Pulumi.yaml",
+        "status": "parsed",
+        "format": "pulumi"
+      }
+    ]
+  }
+}

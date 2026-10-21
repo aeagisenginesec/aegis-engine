@@ -1,0 +1,325 @@
+{
+    "check_type": "arm",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AZURE_36",
+                "bc_check_id": null,
+                "check_name": "Ensure 'Trusted Microsoft Services' is enabled for Storage Account access",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "properties/networkAcls"
+                    ]
+                },
+                "code_block": [
+                    [
+                        25,
+                        "    {\n"
+                    ],
+                    [
+                        26,
+                        "      \"type\": \"Microsoft.Storage/storageAccounts\",\n"
+                    ],
+                    [
+                        27,
+                        "      \"apiVersion\": \"2023-01-01\",\n"
+                    ],
+                    [
+                        28,
+                        "      \"name\": \"[parameters('storageAccountName')]\",\n"
+                    ],
+                    [
+                        29,
+                        "      \"location\": \"[parameters('location')]\",\n"
+                    ],
+                    [
+                        30,
+                        "      \"sku\": { \"name\": \"Standard_GRS\" },\n"
+                    ],
+                    [
+                        31,
+                        "      \"kind\": \"StorageV2\",\n"
+                    ],
+                    [
+                        32,
+                        "      \"properties\": {\n"
+                    ],
+                    [
+                        33,
+                        "        \"supportsHttpsTrafficOnly\": true,\n"
+                    ],
+                    [
+                        34,
+                        "        \"minimumTlsVersion\": \"[variables('tlsVersion')]\",\n"
+                    ],
+                    [
+                        35,
+                        "        \"allowBlobPublicAccess\": false,\n"
+                    ],
+                    [
+                        36,
+                        "        \"publicNetworkAccess\": \"Disabled\",\n"
+                    ],
+                    [
+                        37,
+                        "        \"allowSharedKeyAccess\": false,\n"
+                    ],
+                    [
+                        38,
+                        "        \"networkAcls\": {\n"
+                    ],
+                    [
+                        39,
+                        "          \"bypass\": \"None\",\n"
+                    ],
+                    [
+                        40,
+                        "          \"defaultAction\": \"Deny\",\n"
+                    ],
+                    [
+                        41,
+                        "          \"virtualNetworkRules\": [\n"
+                    ],
+                    [
+                        42,
+                        "            { \"id\": \"[parameters('allowedSubnetId')]\", \"action\": \"Allow\" }\n"
+                    ],
+                    [
+                        43,
+                        "          ]\n"
+                    ],
+                    [
+                        44,
+                        "        },\n"
+                    ],
+                    [
+                        45,
+                        "        \"encryption\": {\n"
+                    ],
+                    [
+                        46,
+                        "          \"keySource\": \"Microsoft.Storage\",\n"
+                    ],
+                    [
+                        47,
+                        "          \"services\": {\n"
+                    ],
+                    [
+                        48,
+                        "            \"blob\": { \"enabled\": true },\n"
+                    ],
+                    [
+                        49,
+                        "            \"file\": { \"enabled\": true }\n"
+                    ],
+                    [
+                        50,
+                        "          }\n"
+                    ],
+                    [
+                        51,
+                        "        }\n"
+                    ],
+                    [
+                        52,
+                        "      }\n"
+                    ],
+                    [
+                        53,
+                        "    },\n"
+                    ]
+                ],
+                "file_path": "/azuredeploy.json",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c027/azuredeploy.json",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c027/azuredeploy.json",
+                "file_line_range": [
+                    25,
+                    53
+                ],
+                "resource": "Microsoft.Storage/storageAccounts.[concat('finrep', uniqueString(resourceGroup().id))]",
+                "evaluations": {},
+                "check_class": "checkov.arm.checks.resource.StorageAccountAzureServicesAccessEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": null,
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AZURE_43",
+                "bc_check_id": null,
+                "check_name": "Ensure Storage Accounts adhere to the naming rules",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "name"
+                    ]
+                },
+                "code_block": [
+                    [
+                        25,
+                        "    {\n"
+                    ],
+                    [
+                        26,
+                        "      \"type\": \"Microsoft.Storage/storageAccounts\",\n"
+                    ],
+                    [
+                        27,
+                        "      \"apiVersion\": \"2023-01-01\",\n"
+                    ],
+                    [
+                        28,
+                        "      \"name\": \"[parameters('storageAccountName')]\",\n"
+                    ],
+                    [
+                        29,
+                        "      \"location\": \"[parameters('location')]\",\n"
+                    ],
+                    [
+                        30,
+                        "      \"sku\": { \"name\": \"Standard_GRS\" },\n"
+                    ],
+                    [
+                        31,
+                        "      \"kind\": \"StorageV2\",\n"
+                    ],
+                    [
+                        32,
+                        "      \"properties\": {\n"
+                    ],
+                    [
+                        33,
+                        "        \"supportsHttpsTrafficOnly\": true,\n"
+                    ],
+                    [
+                        34,
+                        "        \"minimumTlsVersion\": \"[variables('tlsVersion')]\",\n"
+                    ],
+                    [
+                        35,
+                        "        \"allowBlobPublicAccess\": false,\n"
+                    ],
+                    [
+                        36,
+                        "        \"publicNetworkAccess\": \"Disabled\",\n"
+                    ],
+                    [
+                        37,
+                        "        \"allowSharedKeyAccess\": false,\n"
+                    ],
+                    [
+                        38,
+                        "        \"networkAcls\": {\n"
+                    ],
+                    [
+                        39,
+                        "          \"bypass\": \"None\",\n"
+                    ],
+                    [
+                        40,
+                        "          \"defaultAction\": \"Deny\",\n"
+                    ],
+                    [
+                        41,
+                        "          \"virtualNetworkRules\": [\n"
+                    ],
+                    [
+                        42,
+                        "            { \"id\": \"[parameters('allowedSubnetId')]\", \"action\": \"Allow\" }\n"
+                    ],
+                    [
+                        43,
+                        "          ]\n"
+                    ],
+                    [
+                        44,
+                        "        },\n"
+                    ],
+                    [
+                        45,
+                        "        \"encryption\": {\n"
+                    ],
+                    [
+                        46,
+                        "          \"keySource\": \"Microsoft.Storage\",\n"
+                    ],
+                    [
+                        47,
+                        "          \"services\": {\n"
+                    ],
+                    [
+                        48,
+                        "            \"blob\": { \"enabled\": true },\n"
+                    ],
+                    [
+                        49,
+                        "            \"file\": { \"enabled\": true }\n"
+                    ],
+                    [
+                        50,
+                        "          }\n"
+                    ],
+                    [
+                        51,
+                        "        }\n"
+                    ],
+                    [
+                        52,
+                        "      }\n"
+                    ],
+                    [
+                        53,
+                        "    },\n"
+                    ]
+                ],
+                "file_path": "/azuredeploy.json",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c027/azuredeploy.json",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c027/azuredeploy.json",
+                "file_line_range": [
+                    25,
+                    53
+                ],
+                "resource": "Microsoft.Storage/storageAccounts.[concat('finrep', uniqueString(resourceGroup().id))]",
+                "evaluations": {},
+                "check_class": "checkov.arm.checks.resource.StorageAccountName",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": null,
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 6,
+        "failed": 2,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

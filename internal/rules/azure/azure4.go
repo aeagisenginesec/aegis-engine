@@ -2,6 +2,7 @@
 package azure
 
 import (
+	"sort"
 	"strings"
 
 	"aegis/internal/ir"
@@ -11,10 +12,7 @@ import (
 func Azure4Rules() []ir.Rule {
 	return []ir.Rule{
 		mssqlNoTDE{},              // AEGIS-AZURE-044
-		mssqlNoAuditing{},         // AEGIS-AZURE-045
 		mssqlNoThreatDetect{},     // AEGIS-AZURE-046
-		mssqlNoADAdmin{},          // AEGIS-AZURE-047
-		mssqlPublicAccess{},       // AEGIS-AZURE-048
 		mssqlDBNoTDE{},            // AEGIS-AZURE-049
 		mssqlFirewallOpen{},       // AEGIS-AZURE-050
 		mssqlNoVulnAssess{},       // AEGIS-AZURE-051
@@ -63,35 +61,6 @@ func (s mssqlNoTDE) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZURE-045: MSSQL server without auditing
-// ---------------------------------------------------------------------------
-
-type mssqlNoAuditing struct{}
-
-func (mssqlNoAuditing) ID() string { return "AEGIS-AZURE-045" }
-func (mssqlNoAuditing) Title() string {
-	return "MSSQL server without extended auditing"
-}
-func (mssqlNoAuditing) Description() string {
-	return "azurerm_mssql_server without extended_auditing_policy loses " +
-		"database activity audit trail. Enable extended auditing."
-}
-func (mssqlNoAuditing) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (mssqlNoAuditing) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
-}
-
-func (s mssqlNoAuditing) Check(r ir.Resource) []ir.Finding {
-	_, _, present, _ := getBlocks(r, "extended_auditing_policy")
-	if present {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "extended_auditing_policy",
-		evidenceSpan(ir.Span{}, r.Span), "absent", "extended_auditing_policy block with storage_endpoint")}
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AZURE-046: MSSQL server without threat detection
 // ---------------------------------------------------------------------------
 
@@ -118,67 +87,6 @@ func (s mssqlNoThreatDetect) Check(r ir.Resource) []ir.Finding {
 	}
 	return []ir.Finding{mkFinding(s, r, "security_alert_policy",
 		evidenceSpan(ir.Span{}, r.Span), "absent", "security_alert_policy block with state = \"Enabled\"")}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZURE-047: MSSQL server without Azure AD administrator
-// ---------------------------------------------------------------------------
-
-type mssqlNoADAdmin struct{}
-
-func (mssqlNoADAdmin) ID() string { return "AEGIS-AZURE-047" }
-func (mssqlNoADAdmin) Title() string {
-	return "MSSQL server without Azure AD administrator"
-}
-func (mssqlNoADAdmin) Description() string {
-	return "azurerm_mssql_server without azuread_administrator relies solely " +
-		"on SQL authentication. Configure an Azure AD admin for centralized identity."
-}
-func (mssqlNoADAdmin) Severity() ir.Severity { return ir.SeverityMedium }
-
-func (mssqlNoADAdmin) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
-}
-
-func (s mssqlNoADAdmin) Check(r ir.Resource) []ir.Finding {
-	_, _, present, _ := getBlocks(r, "azuread_administrator")
-	if present {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "azuread_administrator",
-		evidenceSpan(ir.Span{}, r.Span), "absent", "azuread_administrator block with login_username")}
-}
-
-// ---------------------------------------------------------------------------
-// AEGIS-AZURE-048: MSSQL server with public network access
-// ---------------------------------------------------------------------------
-
-type mssqlPublicAccess struct{}
-
-func (mssqlPublicAccess) ID() string { return "AEGIS-AZURE-048" }
-func (mssqlPublicAccess) Title() string {
-	return "MSSQL server with public network access"
-}
-func (mssqlPublicAccess) Description() string {
-	return "azurerm_mssql_server with public_network_access_enabled = true " +
-		"exposes the database endpoint. Disable public access and use private endpoints."
-}
-func (mssqlPublicAccess) Severity() ir.Severity { return ir.SeverityHigh }
-
-func (mssqlPublicAccess) AppliesTo(resType string) bool {
-	return resType == "azurerm_mssql_server"
-}
-
-func (s mssqlPublicAccess) Check(r ir.Resource) []ir.Finding {
-	pub, span, present, known := getBool(r, "public_network_access_enabled")
-	if !present || !known {
-		return nil
-	}
-	if !pub {
-		return nil
-	}
-	return []ir.Finding{mkFinding(s, r, "public_network_access_enabled", span,
-		"true", "public_network_access_enabled = false")}
 }
 
 // ---------------------------------------------------------------------------
@@ -280,8 +188,14 @@ func (s mssqlNoVulnAssess) Check(r ir.Resource) []ir.Finding {
 	if strings.EqualFold(en, "true") {
 		return nil
 	}
+	// An empty value is not an explicit enable: keep firing, but report
+	// a non-empty Actual so the evidence is meaningful.
+	actual := en
+	if actual == "" {
+		actual = "(empty — not enabled)"
+	}
 	return []ir.Finding{mkFinding(s, r, "recurring_scans.enabled",
-		evidenceSpan(ir.Span{}, r.Span), en, "recurring_scans { enabled = true }")}
+		evidenceSpan(ir.Span{}, r.Span), actual, "recurring_scans { enabled = true }")}
 }
 
 // ---------------------------------------------------------------------------
@@ -391,7 +305,7 @@ func nsgRuleOpenToWorld(r ir.Resource, port string) bool {
 		return false
 	}
 	proto, _, pp, pk := getString(r, "protocol")
-	if !pp || !pk || !(strings.EqualFold(proto, "Tcp") || proto == "*") {
+	if !pp || !pk || !strings.EqualFold(proto, "Tcp") && proto != "*" {
 		return false
 	}
 	dpr, _, drp, drk := getString(r, "destination_port_range")
@@ -440,7 +354,7 @@ func nsgBlockOpenToWorld(blk map[string]ir.Value, port string) bool {
 		return false
 	}
 	proto, _, pp, pk := blockString(blk, "protocol")
-	if !pp || !pk || !(strings.EqualFold(proto, "Tcp") || proto == "*") {
+	if !pp || !pk || !strings.EqualFold(proto, "Tcp") && proto != "*" {
 		return false
 	}
 	matched := false
@@ -631,6 +545,9 @@ func (vnetNoFlowTimeout) AppliesTo(resType string) bool {
 }
 
 func (s vnetNoFlowTimeout) Check(r ir.Resource) []ir.Finding {
+	if v, ok := r.Attributes["dns_servers"]; ok && !v.Known {
+		return nil // unresolved: cannot decide
+	}
 	if _, _, ok := getStringList(r, "dns_servers"); ok {
 		return nil
 	}
@@ -659,12 +576,42 @@ func (subnetNoNSG) AppliesTo(resType string) bool {
 	return resType == "azurerm_subnet"
 }
 
-func (s subnetNoNSG) Check(r ir.Resource) []ir.Finding {
-	// Subnets associate NSGs via a separate association resource; the
-	// subnet itself rarely carries the reference. Only flag when the
-	// subnet explicitly opts out via a documented attribute is not
-	// possible — stay quiet to avoid noise.
-	return nil
+func (s subnetNoNSG) Check(ir.Resource) []ir.Finding { return nil }
+
+var _ ir.CrossResourceRule = subnetNoNSG{}
+
+// CheckAll fires for each subnet with no azurerm_subnet_network_security_group_association
+// referencing it. NSG association is a separate resource, so a per-resource Check cannot
+// decide this (the subnet itself carries no NSG reference).
+func (s subnetNoNSG) CheckAll(resources []ir.Resource) []ir.Finding {
+	protected := map[string]bool{}
+	for _, r := range resources {
+		if r.Type != "azurerm_subnet_network_security_group_association" {
+			continue
+		}
+		v, ok := r.Attributes["subnet_id"]
+		if !ok || !v.IsRef() {
+			continue // unresolvable link: cannot prove protection
+		}
+		if addr, ok := refAddrOf(v.Ref); ok {
+			protected[addr] = true
+		}
+	}
+	sorted := append([]ir.Resource(nil), resources...)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Address() < sorted[j].Address() })
+	var out []ir.Finding
+	for _, r := range sorted {
+		if r.Type != "azurerm_subnet" {
+			continue
+		}
+		if protected[r.Address()] {
+			continue
+		}
+		out = append(out, mkFinding(s, r, "network_security_group",
+			evidenceSpan(ir.Span{}, r.Span), "absent",
+			"azurerm_subnet_network_security_group_association targeting "+r.Address()))
+	}
+	return out
 }
 
 // ---------------------------------------------------------------------------
@@ -689,6 +636,9 @@ func (subnetNoServiceEndpoint) AppliesTo(resType string) bool {
 }
 
 func (s subnetNoServiceEndpoint) Check(r ir.Resource) []ir.Finding {
+	if v, ok := r.Attributes["service_endpoints"]; ok && !v.Known {
+		return nil // unresolved: cannot decide
+	}
 	if _, _, ok := getStringList(r, "service_endpoints"); ok {
 		return nil
 	}

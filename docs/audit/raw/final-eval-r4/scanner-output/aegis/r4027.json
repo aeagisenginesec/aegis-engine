@@ -1,0 +1,209 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027",
+  "summary": {
+    "resources": 4,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 10,
+    "critical": 3,
+    "high": 3,
+    "medium": 2,
+    "low": 2
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-006",
+      "severity": "critical",
+      "title": "IAM policy allows all actions on all resources",
+      "description": "An Allow statement with Action \"*\" on Resource \"*\" is administrative access. Scope actions and resources to least privilege.",
+      "resource": "aws_iam_user_policy.deployer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 24,
+      "evidence": "policy = Allow statement with Action \"*\" on Resource \"*\"",
+      "expected": "scoped Action and Resource lists",
+      "remediation": "Replace the wildcard policy with least-privilege statements. List only the\nactions the workload needs on only the ARNs it touches:\npolicy = jsonencode({\n  Version = \"2012-10-17\"\n  Statement = [{\n    Effect   = \"Allow\"\n    Action   = [\"s3:GetObject\", \"s3:PutObject\"]\n    Resource = [\"arn:aws:s3:::my-bucket/*\"]\n  }]\n})\nUse IAM Access Analyzer policy generation from CloudTrail to derive the minimum set.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.16"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-6"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "7.2.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-333",
+      "severity": "high",
+      "title": "Inline admin policy attached to role/user/group",
+      "description": "An inline IAM policy with an Allow statement granting Action \"*\" (or \"*:*\") on Resource \"*\" is administrative access. Inline policies are harder to audit than managed ones; scope them to least privilege.",
+      "resource": "aws_iam_user_policy.deployer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 24,
+      "evidence": "policy = Allow statement with Action \"*\" (or \"*:*\") on Resource \"*\"",
+      "expected": "scoped Action and Resource lists",
+      "remediation": "Move the inline admin policy to a scoped customer-managed policy (see\nAEGIS-AWS-006 fix). Inline policies on identities are hard to audit — prefer\nmanaged policies attached to groups/roles.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "1.16"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "AC-6"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "7.2.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-501",
+      "severity": "critical",
+      "title": "IAM policy allows privilege escalation (create policy + attach policy)",
+      "description": "The policy combines a policy-authoring action (iam:CreatePolicy, iam:PutRolePolicy, iam:PutUserPolicy, iam:PutGroupPolicy) with a policy-attachment action (iam:AttachRolePolicy, iam:AttachUserPolicy, iam:AttachGroupPolicy). Attack path: create an administrative policy, attach it to your own role/user, assume full admin. Split authoring from attachment duties and scope each to least privilege.",
+      "resource": "aws_iam_user_policy.deployer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 24,
+      "evidence": "policy = Allow statements grant policy-authoring and policy-attachment actions",
+      "expected": "separate policy authoring from attachment; scope both to least privilege",
+      "remediation": "Split policy authoring from attachment (this combination is the classic privilege\nescalation primitive). Remove `iam:CreatePolicy*` / `iam:Attach*Policy` from the\nworkload policy. Policy management belongs in a separate, human-gated CI/CD role —\nnever in an application runtime role.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-502",
+      "severity": "critical",
+      "title": "IAM policy allows privilege escalation via iam:PassRole on * with compute launch",
+      "description": "The policy allows iam:PassRole on \"*\" together with a role-assumption primitive (ec2:RunInstances, lambda:CreateFunction, lambda:UpdateFunctionCode, ...). Attack path: launch a compute resource passing an administrative role, then steal its credentials from the instance metadata / environment. Scope iam:PassRole to specific role ARNs.",
+      "resource": "aws_iam_user_policy.deployer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 24,
+      "evidence": "policy = Allow statements grant iam:PassRole on \"*\" with a compute-launch primitive",
+      "expected": "scope iam:PassRole to specific role ARNs",
+      "remediation": "Scope `iam:PassRole` to the exact role ARNs the workload must pass, and only\ntogether with the specific compute-launch action it needs:\n{\n  \"Effect\": \"Allow\",\n  \"Action\": \"iam:PassRole\",\n  \"Resource\": \"arn:aws:iam::123456789012:role/AppExecutionRole\"\n}\nNever grant `iam:PassRole` on `*` — it lets the holder escalate to any role.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-503",
+      "severity": "high",
+      "title": "IAM policy allows data exfiltration primitives",
+      "description": "The policy grants a known exfiltration pair: s3:GetObject + s3:PutObject on \"*\" (copy data to an attacker bucket), rds:CreateDBSnapshot + rds:ModifyDBSnapshotAttribute (share a snapshot cross-account), or ec2:CreateSnapshot + ec2:ModifySnapshotAttribute (share an EBS snapshot). Attack path: snapshot or copy production data, share it outside the account. Scope data-plane actions to specific resources.",
+      "resource": "aws_iam_user_policy.deployer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 24,
+      "evidence": "policy = Allow statements grant exfiltration pair s3:GetObject + s3:PutObject on \"*\"",
+      "expected": "scope data-plane actions to specific resources",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-504",
+      "severity": "high",
+      "title": "IAM permissions management actions allowed on all resources",
+      "description": "An Allow statement grants IAM write actions (iam:Put*, iam:Create*, iam:Update*, iam:Delete*, iam:Attach*, iam:Detach*, or iam:*) on Resource \"*\". Attack path: modify any identity's policies directly to escalate to admin. Read-only IAM actions (iam:Get*, iam:List*, iam:Generate*, iam:Simulate*) are excluded. Scope IAM management to specific users, roles, and policies.",
+      "resource": "aws_iam_user_policy.deployer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 24,
+      "evidence": "policy = Allow statement grants IAM management action \"*\" on \"*\"",
+      "expected": "scope IAM management actions to specific identities",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-659",
+      "severity": "medium",
+      "title": "IAM user uses an inline policy",
+      "description": "The user embeds an inline policy document instead of attaching a managed policy. Inline policies cannot be reused, versioned, or reviewed centrally. Prefer aws_iam_policy with aws_iam_user_policy_attachment.",
+      "resource": "aws_iam_user_policy.deployer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 22,
+      "evidence": "policy = inline policy document",
+      "expected": "managed policy + attachment",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-659",
+      "severity": "medium",
+      "title": "IAM user uses an inline policy",
+      "description": "The user embeds an inline policy document instead of attaching a managed policy. Inline policies cannot be reused, versioned, or reviewed centrally. Prefer aws_iam_policy with aws_iam_user_policy_attachment.",
+      "resource": "aws_iam_user_policy.reader",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 5,
+      "evidence": "policy = inline policy document",
+      "expected": "managed policy + attachment",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-672",
+      "severity": "low",
+      "title": "IAM user has no tags",
+      "description": "The IAM user carries no tags, making ownership, purpose, and lifecycle untraceable in audits and complicating attribute-based access control. Tag identities with at least owner and purpose.",
+      "resource": "aws_iam_user.deployer",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 18,
+      "evidence": "tags = absent (AWS default: no tags)",
+      "expected": "tags set (owner, purpose)",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-672",
+      "severity": "low",
+      "title": "IAM user has no tags",
+      "description": "The IAM user carries no tags, making ownership, purpose, and lifecycle untraceable in audits and complicating attribute-based access control. Tag identities with at least owner and purpose.",
+      "resource": "aws_iam_user.reader",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+      "line": 1,
+      "evidence": "tags = absent (AWS default: no tags)",
+      "expected": "tags set (owner, purpose)",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4027/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

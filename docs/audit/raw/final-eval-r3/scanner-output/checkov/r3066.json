@@ -1,0 +1,185 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_58",
+                "bc_check_id": "BC_AWS_KUBERNETES_3",
+                "check_name": "Ensure EKS Cluster has Secrets Encryption Enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/EncryptionConfig/Resources"
+                    ]
+                },
+                "code_block": [
+                    [
+                        4,
+                        "  MainCluster:\n"
+                    ],
+                    [
+                        5,
+                        "    Type: AWS::EKS::Cluster\n"
+                    ],
+                    [
+                        6,
+                        "    Properties:\n"
+                    ],
+                    [
+                        7,
+                        "      Name: main-8e53c2\n"
+                    ],
+                    [
+                        8,
+                        "      RoleArn: arn:aws:iam::123456789012:role/eks-cluster\n"
+                    ],
+                    [
+                        9,
+                        "      ResourcesVpcConfig:\n"
+                    ],
+                    [
+                        10,
+                        "        SubnetIds: [subnet-aaa, subnet-bbb]\n"
+                    ],
+                    [
+                        11,
+                        "        EndpointPublicAccess: true\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3066/template.yaml",
+                "repo_file_path": "/corpus/r3066/template.yaml",
+                "file_line_range": [
+                    4,
+                    11
+                ],
+                "resource": "AWS::EKS::Cluster.MainCluster",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.EKSSecretsEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-kubernetes-policies/bc-aws-kubernetes-3",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_18",
+                "bc_check_id": "BC_AWS_S3_13",
+                "check_name": "Ensure the S3 bucket has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/LoggingConfiguration"
+                    ]
+                },
+                "code_block": [
+                    [
+                        13,
+                        "  LogsBucket:\n"
+                    ],
+                    [
+                        14,
+                        "    Type: AWS::S3::Bucket\n"
+                    ],
+                    [
+                        15,
+                        "    Properties:\n"
+                    ],
+                    [
+                        16,
+                        "      BucketName: logs-8e53c2\n"
+                    ],
+                    [
+                        17,
+                        "      VersioningConfiguration:\n"
+                    ],
+                    [
+                        18,
+                        "        Status: Enabled\n"
+                    ],
+                    [
+                        19,
+                        "      BucketEncryption:\n"
+                    ],
+                    [
+                        20,
+                        "        ServerSideEncryptionConfiguration:\n"
+                    ],
+                    [
+                        21,
+                        "          - ServerSideEncryptionByDefault:\n"
+                    ],
+                    [
+                        22,
+                        "              SSEAlgorithm: AES256\n"
+                    ],
+                    [
+                        23,
+                        "      PublicAccessBlockConfiguration:\n"
+                    ],
+                    [
+                        24,
+                        "        BlockPublicAcls: true\n"
+                    ],
+                    [
+                        25,
+                        "        BlockPublicPolicy: true\n"
+                    ],
+                    [
+                        26,
+                        "        IgnorePublicAcls: true\n"
+                    ],
+                    [
+                        27,
+                        "        RestrictPublicBuckets: true\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3066/template.yaml",
+                "repo_file_path": "/corpus/r3066/template.yaml",
+                "file_line_range": [
+                    13,
+                    27
+                ],
+                "resource": "AWS::S3::Bucket.LogsBucket",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.S3AccessLogs",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/s3-policies/s3-13-enable-logging",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 8,
+        "failed": 2,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}

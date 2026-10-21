@@ -62,22 +62,40 @@ func TestWriteJSONEnvelope(t *testing.T) {
 	if env["target"] != "/tmp/proj" {
 		t.Errorf("wrong target: %v", env["target"])
 	}
-	if env["resources_scanned"] != float64(3) {
-		t.Errorf("wrong resources_scanned: %v", env["resources_scanned"])
+	if env["resources_scanned"] != nil {
+		t.Errorf("legacy resources_scanned key should be gone: %v", env["resources_scanned"])
+	}
+	summary, ok := env["summary"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing summary block: %v", env["summary"])
+	}
+	if summary["resources"] != float64(3) {
+		t.Errorf("wrong summary.resources: %v", summary["resources"])
+	}
+	if summary["findings"] != float64(2) {
+		t.Errorf("wrong summary.findings: %v", summary["findings"])
+	}
+	if summary["critical"] != float64(1) || summary["high"] != float64(1) {
+		t.Errorf("wrong severity rollup: %v", summary)
 	}
 	findings, ok := env["findings"].([]any)
 	if !ok || len(findings) != 2 {
 		t.Fatalf("expected 2 findings, got %v", env["findings"])
 	}
-	// Secret redaction must fire in JSON output.
+	// Secret redaction must fire in JSON output (flat evidence string).
 	second := findings[1].(map[string]any)
-	ev := second["evidence"].(map[string]any)
-	if ev["actual"] != "[REDACTED]" {
-		t.Errorf("secret not redacted in JSON: %v", ev["actual"])
+	if ev, _ := second["evidence"].(string); !strings.Contains(ev, "[REDACTED]") {
+		t.Errorf("secret not redacted in JSON evidence: %v", ev)
+	}
+	if second["file"] != "db.tf" || second["line"] != float64(7) {
+		t.Errorf("location not flattened: file=%v line=%v", second["file"], second["line"])
 	}
 	first := findings[0].(map[string]any)
-	if first["evidence"].(map[string]any)["actual"] != "public-read" {
-		t.Errorf("non-secret value wrongly redacted")
+	if ev, _ := first["evidence"].(string); ev != `acl = public-read` {
+		t.Errorf("flat evidence wrong: %q", ev)
+	}
+	if first["expected"] != "private" {
+		t.Errorf("expected field wrong: %v", first["expected"])
 	}
 }
 
@@ -166,16 +184,148 @@ func TestWriteText(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	if !strings.Contains(out, "HIGH aws-s3-public-acl main.tf:12 — S3 bucket has public ACL") {
+	// Severity-grouped sections, most severe first.
+	critIdx := strings.Index(out, "CRITICAL (1)")
+	highIdx := strings.Index(out, "HIGH (1)")
+	if critIdx < 0 || highIdx < 0 {
+		t.Fatalf("missing severity group headers:\n%s", out)
+	}
+	if critIdx > highIdx {
+		t.Errorf("critical group should come before high:\n%s", out)
+	}
+	if !strings.Contains(out, "aws-s3-public-acl  S3 bucket has public ACL") {
 		t.Errorf("missing expected finding line:\n%s", out)
 	}
-	if !strings.Contains(out, `evidence: acl = "public-read"`) {
+	if !strings.Contains(out, "main.tf:12  aws_s3_bucket.data") {
+		t.Errorf("missing location line:\n%s", out)
+	}
+	if !strings.Contains(out, "evidence: acl = public-read") {
 		t.Errorf("missing evidence line:\n%s", out)
+	}
+	if !strings.Contains(out, "findings:  2  (critical 1, high 1, medium 0, low 0)") {
+		t.Errorf("missing summary rollup:\n%s", out)
 	}
 	if strings.Contains(out, "Sup3rSecret123!") {
 		t.Errorf("secret leaked into text output")
 	}
 	if !strings.Contains(out, "[REDACTED]") {
 		t.Errorf("expected redacted marker in text output")
+	}
+}
+
+func TestWriteTextNoColorByDefault(t *testing.T) {
+	var buf bytes.Buffer
+	if err := WriteText(&buf, sampleResult()); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "\x1b[") {
+		t.Errorf("default WriteText must not emit ANSI codes:\n%s", out)
+	}
+	// Findings are separated by a blank line.
+	if !strings.Contains(out, "aws_s3_bucket.data\n\n") && !strings.Contains(out, "\n\n  aws-db-master-password") {
+		// Fallback: count blank-line separators between the two finding cards.
+		critIdx := strings.Index(out, "CRITICAL (1)")
+		highIdx := strings.Index(out, "HIGH (1)")
+		segment := out[critIdx:highIdx]
+		if !strings.Contains(segment, "\n\n") {
+			t.Errorf("expected blank line after finding card:\n%s", out)
+		}
+	}
+}
+
+func TestWriteTextWithColor(t *testing.T) {
+	var buf bytes.Buffer
+	if err := WriteTextWithOptions(&buf, sampleResult(), TextOptions{Color: true}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "\x1b[") {
+		t.Fatalf("colored output must contain ANSI codes:\n%s", out)
+	}
+	// Critical header painted bold bright red.
+	if !strings.Contains(out, "\x1b[1;91mCRITICAL (1)\x1b[0m") {
+		t.Errorf("critical header not colored:\n%s", out)
+	}
+	// High header painted orange (256-color).
+	if !strings.Contains(out, "\x1b[38;5;208mHIGH (1)\x1b[0m") {
+		t.Errorf("high header not colored:\n%s", out)
+	}
+	// Rule ID bolded.
+	if !strings.Contains(out, "\x1b[1maws-s3-public-acl\x1b[0m") {
+		t.Errorf("rule ID not bolded:\n%s", out)
+	}
+	// Rollup severity counts colored.
+	if !strings.Contains(out, "\x1b[1;91mcritical\x1b[0m 1") {
+		t.Errorf("rollup critical count not colored:\n%s", out)
+	}
+	// Stripping ANSI codes must yield the plain rendering.
+	plain := stripANSI(out)
+	var pbuf bytes.Buffer
+	if err := WriteText(&pbuf, sampleResult()); err != nil {
+		t.Fatal(err)
+	}
+	if plain != pbuf.String() {
+		t.Errorf("colored output differs from plain beyond ANSI codes")
+	}
+}
+
+func stripANSI(s string) string {
+	var b strings.Builder
+	inEsc := false
+	for i := 0; i < len(s); i++ {
+		if !inEsc {
+			if s[i] == 0x1b && i+1 < len(s) && s[i+1] == '[' {
+				inEsc = true
+				i++
+				continue
+			}
+			b.WriteByte(s[i])
+			continue
+		}
+		if (s[i] >= 'a' && s[i] <= 'z') || (s[i] >= 'A' && s[i] <= 'Z') {
+			inEsc = false
+		}
+	}
+	return b.String()
+}
+
+func TestWriteTextFindingLayout(t *testing.T) {
+	var buf bytes.Buffer
+	if err := WriteText(&buf, sampleResult()); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	// Plain-language "why" line from the description.
+	if !strings.Contains(out, "why: The bucket ACL allows public read access.") {
+		t.Errorf("missing why line:\n%s", out)
+	}
+	// Evidence and expected on separate scannable lines.
+	if !strings.Contains(out, "evidence: acl = public-read") {
+		t.Errorf("missing evidence line:\n%s", out)
+	}
+	if !strings.Contains(out, "expected: private") {
+		t.Errorf("missing expected line:\n%s", out)
+	}
+	if strings.Contains(out, "(expected:") {
+		t.Errorf("expected must not be parenthesized into the evidence line:\n%s", out)
+	}
+}
+
+func TestWrapField(t *testing.T) {
+	lines := wrapField("why", "one two three four five six seven", 20)
+	if len(lines) < 2 {
+		t.Fatalf("expected wrapping, got %v", lines)
+	}
+	for _, l := range lines {
+		if len(l) > 20 {
+			t.Errorf("line exceeds width: %q", l)
+		}
+	}
+	if !strings.HasPrefix(lines[0], "    why: one") {
+		t.Errorf("bad first line: %q", lines[0])
+	}
+	if !strings.HasPrefix(lines[1], "         three") {
+		t.Errorf("bad hanging indent: %q", lines[1])
 	}
 }

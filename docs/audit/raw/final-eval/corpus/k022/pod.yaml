@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: node-agent
+  labels:
+    app: node-agent
+spec:
+  hostNetwork: true
+  containers:
+    - name: agent
+      image: example/node-agent:2.1
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: host-root
+          mountPath: /host
+      command: ["/agent", "--collect-all"]
+  volumes:
+    - name: host-root
+      hostPath:
+        path: /

@@ -1,0 +1,546 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security groups rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        21,
+                        "  AlbSecurityGroup:\n"
+                    ],
+                    [
+                        22,
+                        "    Type: AWS::EC2::SecurityGroup\n"
+                    ],
+                    [
+                        23,
+                        "    Properties:\n"
+                    ],
+                    [
+                        24,
+                        "      GroupDescription: ALB ingress\n"
+                    ],
+                    [
+                        25,
+                        "      VpcId: !Ref VpcId\n"
+                    ],
+                    [
+                        26,
+                        "      SecurityGroupIngress:\n"
+                    ],
+                    [
+                        27,
+                        "        - IpProtocol: tcp\n"
+                    ],
+                    [
+                        28,
+                        "          FromPort: 80\n"
+                    ],
+                    [
+                        29,
+                        "          ToPort: 80\n"
+                    ],
+                    [
+                        30,
+                        "          CidrIp: 0.0.0.0/0\n"
+                    ]
+                ],
+                "file_path": "/alb-asg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "file_line_range": [
+                    21,
+                    30
+                ],
+                "resource": "AWS::EC2::SecurityGroup.AlbSecurityGroup",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_260",
+                "bc_check_id": "BC_AWS_NETWORKING_67",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 80",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        21,
+                        "  AlbSecurityGroup:\n"
+                    ],
+                    [
+                        22,
+                        "    Type: AWS::EC2::SecurityGroup\n"
+                    ],
+                    [
+                        23,
+                        "    Properties:\n"
+                    ],
+                    [
+                        24,
+                        "      GroupDescription: ALB ingress\n"
+                    ],
+                    [
+                        25,
+                        "      VpcId: !Ref VpcId\n"
+                    ],
+                    [
+                        26,
+                        "      SecurityGroupIngress:\n"
+                    ],
+                    [
+                        27,
+                        "        - IpProtocol: tcp\n"
+                    ],
+                    [
+                        28,
+                        "          FromPort: 80\n"
+                    ],
+                    [
+                        29,
+                        "          ToPort: 80\n"
+                    ],
+                    [
+                        30,
+                        "          CidrIp: 0.0.0.0/0\n"
+                    ]
+                ],
+                "file_path": "/alb-asg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "file_line_range": [
+                    21,
+                    30
+                ],
+                "resource": "AWS::EC2::SecurityGroup.AlbSecurityGroup",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupUnrestrictedIngress80",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-aws-security-groups-do-not-allow-ingress-from-00000-to-port-80",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security groups rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        32,
+                        "  AppSecurityGroup:\n"
+                    ],
+                    [
+                        33,
+                        "    Type: AWS::EC2::SecurityGroup\n"
+                    ],
+                    [
+                        34,
+                        "    Properties:\n"
+                    ],
+                    [
+                        35,
+                        "      GroupDescription: App instances, ALB only\n"
+                    ],
+                    [
+                        36,
+                        "      VpcId: !Ref VpcId\n"
+                    ],
+                    [
+                        37,
+                        "      SecurityGroupIngress:\n"
+                    ],
+                    [
+                        38,
+                        "        - IpProtocol: tcp\n"
+                    ],
+                    [
+                        39,
+                        "          FromPort: 8080\n"
+                    ],
+                    [
+                        40,
+                        "          ToPort: 8080\n"
+                    ],
+                    [
+                        41,
+                        "          SourceSecurityGroupId: !Ref AlbSecurityGroup\n"
+                    ]
+                ],
+                "file_path": "/alb-asg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "file_line_range": [
+                    32,
+                    41
+                ],
+                "resource": "AWS::EC2::SecurityGroup.AppSecurityGroup",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_131",
+                "bc_check_id": "BC_AWS_NETWORKING_41",
+                "check_name": "Ensure that ALB drops HTTP headers",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties"
+                    ]
+                },
+                "code_block": [
+                    [
+                        43,
+                        "  WebAlb:\n"
+                    ],
+                    [
+                        44,
+                        "    Type: AWS::ElasticLoadBalancingV2::LoadBalancer\n"
+                    ],
+                    [
+                        45,
+                        "    Properties:\n"
+                    ],
+                    [
+                        46,
+                        "      Scheme: internet-facing\n"
+                    ],
+                    [
+                        47,
+                        "      Type: application\n"
+                    ],
+                    [
+                        48,
+                        "      Subnets: !Ref SubnetIds\n"
+                    ],
+                    [
+                        49,
+                        "      SecurityGroups:\n"
+                    ],
+                    [
+                        50,
+                        "        - !Ref AlbSecurityGroup\n"
+                    ]
+                ],
+                "file_path": "/alb-asg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "file_line_range": [
+                    43,
+                    50
+                ],
+                "resource": "AWS::ElasticLoadBalancingV2::LoadBalancer.WebAlb",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.ALBDropHttpHeaders",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/ensure-that-alb-drops-http-headers",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_91",
+                "bc_check_id": "BC_AWS_LOGGING_22",
+                "check_name": "Ensure the ELBv2 (Application/Network) has access logging enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties"
+                    ]
+                },
+                "code_block": [
+                    [
+                        43,
+                        "  WebAlb:\n"
+                    ],
+                    [
+                        44,
+                        "    Type: AWS::ElasticLoadBalancingV2::LoadBalancer\n"
+                    ],
+                    [
+                        45,
+                        "    Properties:\n"
+                    ],
+                    [
+                        46,
+                        "      Scheme: internet-facing\n"
+                    ],
+                    [
+                        47,
+                        "      Type: application\n"
+                    ],
+                    [
+                        48,
+                        "      Subnets: !Ref SubnetIds\n"
+                    ],
+                    [
+                        49,
+                        "      SecurityGroups:\n"
+                    ],
+                    [
+                        50,
+                        "        - !Ref AlbSecurityGroup\n"
+                    ]
+                ],
+                "file_path": "/alb-asg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "file_line_range": [
+                    43,
+                    50
+                ],
+                "resource": "AWS::ElasticLoadBalancingV2::LoadBalancer.WebAlb",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.ELBv2AccessLogs",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/bc-aws-logging-22",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_2",
+                "bc_check_id": "BC_AWS_NETWORKING_29",
+                "check_name": "Ensure ALB protocol is HTTPS",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/Protocol",
+                        "Properties/DefaultActions"
+                    ]
+                },
+                "code_block": [
+                    [
+                        52,
+                        "  HttpListener:\n"
+                    ],
+                    [
+                        53,
+                        "    Type: AWS::ElasticLoadBalancingV2::Listener\n"
+                    ],
+                    [
+                        54,
+                        "    Properties:\n"
+                    ],
+                    [
+                        55,
+                        "      LoadBalancerArn: !Ref WebAlb\n"
+                    ],
+                    [
+                        56,
+                        "      Port: 80\n"
+                    ],
+                    [
+                        57,
+                        "      Protocol: HTTP\n"
+                    ],
+                    [
+                        58,
+                        "      DefaultActions:\n"
+                    ],
+                    [
+                        59,
+                        "        - Type: forward\n"
+                    ],
+                    [
+                        60,
+                        "          TargetGroupArn: !Ref AppTargetGroup\n"
+                    ]
+                ],
+                "file_path": "/alb-asg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "file_line_range": [
+                    52,
+                    60
+                ],
+                "resource": "AWS::ElasticLoadBalancingV2::Listener.HttpListener",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.ALBListenerHTTPS",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-29",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_103",
+                "bc_check_id": "BC_AWS_GENERAL_43",
+                "check_name": "Ensure that Load Balancer Listener is using at least TLS v1.2",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/Protocol",
+                        "Properties/SslPolicy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        52,
+                        "  HttpListener:\n"
+                    ],
+                    [
+                        53,
+                        "    Type: AWS::ElasticLoadBalancingV2::Listener\n"
+                    ],
+                    [
+                        54,
+                        "    Properties:\n"
+                    ],
+                    [
+                        55,
+                        "      LoadBalancerArn: !Ref WebAlb\n"
+                    ],
+                    [
+                        56,
+                        "      Port: 80\n"
+                    ],
+                    [
+                        57,
+                        "      Protocol: HTTP\n"
+                    ],
+                    [
+                        58,
+                        "      DefaultActions:\n"
+                    ],
+                    [
+                        59,
+                        "        - Type: forward\n"
+                    ],
+                    [
+                        60,
+                        "          TargetGroupArn: !Ref AppTargetGroup\n"
+                    ]
+                ],
+                "file_path": "/alb-asg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c016/alb-asg.yaml",
+                "file_line_range": [
+                    52,
+                    60
+                ],
+                "resource": "AWS::ElasticLoadBalancingV2::Listener.HttpListener",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.ALBListenerTLS12",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-general-43",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 7,
+        "failed": 7,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 7,
+        "checkov_version": "3.3.26"
+    }
+}

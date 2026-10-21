@@ -54,6 +54,16 @@ type Value struct {
 	// non-static arguments. The semantics layer resolves the inner structure
 	// then JSON-encodes it to a string.
 	EncodeJSON bool `json:"-"`
+	// Template holds the raw source template text (literal parts plus
+	// ${ref} placeholders) for a string value whose expression contains
+	// interpolations and therefore cannot be statically resolved
+	// (Known=false). It is NOT a resolved value: never use it for
+	// equality, ordering, or any decision that requires the true value.
+	// Pattern-scanning rules (e.g. secret detection in user_data) may
+	// scan it for literal secret patterns in the static parts and for
+	// references to secret-like variables. Empty when the value has no
+	// template form.
+	Template string `json:"-"`
 }
 
 // IsRef reports whether this value is an unresolved reference.
@@ -198,6 +208,20 @@ type Adapter interface {
 	// Parse converts file content into resources. Diagnostics cover anything
 	// the adapter could not represent; hard failures return error.
 	Parse(path string, src []byte) ([]Resource, []Diagnostic, error)
+}
+
+// ContentSniffer is an optional interface for adapters whose Handles
+// decision depends on file content rather than the path alone (e.g.
+// CloudFormation and ARM, which sniff for format markers because the
+// manifests adapter claims every .yaml/.json file).
+// Pipelines that already hold the file bytes — notably in-memory API
+// scans, where the path is virtual and no file exists on disk — must
+// prefer HandlesContent over Handles, or content-sniffed formats are
+// misrouted and their findings silently lost.
+type ContentSniffer interface {
+	// HandlesContent reports whether this adapter parses the file with
+	// the given path and content, without touching disk.
+	HandlesContent(path string, src []byte) bool
 }
 
 // ScanResult is the complete output of one scan.

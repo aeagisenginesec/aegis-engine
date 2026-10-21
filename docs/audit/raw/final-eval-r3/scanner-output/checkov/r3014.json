@@ -1,0 +1,98 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_60",
+                "bc_check_id": "BC_AWS_IAM_44",
+                "check_name": "Ensure IAM role allows only specific services or principals to assume it",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "assume_role_policy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        1,
+                        "resource \"aws_iam_role\" \"partner\" {\n"
+                    ],
+                    [
+                        2,
+                        "  name = \"partner-642f51\"\n"
+                    ],
+                    [
+                        3,
+                        "  assume_role_policy = jsonencode({\n"
+                    ],
+                    [
+                        4,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        5,
+                        "    Statement = [{\n"
+                    ],
+                    [
+                        6,
+                        "      Effect = \"Allow\"\n"
+                    ],
+                    [
+                        7,
+                        "      Principal = { AWS = \"*\" }\n"
+                    ],
+                    [
+                        8,
+                        "      Action = \"sts:AssumeRole\"\n"
+                    ],
+                    [
+                        9,
+                        "    }]\n"
+                    ],
+                    [
+                        10,
+                        "  })\n"
+                    ],
+                    [
+                        11,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3014/main.tf",
+                "repo_file_path": "/corpus/r3014/main.tf",
+                "file_line_range": [
+                    1,
+                    11
+                ],
+                "resource": "aws_iam_role.partner",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.IAMRoleAllowsPublicAssume",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/bc-aws-iam-44",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3014/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 4,
+        "failed": 1,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 1,
+        "checkov_version": "3.3.26"
+    }
+}

@@ -1,0 +1,600 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_16",
+                "bc_check_id": "BC_AWS_GENERAL_4",
+                "check_name": "Ensure all data stored in the RDS is securely encrypted at rest",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/StorageEncrypted"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "  SharedPostgres:\n"
+                    ],
+                    [
+                        34,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        35,
+                        "    Properties:\n"
+                    ],
+                    [
+                        36,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        37,
+                        "      EngineVersion: '15.4'\n"
+                    ],
+                    [
+                        38,
+                        "      DBInstanceClass: db.t3.medium\n"
+                    ],
+                    [
+                        39,
+                        "      AllocatedStorage: 50\n"
+                    ],
+                    [
+                        40,
+                        "      DBName: sharedapp\n"
+                    ],
+                    [
+                        41,
+                        "      MasterUsername: appuser\n"
+                    ],
+                    [
+                        42,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        43,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        44,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        45,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        46,
+                        "      DBSubnetGroupName: !Ref SharedDbSubnetGroup\n"
+                    ],
+                    [
+                        47,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        48,
+                        "        - !Ref PostgresSecurityGroup\n"
+                    ],
+                    [
+                        49,
+                        "      Tags:\n"
+                    ],
+                    [
+                        50,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        51,
+                        "          Value: shared-postgres\n"
+                    ]
+                ],
+                "file_path": "/sg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "file_line_range": [
+                    33,
+                    51
+                ],
+                "resource": "AWS::RDS::DBInstance.SharedPostgres",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSEncryption",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "shared-postgres"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-4",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_118",
+                "bc_check_id": "BC_AWS_LOGGING_28",
+                "check_name": "Ensure that enhanced monitoring is enabled for Amazon RDS instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/MonitoringInterval"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "  SharedPostgres:\n"
+                    ],
+                    [
+                        34,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        35,
+                        "    Properties:\n"
+                    ],
+                    [
+                        36,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        37,
+                        "      EngineVersion: '15.4'\n"
+                    ],
+                    [
+                        38,
+                        "      DBInstanceClass: db.t3.medium\n"
+                    ],
+                    [
+                        39,
+                        "      AllocatedStorage: 50\n"
+                    ],
+                    [
+                        40,
+                        "      DBName: sharedapp\n"
+                    ],
+                    [
+                        41,
+                        "      MasterUsername: appuser\n"
+                    ],
+                    [
+                        42,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        43,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        44,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        45,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        46,
+                        "      DBSubnetGroupName: !Ref SharedDbSubnetGroup\n"
+                    ],
+                    [
+                        47,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        48,
+                        "        - !Ref PostgresSecurityGroup\n"
+                    ],
+                    [
+                        49,
+                        "      Tags:\n"
+                    ],
+                    [
+                        50,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        51,
+                        "          Value: shared-postgres\n"
+                    ]
+                ],
+                "file_path": "/sg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "file_line_range": [
+                    33,
+                    51
+                ],
+                "resource": "AWS::RDS::DBInstance.SharedPostgres",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSEnhancedMonitorEnabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "shared-postgres"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_161",
+                "bc_check_id": "BC_AWS_IAM_65",
+                "check_name": "Ensure RDS database has IAM authentication enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/EnableIAMDatabaseAuthentication"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "  SharedPostgres:\n"
+                    ],
+                    [
+                        34,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        35,
+                        "    Properties:\n"
+                    ],
+                    [
+                        36,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        37,
+                        "      EngineVersion: '15.4'\n"
+                    ],
+                    [
+                        38,
+                        "      DBInstanceClass: db.t3.medium\n"
+                    ],
+                    [
+                        39,
+                        "      AllocatedStorage: 50\n"
+                    ],
+                    [
+                        40,
+                        "      DBName: sharedapp\n"
+                    ],
+                    [
+                        41,
+                        "      MasterUsername: appuser\n"
+                    ],
+                    [
+                        42,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        43,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        44,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        45,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        46,
+                        "      DBSubnetGroupName: !Ref SharedDbSubnetGroup\n"
+                    ],
+                    [
+                        47,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        48,
+                        "        - !Ref PostgresSecurityGroup\n"
+                    ],
+                    [
+                        49,
+                        "      Tags:\n"
+                    ],
+                    [
+                        50,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        51,
+                        "          Value: shared-postgres\n"
+                    ]
+                ],
+                "file_path": "/sg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "file_line_range": [
+                    33,
+                    51
+                ],
+                "resource": "AWS::RDS::DBInstance.SharedPostgres",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSIAMAuthentication",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "shared-postgres"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-rds-database-has-iam-authentication-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_157",
+                "bc_check_id": "BC_AWS_GENERAL_73",
+                "check_name": "Ensure that RDS instances have Multi-AZ enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/MultiAZ"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "  SharedPostgres:\n"
+                    ],
+                    [
+                        34,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        35,
+                        "    Properties:\n"
+                    ],
+                    [
+                        36,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        37,
+                        "      EngineVersion: '15.4'\n"
+                    ],
+                    [
+                        38,
+                        "      DBInstanceClass: db.t3.medium\n"
+                    ],
+                    [
+                        39,
+                        "      AllocatedStorage: 50\n"
+                    ],
+                    [
+                        40,
+                        "      DBName: sharedapp\n"
+                    ],
+                    [
+                        41,
+                        "      MasterUsername: appuser\n"
+                    ],
+                    [
+                        42,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        43,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        44,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        45,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        46,
+                        "      DBSubnetGroupName: !Ref SharedDbSubnetGroup\n"
+                    ],
+                    [
+                        47,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        48,
+                        "        - !Ref PostgresSecurityGroup\n"
+                    ],
+                    [
+                        49,
+                        "      Tags:\n"
+                    ],
+                    [
+                        50,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        51,
+                        "          Value: shared-postgres\n"
+                    ]
+                ],
+                "file_path": "/sg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "file_line_range": [
+                    33,
+                    51
+                ],
+                "resource": "AWS::RDS::DBInstance.SharedPostgres",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSMultiAZEnabled",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "shared-postgres"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-73",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_17",
+                "bc_check_id": "BC_AWS_PUBLIC_2",
+                "check_name": "Ensure all data stored in RDS is not publicly accessible",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/PubliclyAccessible"
+                    ]
+                },
+                "code_block": [
+                    [
+                        33,
+                        "  SharedPostgres:\n"
+                    ],
+                    [
+                        34,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        35,
+                        "    Properties:\n"
+                    ],
+                    [
+                        36,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        37,
+                        "      EngineVersion: '15.4'\n"
+                    ],
+                    [
+                        38,
+                        "      DBInstanceClass: db.t3.medium\n"
+                    ],
+                    [
+                        39,
+                        "      AllocatedStorage: 50\n"
+                    ],
+                    [
+                        40,
+                        "      DBName: sharedapp\n"
+                    ],
+                    [
+                        41,
+                        "      MasterUsername: appuser\n"
+                    ],
+                    [
+                        42,
+                        "      MasterUserPassword: !Ref DBPassword\n"
+                    ],
+                    [
+                        43,
+                        "      StorageEncrypted: false\n"
+                    ],
+                    [
+                        44,
+                        "      PubliclyAccessible: true\n"
+                    ],
+                    [
+                        45,
+                        "      BackupRetentionPeriod: 0\n"
+                    ],
+                    [
+                        46,
+                        "      DBSubnetGroupName: !Ref SharedDbSubnetGroup\n"
+                    ],
+                    [
+                        47,
+                        "      VPCSecurityGroups:\n"
+                    ],
+                    [
+                        48,
+                        "        - !Ref PostgresSecurityGroup\n"
+                    ],
+                    [
+                        49,
+                        "      Tags:\n"
+                    ],
+                    [
+                        50,
+                        "        - Key: Name\n"
+                    ],
+                    [
+                        51,
+                        "          Value: shared-postgres\n"
+                    ]
+                ],
+                "file_path": "/sg.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c019/sg.yaml",
+                "file_line_range": [
+                    33,
+                    51
+                ],
+                "resource": "AWS::RDS::DBInstance.SharedPostgres",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSPubliclyAccessible",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "shared-postgres"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/public-policies/public-2",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 5,
+        "failed": 5,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 3,
+        "checkov_version": "3.3.26"
+    }
+}

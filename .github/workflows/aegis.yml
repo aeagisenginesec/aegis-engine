@@ -1,0 +1,539 @@
+# Aegis IaC Security Gate — production CI workflow for this repository.
+#
+# What it does (every pull request + every push to main):
+#   1. Builds Aegis from source (never the committed binary — a checked-in
+#      binary can go stale vs HEAD; see docs/audit/08_CI_INTEGRATION_REPORT.md).
+#   2. Scans the tree twice (once as JSON for the gate + completeness audit,
+#      once as SARIF for code scanning). Aegis is deterministic, so both runs
+#      see the same findings; the JSON run owns the gate verdict.
+#   3. Audits scan completeness: failed files, skipped files, and a
+#      coverage cross-check of on-disk IaC files vs the scanner's completeness
+#      list (catches files the scanner silently drops, e.g. files over the
+#      --max-file-size cap, which never appear in completeness at all).
+#   4. Splits SARIF into <=5,000-result chunks (GitHub ignores results past
+#      5,000 per upload and rejects uploads past 25,000) and uploads each
+#      chunk under its own category.
+#   5. Posts/updates one PR comment with the verdict + summary.
+#
+# Exit-code contract (from `aegis --help`, verified in CI item 4):
+#   0  scan clean (or findings below --fail-on)
+#   1  findings at or above --fail-on threshold (gate FAIL)
+#   2  operational error (bad flag, unreadable target, --strict parse failure)
+#   3  incomplete scan (audit: failed or silently-missing files) — Aegis itself
+#      has no such code; this workflow synthesises it so an incomplete scan can
+#      never masquerade as a pass.
+#
+# Scanner limitations this workflow works around (all verified locally,
+# docs/audit/14_CI_CD_VALIDATION.md):
+#   - `*.tfvars` has no adapter: an unscanned .tfvars file is reported as
+#     FAILED, so --strict would fail every repo that contains one. The scan
+#     therefore uses --exclude="*.tfvars" (tfvars carry values, not resources;
+#     no rule reads them) and the audit still lists them as skipped.
+#   - `*.tf.json` (Terraform JSON syntax) is treated as a generic manifest and
+#     SKIPPED without analysis — even under --strict. The audit calls this out
+#     explicitly; do not assume .tf.json files are covered.
+#   - Files over --max-file-size (default 10 MiB) are silently absent from
+#     completeness under default flags. The coverage cross-check fails the job
+#     if any on-disk IaC file is missing from completeness.
+#   - SARIF output carries NO completeness/diagnostic data (runs[].tool +
+#     runs[].results only). The JSON artifact is the completeness evidence —
+#     always keep aegis.json, not just the SARIF.
+#   - `--color` does not exist (the binary rejects it with exit 2). Do not add it.
+#
+# Baseline: commit an accepted-findings baseline to .aegis/baseline.json
+# (generate with `aegis scan . --baseline-out=.aegis/baseline.json`, review it,
+# commit it). When the file exists the scan automatically applies
+# --baseline=.aegis/baseline.json and only NEW findings can fail the gate.
+# Refresh via the `update_baseline` workflow_dispatch input (opens a PR).
+name: Aegis IaC Security Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, master, mission/**]
+  workflow_dispatch:
+    inputs:
+      fail_on:
+        description: "Severity threshold that fails the gate"
+        type: choice
+        options: [critical, high, medium, low]
+        default: high
+      update_baseline:
+        description: "Regenerate .aegis/baseline.json and open a refresh PR (no gate run)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aegis-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FAIL_ON: ${{ inputs.fail_on || 'high' }}
+  # .tfvars has no Aegis adapter (see header): exclude it so --strict does not
+  # fail on repos that contain variable files. Excluded files are still listed
+  # as `skipped` in scan completeness.
+  AEGIS_EXCLUDE: "*.tfvars"
+  BASELINE_FILE: .aegis/baseline.json
+
+jobs:
+  scan:
+    name: Scan + gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      chunks: ${{ steps.gate.outputs.chunks }}
+      sarif_exists: ${{ steps.gate.outputs.sarif_exists }}
+      scan_exit: ${{ steps.gate.outputs.scan_exit }}
+      baseline: ${{ steps.gate.outputs.baseline }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+
+      - name: Build Aegis from source
+        run: |
+          go build -o aegis ./cmd/aegis
+          ./aegis doctor
+
+      - name: Scan, audit completeness, split SARIF (gate)
+        id: gate
+        # No errexit: exit codes are the gate signal and are handled below.
+        # (GitHub runs steps with `bash -e`; without `set +e` a scan exit of
+        # 1 would abort this step before the audit/split/outputs run.)
+        run: |
+          set +e -u -o pipefail
+
+          BASELINE_ARGS=""
+          if [ -f "${BASELINE_FILE}" ]; then
+            echo "Using baseline ${BASELINE_FILE}"
+            BASELINE_ARGS="--baseline=${BASELINE_FILE}"
+          else
+            echo "No baseline at ${BASELINE_FILE}; all findings are live."
+          fi
+
+          # --- Scan 1 (JSON): owns the gate verdict + completeness evidence.
+          # shellcheck disable=SC2086
+          ./aegis scan . --format=json --fail-on="${FAIL_ON}" --strict \
+            --exclude="${AEGIS_EXCLUDE}" ${BASELINE_ARGS} > aegis.json
+          SCAN_EXIT=$?
+          echo "JSON scan exit: ${SCAN_EXIT}"
+
+          # --- Scan 2 (SARIF): for code-scanning upload. Deterministic, so it
+          # must agree with scan 1; a 2 here is an operational error.
+          # shellcheck disable=SC2086
+          ./aegis scan . --format=sarif --fail-on="${FAIL_ON}" --strict \
+            --exclude="${AEGIS_EXCLUDE}" ${BASELINE_ARGS} > aegis.sarif
+          SARIF_EXIT=$?
+          echo "SARIF scan exit: ${SARIF_EXIT}"
+
+          # --- Completeness + coverage audit (exit 0 complete, 3 incomplete).
+          cat > /tmp/aegis_audit.py <<'PYEOF'
+          #!/usr/bin/env python3
+          """Aegis CI completeness + coverage audit.
+
+          Reads the JSON scan output, fails on incomplete scans, warns on
+          skipped files, and cross-checks on-disk IaC files against the
+          scanner's completeness list (catches files the scanner silently
+          drops, e.g. files over --max-file-size, which never appear in
+          completeness at all).
+
+          Usage: aegis_audit.py <aegis.json> <scan-dir> <own-output-file>...
+          Exit 0: scan complete. Exit 3: incomplete scan (failed/missing files).
+          Exit 2: usage / unreadable JSON.
+          Writes audit.json + aegis-summary.md next to aegis.json.
+          """
+          import json
+          import os
+          import sys
+          from collections import Counter
+
+          SCAN_EXTS = (".tf", ".tf.json", ".tfvars", ".yaml", ".yml", ".json", ".bicep")
+          SKIP_DIRS = {".git", "node_modules"}
+
+
+          def is_iac(path):
+              name = os.path.basename(path)
+              if name == "Dockerfile" or name.startswith("Dockerfile."):
+                  return True
+              return name.lower().endswith(SCAN_EXTS)
+
+
+          def main():
+              if len(sys.argv) < 3:
+                  print("usage: aegis_audit.py <aegis.json> <scan-dir> [own-output...]",
+                        file=sys.stderr)
+                  return 2
+              json_path, scan_dir = sys.argv[1], sys.argv[2]
+              own_outputs = {os.path.abspath(os.path.join(scan_dir, p))
+                             for p in sys.argv[3:]}
+              try:
+                  with open(json_path) as f:
+                      doc = json.load(f)
+              except (OSError, json.JSONDecodeError) as e:
+                  print(f"AUDIT ERROR: cannot read {json_path}: {e}", file=sys.stderr)
+                  return 2
+
+              findings = doc.get("findings", [])
+              by_sev = dict(Counter(f.get("severity", "?") for f in findings))
+              comp = doc.get("scan_completeness", {}) or {}
+              entries = comp.get("files", []) or []
+              failed = [e for e in entries if e.get("status") == "failed"]
+              skipped = [e for e in entries if e.get("status") == "skipped"]
+
+              # Coverage cross-check: every IaC file on disk must appear in
+              # completeness (as parsed, skipped, or failed). A file that is
+              # missing was silently dropped by the scanner — fail loudly.
+              seen = set()
+              for e in entries:
+                  p = e.get("path", "")
+                  seen.add(os.path.abspath(p if os.path.isabs(p)
+                                           else os.path.join(scan_dir, p)))
+              missing = []
+              for root, dirs, files in os.walk(scan_dir):
+                  dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+                  for name in files:
+                      full = os.path.abspath(os.path.join(root, name))
+                      if full in own_outputs:
+                          continue
+                      if is_iac(full) and full not in seen:
+                          missing.append(os.path.relpath(full, scan_dir))
+
+              tfjson_skipped = any(e.get("path", "").endswith(".tf.json")
+                                   for e in skipped)
+              complete = not failed and not missing
+              audit = {
+                  "findings_total": len(findings),
+                  "by_severity": by_sev,
+                  "files_discovered": comp.get("files_discovered"),
+                  "files_parsed": comp.get("files_parsed"),
+                  "files_skipped": comp.get("files_skipped"),
+                  "files_failed": comp.get("files_failed"),
+                  "failed_files": [{"path": e.get("path"), "reason": e.get("reason", "")}
+                                   for e in failed],
+                  "skipped_files": [{"path": e.get("path"), "reason": e.get("reason", "")}
+                                    for e in skipped],
+                  "missing_files": sorted(missing),
+                  "tfjson_skipped": tfjson_skipped,
+                  "complete": complete,
+              }
+              with open("audit.json", "w") as f:
+                  json.dump(audit, f, indent=2, sort_keys=True)
+
+              lines = []
+              lines.append("## Aegis scan summary\n")
+              lines.append(f"- Findings: **{len(findings)}** "
+                           f"(critical={by_sev.get('critical', 0)}, "
+                           f"high={by_sev.get('high', 0)}, "
+                           f"medium={by_sev.get('medium', 0)}, "
+                           f"low={by_sev.get('low', 0)}, "
+                           f"info={by_sev.get('info', 0)})")
+              lines.append(f"- Files: discovered={comp.get('files_discovered')}, "
+                           f"parsed={comp.get('files_parsed')}, "
+                           f"skipped={comp.get('files_skipped')}, "
+                           f"failed={comp.get('files_failed')}")
+              lines.append(f"- Scan complete: **{'yes' if complete else 'NO — see below'}**")
+              if failed:
+                  lines.append("\n### Failed files (parse errors)")
+                  for e in failed:
+                      lines.append(f"- `{e.get('path')}` — {e.get('reason', '')}")
+              if missing:
+                  lines.append("\n### Silently missing files (on disk, absent from completeness)")
+                  lines.append("These received ZERO coverage and the scanner did not "
+                               "report them. Common cause: file over --max-file-size.")
+                  for m in missing:
+                      lines.append(f"- `{m}`")
+              if skipped:
+                  lines.append(f"\n### Skipped files ({len(skipped)})")
+                  for e in skipped[:20]:
+                      lines.append(f"- `{e.get('path')}` — {e.get('reason', '')}")
+                  if len(skipped) > 20:
+                      lines.append(f"- …and {len(skipped) - 20} more (see audit.json)")
+              if tfjson_skipped:
+                  lines.append("\n> ⚠️ `.tf.json` (Terraform JSON syntax) files were "
+                               "SKIPPED: Aegis treats them as generic manifests and "
+                               "does not analyse them. Convert to `.tf` for coverage.")
+              with open("aegis-summary.md", "w") as f:
+                  f.write("\n".join(lines) + "\n")
+              print("\n".join(lines))
+              if not complete:
+                  print("AUDIT: INCOMPLETE SCAN — failing the job (exit 3)",
+                        file=sys.stderr)
+                  return 3
+              print("AUDIT: scan complete")
+              return 0
+
+          if __name__ == "__main__":
+              sys.exit(main())
+          PYEOF
+          python3 /tmp/aegis_audit.py aegis.json . \
+            aegis.json aegis.sarif aegis-summary.md audit.json \
+            aegis-chunk-01.sarif
+          AUDIT_EXIT=$?
+          echo "Audit exit: ${AUDIT_EXIT}"
+
+          # --- Split SARIF into <=5,000-result chunks for code scanning.
+          cat > /tmp/aegis_split.py <<'PYEOF'
+          #!/usr/bin/env python3
+          """Split an Aegis SARIF file into <=5,000-result chunks.
+
+          GitHub code scanning ignores results past 5,000 per upload and
+          rejects uploads past 25,000 results, so a large scan must be
+          uploaded as one chunk per category. Each chunk is a complete SARIF
+          document carrying only the rules its results reference.
+
+          Usage: aegis_split.py <aegis.sarif>
+          Writes aegis-chunk-NN.sarif files + chunks.json manifest
+          [{file, category}] to stdout. Exit 2 on missing/invalid input.
+          """
+          import copy
+          import json
+          import sys
+
+          CHUNK_SIZE = 5000
+
+
+          def main():
+              if len(sys.argv) < 2:
+                  print("usage: aegis_split.py <aegis.sarif>", file=sys.stderr)
+                  return 2
+              try:
+                  with open(sys.argv[1]) as f:
+                      doc = json.load(f)
+              except (OSError, json.JSONDecodeError) as e:
+                  print(f"SPLIT ERROR: cannot read {sys.argv[1]}: {e}", file=sys.stderr)
+                  return 2
+              runs = doc.get("runs") or []
+              if not runs:
+                  print("SPLIT ERROR: SARIF has no runs", file=sys.stderr)
+                  return 2
+              # Aegis emits exactly one run; split that run's results.
+              run = runs[0]
+              results = run.get("results") or []
+              rules = (run.get("tool", {}).get("driver", {}).get("rules") or [])
+              chunks = []
+              for i in range(0, max(len(results), 1), CHUNK_SIZE):
+                  part = results[i:i + CHUNK_SIZE]
+                  rule_ids = {r.get("ruleId") for r in part}
+                  chunk = copy.deepcopy(doc)
+                  chunk_run = copy.deepcopy(run)
+                  driver = chunk_run.setdefault("tool", {}).setdefault("driver", {})
+                  driver["rules"] = [r for r in rules if r.get("id") in rule_ids]
+                  chunk_run["results"] = part
+                  chunk["runs"] = [chunk_run]
+                  fname = f"aegis-chunk-{len(chunks) + 1:02d}.sarif"
+                  with open(fname, "w") as f:
+                      json.dump(chunk, f)
+                  chunks.append({"file": fname,
+                                 "category": f"aegis-chunk-{len(chunks) + 1:02d}"})
+              with open("chunks.json", "w") as f:
+                  json.dump(chunks, f)
+              print(f"SPLIT: {len(results)} results -> {len(chunks)} chunk(s)")
+              return 0
+
+          if __name__ == "__main__":
+              sys.exit(main())
+          PYEOF
+          python3 /tmp/aegis_split.py aegis.sarif
+          SPLIT_EXIT=$?
+          echo "Split exit: ${SPLIT_EXIT}"
+
+          # --- Gate decision. Never let an incomplete/failed scan pass as clean.
+          echo "scan_exit=${SCAN_EXIT}" >> "${GITHUB_OUTPUT}"
+          if [ -s aegis.sarif ]; then
+            echo "sarif_exists=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "sarif_exists=false" >> "${GITHUB_OUTPUT}"
+          fi
+          if [ -f "${BASELINE_FILE}" ]; then
+            echo "baseline=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "baseline=false" >> "${GITHUB_OUTPUT}"
+          fi
+          if [ -f chunks.json ]; then
+            echo "chunks=$(python3 -c 'import json; print(json.dumps(json.load(open("chunks.json"))))')" >> "${GITHUB_OUTPUT}"
+          else
+            echo 'chunks=[]' >> "${GITHUB_OUTPUT}"
+          fi
+          cat aegis-summary.md >> "${GITHUB_STEP_SUMMARY}"
+          if [ "${SCAN_EXIT}" -eq 2 ] || [ "${SARIF_EXIT}" -eq 2 ] || [ "${SPLIT_EXIT}" -ne 0 ]; then
+            echo "GATE: operational error (exit 2)"
+            exit 2
+          fi
+          if [ "${AUDIT_EXIT}" -ne 0 ]; then
+            echo "GATE: incomplete scan (exit ${AUDIT_EXIT})"
+            exit "${AUDIT_EXIT}"
+          fi
+          echo "GATE: scan exit ${SCAN_EXIT} (0 clean, 1 findings at/above threshold)"
+          exit "${SCAN_EXIT}"
+
+      - name: Upload scan artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: aegis-results
+          path: |
+            aegis.json
+            aegis.sarif
+            aegis-chunk-*.sarif
+            chunks.json
+            audit.json
+            aegis-summary.md
+          retention-days: 30
+          if-no-files-found: warn
+
+  upload-sarif:
+    name: Archive SARIF chunks
+    needs: scan
+    # Runs even when the gate fails (findings must still be preserved);
+    # skipped only if the scan job produced no SARIF at all.
+    #
+    # Why artifacts instead of code scanning: this repository is
+    # private, and GitHub's code-scanning API rejects SARIF uploads on
+    # private repos without GitHub Advanced Security ("Resource not
+    # accessible by integration" — observed on run #1, 2026-10-21,
+    # despite security-events: write being granted). The chunks are
+    # therefore archived as run artifacts. If the repo goes public or
+    # GHAS is enabled, restore the upload by replacing the archive step
+    # with github/codeql-action/upload-sarif@v4 using sarif_file =
+    # matrix.chunk.file and category = matrix.chunk.category (one
+    # category per chunk, as the split already provides).
+    if: always() && needs.scan.outputs.sarif_exists == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.scan.outputs.chunks) }}
+    steps:
+      - name: Download scan artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: aegis-results
+
+      - name: Archive SARIF chunk
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sarif-${{ matrix.chunk.category }}
+          path: ${{ matrix.chunk.file }}
+          retention-days: 30
+          if-no-files-found: error
+
+  pr-comment:
+    name: PR summary comment
+    needs: scan
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Download scan artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: aegis-results
+
+      - name: Upsert PR comment
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- aegis-scan-summary -->';
+            let body;
+            try {
+              const audit = JSON.parse(fs.readFileSync('audit.json', 'utf8'));
+              const summary = fs.readFileSync('aegis-summary.md', 'utf8');
+              const verdict = audit.complete
+                ? (process.env.SCAN_EXIT === '0'
+                    ? '✅ PASS — no findings at/above the threshold'
+                    : '❌ FAIL — findings at/above the threshold')
+                : '⛔ INCOMPLETE SCAN — fix parse/coverage errors and re-run';
+              body = `${marker}\n## Aegis IaC gate — ${verdict}\n\n${summary}\n\n` +
+                `[Full JSON + SARIF artifacts](https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}) · ` +
+                `fail-on: \`${process.env.FAIL_ON}\` · baseline: ` +
+                (process.env.BASELINE === 'true' ? '`.aegis/baseline.json`' : 'none');
+            } catch (e) {
+              body = `${marker}\n## Aegis IaC gate — ⚠️ scan produced no summary\n\nThe scan job did not emit audit.json (operational error, exit 2?). ` +
+                `See the [workflow run](https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}).`;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
+        env:
+          SCAN_EXIT: ${{ needs.scan.outputs.scan_exit }}
+          FAIL_ON: ${{ env.FAIL_ON }}
+          BASELINE: ${{ needs.scan.outputs.baseline }}
+
+  baseline-refresh:
+    name: Refresh baseline (manual)
+    if: github.event_name == 'workflow_dispatch' && inputs.update_baseline == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+
+      - name: Build Aegis from source
+        run: go build -o aegis ./cmd/aegis
+
+      - name: Regenerate baseline
+        run: |
+          set -euo pipefail
+          mkdir -p .aegis
+          SCAN_EXIT=0
+          ./aegis scan . --format=json --strict \
+            --exclude="${AEGIS_EXCLUDE}" \
+            --baseline-out=.aegis/baseline.json > /tmp/baseline-scan.json || SCAN_EXIT=$?
+          if [ "${SCAN_EXIT}" -eq 2 ]; then
+            echo "Baseline regeneration hit an operational error (exit 2)."
+            exit 2
+          fi
+          echo "Baseline written (scan exit ${SCAN_EXIT}: findings are expected)."
+
+      - name: Open baseline-refresh PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH="chore/aegis-baseline-refresh-${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${BRANCH}"
+          git add .aegis/baseline.json
+          git commit -m "chore(aegis): refresh baseline" || {
+            echo "No baseline changes to commit."
+            exit 0
+          }
+          git push origin "${BRANCH}"
+          gh pr create --title "chore(aegis): refresh baseline" \
+            --body "Regenerated \`.aegis/baseline.json\` via the Aegis gate workflow. Review the diff: every added fingerprint is a finding the gate will stop flagging." \
+            --base main --head "${BRANCH}"

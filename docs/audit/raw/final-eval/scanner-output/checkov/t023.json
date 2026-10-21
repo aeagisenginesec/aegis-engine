@@ -1,0 +1,303 @@
+{
+    "check_type": "terraform",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_26",
+                "bc_check_id": "BC_AWS_GENERAL_15",
+                "check_name": "Ensure all data stored in the SNS topic is encrypted",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "kms_master_key_id"
+                    ]
+                },
+                "code_block": [
+                    [
+                        14,
+                        "resource \"aws_sns_topic\" \"orders\" {\n"
+                    ],
+                    [
+                        15,
+                        "  name                        = \"orders.fifo\"\n"
+                    ],
+                    [
+                        16,
+                        "  fifo_topic                  = true\n"
+                    ],
+                    [
+                        17,
+                        "  content_based_deduplication = true\n"
+                    ],
+                    [
+                        18,
+                        "\n"
+                    ],
+                    [
+                        19,
+                        "  tags = {\n"
+                    ],
+                    [
+                        20,
+                        "    Name = \"orders-fifo\"\n"
+                    ],
+                    [
+                        21,
+                        "  }\n"
+                    ],
+                    [
+                        22,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t023/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t023/main.tf",
+                "file_line_range": [
+                    14,
+                    22
+                ],
+                "resource": "aws_sns_topic.orders",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SNSTopicEncryption",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "orders-fifo"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-15",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t023/main.tf"
+            },
+            {
+                "check_id": "CKV_AWS_169",
+                "bc_check_id": "BC_AWS_GENERAL_92",
+                "check_name": "Ensure SNS topic policy is not public by only allowing specific services or principals to access it",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "policy"
+                    ]
+                },
+                "code_block": [
+                    [
+                        24,
+                        "resource \"aws_sns_topic_policy\" \"open\" {\n"
+                    ],
+                    [
+                        25,
+                        "  arn = aws_sns_topic.orders.arn\n"
+                    ],
+                    [
+                        26,
+                        "\n"
+                    ],
+                    [
+                        27,
+                        "  policy = jsonencode({\n"
+                    ],
+                    [
+                        28,
+                        "    Version = \"2012-10-17\"\n"
+                    ],
+                    [
+                        29,
+                        "    Statement = [\n"
+                    ],
+                    [
+                        30,
+                        "      {\n"
+                    ],
+                    [
+                        31,
+                        "        Sid       = \"AllowAnyPublisher\"\n"
+                    ],
+                    [
+                        32,
+                        "        Effect    = \"Allow\"\n"
+                    ],
+                    [
+                        33,
+                        "        Principal = \"*\"\n"
+                    ],
+                    [
+                        34,
+                        "        Action    = \"sns:Publish\"\n"
+                    ],
+                    [
+                        35,
+                        "        Resource  = aws_sns_topic.orders.arn\n"
+                    ],
+                    [
+                        36,
+                        "      }\n"
+                    ],
+                    [
+                        37,
+                        "    ]\n"
+                    ],
+                    [
+                        38,
+                        "  })\n"
+                    ],
+                    [
+                        39,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t023/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t023/main.tf",
+                "file_line_range": [
+                    24,
+                    39
+                ],
+                "resource": "aws_sns_topic_policy.open",
+                "evaluations": null,
+                "check_class": "checkov.terraform.checks.resource.aws.SNSTopicPolicyAnyPrincipal",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/ensure-sns-topic-policy-is-not-public-by-only-allowing-specific-services-or-principals-to-access-it",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t023/main.tf"
+            },
+            {
+                "check_id": "CKV2_AWS_73",
+                "bc_check_id": "BC_AWS_GENERAL_266",
+                "check_name": "Ensure AWS SQS uses CMK not AWS default keys for encryption",
+                "check_result": {
+                    "result": "FAILED",
+                    "entity": {
+                        "aws_sqs_queue": {
+                            "orders": {
+                                "__end_line__": 50,
+                                "__start_line__": 41,
+                                "content_based_deduplication": [
+                                    true
+                                ],
+                                "fifo_queue": [
+                                    true
+                                ],
+                                "kms_master_key_id": [
+                                    "alias/aws/sqs"
+                                ],
+                                "name": [
+                                    "orders.fifo"
+                                ],
+                                "tags": [
+                                    {
+                                        "Name": "orders-fifo"
+                                    }
+                                ],
+                                "__address__": "aws_sqs_queue.orders",
+                                "__provider_address__": "aws.default"
+                            }
+                        }
+                    },
+                    "evaluated_keys": [
+                        "kms_master_key_id"
+                    ]
+                },
+                "code_block": [
+                    [
+                        41,
+                        "resource \"aws_sqs_queue\" \"orders\" {\n"
+                    ],
+                    [
+                        42,
+                        "  name                        = \"orders.fifo\"\n"
+                    ],
+                    [
+                        43,
+                        "  fifo_queue                  = true\n"
+                    ],
+                    [
+                        44,
+                        "  content_based_deduplication = true\n"
+                    ],
+                    [
+                        45,
+                        "  kms_master_key_id           = \"alias/aws/sqs\"\n"
+                    ],
+                    [
+                        46,
+                        "\n"
+                    ],
+                    [
+                        47,
+                        "  tags = {\n"
+                    ],
+                    [
+                        48,
+                        "    Name = \"orders-fifo\"\n"
+                    ],
+                    [
+                        49,
+                        "  }\n"
+                    ],
+                    [
+                        50,
+                        "}\n"
+                    ]
+                ],
+                "file_path": "/main.tf",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t023/main.tf",
+                "repo_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t023/main.tf",
+                "file_line_range": [
+                    41,
+                    50
+                ],
+                "resource": "aws_sqs_queue.orders",
+                "evaluations": null,
+                "check_class": "checkov.common.graph.checks_infra.base_check",
+                "fixed_definition": null,
+                "entity_tags": {
+                    "Name": "orders-fifo"
+                },
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/bc-aws-2-73",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/t023/main.tf"
+            }
+        ]
+    },
+    "summary": {
+        "passed": 4,
+        "failed": 3,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 3,
+        "checkov_version": "3.3.26"
+    }
+}

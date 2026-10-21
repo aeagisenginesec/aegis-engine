@@ -20,20 +20,20 @@ import (
 // Azure21Rules returns data platform & AI services rules in ID order.
 func Azure21Rules() []ir.Rule {
 	return []ir.Rule{
-		adfNoCMK{},           // AEGIS-AZURE-299
-		adfNoManagedVNet{},   // AEGIS-AZURE-300
-		synapseDataExfil{},   // AEGIS-AZURE-301
-		synapseNoCMK{},       // AEGIS-AZURE-302
-		databricksInfraEnc{},  // AEGIS-AZURE-303
+		adfNoCMK{},             // AEGIS-AZURE-299
+		adfNoManagedVNet{},     // AEGIS-AZURE-300
+		synapseDataExfil{},     // AEGIS-AZURE-301
+		synapseNoCMK{},         // AEGIS-AZURE-302
+		databricksInfraEnc{},   // AEGIS-AZURE-303
 		databricksNoPublicIP{}, // AEGIS-AZURE-304
-		iotHubNoIPFilter{},   // AEGIS-AZURE-305
-		iotHubSAPRegWrite{},  // AEGIS-AZURE-306
-		iotHubMinTLS{},       // AEGIS-AZURE-307
-		iotHubFallbackRoute{}, // AEGIS-AZURE-308
-		cognitiveNetACLs{},   // AEGIS-AZURE-309
-		cognitiveNoCMK{},     // AEGIS-AZURE-310
-		cognitiveLocalAuth{}, // AEGIS-AZURE-311
-		redisPublicNet{},      // AEGIS-AZURE-313
+		iotHubNoIPFilter{},     // AEGIS-AZURE-305
+		iotHubSAPRegWrite{},    // AEGIS-AZURE-306
+		iotHubMinTLS{},         // AEGIS-AZURE-307
+		iotHubFallbackRoute{},  // AEGIS-AZURE-308
+		cognitiveNetACLs{},     // AEGIS-AZURE-309
+		cognitiveNoCMK{},       // AEGIS-AZURE-310
+		cognitiveLocalAuth{},   // AEGIS-AZURE-311
+		redisPublicNet{},       // AEGIS-AZURE-313
 	}
 }
 
@@ -194,6 +194,7 @@ func (s databricksInfraEnc) Check(r ir.Resource) []ir.Finding {
 	return absentInsecureFalse(s, r, "infrastructure_encryption_enabled",
 		"infrastructure_encryption_enabled = true")
 }
+
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-304: Databricks workspace with public IPs on clusters
@@ -218,7 +219,10 @@ func (databricksNoPublicIP) AppliesTo(resType string) bool {
 
 func (s databricksNoPublicIP) Check(r ir.Resource) []ir.Finding {
 	cps, span, present, known := getBlocks(r, "custom_parameters")
-	if !present || !known {
+	if present && !known {
+		return nil // unresolved: cannot decide
+	}
+	if !present {
 		return []ir.Finding{mkFinding(s, r, "custom_parameters",
 			evidenceSpan(span, r.Span), "absent (public IPs by default)",
 			"custom_parameters { no_public_ip = true }")}
@@ -237,6 +241,7 @@ func (s databricksNoPublicIP) Check(r ir.Resource) []ir.Finding {
 	}
 	return nil
 }
+
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-305: IoT Hub without IP filter
 // ---------------------------------------------------------------------------
@@ -315,6 +320,7 @@ func (s iotHubSAPRegWrite) Check(r ir.Resource) []ir.Finding {
 	return []ir.Finding{mkFinding(s, r, "registry_write", span,
 		"true", "registry_write = false")}
 }
+
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-307: IoT Hub below TLS 1.2
 // ---------------------------------------------------------------------------
@@ -426,6 +432,7 @@ func (s cognitiveNetACLs) Check(r ir.Resource) []ir.Finding {
 	}
 	return nil
 }
+
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-310: Cognitive Services without customer-managed key
 // ---------------------------------------------------------------------------
@@ -513,8 +520,8 @@ func (redisPublicNet) Title() string {
 }
 func (redisPublicNet) Description() string {
 	return "azurerm_redis_cache with public_network_access_enabled " +
-		"(the provider default) exposes the cache endpoint over the " +
-		"public internet. Disable it and use private endpoints."
+		"= true exposes the cache endpoint over the public internet. " +
+		"Disable it and use private endpoints."
 }
 func (redisPublicNet) Severity() ir.Severity { return ir.SeverityHigh }
 
@@ -522,6 +529,18 @@ func (redisPublicNet) AppliesTo(resType string) bool {
 	return resType == "azurerm_redis_cache"
 }
 
+// Check fires only on explicit enablement. The previous absence-based
+// firing (provider default: enabled) produced false positives in the
+// R5 blind eval on Redis caches with no public-exposure evidence
+// (Pulumi/ARM resources where the property was simply unset, e.g.
+// r5107/r5113/r5114), while every true firing carried the property
+// explicitly. The rule now requires the enablement it claims.
 func (s redisPublicNet) Check(r ir.Resource) []ir.Finding {
-	return publicNetOpen(s, r, "public_network_access_enabled", "azurerm_redis_cache")
+	open, span, present, known := getBool(r, "public_network_access_enabled")
+	if !present || !known || !open {
+		return nil
+	}
+	return []ir.Finding{mkFinding(s, r, "public_network_access_enabled",
+		evidenceSpan(span, r.Span), "true",
+		"public_network_access_enabled = false on azurerm_redis_cache")}
 }

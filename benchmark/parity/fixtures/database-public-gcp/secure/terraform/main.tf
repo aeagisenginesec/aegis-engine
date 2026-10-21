@@ -8,6 +8,7 @@ resource "google_sql_database_instance" "db" {
 
     ip_configuration {
       ipv4_enabled = false
+      require_ssl  = true
     }
   }
 }

@@ -40,6 +40,9 @@ type Adapter struct{}
 // Compile-time check that Adapter satisfies ir.Adapter.
 var _ ir.Adapter = Adapter{}
 
+// Compile-time check that Adapter satisfies ir.ContentSniffer.
+var _ ir.ContentSniffer = Adapter{}
+
 // New constructs the adapter.
 func New() *Adapter { return &Adapter{} }
 
@@ -56,16 +59,29 @@ func (Adapter) Handles(path string) bool {
 	if strings.HasSuffix(strings.ToLower(path), ".plan.json") {
 		return false
 	}
-	return looksLikeARM(path)
-}
-
-// looksLikeARM reads the file (bounded) and checks for the ARM deployment
-// template schema marker.
-func looksLikeARM(path string) bool {
 	src, err := readBounded(path, 64<<10) // 64 KiB is plenty for a $schema scan
 	if err != nil {
 		return false
 	}
+	return Adapter{}.HandlesContent(path, src)
+}
+
+// HandlesContent is the content-aware form of Handles for pipelines that
+// already hold the file bytes (in-memory API scans): same extension gate,
+// sniffing the provided bytes instead of reading from disk.
+func (Adapter) HandlesContent(path string, src []byte) bool {
+	if !strings.EqualFold(filepath.Ext(path), ".json") {
+		return false
+	}
+	// .plan.json belongs to the planjson adapter.
+	if strings.HasSuffix(strings.ToLower(path), ".plan.json") {
+		return false
+	}
+	return looksLikeARMContent(src)
+}
+
+// looksLikeARMContent checks bytes for the ARM deployment template marker.
+func looksLikeARMContent(src []byte) bool {
 	// The canonical marker: "$schema": ".../deploymentTemplate.json#"
 	// Case-insensitive match on the schema file name.
 	lower := strings.ToLower(string(src))
@@ -203,6 +219,9 @@ func BuildResources(path string, tmpl map[string]any) ([]ir.Resource, []ir.Diagn
 		out = append(out, res)
 	}
 	out = foldBlobServices(out, t)
+	out = foldQueueServices(out, t)
+	out = translateStorageBlocks(out)
+	out = translateVNetDNS(out)
 	return out, t.diags
 }
 
@@ -221,7 +240,29 @@ func (t *template) staticValue(v any) ir.Value {
 type evalCtx struct {
 	t        *template
 	varStack map[string]bool // cycle guard for variables
+	warned   map[string]bool // dedup for one-time expression warnings
+	// varCache memoizes fully-evaluated variable values. Without it,
+	// variables('vN') chains re-evaluate exponentially: v22 = concat of
+	// v21 twice costs 2^22 leaf evaluations (~18 s from a 2 KB file).
+	// Cache entries are only stored when the evaluation saw no cycle-
+	// guard hit (cycleHits unchanged across it): a value computed while
+	// a dependency was in-progress embeds an Unknown that a later,
+	// cycle-free evaluation would not produce (coalesce() skips
+	// Unknowns), so poisoned evaluations must never be cached.
+	varCache map[string]ir.Value
+	// cycleHits counts variables() lookups that hit an in-progress
+	// variable (the cycle guard). A counter, not a bool: a sticky bool
+	// would make later evaluations' "unchanged" snapshots pass even
+	// when a NEW hit occurred during them, caching poisoned values.
+	cycleHits int
 }
+
+// maxConstructedString caps strings built by concat/join/format/replace.
+// Variable chains can otherwise double a string per level (v30 = 8 GiB
+// from a 2 KB file) even with memoization, because the final string
+// itself is that large. Literals from the file are unaffected (bounded
+// by the file-size cap); only constructed amplification is capped.
+const maxConstructedString = 1 << 20
 
 // eval resolves a raw template value to an ir.Value. Strings in [..] are
 // ARM expressions; everything else converts literally.
@@ -279,6 +320,20 @@ func unescapeBracket(s string) (string, bool) {
 }
 
 // evalExpression parses and evaluates one ARM [...] expression.
+// warnOnce emits a template diagnostic at most once per key within one
+// template parse, so a repeated unsupported expression does not flood
+// the scan output.
+func (c *evalCtx) warnOnce(key, msg string) {
+	if c.warned == nil {
+		c.warned = map[string]bool{}
+	}
+	if c.warned[key] {
+		return
+	}
+	c.warned[key] = true
+	c.t.diag("warning", msg)
+}
+
 func (c *evalCtx) evalExpression(s string) ir.Value {
 	span := c.t.span
 	if lit, ok := unescapeBracket(s); ok {
@@ -287,6 +342,10 @@ func (c *evalCtx) evalExpression(s string) ir.Value {
 	inner := strings.TrimSpace(s[1 : len(s)-1])
 	v, ok := c.parseExpr(inner)
 	if !ok {
+		// Unparsable expression: the value is Unknown, and the failure
+		// must be visible — a property guarded by an unparsed
+		// expression would otherwise fail silently.
+		c.warnOnce("expr:"+s, fmt.Sprintf("arm: could not parse expression %q; treated as unknown", s))
 		return ir.UnknownValue(span)
 	}
 	return v
@@ -492,10 +551,8 @@ func (p *exprParser) applySuffixes(v ir.Value) (ir.Value, bool) {
 		default:
 			return v, true
 		}
-		if !v.Known {
-			// Once unknown, remaining suffixes keep it unknown.
-			// Still need to consume them for parse validity.
-		}
+		// Once unknown (!v.Known), remaining suffixes keep it
+		// unknown; they are still consumed for parse validity.
 	}
 }
 
@@ -549,7 +606,11 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 		if !ok {
 			return unknown
 		}
+		if cached, ok := c.varCache[n]; ok {
+			return cached
+		}
 		if c.varStack[n] {
+			c.cycleHits++
 			return unknown // cycle
 		}
 		raw, ok := c.t.variables[n]
@@ -557,8 +618,16 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 			return unknown
 		}
 		c.varStack[n] = true
+		before := c.cycleHits
 		v := c.eval(raw)
 		delete(c.varStack, n)
+		// Cache only cycle-free evaluations (see varCache doc).
+		if c.cycleHits == before {
+			if c.varCache == nil {
+				c.varCache = map[string]ir.Value{}
+			}
+			c.varCache[n] = v
+		}
 		return v
 	case "concat":
 		var b strings.Builder
@@ -566,6 +635,9 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 			s, ok := a.AsString()
 			if !ok {
 				return unknown
+			}
+			if b.Len()+len(s) > maxConstructedString {
+				return unknown // constructed string would exceed cap
 			}
 			b.WriteString(s)
 		}
@@ -582,6 +654,9 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 				return unknown
 			}
 			out = strings.ReplaceAll(out, "{"+strconv.Itoa(i-1)+"}", s)
+			if len(out) > maxConstructedString {
+				return unknown // constructed string would exceed cap
+			}
 		}
 		return ir.Value{Raw: out, Known: true, Span: span}
 	case "tolower":
@@ -602,6 +677,12 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 		neu, ok3 := strArg(2)
 		if !ok1 || !ok2 || !ok3 {
 			return unknown
+		}
+		// ReplaceAll can amplify (short old -> long neu, many matches).
+		if old != "" && len(neu) > len(old) {
+			if n := strings.Count(s, old); n > 0 && len(s)+n*(len(neu)-len(old)) > maxConstructedString {
+				return unknown
+			}
 		}
 		return ir.Value{Raw: strings.ReplaceAll(s, old, neu), Known: true, Span: span}
 	case "string":
@@ -753,10 +834,15 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 			return unknown
 		}
 		parts := make([]string, 0, len(l))
+		total := len(sep) * len(l)
 		for _, e := range l {
 			s, ok := e.AsString()
 			if !ok {
 				return unknown
+			}
+			total += len(s)
+			if total > maxConstructedString {
+				return unknown // constructed string would exceed cap
 			}
 			parts = append(parts, s)
 		}
@@ -784,16 +870,124 @@ func (c *evalCtx) callFunc(name string, args []ir.Value) ir.Value {
 			return ir.Value{Raw: string(tv[len(tv)-1]), Known: true, Span: span}
 		}
 		return unknown
+	case "resourceid":
+		// resourceId('Microsoft.Storage/storageAccounts', 'name', ...)
+		// with all-literal arguments statically names a resource in
+		// this template, even though the full Azure resource ID
+		// string cannot be constructed here: surface it as a
+		// reference so cross-resource rules (private-endpoint
+		// linkage, role assignments) can correlate the resources.
+		// Non-literal arguments stay Unknown.
+		if len(args) < 2 {
+			return unknown
+		}
+		strs := make([]string, len(args))
+		for i, a := range args {
+			s, ok := a.Raw.(string)
+			if !a.Known || !ok {
+				return unknown
+			}
+			strs[i] = s
+		}
+		tfType, _ := normalizeType(strs[0])
+		return ir.Value{
+			Ref:   tfType + "." + strs[len(strs)-1] + ".id",
+			Known: true, Span: span,
+		}
 	}
-	// Everything else (resourceId, reference, listKeys, subscription(),
+	// Everything else (reference, listKeys, subscription(),
 	// resourceGroup(), if(), equals(), guid(), uniqueString(), utcNow(),
 	// providers(), extensionResourceId(), ...) -> explicit Unknown.
+	// Known-but-unresolvable functions stay silent: their values
+	// genuinely cannot be decided statically. A function name outside
+	// the known ARM set is almost certainly a typo or an unsupported
+	// construct, so it gets one warning per template parse — otherwise
+	// a property guarded by it would fail silently.
+	if !knownARMFunction(name) {
+		c.warnOnce("func:"+strings.ToLower(name), fmt.Sprintf("arm: unknown template function %q; treated as unknown", name))
+	}
 	return unknown
+}
+
+// knownARMFunction reports whether name is a function from the ARM
+// template function reference (implemented or known-unresolvable). The
+// list is generous: a false warning on a real function is noise, while
+// a missed typo is a silent miss. list* is matched by prefix: the
+// family (listKeys, listAccountSas, listSecrets, ...) is too large to
+// enumerate.
+func knownARMFunction(name string) bool {
+	lower := strings.ToLower(name)
+	if strings.HasPrefix(lower, "list") {
+		return true
+	}
+	switch lower {
+	case "abs", "add", "and", "array", "base64", "base64tojson",
+		"base64tostring", "builduri", "cidrhost", "cidrsubnet", "ceil",
+		"copyindex", "datauri", "datauritostring", "datetimeadd",
+		"datetimefromepoch", "datetimetoepoch", "datetimetoutc",
+		"deployment", "div", "empty", "environment", "equals",
+		"extensionconfig", "extensionresourceid", "field", "filter",
+		"flatten", "float", "floor", "format", "greater",
+		"greaterorequals", "groupby", "guid", "if", "indexof",
+		"intersection", "items", "json", "lambda", "lambdavariables",
+		"less", "lessorequals", "managementgroup",
+		"managementgroupresourceid", "map", "mod", "mul",
+		"newguid", "not", "objectkeys", "or", "parsecidr", "pickzones",
+		"providers", "range", "reduce", "reference", "references",
+		"resourcegroup", "resourceid", "reverse", "shallowmerge", "sort",
+		"sub", "subscription", "subscriptionresourceid", "tenant",
+		"tenantresourceid", "toobject", "tryget",
+		"tryindexfromend", "utcnow", "uniquestring", "uri",
+		"uricomponent", "uricomponenttostring",
+		// Bicep-side functions / placeholders that legitimately reach
+		// the ARM evaluator: getSecret (Key Vault references),
+		// load* (compile-time file loads), and "unknown" — the Bicep
+		// adapter's own Unknown placeholder ([unknown()]).
+		"getsecret", "loadtextcontent", "loadfileasbase64",
+		"loadjsoncontent", "loadyamlcontent", "unknown":
+		return true
+	}
+	return false
 }
 
 // mapResource converts one ARM resource's fields into IR attributes:
 // top-level fields (location, tags, kind, sku, identity) plus the
 // properties object flattened with per-type renames.
+// mergeDdosProtectionPlan combines the two ARM VNet properties
+// enableDdosProtection (bool) and ddosProtectionPlan ({id}) into the
+// single Terraform block value ddos_protection_plan { id, enable }
+// the Azure rules read. Only the facts present in the template are
+// carried: no enable is invented when the template omits the flag.
+// Returns false when neither property is present.
+func mergeDdosProtectionPlan(c *evalCtx, props map[string]any) (ir.Value, bool) {
+	planRaw, hasPlan := props["ddosProtectionPlan"]
+	enRaw, hasEnable := props["enableDdosProtection"]
+	if !hasPlan && !hasEnable {
+		return ir.Value{}, false
+	}
+	fields := map[string]ir.Value{}
+	span := c.t.span
+	if hasPlan {
+		pv := c.eval(planRaw)
+		span = pv.Span
+		if m, ok := pv.AsMap(); ok {
+			for k, fv := range m {
+				fields[snake(k)] = fv
+			}
+		} else {
+			// Non-object plan value (bare reference): keep it as id.
+			fields["id"] = pv
+		}
+	}
+	if hasEnable {
+		fields["enable"] = c.eval(enRaw)
+	}
+	if len(fields) == 0 {
+		return ir.Value{}, false
+	}
+	return ir.Value{Raw: fields, Known: true, Span: span}, true
+}
+
 func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 	span := c.t.span
 	if v, ok := rdm["location"]; ok {
@@ -828,8 +1022,24 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 		props = map[string]any{}
 	}
 	renames := propertyRenames(res.Type)
+	// Merge the ARM VNet DDoS pair into the single TF block
+	// ddos_protection_plan { id, enable } BEFORE the generic loop.
+	// The two ARM properties collide on that one IR name —
+	// enableDdosProtection via the rename table, ddosProtectionPlan
+	// via snake_case — and the loop's first-writer-wins guard made
+	// the winner a coin flip on Go map iteration order: when the
+	// plan object won, AEGIS-AZURE-057 saw a block with no enable
+	// and fired on compliant VNets (intermittent compliant-gate
+	// failure); when the bare bool won, the rule could not decide
+	// at all. Pre-setting the merged block makes the loop skip both
+	// source keys deterministically.
+	if res.Type == "azurerm_virtual_network" {
+		if merged, ok := mergeDdosProtectionPlan(c, props); ok {
+			res.Attributes["ddos_protection_plan"] = merged
+		}
+	}
 	for k, v := range props {
-		name := k
+		var name string
 		if rn, ok := renames[k]; ok {
 			name = rn
 		} else {
@@ -858,18 +1068,51 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 			}
 		}
 	}
-	// Convert ARM publicNetworkAccess enum to boolean for mssql servers.
-	// ARM uses "Enabled"/"Disabled", TF rules expect a boolean.
-	if res.Type == "azurerm_mssql_server" {
-		if v, ok := res.Attributes["public_network_access_enabled"]; ok {
-			if s, ok := v.AsString(); ok {
-				switch s {
-				case "Enabled":
-					res.Attributes["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
-				case "Disabled":
-					res.Attributes["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
+	// Promote nested network.publicNetworkAccess to the top level for
+	// PostgreSQL flexible servers. ARM nests it as
+	// properties.network.publicNetworkAccess, while the TF attribute
+	// (and AEGIS-AZURE-169) is the flat public_network_access_enabled.
+	// Without this promotion the property was invisible to the rules,
+	// so AZURE-169 fired on "absence" even when the template explicitly
+	// set publicNetworkAccess to "Disabled" (17 of 18 R5 firings).
+	if res.Type == "azurerm_postgresql_flexible_server" {
+		_, hasEnabled := res.Attributes["public_network_access_enabled"]
+		_, hasPlain := res.Attributes["public_network_access"]
+		if !hasEnabled && !hasPlain {
+			if net, ok := res.Attributes["network"]; ok {
+				if m, ok := net.AsMap(); ok {
+					for ek, ev := range m {
+						if ek == "publicNetworkAccess" || ek == "public_network_access" {
+							res.Attributes["public_network_access"] = ev
+							break
+						}
+					}
 				}
 			}
+		}
+	}
+	// Convert the ARM publicNetworkAccess enum to the boolean
+	// public_network_access_enabled the TF rules expect, for every
+	// resource type (this used to be mssql-only, which left the string
+	// enum unreadable — getBool reports it unknown — for all other
+	// types). ARM uses "Enabled"/"Disabled". Depending on the
+	// per-type renames, the property lands either under
+	// public_network_access_enabled (renamed types) or under the
+	// generic snake_case name public_network_access.
+	for _, key := range []string{"public_network_access_enabled", "public_network_access"} {
+		v, ok := res.Attributes[key]
+		if !ok {
+			continue
+		}
+		s, ok := v.AsString()
+		if !ok {
+			continue
+		}
+		switch s {
+		case "Enabled":
+			res.Attributes["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
+		case "Disabled":
+			res.Attributes["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
 		}
 	}
 	// Flatten ARM securityRules: [{name, properties: {access, ...}}]
@@ -889,7 +1132,7 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 							if pm, ok := pv.AsMap(); ok {
 								renames := propertyRenames("azurerm_network_security_rule")
 								for pk, pv2 := range pm {
-									name := pk
+									var name string
 									if rn, ok := renames[pk]; ok {
 										name = rn
 									} else {
@@ -909,7 +1152,76 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 			}
 		}
 	}
+	// Normalize Key Vault network_acls: ARM ipRules: [{value: ...}] and
+	// virtualNetworkRules: [{id: ...}] become the plain string lists
+	// ip_rules / virtual_network_subnet_ids the Azure rules read (TF
+	// shape). Without this, AZURE-205 fires a false positive on vaults
+	// that do define IP/VNet allowances.
+	if res.Type == "azurerm_key_vault" {
+		if nacls, ok := res.Attributes["network_acls"]; ok {
+			if m, ok := nacls.AsMap(); ok {
+				if ip, ok := m["ip_rules"]; ok {
+					if unwrapped, ok := unwrapSingleKeyList(ip, "value"); ok {
+						m["ip_rules"] = unwrapped
+					}
+				}
+				if vr, ok := m["virtual_network_rules"]; ok {
+					if unwrapped, ok := unwrapSingleKeyList(vr, "id"); ok {
+						m["virtual_network_subnet_ids"] = unwrapped
+						delete(m, "virtual_network_rules")
+					}
+				}
+			}
+		}
+	}
 	_ = span
+}
+
+// unwrapSingleKeyList converts a list of single-key maps [{key: x}, ...]
+// to a plain list [x, ...]. Non-map elements or maps without the key
+// abort the conversion.
+func unwrapSingleKeyList(v ir.Value, key string) (ir.Value, bool) {
+	lst, ok := v.AsList()
+	if !ok {
+		return ir.Value{}, false
+	}
+	out := make([]ir.Value, 0, len(lst))
+	for _, e := range lst {
+		em, ok := e.AsMap()
+		if !ok {
+			return ir.Value{}, false
+		}
+		ev, ok := em[key]
+		if !ok || !ev.Known {
+			return ir.Value{}, false
+		}
+		out = append(out, ev)
+	}
+	return ir.Value{Raw: out, Known: true, Span: v.Span}, true
+}
+
+// findStorageAccount locates the (single) parent storage account in
+// the partially built output slice. Folds search the OUTPUT slice, not
+// the input: indices into the input go stale as soon as an earlier
+// child is dropped, which mis-folded (or panicked on) templates whose
+// service children sit between two accounts.
+func findStorageAccount(out []ir.Resource, name string) *ir.Resource {
+	for i := range out {
+		if out[i].Type == "azurerm_storage_account" && out[i].Name == name {
+			return &out[i]
+		}
+	}
+	return nil
+}
+
+// objectField extracts one field from an object-valued attribute.
+func objectField(v ir.Value, key string) (ir.Value, bool) {
+	m, ok := v.Raw.(map[string]ir.Value)
+	if !ok {
+		return ir.Value{}, false
+	}
+	f, ok := m[key]
+	return f, ok
 }
 
 // foldBlobServices merges Microsoft.Storage/storageAccounts/blobServices
@@ -917,13 +1229,9 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 // block, so the blob-property rules apply. The child resource itself is
 // dropped (it carries no independent security surface).
 func foldBlobServices(resources []ir.Resource, t *template) []ir.Resource {
-	byAddr := map[string]int{}
-	for i, r := range resources {
-		byAddr[r.Type+"\x00"+r.Name] = i
-	}
 	var out []ir.Resource
 	for _, r := range resources {
-		if r.Type != "arm_Microsoft.Storage/storageAccounts/blobServices" &&
+		if r.Type != "arm_microsoft_storage_storageaccounts_blobservices" &&
 			r.Type != "azurerm_storage_account_blob_services" {
 			out = append(out, r)
 			continue
@@ -933,12 +1241,11 @@ func foldBlobServices(resources []ir.Resource, t *template) []ir.Resource {
 		if idx := strings.Index(parentName, "/"); idx >= 0 {
 			parentName = parentName[:idx]
 		}
-		pi, ok := byAddr["azurerm_storage_account\x00"+parentName]
-		if !ok {
+		parent := findStorageAccount(out, parentName)
+		if parent == nil {
 			out = append(out, r) // orphan: keep as-is
 			continue
 		}
-		parent := &out[pi]
 		blk := map[string]ir.Value{}
 		if v, ok := r.Attributes["is_versioning_enabled"]; ok {
 			blk["versioning_enabled"] = v
@@ -946,8 +1253,18 @@ func foldBlobServices(resources []ir.Resource, t *template) []ir.Resource {
 		if v, ok := r.Attributes["delete_retention_policy"]; ok {
 			blk["delete_retention_policy"] = v
 		}
+		if v, ok := r.Attributes["container_delete_retention_policy"]; ok {
+			blk["container_delete_retention_policy"] = v
+		}
 		if v, ok := r.Attributes["change_feed_enabled"]; ok {
 			blk["change_feed_enabled"] = v
+		}
+		// ARM spells it changeFeed { enabled = ... }: an object, not a
+		// flat change_feed_enabled boolean.
+		if v, ok := r.Attributes["change_feed"]; ok {
+			if en, eok := objectField(v, "enabled"); eok {
+				blk["change_feed_enabled"] = en
+			}
 		}
 		if len(blk) > 0 {
 			parent.Attributes["blob_properties"] = ir.Value{
@@ -958,6 +1275,158 @@ func foldBlobServices(resources []ir.Resource, t *template) []ir.Resource {
 		// child dropped
 	}
 	return out
+}
+
+// foldQueueServices merges Microsoft.Storage/storageAccounts/queueServices
+// child resources into their parent storage account as a queue_properties
+// block (analytics logging + metrics), mirroring foldBlobServices. The
+// child resource itself is dropped.
+func foldQueueServices(resources []ir.Resource, t *template) []ir.Resource {
+	var out []ir.Resource
+	for _, r := range resources {
+		if r.Type != "arm_microsoft_storage_storageaccounts_queueservices" &&
+			r.Type != "azurerm_storage_account_queue_services" {
+			out = append(out, r)
+			continue
+		}
+		// Child name is "<account>/default": find the parent account.
+		parentName := r.Name
+		if idx := strings.Index(parentName, "/"); idx >= 0 {
+			parentName = parentName[:idx]
+		}
+		parent := findStorageAccount(out, parentName)
+		if parent == nil {
+			out = append(out, r) // orphan: keep as-is
+			continue
+		}
+		blk := map[string]ir.Value{}
+		if v, ok := r.Attributes["analytics_logging"]; ok {
+			log := map[string]ir.Value{}
+			for _, k := range []string{"delete", "read", "write", "version"} {
+				if fv, fok := objectField(v, k); fok {
+					log[k] = fv
+				}
+			}
+			if rp, rok := objectField(v, "retention_policy"); rok {
+				if d, dok := objectField(rp, "days"); dok {
+					log["retention_policy_days"] = d
+				}
+			}
+			if len(log) > 0 {
+				blk["logging"] = ir.Value{
+					Raw:   []ir.Value{{Raw: log, Known: true, Span: v.Span}},
+					Known: true, Span: v.Span,
+				}
+			}
+		}
+		if v, ok := r.Attributes["hour_metrics"]; ok {
+			blk["hour_metrics"] = ir.Value{
+				Raw:   []ir.Value{v},
+				Known: true, Span: v.Span,
+			}
+		}
+		if v, ok := r.Attributes["minute_metrics"]; ok {
+			blk["minute_metrics"] = ir.Value{
+				Raw:   []ir.Value{v},
+				Known: true, Span: v.Span,
+			}
+		}
+		if len(blk) > 0 {
+			parent.Attributes["queue_properties"] = ir.Value{
+				Raw:   []ir.Value{{Raw: blk, Known: true, Span: r.Span}},
+				Known: true, Span: r.Span,
+			}
+		}
+		// child dropped
+	}
+	return out
+}
+
+// translateStorageBlocks reshapes two storage-account property groups
+// into the Terraform block forms the rule pack reads:
+//
+//   - properties.sasPolicy (a single object attribute) becomes a
+//     sas_policy block, with sasExpirationPeriod renamed to the
+//     Terraform field expiration_period.
+//   - properties.encryption.keyVaultProperties becomes a
+//     customer_managed_key block carrying the versioned key URL.
+//
+// Object-valued attributes are invisible to block-based rules, so
+// without this the controls are present but unreadable — FPs
+// AZURE-125 and AZURE-033 on correctly configured accounts.
+func translateStorageBlocks(resources []ir.Resource) []ir.Resource {
+	for i := range resources {
+		r := &resources[i]
+		if r.Type != "azurerm_storage_account" {
+			continue
+		}
+		if v, ok := r.Attributes["sas_policy"]; ok {
+			if obj, isObj := v.Raw.(map[string]ir.Value); isObj {
+				blk := map[string]ir.Value{}
+				if ep, eok := obj["sas_expiration_period"]; eok {
+					blk["expiration_period"] = ep
+				}
+				if ea, eok := obj["expiration_action"]; eok {
+					blk["expiration_action"] = ea
+				}
+				if len(blk) > 0 {
+					r.Attributes["sas_policy"] = ir.Value{
+						Raw:   []ir.Value{{Raw: blk, Known: true, Span: v.Span}},
+						Known: true, Span: v.Span,
+					}
+				}
+			}
+		}
+		if v, ok := r.Attributes["encryption"]; ok {
+			if kv, kok := objectField(v, "key_vault_properties"); kok {
+				name, nok := objectField(kv, "key_name")
+				uri, uok := objectField(kv, "key_vault_uri")
+				if nok && uok {
+					ns, _ := name.AsString()
+					us, _ := uri.AsString()
+					if ns != "" && us != "" {
+						keyID := strings.TrimSuffix(us, "/") + "/keys/" + ns
+						if ver, vok := objectField(kv, "key_version"); vok {
+							if vs, _ := ver.AsString(); vs != "" {
+								keyID += "/" + vs
+							}
+						}
+						blk := map[string]ir.Value{
+							"key_vault_key_id": {Raw: keyID, Known: true, Span: kv.Span},
+						}
+						r.Attributes["customer_managed_key"] = ir.Value{
+							Raw:   []ir.Value{{Raw: blk, Known: true, Span: kv.Span}},
+							Known: true, Span: kv.Span,
+						}
+					}
+				}
+			}
+		}
+	}
+	return resources
+}
+
+// translateVNetDNS flattens properties.dhcpOptions.dnsServers onto
+// the azurerm_virtual_network resource as the flat dns_servers list
+// the rule pack reads (Terraform models it as a top-level attribute).
+// Without this, VNets with custom DNS configured still drew
+// AZURE-058 ("without custom DNS servers").
+func translateVNetDNS(resources []ir.Resource) []ir.Resource {
+	for i := range resources {
+		r := &resources[i]
+		if r.Type != "azurerm_virtual_network" {
+			continue
+		}
+		if _, ok := r.Attributes["dns_servers"]; ok {
+			continue
+		}
+		if v, ok := r.Attributes["dhcp_options"]; ok {
+			if ds, dok := objectField(v, "dns_servers"); dok {
+				r.Attributes["dns_servers"] = ds
+			}
+		}
+	}
+	return resources
 }
 
 // snake converts camelCase to snake_case. Runs of capitals are treated as
@@ -971,7 +1440,7 @@ func snake(s string) string {
 				prev := runes[i-1]
 				nextIsLower := i+1 < len(runes) && runes[i+1] >= 'a' && runes[i+1] <= 'z'
 				if (prev >= 'a' && prev <= 'z') || (prev >= '0' && prev <= '9') ||
-					(!(prev >= 'a' && prev <= 'z') && nextIsLower) {
+					((prev < 'a' || prev > 'z') && nextIsLower) {
 					b.WriteByte('_')
 				}
 			}

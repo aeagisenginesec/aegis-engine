@@ -1,0 +1,26 @@
+name: r4109-stack
+runtime: yaml
+description: Pulumi stack (template layout)
+template:
+  resources:
+    dbServer:
+      type: azure-native:sql:Server
+      properties:
+        serverName: sql-8c878b
+        resourceGroupName: rg-db
+        location: westeurope
+        administratorLogin: sqladmin
+        version: "12.0"
+
+    dataAccount:
+      type: azure-native:storage:StorageAccount
+      properties:
+        accountName: data8c878b
+        resourceGroupName: rg-data
+        location: westeurope
+        kind: StorageV2
+        sku:
+          name: Standard_LRS
+        allowBlobPublicAccess: true
+        minimumTlsVersion: TLS1_2
+        supportsHttpsTrafficOnly: true

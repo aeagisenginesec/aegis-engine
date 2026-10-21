@@ -1,0 +1,403 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1328b-e887-79d3-988c-91502ae4d93c",
+  "CreatedAt": "2026-10-12T23:56:32.263648061Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval/corpus/c028",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "azuredeploy.json",
+      "Class": "config",
+      "Type": "azure-arm",
+      "MisconfSummary": {
+        "Successes": 2,
+        "Failures": 3
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Azure ARM Security Check",
+          "ID": "AZU-0013",
+          "Title": "Key vault should have the network acl block specified",
+          "Description": "Network ACLs allow you to reduce your exposure to risk by limiting what can access your key vault.\n\nThe default action of the Network ACL should be set to deny for when IPs are not matched. Azure services can be allowed to bypass.\n",
+          "Message": "Vault network ACL does not block access by default.",
+          "Namespace": "builtin.azure.keyvault.azure0013",
+          "Query": "data.builtin.azure.keyvault.azure0013.deny",
+          "Resolution": "Set a network ACL for the key vault",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0013",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/key-vault/general/network-security",
+            "https://avd.aquasec.com/misconfig/azu-0013"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Azure",
+            "Service": "keyvault",
+            "StartLine": 26,
+            "EndLine": 53,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "{",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "{",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 26,
+                  "Content": "    {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 27,
+                  "Content": "      \"type\": \"Microsoft.KeyVault/vaults\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"type\"\u001b[0m: \u001b[38;5;37m\"Microsoft.KeyVault/vaults\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 28,
+                  "Content": "      \"apiVersion\": \"2023-07-01\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"apiVersion\"\u001b[0m: \u001b[38;5;37m\"2023-07-01\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 29,
+                  "Content": "      \"name\": \"[parameters('vaultName')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"name\"\u001b[0m: \u001b[38;5;37m\"[parameters('vaultName')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 30,
+                  "Content": "      \"location\": \"[parameters('location')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"location\"\u001b[0m: \u001b[38;5;37m\"[parameters('location')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 31,
+                  "Content": "      \"properties\": {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"properties\"\u001b[0m: {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 32,
+                  "Content": "        \"tenantId\": \"[parameters('tenantId')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"tenantId\"\u001b[0m: \u001b[38;5;37m\"[parameters('tenantId')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 33,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 73
+                }
+              },
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {}
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Azure ARM Security Check",
+          "ID": "AZU-0016",
+          "Title": "Key vault should have purge protection enabled",
+          "Description": "Purge protection is an optional Key Vault behavior and is not enabled by default.\n\nPurge protection can only be enabled once soft-delete is enabled. It can be turned on via CLI or PowerShell.\n",
+          "Message": "Vault does not have purge protection enabled.",
+          "Namespace": "builtin.azure.keyvault.azure0016",
+          "Query": "data.builtin.azure.keyvault.azure0016.deny",
+          "Resolution": "Enable purge protection for key vaults",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0016",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/key-vault/general/soft-delete-overview#purge-protection",
+            "https://avd.aquasec.com/misconfig/azu-0016"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Azure",
+            "Service": "keyvault",
+            "StartLine": 35,
+            "EndLine": 35,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "{",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "{",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 35,
+                  "Content": "        \"enablePurgeProtection\": false,",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;33m\"enablePurgeProtection\"\u001b[0m: \u001b[38;5;166mfalse\u001b[0m,",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 72,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 73,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "resources[0].properties",
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 31,
+                  "EndLine": 52
+                }
+              },
+              {
+                "Resource": "resources[0]",
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 26,
+                  "EndLine": 53
+                }
+              },
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 73
+                }
+              },
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {}
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Azure ARM Security Check",
+          "ID": "AZU-0017",
+          "Title": "Key Vault Secret should have an expiration date set",
+          "Description": "Expiration Date is an optional Key Vault Secret behavior and is not set by default.\n\nSet when the resource will be become inactive.\n",
+          "Message": "Secret should have an expiry date specified.",
+          "Namespace": "builtin.azure.keyvault.azure0017",
+          "Query": "data.builtin.azure.keyvault.azure0017.deny",
+          "Resolution": "Set an expiry for secrets",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/azu-0017",
+          "References": [
+            "https://docs.microsoft.com/en-us/azure/key-vault/secrets/about-secrets",
+            "https://avd.aquasec.com/misconfig/azu-0017"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Azure",
+            "Service": "keyvault",
+            "StartLine": 54,
+            "EndLine": 65,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "{",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "{",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 54,
+                  "Content": "    {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 55,
+                  "Content": "      \"type\": \"Microsoft.KeyVault/vaults/secrets\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"type\"\u001b[0m: \u001b[38;5;37m\"Microsoft.KeyVault/vaults/secrets\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 56,
+                  "Content": "      \"apiVersion\": \"2023-07-01\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"apiVersion\"\u001b[0m: \u001b[38;5;37m\"2023-07-01\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 57,
+                  "Content": "      \"name\": \"[concat(parameters('vaultName'), '/api-key')]\",",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"name\"\u001b[0m: \u001b[38;5;37m\"[concat(parameters('vaultName'), '/api-key')]\"\u001b[0m,",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 58,
+                  "Content": "      \"dependsOn\": [",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33m\"dependsOn\"\u001b[0m: [",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 59,
+                  "Content": "        \"[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        \u001b[38;5;37m\"[resourceId('Microsoft.KeyVault/vaults', parameters('vaultName'))]\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 60,
+                  "Content": "      ],",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      ],",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 61,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 73
+                }
+              },
+              {
+                "Filename": "azuredeploy.json",
+                "Location": {}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

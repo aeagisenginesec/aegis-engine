@@ -18,6 +18,8 @@
 package terraform
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -191,79 +193,473 @@ type ModuleCall struct {
 // Structural pre-validation (PreValidate) runs first: hopeless input
 // (binary garbage, UTF-16, oversize, truncated, absurdly nested) fails
 // fast with a clear hard error instead of a confusing parser diagnostic.
-// lenientParseConfig parses src as native HCL, with a targeted recovery
-// for single-line object constructors written without comma separators
-// (e.g. { Effect = "Allow" Action = "s3:GetObject" }). Some generators and
-// hand-written files omit the commas; the strict parser then reports
-// "Missing attribute separator" and silently drops the remaining items,
-// which mangles jsonencode() policy documents into empty statements.
+// lenientParseConfig parses src as native HCL, with targeted recovery
+// for separator omissions that make the strict parser drop attributes:
 //
-// Recovery only triggers on files the strict parser already rejects:
-// commas are inserted at the exact diagnostic positions and the source is
-// re-parsed, iterating because the parser reports only the first missing
-// separator per pass. If the repaired source parses cleanly it is used;
-// otherwise the original partial result is returned unchanged. This is
-// purely additive: files that parsed cleanly before are untouched.
-func lenientParseConfig(src []byte, path string) (*hcl.File, hcl.Diagnostics) {
+//   - Object constructors written without comma separators
+//     (e.g. { Effect = "Allow" Action = "s3:GetObject" }): the parser
+//     reports "Missing attribute separator"; a comma is inserted.
+//     Tuple constructors and function-call arguments without separators
+//     ("Missing item separator" / "Missing argument separator") are
+//     repaired the same way.
+//   - Multiple attributes on one line inside a block body
+//     (e.g. `resource "aws_s3_bucket" "pub" { bucket = "c1" acl = "public-read" }`
+//     or `engine = "postgres" instance_class = "db.t3.micro"`): the parser
+//     reports "Missing newline after argument" (multi-line block) or
+//     "Invalid single-argument block definition" (single-line block);
+//     a newline is inserted at the start of the offending attribute.
+//
+// Without recovery the parser silently drops every attribute after the
+// first on a line, so rules see e.g. an S3 bucket with no acl, an RDS
+// instance with no storage_encrypted, or a jsonencode() policy whose
+// statements lost Action/Resource. Recovery only triggers on files the
+// strict parser already rejects: separators are inserted at the exact
+// diagnostic positions and the source is re-parsed, iterating because
+// the parser reports only the first omission per pass. If the repaired
+// source parses cleanly it is used; otherwise the original partial result
+// is returned unchanged. This is purely additive: files that parsed
+// cleanly before are untouched, and genuinely broken files keep their
+// original diagnostics.
+func lenientParseConfig(src []byte, path string) (*hcl.File, hcl.Diagnostics, *lineMap) {
 	f, diags := hclsyntax.ParseConfig(src, path, hcl.Pos{Line: 1, Column: 1})
 	fixed := append([]byte(nil), src...)
 	// The parser reports only the first missing separator per pass, so
-	// iterate. Bound the loop: each pass must fix at least one position.
-	for i := 0; i < 32; i++ {
-		offsets := missingSeparatorOffsets(diags)
-		if len(offsets) == 0 {
+	// iterate. Each pass re-parses the whole file, so the loop is bounded
+	// two ways: an iteration cap and a cumulative-bytes budget. The old
+	// 256-iteration cap alone was too low — a 100-statement jsonencode()
+	// policy needs ~300 separator repairs, so recovery gave up and the
+	// file fell back to a partial parse that silently dropped the policy
+	// attribute (0 findings, file still marked "parsed") — while a bare
+	// iteration raise would let a 10 MiB file with thousands of omissions
+	// pay 1000+ full re-parses. The byte budget keeps small sloppy files
+	// recoverable and large pathological ones bounded.
+	repairedBytes := len(src)
+	for i := 0; i < 2048; i++ {
+		if repairedBytes > maxLenientRepairBytes {
 			break
 		}
-		// Insert commas back-to-front so earlier offsets stay valid.
-		for j := len(offsets) - 1; j >= 0; j-- {
-			off := offsets[j]
+		repairs := separatorRepairs(fixed, diags)
+		if len(repairs) == 0 {
+			break
+		}
+		// Insert repairs back-to-front so earlier offsets stay valid.
+		for j := len(repairs) - 1; j >= 0; j-- {
+			off := repairs[j].offset
 			if off < 0 || off > len(fixed) {
 				continue
 			}
-			fixed = append(fixed[:off:off], append([]byte{','}, fixed[off:]...)...)
+			del := repairs[j].del
+			if off+del > len(fixed) {
+				continue
+			}
+			ins := []byte{repairs[j].insert}
+			fixed = append(fixed[:off:off], append(ins, fixed[off+del:]...)...)
 		}
 		var diags2 hcl.Diagnostics
 		f, diags2 = hclsyntax.ParseConfig(fixed, path, hcl.Pos{Line: 1, Column: 1})
+		repairedBytes += len(fixed)
 		if !diags2.HasErrors() {
-			return f, diags2
+			// Repaired parse wins: positions are in repaired coordinates,
+			// so return the line map that translates them back to the
+			// original source (nil when nothing was repaired).
+			if bytes.Equal(fixed, src) {
+				return f, diags2, nil
+			}
+			return f, diags2, repairedLineMap(src, fixed)
 		}
 		diags = diags2
 	}
 	if diags.HasErrors() {
 		// Recovery failed: fall back to the original strict parse so
-		// behavior on unrecoverable files is unchanged.
+		// behavior on unrecoverable files is unchanged. Positions are
+		// already in original coordinates: no line map.
 		f, diags = hclsyntax.ParseConfig(src, path, hcl.Pos{Line: 1, Column: 1})
 	}
-	return f, diags
+	return f, diags, nil
 }
 
-// missingSeparatorOffsets returns the deduplicated, sorted byte offsets at
-// which the parser reported a missing attribute separator.
-func missingSeparatorOffsets(diags hcl.Diagnostics) []int {
-	seen := map[int]bool{}
-	var out []int
-	for _, d := range diags {
-		if d.Summary != "Missing attribute separator" {
+// lineMap translates positions in the repaired source (see
+// lenientParseConfig) back to positions in the original source. Repairs
+// only insert ',' (no line effect, but shifts later columns on the same
+// line by one), insert '\n' (splits a line), or replace ',' with '\n'
+// (splits a line), so every repaired line is a fragment of exactly one
+// original line — but a fragment after a split restarts at column 1 in
+// repaired coordinates while sitting mid-line in the original, so both
+// the original line and the original column of the fragment's first
+// byte are recorded, plus the fixed columns of inserted commas on each
+// line. Indexing is 1-based: origLine[fixedLine-1] is the original
+// line, colOff[fixedLine-1] the original column of that fixed line's
+// first byte. A position (L, C) in repaired coordinates maps to
+// (origLine[L-1], colOff[L-1]+C-1 minus inserted commas before C on
+// that line).
+type lineMap struct {
+	origLine  []int
+	colOff    []int
+	commaCols [][]int
+}
+
+// repairedLineMap aligns the repaired source against the original and
+// builds the line map. Returns nil when the two cannot be aligned
+// (defensive: callers treat nil as identity).
+func repairedLineMap(src, fixed []byte) *lineMap {
+	m := &lineMap{origLine: []int{1}, colOff: []int{1}, commaCols: [][]int{{}}}
+	srcLine, fixedLine := 1, 1
+	srcLineStart := 0   // byte offset of the current original line's first byte
+	fixedLineStart := 0 // byte offset of the current repaired line's first byte
+	i, j := 0, 0
+	for i < len(src) || j < len(fixed) {
+		if i < len(src) && j < len(fixed) && src[i] == fixed[j] {
+			if src[i] == '\n' {
+				srcLine++
+				srcLineStart = i + 1
+				fixedLine++
+				fixedLineStart = j + 1
+				m.origLine = append(m.origLine, srcLine)
+				m.colOff = append(m.colOff, 1)
+				m.commaCols = append(m.commaCols, []int{})
+			}
+			i++
+			j++
 			continue
 		}
+		if j < len(fixed) && fixed[j] == ',' {
+			// Inserted separator: no line effect, but shifts later
+			// columns on this line by one.
+			m.commaCols[fixedLine-1] = append(m.commaCols[fixedLine-1], j-fixedLineStart+1)
+			j++
+			continue
+		}
+		if j < len(fixed) && fixed[j] == '\n' && i < len(src) && src[i] == ',' {
+			// ',' replaced by '\n': the next fragment starts at src byte i+1.
+			fixedLine++
+			fixedLineStart = j + 1
+			m.origLine = append(m.origLine, srcLine)
+			m.colOff = append(m.colOff, (i+1)-srcLineStart+1)
+			m.commaCols = append(m.commaCols, []int{})
+			i++
+			j++
+			continue
+		}
+		if j < len(fixed) && fixed[j] == '\n' {
+			// Inserted '\n': the next fragment starts at src byte i.
+			fixedLine++
+			fixedLineStart = j + 1
+			m.origLine = append(m.origLine, srcLine)
+			m.colOff = append(m.colOff, i-srcLineStart+1)
+			m.commaCols = append(m.commaCols, []int{})
+			j++
+			continue
+		}
+		return nil // unexplainable mismatch: identity fallback
+	}
+	return m
+}
+
+// remapCol translates one column on one repaired line to original
+// coordinates.
+func (m *lineMap) remapCol(fixedLine, fixedCol int) int {
+	if fixedLine < 1 || fixedLine > len(m.origLine) {
+		return fixedCol
+	}
+	col := m.colOff[fixedLine-1] + fixedCol - 1
+	for _, cc := range m.commaCols[fixedLine-1] {
+		if cc < fixedCol {
+			col--
+		} else {
+			break
+		}
+	}
+	return col
+}
+
+// remap translates one span from repaired coordinates to original
+// coordinates. Spans outside the map (should not happen) pass through.
+func (m *lineMap) remap(s ir.Span) ir.Span {
+	if m == nil {
+		return s
+	}
+	if s.StartLine >= 1 && s.StartLine <= len(m.origLine) {
+		s.StartCol = m.remapCol(s.StartLine, s.StartCol)
+		s.StartLine = m.origLine[s.StartLine-1]
+	}
+	if s.EndLine >= 1 && s.EndLine <= len(m.origLine) {
+		s.EndCol = m.remapCol(s.EndLine, s.EndCol)
+		s.EndLine = m.origLine[s.EndLine-1]
+	}
+	return s
+}
+
+// remapValue translates every span inside a value (recursively) back to
+// original coordinates.
+func (m *lineMap) remapValue(v *ir.Value) {
+	if m == nil {
+		return
+	}
+	v.Span = m.remap(v.Span)
+	switch raw := v.Raw.(type) {
+	case []ir.Value:
+		for i := range raw {
+			m.remapValue(&raw[i])
+		}
+	case map[string]ir.Value:
+		for k, child := range raw {
+			m.remapValue(&child)
+			raw[k] = child
+		}
+	}
+}
+
+// remapResource translates every span of a resource back to original
+// coordinates.
+func (m *lineMap) remapResource(r *ir.Resource) {
+	if m == nil {
+		return
+	}
+	r.Span = m.remap(r.Span)
+	for k, v := range r.Attributes {
+		m.remapValue(&v)
+		r.Attributes[k] = v
+	}
+}
+
+// remapModule translates every span in a parsed module (resources,
+// synthetic resources, variables, locals, module calls, diagnostics)
+// back to original coordinates. No-op when m is nil.
+func (m *lineMap) remapModule(mod *Module, diags []ir.Diagnostic) {
+	if m == nil {
+		return
+	}
+	for i := range mod.Resources {
+		m.remapResource(&mod.Resources[i])
+	}
+	for i := range mod.SyntheticResources {
+		m.remapResource(&mod.SyntheticResources[i])
+	}
+	for k, v := range mod.Variables {
+		m.remapValue(&v.Default)
+		v.Span = m.remap(v.Span)
+		mod.Variables[k] = v
+	}
+	for k, v := range mod.Locals {
+		m.remapValue(&v)
+		mod.Locals[k] = v
+	}
+	for i := range mod.ModuleCalls {
+		mc := &mod.ModuleCalls[i]
+		mc.Span = m.remap(mc.Span)
+		for k, v := range mc.Inputs {
+			m.remapValue(&v)
+			mc.Inputs[k] = v
+		}
+	}
+	for i := range diags {
+		diags[i].Span = m.remap(diags[i].Span)
+	}
+}
+
+// maxLenientRepairBytes caps cumulative re-parsed bytes in
+// lenientParseConfig's repair loop (see there). 16 MiB: a 200-statement
+// sloppy policy needs ~7 MiB of re-parsing to recover, while a 117 KiB
+// file with 2000 sloppy statements aborts after ~136 iterations
+// (~11 s of re-parsing) instead of hanging; a 10 MiB file aborts after
+// ~2 iterations. Worst-case repair-loop time is bounded by ~16 MiB of
+// HCL re-parsing; scans of untrusted input should also use --timeout.
+const maxLenientRepairBytes = 16 << 20
+
+// separatorRepair is one separator insertion at a parser-reported offset.
+// del is the number of bytes to delete at offset before inserting
+// (0 for pure insertions; 1 for comma-to-newline conversions).
+type separatorRepair struct {
+	offset int
+	insert byte // ',' for object constructors, '\n' for block bodies
+	del    int
+}
+
+// separatorRepairs returns the deduplicated, sorted separator insertions
+// implied by the parser diagnostics. Diagnostics of any other kind yield
+// no repairs, which makes the caller fall back to the strict parse.
+//
+//   - "Missing attribute separator" (object constructor), "Missing item
+//     separator" (tuple constructor), "Missing argument separator"
+//     (function call): insert ',' at the start of the offending element.
+//     The item/argument cases were previously unhandled, so recovery
+//     stalled at the first comma-less tuple (e.g. a jsonencode() policy
+//     whose statements are space-separated) and fell back to a partial
+//     parse that dropped the attribute.
+//   - "Missing newline after argument" (block body): insert '\n' at the
+//     start of the offending attribute.
+//   - "Invalid single-argument block definition": an argument sharing a
+//     line with its block's '{' makes the block single-line, so a newline
+//     before the second attribute is NOT enough — the block must be
+//     opened onto its own line. Insert '\n' immediately after the '{'
+//     that opens the offending block (the first '{' on the diagnostic's
+//     line outside strings/comments). A later pass then splits the
+//     remaining same-line attributes with "Missing newline" repairs.
+func separatorRepairs(src []byte, diags hcl.Diagnostics) []separatorRepair {
+	seen := map[int]bool{}
+	var out []separatorRepair
+	addDel := func(off int, ins byte, del int) {
+		if off < 0 || off > len(src) || seen[off] {
+			return
+		}
+		seen[off] = true
+		out = append(out, separatorRepair{offset: off, insert: ins, del: del})
+	}
+	add := func(off int, ins byte) {
+		addDel(off, ins, 0)
+	}
+	for _, d := range diags {
 		if d.Subject == nil {
 			continue
 		}
-		off := d.Subject.Start.Byte
-		if !seen[off] {
-			seen[off] = true
-			out = append(out, off)
+		switch d.Summary {
+		case "Missing attribute separator", "Missing item separator", "Missing argument separator":
+			add(d.Subject.Start.Byte, ',')
+		case "Missing newline after argument":
+			add(d.Subject.Start.Byte, '\n')
+		case "Invalid single-argument block definition":
+			if off, ok := blockOpenBraceOffset(src, d.Subject.Start); ok {
+				add(off, '\n')
+				// Comma-separated single-line blocks (`allow {
+				// protocol = "tcp", ports = ["0-65535"] }`) are also
+				// invalid HCL: commas are not attribute separators in
+				// block bodies. A newline after '{' alone leaves the
+				// commas in place, so the next parse still errors, the
+				// repair loop stalls, and recovery falls back to the
+				// strict partial parse that keeps only the FIRST
+				// argument — silently dropping ports, http_tokens,
+				// image size/type, and every other second-and-later
+				// argument. Convert each top-level comma on the line
+				// to a newline so every argument is recovered.
+				for _, coff := range topLevelCommasOnLine(src, off) {
+					addDel(coff, '\n', 1)
+				}
+			} else {
+				add(d.Subject.Start.Byte, '\n')
+			}
+		default:
+			continue
 		}
 	}
-	sort.Ints(out)
+	sort.Slice(out, func(i, j int) bool { return out[i].offset < out[j].offset })
 	return out
+}
+
+// topLevelCommasOnLine returns the offsets of commas on the line
+// containing offset start that separate arguments of the block body
+// opened just before start (start is the offset right after the block's
+// '{'). Commas nested inside brackets, braces, parens, strings, or
+// comments are not attribute separators and are excluded, as are
+// commas after the '}' that closes the block. Scanning stops at the
+// end of the line.
+func topLevelCommasOnLine(src []byte, start int) []int {
+	var out []int
+	depth := 1
+	i := start
+	for i < len(src) && src[i] != '\n' {
+		c := src[i]
+		switch {
+		case c == '#' || (c == '/' && i+1 < len(src) && src[i+1] == '/'):
+			return out // rest of line is a comment
+		case c == '/' && i+1 < len(src) && src[i+1] == '*':
+			// Skip to the closing */ (or end of line).
+			j := i + 2
+			for j+1 < len(src) && src[j] != '\n' && src[j] != '*' || src[j+1] != '/' {
+				j++
+			}
+			i = j + 2
+		case c == '"' || c == '\'':
+			quote := c
+			i++
+			for i < len(src) && src[i] != '\n' {
+				if src[i] == '\\' {
+					i += 2
+					continue
+				}
+				if src[i] == quote {
+					i++
+					break
+				}
+				i++
+			}
+		case c == '{' || c == '[' || c == '(':
+			depth++
+			i++
+		case c == '}' || c == ']' || c == ')':
+			depth--
+			i++
+			if depth == 0 {
+				return out // block closed; nothing after it is ours
+			}
+		case c == ',' && depth == 1:
+			out = append(out, i)
+			i++
+		default:
+			i++
+		}
+	}
+	return out
+}
+
+// blockOpenBraceOffset finds the '{' that opens the block whose
+// single-line definition the diagnostic at pos complains about: the
+// first '{' on pos's line that lies outside string literals and comments.
+// The newline is inserted right after it (offset = brace+1). ok=false
+// when no such brace exists on the line.
+func blockOpenBraceOffset(src []byte, pos hcl.Pos) (int, bool) {
+	// Find the start of pos's line.
+	lineStart := 0
+	line := 1
+	for i := 0; i < len(src) && line < pos.Line; i++ {
+		if src[i] == '\n' {
+			line++
+			lineStart = i + 1
+		}
+	}
+	// Scan the line forward, skipping strings and comments.
+	i := lineStart
+	for i < len(src) && src[i] != '\n' {
+		c := src[i]
+		switch {
+		case c == '#':
+			return -1, false // rest of line is a comment
+		case c == '/' && i+1 < len(src) && src[i+1] == '/':
+			return -1, false
+		case c == '/' && i+1 < len(src) && src[i+1] == '*':
+			// Skip to the closing */ (or end of line).
+			j := i + 2
+			for j+1 < len(src) && src[j] != '\n' && src[j] != '*' || src[j+1] != '/' {
+				j++
+			}
+			i = j + 2
+		case c == '"' || c == '\'':
+			quote := c
+			i++
+			for i < len(src) && src[i] != '\n' {
+				if src[i] == '\\' {
+					i += 2
+					continue
+				}
+				if src[i] == quote {
+					i++
+					break
+				}
+				i++
+			}
+		case c == '{':
+			return i + 1, true
+		default:
+			i++
+		}
+	}
+	return -1, false
 }
 
 func (Adapter) ParseModule(path string, src []byte) (Module, []ir.Diagnostic, error) {
 	if err := PreValidate(path, src); err != nil {
 		return Module{}, nil, err
 	}
-	f, diags := lenientParseConfig(src, path)
+	f, diags, lm := lenientParseConfig(src, path)
 
 	var out []ir.Diagnostic
 	for _, d := range diags {
@@ -466,6 +862,10 @@ func (Adapter) ParseModule(path string, src []byte) (Module, []ir.Diagnostic, er
 	}
 	// Deterministic order for advisory matching.
 	sort.Slice(mod.ProviderReqs, func(i, j int) bool { return mod.ProviderReqs[i].Name < mod.ProviderReqs[j].Name })
+	// Positions from a repaired parse are in repaired coordinates; map
+	// them back to the original source so findings point at the lines
+	// the user actually wrote.
+	lm.remapModule(&mod, out)
 	return mod, out, nil
 }
 
@@ -671,6 +1071,14 @@ func valueFromExpr(path string, expr hcl.Expression) (v ir.Value) {
 			v = ir.UnknownValue(span)
 		}
 	}()
+	// Pure expressions: static literals plus whitelisted pure function
+	// calls (jsonencode, merge, concat) over static arguments. These are
+	// fully determined by the source, so evaluating them is not guessing:
+	// jsonencode(merge({...}, {...})) policy documents and concat() action
+	// lists become analyzable instead of Unknown.
+	if val, ok := evalPureExpr(expr); ok {
+		return ctyToValue(val, span)
+	}
 	if !staticExpr(expr) {
 		// Milestone 3: evaluate jsonencode() over static arguments so IAM
 		// policy documents written as jsonencode({...}) become analyzable.
@@ -700,6 +1108,19 @@ func valueFromExpr(path string, expr hcl.Expression) (v ir.Value) {
 		// determined until the semantics pass resolves every child.)
 		if v, ok := refOrPartial(path, expr); ok {
 			return v
+		}
+		// Template expressions (strings/heredocs with ${...} interpolations)
+		// cannot be statically resolved, but their SOURCE TEXT is still
+		// evidence: a secret pattern in the literal parts, or a reference
+		// to a secret-like variable, is detectable without resolving the
+		// value. Preserve the template (literal parts verbatim, traversals
+		// as ${ref}, anything else as opaque ${...}) on the Unknown value
+		// so pattern-scanning rules can opt into it. Known stays false:
+		// the template is never a resolved value.
+		if tmpl, ok := templateText(expr); ok {
+			u := ir.UnknownValue(span)
+			u.Template = tmpl
+			return u
 		}
 		return ir.UnknownValue(span)
 	}
@@ -752,6 +1173,53 @@ func refOrPartial(path string, expr hcl.Expression) (ir.Value, bool) {
 	return ir.Value{}, false
 }
 
+// templateText renders a template expression as source text: literal parts
+// verbatim, bare traversals as ${ref}, anything else as opaque ${...}.
+// ok=false when expr is not a template form. Used to preserve evidence
+// from interpolated strings that cannot be statically resolved.
+func templateText(expr hcl.Expression) (string, bool) {
+	switch ex := expr.(type) {
+	case *hclsyntax.TemplateExpr:
+		var sb strings.Builder
+		for _, part := range ex.Parts {
+			switch p := part.(type) {
+			case *hclsyntax.LiteralValueExpr:
+				if p.Val.Type() != cty.String {
+					return "", false
+				}
+				sb.WriteString(p.Val.AsString())
+			case *hclsyntax.ScopeTraversalExpr:
+				// Interpolations appear as bare traversals in Parts.
+				if ref, ok := traversalRef(p.Traversal); ok {
+					sb.WriteString("${" + ref + "}")
+					continue
+				}
+				sb.WriteString("${...}")
+			case *hclsyntax.TemplateWrapExpr:
+				if trav, ok := p.Wrapped.(*hclsyntax.ScopeTraversalExpr); ok {
+					if ref, ok := traversalRef(trav.Traversal); ok {
+						sb.WriteString("${" + ref + "}")
+						continue
+					}
+				}
+				sb.WriteString("${...}")
+			default:
+				sb.WriteString("${...}")
+			}
+		}
+		return sb.String(), true
+	case *hclsyntax.TemplateWrapExpr:
+		if trav, ok := ex.Wrapped.(*hclsyntax.ScopeTraversalExpr); ok {
+			if ref, ok := traversalRef(trav.Traversal); ok {
+				return "${" + ref + "}", true
+			}
+		}
+		return "${...}", true
+	default:
+		return "", false
+	}
+}
+
 // staticOrRefOrPartial resolves one composite element: static literals stay
 // Known, bare traversals keep their Ref, nested tuples/objects recurse.
 // ok=false means "not representable" — the whole composite stays Unknown.
@@ -774,6 +1242,13 @@ func staticKeyString(e hcl.Expression) (string, bool) {
 		if kw := hcl.ExprAsKeyword(k.Wrapped); kw != "" {
 			return kw, true
 		}
+		// Quoted keys ("Effect": "Allow") arrive as ObjectConsKeyExpr
+		// wrapping a TemplateExpr, not a bare keyword: ExprAsKeyword
+		// returns "" for them. Unwrap and evaluate the inner
+		// expression, or every JSON-style (colon-separated) object —
+		// the form AWS policy documents are pasted in as — silently
+		// degrades to Unknown and its rules stop firing.
+		return staticKeyString(k.Wrapped)
 	}
 	if staticExpr(e) {
 		val, diags := e.Value(emptyCtx)
@@ -879,6 +1354,8 @@ func staticObjectKey(e hcl.Expression) bool {
 		if hcl.ExprAsKeyword(k.Wrapped) != "" {
 			return true
 		}
+		// Quoted keys ("Effect": "Allow"): unwrap, same as staticKeyString.
+		return staticExpr(k.Wrapped)
 	}
 	return staticExpr(e)
 }
@@ -903,8 +1380,173 @@ func jsonEncodeStatic(expr hcl.Expression) (string, bool) {
 	return string(b), true
 }
 
-// ctyToGo converts a known, non-null cty value to Go natives for JSON
-// encoding. Unknown, null, or exotic types report ok=false.
+// evalPureExpr evaluates an expression built only from static literals
+// and whitelisted pure function calls, returning ok=false for anything
+// else (references, conditionals, operators other than unary minus,
+// non-whitelisted calls). The whitelist is deliberately tiny and
+// side-effect-free:
+//
+//   - jsonencode(x): x evaluated, then JSON-encoded (mirrors Terraform).
+//   - merge(m1, m2, ...): object union, later maps win on key conflicts.
+//   - concat(l1, l2, ...): list concatenation.
+//
+// Calls nest: jsonencode(merge({...}, {...})) and objects/lists
+// containing pure calls evaluate recursively. Anything containing a
+// reference stays unevaluated (ok=false) so the caller can preserve the
+// reference for the semantics layer instead of guessing.
+func evalPureExpr(expr hcl.Expression) (cty.Value, bool) {
+	switch ex := expr.(type) {
+	case *hclsyntax.LiteralValueExpr:
+		val, diags := expr.Value(emptyCtx)
+		if diags.HasErrors() {
+			return cty.NilVal, false
+		}
+		return val, true
+	case *hclsyntax.TemplateExpr:
+		if len(ex.Parts) != 1 {
+			return cty.NilVal, false
+		}
+		return evalPureExpr(ex.Parts[0])
+	case *hclsyntax.TemplateWrapExpr:
+		return evalPureExpr(ex.Wrapped)
+	case *hclsyntax.TupleConsExpr:
+		if len(ex.Exprs) == 0 {
+			return cty.EmptyTupleVal, true
+		}
+		elems := make([]cty.Value, 0, len(ex.Exprs))
+		for _, e := range ex.Exprs {
+			v, ok := evalPureExpr(e)
+			if !ok {
+				return cty.NilVal, false
+			}
+			elems = append(elems, v)
+		}
+		return cty.TupleVal(elems), true
+	case *hclsyntax.ObjectConsExpr:
+		if len(ex.Items) == 0 {
+			return cty.EmptyObjectVal, true
+		}
+		attrs := make(map[string]cty.Value, len(ex.Items))
+		for _, item := range ex.Items {
+			key, ok := staticKeyString(item.KeyExpr)
+			if !ok {
+				return cty.NilVal, false
+			}
+			v, ok := evalPureExpr(item.ValueExpr)
+			if !ok {
+				return cty.NilVal, false
+			}
+			attrs[key] = v
+		}
+		return cty.ObjectVal(attrs), true
+	case *hclsyntax.UnaryOpExpr:
+		if ex.Op != hclsyntax.OpNegate {
+			return cty.NilVal, false
+		}
+		// Evaluate exactly (no float64 round-trip): the operand must
+		// itself be pure, then the whole expression evaluates literally.
+		if _, ok := evalPureExpr(ex.Val); !ok {
+			return cty.NilVal, false
+		}
+		val, diags := expr.Value(emptyCtx)
+		if diags.HasErrors() {
+			return cty.NilVal, false
+		}
+		return val, true
+	case *hclsyntax.FunctionCallExpr:
+		return evalPureCall(ex)
+	default:
+		return cty.NilVal, false
+	}
+}
+
+// evalPureCall evaluates one whitelisted pure function call.
+func evalPureCall(call *hclsyntax.FunctionCallExpr) (cty.Value, bool) {
+	switch call.Name {
+	case "jsonencode":
+		if len(call.Args) != 1 {
+			return cty.NilVal, false
+		}
+		v, ok := evalPureExpr(call.Args[0])
+		if !ok {
+			return cty.NilVal, false
+		}
+		goVal, ok := ctyToGo(v)
+		if !ok {
+			return cty.NilVal, false
+		}
+		b, err := json.Marshal(goVal)
+		if err != nil {
+			return cty.NilVal, false
+		}
+		return cty.StringVal(string(b)), true
+	case "merge":
+		merged := map[string]cty.Value{}
+		for _, arg := range call.Args {
+			v, ok := evalPureExpr(arg)
+			if !ok {
+				return cty.NilVal, false
+			}
+			if !v.Type().IsObjectType() && !v.Type().IsMapType() {
+				return cty.NilVal, false
+			}
+			for it := v.ElementIterator(); it.Next(); {
+				kv, ev := it.Element()
+				merged[kv.AsString()] = ev
+			}
+		}
+		if len(merged) == 0 {
+			return cty.EmptyObjectVal, true
+		}
+		return cty.ObjectVal(merged), true
+	case "concat":
+		var elems []cty.Value
+		for _, arg := range call.Args {
+			v, ok := evalPureExpr(arg)
+			if !ok {
+				return cty.NilVal, false
+			}
+			if !v.Type().IsTupleType() && !v.Type().IsListType() && !v.Type().IsSetType() {
+				return cty.NilVal, false
+			}
+			for it := v.ElementIterator(); it.Next(); {
+				_, ev := it.Element()
+				elems = append(elems, ev)
+			}
+		}
+		if len(elems) == 0 {
+			return cty.EmptyTupleVal, true
+		}
+		return cty.TupleVal(elems), true
+	case "base64encode":
+		// Pure and deterministic: encodes a static string exactly as
+		// Terraform would. Lets user_data = base64encode(...) resolve to
+		// a Known base64 string that secret-scanning rules can decode.
+		if len(call.Args) != 1 {
+			return cty.NilVal, false
+		}
+		v, ok := evalPureExpr(call.Args[0])
+		if !ok || v.Type() != cty.String || !v.IsKnown() || v.IsNull() {
+			return cty.NilVal, false
+		}
+		return cty.StringVal(base64.StdEncoding.EncodeToString([]byte(v.AsString()))), true
+	case "base64decode":
+		if len(call.Args) != 1 {
+			return cty.NilVal, false
+		}
+		v, ok := evalPureExpr(call.Args[0])
+		if !ok || v.Type() != cty.String || !v.IsKnown() || v.IsNull() {
+			return cty.NilVal, false
+		}
+		decoded, err := base64.StdEncoding.DecodeString(strings.TrimSpace(v.AsString()))
+		if err != nil {
+			return cty.NilVal, false
+		}
+		return cty.StringVal(string(decoded)), true
+	default:
+		return cty.NilVal, false
+	}
+}
 func ctyToGo(val cty.Value) (any, bool) {
 	val, _ = val.UnmarkDeep()
 	if !val.IsKnown() || val.IsNull() {

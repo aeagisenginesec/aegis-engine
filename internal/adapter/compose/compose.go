@@ -7,6 +7,7 @@
 //   - cap_add: []Value of capability strings
 //   - network_mode: string (absent when none)
 //   - pid: string (absent when none)
+//   - ipc: string (absent when none)
 //   - user: string (absent when none)
 //   - ports: []Value of published port strings
 //   - volumes: []Value of host-side source paths for bind/volume mounts
@@ -14,7 +15,7 @@
 //     that look like secrets with literal values (values redacted)
 //
 // Safety: malformed YAML yields a diagnostic, never a panic. Unknown
-// service keys are ignored. Secret values are never stored.
+// service keys yield warning diagnostics, never silent drops.
 package compose
 
 import (
@@ -81,21 +82,54 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 	}
 
 	var out []ir.Resource
+	var diags []ir.Diagnostic
 	for i := 0; i+1 < len(services.Content); i += 2 {
 		name := nodeString(services.Content[i])
 		svc := services.Content[i+1]
 		if name == "" || svc.Kind != yaml.MappingNode {
+			// A service entry that is not a mapping (e.g. `web:
+			// justastring`, or an empty key) cannot become a
+			// resource — but dropping it silently looks exactly
+			// like a clean service. Warn, never vanish it.
+			label := name
+			if label == "" {
+				label = "(empty name)"
+			}
+			diags = append(diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: "compose: service " + label + " is not a mapping; skipped",
+				Span:    ir.Span{File: path, StartLine: svc.Line, StartCol: svc.Column},
+			})
 			continue
 		}
-		out = append(out, parseService(path, name, svc))
+		r, sdiags := parseService(path, name, svc)
+		out = append(out, r)
+		diags = append(diags, sdiags...)
 	}
-	return out, nil, nil
+	return out, diags, nil
 }
 
 // parseService converts one service mapping into a compose_service resource.
-func parseService(path, name string, svc *yaml.Node) ir.Resource {
+// Unknown service keys produce warning diagnostics: an ignored key is
+// otherwise indistinguishable from a typo'd security setting
+// (e.g. `priviliged: true` silently dropping the privileged flag).
+// Keys in the Compose service spec (and x-* extension keys) are accepted
+// silently; anything else is reported, never dropped quietly.
+func parseService(path, name string, svc *yaml.Node) (ir.Resource, []ir.Diagnostic) {
 	span := ir.Span{File: path, StartLine: svc.Line, StartCol: 1, EndLine: svc.Line, EndCol: 1}
 	attrs := map[string]ir.Value{}
+	var diags []ir.Diagnostic
+	for i := 0; i+1 < len(svc.Content); i += 2 {
+		k := nodeString(svc.Content[i])
+		if k == "" || knownComposeServiceKey(k) {
+			continue
+		}
+		diags = append(diags, ir.Diagnostic{
+			Level:   "warning",
+			Message: "compose: unknown service key " + k + " for service " + name + "; ignored",
+			Span:    ir.Span{File: path, StartLine: svc.Content[i].Line, StartCol: svc.Content[i].Column},
+		})
+	}
 
 	if img := mappingScalar(svc, "image"); img != "" {
 		attrs["image"] = ir.Value{Raw: img, Known: true, Span: span}
@@ -109,6 +143,9 @@ func parseService(path, name string, svc *yaml.Node) ir.Resource {
 	}
 	if pid := mappingScalar(svc, "pid"); pid != "" {
 		attrs["pid"] = ir.Value{Raw: pid, Known: true, Span: span}
+	}
+	if ipc := mappingScalar(svc, "ipc"); ipc != "" {
+		attrs["ipc"] = ir.Value{Raw: ipc, Known: true, Span: span}
 	}
 	if user := mappingScalar(svc, "user"); user != "" {
 		attrs["user"] = ir.Value{Raw: user, Known: true, Span: span}
@@ -129,7 +166,39 @@ func parseService(path, name string, svc *yaml.Node) ir.Resource {
 		Provider:   "docker",
 		Attributes: attrs,
 		Span:       span,
+	}, diags
+}
+
+// knownComposeServiceKey reports whether k is a service key from the
+// Compose specification (or an x-* extension key). The list is
+// deliberately generous: an unlisted-but-valid key costs only a warning,
+// while a typo'd security key must never vanish silently.
+func knownComposeServiceKey(k string) bool {
+	if strings.HasPrefix(k, "x-") {
+		return true
 	}
+	switch k {
+	case "anchor", "annotations", "build", "blkio_config", "cap_add",
+		"cap_drop", "cgroup", "cgroup_parent", "command", "configs",
+		"container_name", "cpu_count", "cpu_percent", "cpu_shares",
+		"cpu_period", "cpu_quota", "cpu_rt_period", "cpu_rt_runtime",
+		"cpus", "cpuset", "credential_spec", "depends_on", "deploy",
+		"develop", "device_cgroup_rules", "devices", "dns", "dns_opt",
+		"dns_search", "domainname", "entrypoint", "env_file",
+		"environment", "expose", "extends", "external_links",
+		"extra_hosts", "group_add", "healthcheck", "hostname", "image",
+		"init", "ipc", "isolation", "labels", "links", "logging",
+		"mac_address", "mem_limit", "mem_reservation", "mem_swappiness",
+		"memswap_limit", "name", "network_mode", "networks",
+		"oom_kill_disable", "oom_score_adj", "pid", "pids_limit",
+		"platform", "ports", "privileged", "profiles", "pull_policy",
+		"read_only", "restart", "runtime", "scale", "secrets",
+		"security_opt", "shm_size", "stdin_open", "stop_grace_period",
+		"stop_signal", "sysctls", "tmpfs", "tty", "ulimits", "user",
+		"userns_mode", "volumes", "volumes_from", "working_dir":
+		return true
+	}
+	return false
 }
 
 // servicePorts returns published port specs as strings.

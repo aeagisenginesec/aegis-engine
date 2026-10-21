@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"aegis/internal/version"
 )
 
 const vulnTF = `resource "aws_s3_bucket" "data" {
@@ -59,7 +61,7 @@ func TestScanExitCodeFindings(t *testing.T) {
 	if !seen["AEGIS-AWS-002"] {
 		t.Errorf("expected rule AEGIS-AWS-002 among findings, got %v", seen)
 	}
-	if env["aegis_version"] != "1.0.0" {
+	if env["aegis_version"] != version.Version {
 		t.Errorf("missing aegis_version in envelope")
 	}
 }
@@ -74,7 +76,7 @@ func TestScanCleanExitCode(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("expected exit code 0 (clean), got %d; stderr: %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "findings: 0") {
+	if !strings.Contains(stdout.String(), "findings:  0") {
 		t.Errorf("expected clean text summary, got:\n%s", stdout.String())
 	}
 }
@@ -372,5 +374,93 @@ func TestScanStrictFlag(t *testing.T) {
 	code = run([]string{"scan", dir2, "--strict", "--format=json"}, &stdout, &stderr)
 	if code != 1 {
 		t.Errorf("expected exit 1 (findings) with --strict on valid input, got %d", code)
+	}
+}
+
+// TestScanModuleDedup: a root that calls the same module twice, a nested
+// module, and two different modules each holding a same-named bucket must
+// produce exactly one finding per (rule, resource, attribute) — no bare
+// twins — while keeping both same-named distinct resources.
+func TestScanModuleDedup(t *testing.T) {
+	dir := t.TempDir()
+	write := func(rel, src string) {
+		p := filepath.Join(dir, rel)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(src), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Root: two instances of ./mod-a, one of ./mod-b.
+	write("main.tf", `
+module "a1" { source = "./mod-a" }
+module "a2" { source = "./mod-a" }
+module "b"  { source = "./mod-b" }
+resource "aws_s3_bucket" "root" {
+  acl = "public-read"
+}
+`)
+	// mod-a: one public bucket + a nested module call.
+	write("mod-a/main.tf", `
+resource "aws_s3_bucket" "data" {
+  acl = "public-read"
+}
+module "inner" { source = "./inner" }
+`)
+	write("mod-a/inner/main.tf", `
+resource "aws_s3_bucket" "deep" {
+  acl = "public-read"
+}
+`)
+	// mod-b: a same-named bucket (distinct resource, different file).
+	write("mod-b/main.tf", `
+resource "aws_s3_bucket" "data" {
+  acl = "public-read"
+}
+`)
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"scan", dir, "--format=json"}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1 (findings), got %d; stderr: %s", code, stderr.String())
+	}
+	var env map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("stdout is not valid JSON: %v", err)
+	}
+	findings, _ := env["findings"].([]any)
+	// (rule, resource, evidence) triples must be unique: no bare twins.
+	seen := map[string]int{}
+	for _, f := range findings {
+		fm := f.(map[string]any)
+		key := fm["rule_id"].(string) + "|" + fm["resource"].(string) + "|" + fm["evidence"].(string)
+		seen[key]++
+	}
+	for k, n := range seen {
+		if n > 1 {
+			t.Errorf("duplicate finding %s x%d", k, n)
+		}
+	}
+	// The public-ACL rule must fire exactly once per distinct bucket:
+	// root, a1.data, a2.data, a1.inner.deep, a2.inner.deep, b.data = 6.
+	var aclHits []string
+	for _, f := range findings {
+		fm := f.(map[string]any)
+		if fm["rule_id"] == "AEGIS-AWS-002" {
+			aclHits = append(aclHits, fm["resource"].(string))
+		}
+	}
+	if len(aclHits) != 6 {
+		t.Errorf("expected 6 AEGIS-AWS-002 findings (root + 2x mod-a + 2x nested + mod-b), got %d: %v", len(aclHits), aclHits)
+	}
+	// No bare finding may come from a module file: every finding whose
+	// file is under mod-a/ or mod-b/ must carry a module address.
+	for _, f := range findings {
+		fm := f.(map[string]any)
+		file := fm["file"].(string)
+		res := fm["resource"].(string)
+		if (strings.Contains(file, "mod-a/") || strings.Contains(file, "mod-b/")) && !strings.Contains(res, ".module.") {
+			t.Errorf("bare twin survived: %s from %s", res, file)
+		}
 	}
 }

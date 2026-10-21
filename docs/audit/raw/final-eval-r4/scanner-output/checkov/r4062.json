@@ -1,0 +1,173 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_23",
+                "bc_check_id": "BC_AWS_NETWORKING_31",
+                "check_name": "Ensure every security groups rule has a description",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        4,
+                        "  BastionSG:\n"
+                    ],
+                    [
+                        5,
+                        "    Type: AWS::EC2::SecurityGroup\n"
+                    ],
+                    [
+                        6,
+                        "    Properties:\n"
+                    ],
+                    [
+                        7,
+                        "      GroupName: bastion-08332a\n"
+                    ],
+                    [
+                        8,
+                        "      GroupDescription: bastion access\n"
+                    ],
+                    [
+                        9,
+                        "      SecurityGroupIngress:\n"
+                    ],
+                    [
+                        10,
+                        "        - IpProtocol: tcp\n"
+                    ],
+                    [
+                        11,
+                        "          FromPort: 22\n"
+                    ],
+                    [
+                        12,
+                        "          ToPort: 22\n"
+                    ],
+                    [
+                        13,
+                        "          CidrIp: 0.0.0.0/0\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4062/template.yaml",
+                "repo_file_path": "/corpus/r4062/template.yaml",
+                "file_line_range": [
+                    4,
+                    13
+                ],
+                "resource": "AWS::EC2::SecurityGroup.BastionSG",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupRuleDescription",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-31",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_24",
+                "bc_check_id": "BC_AWS_NETWORKING_1",
+                "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/SecurityGroupIngress"
+                    ]
+                },
+                "code_block": [
+                    [
+                        4,
+                        "  BastionSG:\n"
+                    ],
+                    [
+                        5,
+                        "    Type: AWS::EC2::SecurityGroup\n"
+                    ],
+                    [
+                        6,
+                        "    Properties:\n"
+                    ],
+                    [
+                        7,
+                        "      GroupName: bastion-08332a\n"
+                    ],
+                    [
+                        8,
+                        "      GroupDescription: bastion access\n"
+                    ],
+                    [
+                        9,
+                        "      SecurityGroupIngress:\n"
+                    ],
+                    [
+                        10,
+                        "        - IpProtocol: tcp\n"
+                    ],
+                    [
+                        11,
+                        "          FromPort: 22\n"
+                    ],
+                    [
+                        12,
+                        "          ToPort: 22\n"
+                    ],
+                    [
+                        13,
+                        "          CidrIp: 0.0.0.0/0\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4062/template.yaml",
+                "repo_file_path": "/corpus/r4062/template.yaml",
+                "file_line_range": [
+                    4,
+                    13
+                ],
+                "resource": "AWS::EC2::SecurityGroup.BastionSG",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.SecurityGroupUnrestrictedIngress22",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-networking-policies/networking-1-port-security",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            }
+        ]
+    },
+    "summary": {
+        "passed": 2,
+        "failed": 2,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 1,
+        "checkov_version": "3.3.26"
+    }
+}

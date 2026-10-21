@@ -1,0 +1,150 @@
+{
+  "aegis_version": "2.0.0",
+  "target": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4018",
+  "summary": {
+    "resources": 3,
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "findings": 7,
+    "critical": 0,
+    "high": 1,
+    "medium": 1,
+    "low": 5
+  },
+  "findings": [
+    {
+      "rule_id": "AEGIS-AWS-004",
+      "severity": "high",
+      "title": "Security group ingress open to the world",
+      "description": "Ingress rules allowing 0.0.0.0/0 expose the workload to the entire internet. Restrict source CIDRs to known ranges.",
+      "resource": "aws_security_group.app",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4018/main.tf",
+      "line": 13,
+      "evidence": "ingress.cidr_blocks = 0.0.0.0/0",
+      "expected": "restricted source CIDR ranges",
+      "remediation": "Restrict the ingress CIDR to trusted ranges. Replace `0.0.0.0/0` with your\noffice/VPN CIDRs, or remove the rule and use SSM Session Manager (no inbound\nSSH needed):\ningress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"203.0.113.0/24\"]  # your trusted range\n}",
+      "references": [
+        "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html"
+      ],
+      "compliance": [
+        {
+          "framework": "CIS-AWS-1.5",
+          "control": "5.2"
+        },
+        {
+          "framework": "NIST-800-53",
+          "control": "SC-7"
+        },
+        {
+          "framework": "PCI-DSS-4.0",
+          "control": "1.4.1"
+        }
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "severity": "low",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "resource": "aws_security_group.app",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4018/main.tf",
+      "line": 1,
+      "evidence": "description = absent or empty",
+      "expected": "description attribute documenting the group or rule",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "severity": "low",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "resource": "aws_security_group.app",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4018/main.tf",
+      "line": 1,
+      "evidence": "egress[0].description = absent",
+      "expected": "description on each inline egress rule",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "severity": "low",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "resource": "aws_security_group.app",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4018/main.tf",
+      "line": 1,
+      "evidence": "ingress[0].description = absent",
+      "expected": "description on each inline ingress rule",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-604",
+      "severity": "low",
+      "title": "Security group or rule without description",
+      "description": "Hygiene: Security groups and their rules should carry descriptions so reviewers understand their purpose. Add a description attribute.",
+      "resource": "aws_security_group.app",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4018/main.tf",
+      "line": 1,
+      "evidence": "ingress[1].description = absent",
+      "expected": "description on each inline ingress rule",
+      "remediation": "Review the flagged configuration against AWS security best practices and the CIS AWS Foundations Benchmark. Apply the control the rule describes, preferring restrictive defaults, encryption, and audit logging. Validate with `aegis scan` after the change.",
+      "references": [
+        "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-659",
+      "severity": "medium",
+      "title": "IAM user uses an inline policy",
+      "description": "The user embeds an inline policy document instead of attaching a managed policy. Inline policies cannot be reused, versioned, or reviewed centrally. Prefer aws_iam_policy with aws_iam_user_policy_attachment.",
+      "resource": "aws_iam_user_policy.reader",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4018/main.tf",
+      "line": 27,
+      "evidence": "policy = inline policy document",
+      "expected": "managed policy + attachment",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    },
+    {
+      "rule_id": "AEGIS-AWS-672",
+      "severity": "low",
+      "title": "IAM user has no tags",
+      "description": "The IAM user carries no tags, making ownership, purpose, and lifecycle untraceable in audits and complicating attribute-based access control. Tag identities with at least owner and purpose.",
+      "resource": "aws_iam_user.reader",
+      "file": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4018/main.tf",
+      "line": 23,
+      "evidence": "tags = absent (AWS default: no tags)",
+      "expected": "tags set (owner, purpose)",
+      "remediation": "Apply least privilege. Replace wildcard (`*`) actions and resources with the minimum scoped ARNs the workload needs. Split policy authoring from attachment. Use IAM Access Analyzer to generate scoped policies from CloudTrail history.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      ]
+    }
+  ],
+  "diagnostics": [],
+  "scan_completeness": {
+    "files_discovered": 1,
+    "files_parsed": 1,
+    "files_skipped": 0,
+    "files_failed": 0,
+    "files": [
+      {
+        "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4018/main.tf",
+        "status": "parsed",
+        "format": "terraform"
+      }
+    ]
+  }
+}

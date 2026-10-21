@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: monitor-2057af
+  labels:
+    app: monitor-2057af
+spec:
+  selector:
+    matchLabels:
+      app: monitor-2057af
+  template:
+    metadata:
+      labels:
+        app: monitor-2057af
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+        - name: monitor
+          image: registry.example.com/monitor:1.9.0
+          volumeMounts:
+            - name: hostroot
+              mountPath: /host
+      volumes:
+        - name: hostroot
+          hostPath:
+            path: /

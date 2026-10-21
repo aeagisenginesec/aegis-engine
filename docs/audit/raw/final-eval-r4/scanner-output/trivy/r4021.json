@@ -1,0 +1,636 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.74.0"
+  },
+  "ReportID": "01a1355c-6d49-7518-a3b2-01f8a03bb238",
+  "CreatedAt": "2026-10-13T13:03:32.169337438Z",
+  "ArtifactName": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r4/corpus/r4021",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": ".",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 51,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Type": "terraform",
+      "MisconfSummary": {
+        "Successes": 0,
+        "Failures": 5
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0042",
+          "Title": "Domain logging should be enabled for Elastic Search domains",
+          "Description": "Amazon ES exposes four Elasticsearch logs through Amazon CloudWatch Logs: error logs, search slow logs, index slow logs, and audit logs.\nSearch slow logs, index slow logs, and error logs are useful for troubleshooting performance and stability issues.\nAudit logs track user activity for compliance purposes.\nAll the logs are disabled by default.\n",
+          "Message": "Domain audit logging is not enabled.",
+          "Namespace": "builtin.aws.elasticsearch.aws0042",
+          "Query": "data.builtin.aws.elasticsearch.aws0042.deny",
+          "Resolution": "Enable logging for ElasticSearch domains",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0042",
+          "References": [
+            "https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createdomain-configure-slow-logs.html",
+            "https://avd.aquasec.com/misconfig/aws-0042"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_opensearch_domain.logs",
+            "Provider": "AWS",
+            "Service": "elasticsearch",
+            "StartLine": 1,
+            "EndLine": 8,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"aws_opensearch_domain\" \"logs\" {",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_opensearch_domain\"\u001b[0m \u001b[38;5;37m\"logs\"\u001b[0m {",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  domain_name = \"logs-3e15f0\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mdomain_name\u001b[0m = \u001b[38;5;37m\"logs-3e15f0\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  engine_version = \"OpenSearch_2.11\"",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mengine_version\u001b[0m = \u001b[38;5;37m\"OpenSearch_2.11\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  cluster_config { instance_type = \"t3.small.search\" }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  cluster_config { \u001b[38;5;245minstance_type\u001b[0m = \u001b[38;5;37m\"t3.small.search\"\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "  encrypt_at_rest { enabled = false }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  encrypt_at_rest { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "  node_to_node_encryption { enabled = false }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  node_to_node_encryption { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "  domain_endpoint_options { enforce_https = false }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  domain_endpoint_options { \u001b[38;5;245menforce_https\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 8,
+                  "Content": "}",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0043",
+          "Title": "Elasticsearch domain uses plaintext traffic for node to node communication.",
+          "Description": "Traffic flowing between Elasticsearch nodes should be encrypted to ensure sensitive data is kept private.\n",
+          "Message": "Domain does not have in-transit encryption enabled.",
+          "Namespace": "builtin.aws.elasticsearch.aws0043",
+          "Query": "data.builtin.aws.elasticsearch.aws0043.deny",
+          "Resolution": "Enable encrypted node to node communication",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0043",
+          "References": [
+            "https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/ntn.html",
+            "https://avd.aquasec.com/misconfig/aws-0043"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_opensearch_domain.logs",
+            "Provider": "AWS",
+            "Service": "elasticsearch",
+            "StartLine": 6,
+            "EndLine": 6,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"aws_opensearch_domain\" \"logs\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_opensearch_domain\"\u001b[0m \u001b[38;5;37m\"logs\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  domain_name = \"logs-3e15f0\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mdomain_name\u001b[0m = \u001b[38;5;37m\"logs-3e15f0\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  engine_version = \"OpenSearch_2.11\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mengine_version\u001b[0m = \u001b[38;5;37m\"OpenSearch_2.11\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  cluster_config { instance_type = \"t3.small.search\" }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  cluster_config { \u001b[38;5;245minstance_type\u001b[0m = \u001b[38;5;37m\"t3.small.search\"\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "  encrypt_at_rest { enabled = false }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  encrypt_at_rest { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "  node_to_node_encryption { enabled = false }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  node_to_node_encryption { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 7,
+                  "Content": "  domain_endpoint_options { enforce_https = false }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  domain_endpoint_options { \u001b[38;5;245menforce_https\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 8,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "node_to_node_encryption",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 6,
+                  "EndLine": 6
+                }
+              },
+              {
+                "Resource": "aws_opensearch_domain.logs",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 8
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0046",
+          "Title": "Elasticsearch doesn't enforce HTTPS traffic.",
+          "Description": "Plain HTTP is unencrypted and human-readable. This means that if a malicious actor was to eavesdrop on your connection, they would be able to see all of your data flowing back and forth.\nYou should use HTTPS, which is HTTP over an encrypted (TLS) connection, meaning eavesdroppers cannot read your traffic.\n",
+          "Message": "Domain does not enforce HTTPS.",
+          "Namespace": "builtin.aws.elasticsearch.aws0046",
+          "Query": "data.builtin.aws.elasticsearch.aws0046.deny",
+          "Resolution": "Enforce the use of HTTPS for ElasticSearch",
+          "Severity": "CRITICAL",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0046",
+          "References": [
+            "https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-data-protection.html",
+            "https://avd.aquasec.com/misconfig/aws-0046"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_opensearch_domain.logs",
+            "Provider": "AWS",
+            "Service": "elasticsearch",
+            "StartLine": 7,
+            "EndLine": 7,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"aws_opensearch_domain\" \"logs\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_opensearch_domain\"\u001b[0m \u001b[38;5;37m\"logs\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  domain_name = \"logs-3e15f0\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mdomain_name\u001b[0m = \u001b[38;5;37m\"logs-3e15f0\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  engine_version = \"OpenSearch_2.11\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mengine_version\u001b[0m = \u001b[38;5;37m\"OpenSearch_2.11\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  cluster_config { instance_type = \"t3.small.search\" }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  cluster_config { \u001b[38;5;245minstance_type\u001b[0m = \u001b[38;5;37m\"t3.small.search\"\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "  encrypt_at_rest { enabled = false }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  encrypt_at_rest { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "  node_to_node_encryption { enabled = false }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  node_to_node_encryption { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "  domain_endpoint_options { enforce_https = false }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  domain_endpoint_options { \u001b[38;5;245menforce_https\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 8,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "domain_endpoint_options",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 7,
+                  "EndLine": 7
+                }
+              },
+              {
+                "Resource": "aws_opensearch_domain.logs",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 8
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0048",
+          "Title": "Elasticsearch domain isn't encrypted at rest.",
+          "Description": "You should ensure your Elasticsearch data is encrypted at rest to help prevent sensitive information from being read by unauthorised users.\n",
+          "Message": "Domain does not have at-rest encryption enabled.",
+          "Namespace": "builtin.aws.elasticsearch.aws0048",
+          "Query": "data.builtin.aws.elasticsearch.aws0048.deny",
+          "Resolution": "Enable ElasticSearch domain encryption",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0048",
+          "References": [
+            "https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/encryption-at-rest.html",
+            "https://avd.aquasec.com/misconfig/aws-0048"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_opensearch_domain.logs",
+            "Provider": "AWS",
+            "Service": "elasticsearch",
+            "StartLine": 5,
+            "EndLine": 5,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"aws_opensearch_domain\" \"logs\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_opensearch_domain\"\u001b[0m \u001b[38;5;37m\"logs\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  domain_name = \"logs-3e15f0\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mdomain_name\u001b[0m = \u001b[38;5;37m\"logs-3e15f0\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  engine_version = \"OpenSearch_2.11\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mengine_version\u001b[0m = \u001b[38;5;37m\"OpenSearch_2.11\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  cluster_config { instance_type = \"t3.small.search\" }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  cluster_config { \u001b[38;5;245minstance_type\u001b[0m = \u001b[38;5;37m\"t3.small.search\"\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "  encrypt_at_rest { enabled = false }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  encrypt_at_rest { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 6,
+                  "Content": "  node_to_node_encryption { enabled = false }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  node_to_node_encryption { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "  domain_endpoint_options { enforce_https = false }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  domain_endpoint_options { \u001b[38;5;245menforce_https\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 8,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "encrypt_at_rest",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 5,
+                  "EndLine": 5
+                }
+              },
+              {
+                "Resource": "aws_opensearch_domain.logs",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 8
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AWS-0126",
+          "Title": "Elasticsearch domain endpoint is using outdated TLS policy.",
+          "Description": "You should not use outdated/insecure TLS versions for encryption. You should be using TLS v1.2+.\n",
+          "Message": "Domain does not have a secure TLS policy.",
+          "Namespace": "builtin.aws.elasticsearch.aws0126",
+          "Query": "data.builtin.aws.elasticsearch.aws0126.deny",
+          "Resolution": "Use the most modern TLS/SSL policies available",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0126",
+          "References": [
+            "https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-data-protection.html",
+            "https://avd.aquasec.com/misconfig/aws-0126"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "aws_opensearch_domain.logs",
+            "Provider": "AWS",
+            "Service": "elasticsearch",
+            "StartLine": 7,
+            "EndLine": 7,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 1,
+                  "Content": "resource \"aws_opensearch_domain\" \"logs\" {",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[38;5;33mresource\u001b[0m \u001b[38;5;37m\"aws_opensearch_domain\"\u001b[0m \u001b[38;5;37m\"logs\"\u001b[0m {",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 2,
+                  "Content": "  domain_name = \"logs-3e15f0\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;245mdomain_name\u001b[0m = \u001b[38;5;37m\"logs-3e15f0\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 3,
+                  "Content": "  engine_version = \"OpenSearch_2.11\"",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  \u001b[38;5;245mengine_version\u001b[0m = \u001b[38;5;37m\"OpenSearch_2.11\"",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 4,
+                  "Content": "  cluster_config { instance_type = \"t3.small.search\" }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m  cluster_config { \u001b[38;5;245minstance_type\u001b[0m = \u001b[38;5;37m\"t3.small.search\"\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 5,
+                  "Content": "  encrypt_at_rest { enabled = false }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  encrypt_at_rest { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 6,
+                  "Content": "  node_to_node_encryption { enabled = false }",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  node_to_node_encryption { \u001b[38;5;245menabled\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 7,
+                  "Content": "  domain_endpoint_options { enforce_https = false }",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  domain_endpoint_options { \u001b[38;5;245menforce_https\u001b[0m = \u001b[38;5;166mfalse\u001b[0m }",
+                  "FirstCause": true,
+                  "LastCause": true
+                },
+                {
+                  "Number": 8,
+                  "Content": "}",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "}",
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            },
+            "Occurrences": [
+              {
+                "Resource": "aws_opensearch_domain.logs",
+                "Filename": "main.tf",
+                "Location": {
+                  "StartLine": 1,
+                  "EndLine": 8
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

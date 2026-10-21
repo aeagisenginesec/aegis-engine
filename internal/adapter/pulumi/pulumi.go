@@ -28,7 +28,9 @@
 package pulumi
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -62,8 +64,16 @@ func (Adapter) Handles(path string) bool {
 
 // Parse converts a Pulumi.yaml program into IR resources. A document without
 // a resources: section yields no resources and a warning diagnostic.
+//
+// Two layouts are accepted, because both exist in the wild:
+//   - Modern (per the Pulumi YAML reference): resources:, variables:,
+//     configuration: (or config:) at the document root.
+//   - Legacy/embedded: the same sections nested under template:.
+//
+// The template: layout takes effect only when the root has no resources:
+// of its own; a document with both is read from the root.
 func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, error) {
-	p := &parser{path: path}
+	p := &parser{path: path, workBudget: maxPulumiWork, resolving: map[string]bool{}}
 	var doc yaml.Node
 	if err := yaml.Unmarshal(src, &doc); err != nil {
 		p.diags = append(p.diags, ir.Diagnostic{
@@ -82,8 +92,34 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 		})
 		return nil, p.diags, nil
 	}
-	p.collectVars(root)
-	resNode := nodeField(root, "resources")
+	prog := programNode(root)
+	if prog != root {
+		p.diags = append(p.diags, ir.Diagnostic{
+			Level:   "info",
+			Message: fmt.Sprintf("pulumi: %s uses the template:-nested program layout", path),
+			Span:    ir.Span{File: path},
+		})
+	}
+	// Honest reporting for Pulumi programs the adapter cannot analyze: an
+	// imperative program (TypeScript/JavaScript, Python, Go, .NET, Java)
+	// has no resources: section, so without this check it scans as
+	// "0 findings" with nothing explaining that the program's language is
+	// not analyzed. Detect it and say so explicitly instead of staying
+	// silent.
+	if lang, files := detectUnanalyzedProgram(root, prog, path); lang != "" {
+		msg := fmt.Sprintf("pulumi: %s is a Pulumi %s program; program files are not analyzed — scan results do not cover this program's resources", path, lang)
+		if len(files) > 0 {
+			msg += fmt.Sprintf(" (unparsed: %s)", strings.Join(files, ", "))
+		}
+		p.diags = append(p.diags, ir.Diagnostic{
+			Level:   "warning",
+			Message: msg,
+			Span:    ir.Span{File: path},
+		})
+		return nil, p.diags, nil
+	}
+	p.collectVars(prog)
+	resNode := nodeField(prog, "resources")
 	if resNode == nil || resNode.Kind != yaml.MappingNode {
 		p.diags = append(p.diags, ir.Diagnostic{
 			Level:   "warning",
@@ -104,9 +140,181 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			})
 			continue
 		}
+		if nodeScalar(nodeField(rn, "type")) == "" {
+			// A resources: entry with no type: field would otherwise
+			// become a phantom "pulumi_" resource no rule matches — a
+			// silent zero-findings scan of an entry the user clearly
+			// meant to declare. Warn naming the entry instead.
+			p.diags = append(p.diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: fmt.Sprintf("pulumi: resource %q has no type: field; skipped (entry is not analyzable)", name),
+				Span:    p.spanOf(rn, path),
+			})
+			continue
+		}
 		out = append(out, p.resource(name, rn))
 	}
 	return out, p.diags, nil
+}
+
+// tsExtensions are Pulumi Node.js program entrypoints.
+var tsExtensions = map[string]bool{
+	".ts": true, ".tsx": true, ".js": true, ".jsx": true,
+	".mjs": true, ".cjs": true, ".mts": true, ".cts": true,
+}
+
+// pyExtensions are Pulumi Python program entrypoints.
+var pyExtensions = map[string]bool{
+	".py": true, ".pyi": true,
+}
+
+// goExtensions are Pulumi Go program entrypoints.
+var goExtensions = map[string]bool{
+	".go": true,
+}
+
+// dotnetExtensions are Pulumi .NET program entrypoints (C#/F#/VB).
+var dotnetExtensions = map[string]bool{
+	".cs": true, ".fs": true, ".vb": true,
+}
+
+// javaExtensions are Pulumi Java program entrypoints.
+var javaExtensions = map[string]bool{
+	".java": true, ".kt": true, ".kts": true,
+}
+
+// detectUnanalyzedProgram reports whether the Pulumi program in path is
+// written in a language the adapter cannot analyze. It returns the human
+// language name and the detected program files, or "" when the program
+// is analyzable (declarative YAML) or carries no language signal.
+//
+// Detection signals, in order:
+//  1. The program's `runtime:` field — authoritative (e.g. nodejs, python).
+//  2. When the runtime is missing or unrecognized and there is no
+//     resources: section, the language markers in the same directory:
+//     a marker file (package.json, requirements.txt, go.mod, …) plus
+//     program entrypoint files.
+func detectUnanalyzedProgram(root, prog *yaml.Node, path string) (string, []string) {
+	rt := ""
+	if n := nodeField(root, "runtime"); n != nil && n.Kind == yaml.ScalarNode {
+		rt = strings.ToLower(strings.TrimSpace(n.Value))
+	}
+	dir := filepath.Dir(path)
+	// 1. The runtime: field is authoritative.
+	if rt == "yaml" {
+		return "", nil
+	}
+	for _, l := range unanalyzedLangs {
+		for _, r := range l.runtimes {
+			if rt != "" && rt == r {
+				return l.name, programFilesExt(dir, l.exts)
+			}
+		}
+	}
+	// 2. Missing or unrecognized runtime: the adapter still analyzes a
+	// resources: section when present; otherwise the language markers in
+	// the same directory are the signal (marker file + entrypoint files).
+	if nodeField(prog, "resources") != nil {
+		return "", nil
+	}
+	for _, l := range unanalyzedLangs {
+		if hasAnyMarker(dir, l.markers) {
+			if files := programFilesExt(dir, l.exts); len(files) > 0 {
+				return l.name, files
+			}
+		}
+	}
+	return "", nil
+}
+
+// unanalyzedLang describes a Pulumi program language the adapter cannot
+// analyze: its runtime: values, human name, program entrypoint extensions,
+// and marker files used for fallback detection when runtime: is absent.
+// A static scanner cannot evaluate imperative programs without executing
+// code, which Aegis never does — so every such language must warn rather
+// than scan silently.
+type unanalyzedLang struct {
+	name     string          // human language name for the warning
+	runtimes []string        // runtime: values (lowercased)
+	exts     map[string]bool // program entrypoint extensions
+	markers  []string        // marker files; a leading "." means extension match
+}
+
+var unanalyzedLangs = []unanalyzedLang{
+	{name: "TypeScript/JavaScript", runtimes: []string{"nodejs", "node"}, exts: tsExtensions, markers: []string{"package.json"}},
+	{name: "Python", runtimes: []string{"python"}, exts: pyExtensions, markers: []string{"requirements.txt", "pyproject.toml", "setup.py"}},
+	{name: "Go", runtimes: []string{"go"}, exts: goExtensions, markers: []string{"go.mod"}},
+	{name: ".NET (C#/F#/VB)", runtimes: []string{"dotnet"}, exts: dotnetExtensions, markers: []string{".csproj", ".fsproj", ".vbproj"}},
+	{name: "Java", runtimes: []string{"java", "jvm"}, exts: javaExtensions, markers: []string{"pom.xml", "build.gradle", "build.gradle.kts"}},
+}
+
+// programFilesExt lists program entrypoint files in dir (non-recursive,
+// sorted) whose extension is in exts. A read error yields no files, never
+// an error: detection is best-effort, and absence of evidence is not
+// evidence. Nothing is executed; only names are read.
+func programFilesExt(dir string, exts map[string]bool) []string {
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, e := range ents {
+		if e.IsDir() {
+			continue
+		}
+		if exts[strings.ToLower(filepath.Ext(e.Name()))] {
+			out = append(out, e.Name())
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// hasAnyMarker reports whether dir contains any of the marker files.
+// A marker starting with "." matches by file extension (e.g. ".csproj");
+// otherwise it matches by exact file name, case-insensitively.
+func hasAnyMarker(dir string, markers []string) bool {
+	for _, m := range markers {
+		if strings.HasPrefix(m, ".") {
+			if hasExtCI(dir, m) {
+				return true
+			}
+			continue
+		}
+		if hasFileCI(dir, m) {
+			return true
+		}
+	}
+	return false
+}
+
+// hasExtCI reports whether dir contains a file with the given extension,
+// matched case-insensitively.
+func hasExtCI(dir, ext string) bool {
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+	for _, e := range ents {
+		if !e.IsDir() && strings.EqualFold(filepath.Ext(e.Name()), ext) {
+			return true
+		}
+	}
+	return false
+}
+
+// hasFileCI reports whether dir contains name, matched case-insensitively.
+func hasFileCI(dir, name string) bool {
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+	for _, e := range ents {
+		if !e.IsDir() && strings.EqualFold(e.Name(), name) {
+			return true
+		}
+	}
+	return false
 }
 
 // parser carries per-parse state.
@@ -121,7 +329,28 @@ type parser struct {
 	// resourceTypes maps logical resource name -> canonical TF type,
 	// for qualifying Refs in the type.name.attr form rules expect.
 	resourceTypes map[string]string
+	// aliasActive tracks alias targets currently being resolved (cycle
+	// guard). YAML anchors can be self-referential (&a [*a]); decoding
+	// into yaml.Node does NOT get yaml.v3's alias safeguards, so an
+	// unguarded follow recurses until the goroutine stack overflows.
+	aliasActive map[*yaml.Node]bool
+	// workBudget bounds total value() calls per Parse. Each ${...}
+	// resolution re-walks the referenced variable's subtree, so nested
+	// variable references amplify exponentially (diamond expansion).
+	// Exhaustion yields Unknown plus a single warning, never a hang.
+	workBudget int
+	// budgetWarned records that the work-budget warning was emitted.
+	budgetWarned bool
+	// resolving tracks variable names currently being resolved via
+	// ${...}. A reference cycle (a: ${b}, b: ${a}) would otherwise
+	// recurse value -> scalar -> resolveRef forever until stack overflow.
+	resolving map[string]bool
 }
+
+// maxPulumiWork bounds value() calls per Parse. A 10 MiB YAML file holds
+// at most ~1M nodes; 20M leaves ample headroom for ${...} re-walks while
+// bounding adversarial diamond expansion to seconds, not hours.
+const maxPulumiWork = 20000000
 
 // collectVars indexes variables: and configuration: defaults for ${...}
 // reference resolution.
@@ -134,7 +363,7 @@ func (p *parser) collectVars(root *yaml.Node) {
 			p.vars[k] = nodeField(v, k)
 		}
 	}
-	if c := nodeField(root, "configuration"); c != nil && c.Kind == yaml.MappingNode {
+	collectConfig := func(c *yaml.Node) {
 		for _, k := range sortedKeys(c) {
 			cn := nodeField(c, k)
 			if cn == nil {
@@ -150,6 +379,12 @@ func (p *parser) collectVars(root *yaml.Node) {
 				p.vars[k] = cn
 			}
 		}
+	}
+	if c := nodeField(root, "configuration"); c != nil && c.Kind == yaml.MappingNode {
+		collectConfig(c)
+	} else if c := nodeField(root, "config"); c != nil && c.Kind == yaml.MappingNode {
+		// Modern Pulumi YAML reference uses config: instead of configuration:.
+		collectConfig(c)
 	}
 	if r := nodeField(root, "resources"); r != nil && r.Kind == yaml.MappingNode {
 		for _, k := range sortedKeys(r) {
@@ -184,6 +419,26 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 			attrs[toSnake(k)] = p.value(nodeField(props, k), span)
 		}
 	}
+	// publicNetworkAccess is an enum in Pulumi azure-native
+	// ("Enabled"/"Disabled"); the rules expect the boolean
+	// public_network_access_enabled. Convert for every Azure type
+	// (this used to exist only inside the storage-account and
+	// mssql-server blocks, leaving e.g. Redis caches with the raw
+	// string under public_network_access, which bool rules cannot
+	// read).
+	if strings.HasPrefix(tfType, "azurerm_") {
+		if v, ok := attrs["public_network_access"]; ok {
+			if s, ok := v.AsString(); ok {
+				switch s {
+				case "Enabled":
+					attrs["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
+				case "Disabled":
+					attrs["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
+				}
+			}
+			delete(attrs, "public_network_access")
+		}
+	}
 	// options.protect / options.ignoreChanges are metadata, not security
 	// signals; they are intentionally not mapped to attributes.
 	// Promote nested encryption.requireInfrastructureEncryption for Azure
@@ -201,6 +456,12 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 				}
 			}
 		}
+		// Pulumi azure-native property names differ from the Terraform
+		// attribute names the rules expect; normalize them.
+		renameAttr(attrs, "minimum_tls_version", "min_tls_version")
+		renameAttr(attrs, "supports_https_traffic_only", "https_traffic_only_enabled")
+		renameAttr(attrs, "allow_shared_key_access", "shared_access_key_enabled")
+		renameAttr(attrs, "network_rule_set", "network_rules")
 	}
 	// Rename securityRules -> security_rule for NSGs (TF attribute name).
 	if tfType == "azurerm_network_security_group" {
@@ -208,6 +469,23 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 			attrs["security_rule"] = v
 			delete(attrs, "security_rules")
 		}
+		// azure-native nests each rule's fields under properties:; the
+		// rules read direction/access/source_* at the rule level.
+		flattenNestedProperties(attrs, "security_rule")
+	}
+	// azure-native Key Vault wraps all settings under properties:; the
+	// rules read purge_protection_enabled etc. at the resource level.
+	if tfType == "azurerm_key_vault" {
+		flattenNestedProperties(attrs, "")
+		renameAttr(attrs, "enable_purge_protection", "purge_protection_enabled")
+		renameAttr(attrs, "enable_soft_delete", "soft_delete_enabled")
+		// azure-native uses softDeleteRetentionInDays; the rules read
+		// soft_delete_retention_days (same rename as the ARM adapter).
+		renameAttr(attrs, "soft_delete_retention_in_days", "soft_delete_retention_days")
+		// azure-native networkAcls use ipRules: [{value: ...}] and
+		// virtualNetworkRules: [{id: ...}]; the rules read ip_rules /
+		// virtual_network_subnet_ids as plain string lists.
+		normalizeKVNetworkAcls(attrs)
 	}
 	// Rename allows -> allow for GCP firewalls (TF attribute name).
 	if tfType == "google_compute_firewall" {
@@ -216,19 +494,29 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 			delete(attrs, "allows")
 		}
 	}
-	// Convert publicNetworkAccess enum to boolean for MSSQL servers.
-	// Pulumi uses public_network_access; TF rules expect public_network_access_enabled.
-	if tfType == "azurerm_mssql_server" {
-		if v, ok := attrs["public_network_access"]; ok {
-			if s, ok := v.AsString(); ok {
-				switch s {
-				case "Enabled":
-					attrs["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
-				case "Disabled":
-					attrs["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
+	// (The mssql publicNetworkAccess enum conversion that used to live
+	// here is now the general azurerm_* conversion above.)
+	// Terraform policy attributes are JSON strings; a Pulumi YAML mapping
+	// for `policy` (e.g. an S3 BucketPolicy document) must be stringified
+	// so the policy rules (which parse a JSON string) can read it. If any
+	// part is unresolved, leave the mapping untouched: stringifying an
+	// Unknown would fabricate document content.
+	if v, ok := attrs["policy"]; ok {
+		if m, ok := v.Raw.(map[string]ir.Value); ok {
+			if s, ok := stringifyPolicyDoc(m); ok {
+				attrs["policy"] = ir.Value{Raw: s, Known: true, Span: v.Span}
+			}
+		}
+	}
+	// Rules sometimes read sku as a plain string; expose sku.name too
+	// (same promotion as the ARM adapter).
+	if v, ok := attrs["sku"]; ok {
+		if m, ok := v.Raw.(map[string]ir.Value); ok {
+			if n, ok := m["name"]; ok {
+				if _, exists := attrs["sku_name"]; !exists {
+					attrs["sku_name"] = n
 				}
 			}
-			delete(attrs, "public_network_access")
 		}
 	}
 	return ir.Resource{
@@ -247,6 +535,19 @@ func (p *parser) value(n *yaml.Node, span ir.Span) ir.Value {
 	if n == nil {
 		return ir.UnknownValue(span)
 	}
+	// Work budget: bounds total node visits incl. ${...} re-walks.
+	if p.workBudget <= 0 {
+		if !p.budgetWarned {
+			p.budgetWarned = true
+			p.diags = append(p.diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: "pulumi: evaluation budget exceeded (deeply nested variable references?); remaining values treated as unknown",
+				Span:    span,
+			})
+		}
+		return ir.UnknownValue(span)
+	}
+	p.workBudget--
 	span = p.spanOf(n, p.path)
 	switch n.Kind {
 	case yaml.ScalarNode:
@@ -274,7 +575,26 @@ func (p *parser) value(n *yaml.Node, span ir.Span) ir.Value {
 		}
 		return ir.Value{Raw: out, Known: true, Span: span}
 	case yaml.AliasNode:
-		return p.value(n.Alias, span)
+		if n.Alias == nil {
+			return ir.UnknownValue(span)
+		}
+		// Cycle guard: a self-referential anchor (&a [*a]) would
+		// otherwise recurse until stack overflow.
+		if p.aliasActive[n.Alias] {
+			p.diags = append(p.diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: "pulumi: YAML alias cycle detected; value treated as unknown",
+				Span:    span,
+			})
+			return ir.UnknownValue(span)
+		}
+		if p.aliasActive == nil {
+			p.aliasActive = map[*yaml.Node]bool{}
+		}
+		p.aliasActive[n.Alias] = true
+		v := p.value(n.Alias, span)
+		delete(p.aliasActive, n.Alias)
+		return v
 	default:
 		return ir.UnknownValue(span)
 	}
@@ -290,11 +610,15 @@ func (p *parser) scalar(n *yaml.Node, span ir.Span) ir.Value {
 		return ir.Value{Raw: n.Value == "true", Known: true, Span: span}
 	case "!!int":
 		var i int64
-		fmt.Sscanf(n.Value, "%d", &i)
+		if _, err := fmt.Sscanf(n.Value, "%d", &i); err != nil {
+			return ir.Value{Known: false, Span: span}
+		}
 		return ir.Value{Raw: float64(i), Known: true, Span: span}
 	case "!!float":
 		var f float64
-		fmt.Sscanf(n.Value, "%g", &f)
+		if _, err := fmt.Sscanf(n.Value, "%g", &f); err != nil {
+			return ir.Value{Known: false, Span: span}
+		}
 		return ir.Value{Raw: f, Known: true, Span: span}
 	default:
 		s := n.Value
@@ -321,8 +645,21 @@ func (p *parser) resolveRef(ref string, span ir.Span) ir.Value {
 		head = head[:i]
 	}
 	if v, ok := p.vars[head]; ok {
+		// Cycle guard: a: ${b}, b: ${a} would otherwise recurse
+		// value -> scalar -> resolveRef until stack overflow.
+		if p.resolving[head] {
+			p.diags = append(p.diags, ir.Diagnostic{
+				Level:   "warning",
+				Message: fmt.Sprintf("pulumi: variable reference cycle involving %q; value treated as unknown", head),
+				Span:    span,
+			})
+			return ir.Value{Known: false, Span: span, Ref: ref}
+		}
 		// Statically-known variable/config value: inline it.
-		return p.value(v, span)
+		p.resolving[head] = true
+		out := p.value(v, span)
+		delete(p.resolving, head)
+		return out
 	}
 	if p.resourceNames[head] {
 		// Qualify with canonical type for cross-adapter Ref compatibility:
@@ -342,6 +679,179 @@ func (p *parser) spanOf(n *yaml.Node, path string) ir.Span {
 		return ir.Span{File: path, StartLine: 1, StartCol: 1}
 	}
 	return ir.Span{File: path, StartLine: n.Line, StartCol: n.Column}
+}
+
+// programNode resolves which mapping holds the Pulumi program sections
+// (resources:, variables:, configuration:/config:). The modern layout puts
+// them at the document root; the legacy layout nests them under template:.
+// The template layout applies only when the root defines no resources: of
+// its own, so a mixed document is read from the root.
+func programNode(root *yaml.Node) *yaml.Node {
+	if nodeField(root, "resources") != nil {
+		return root
+	}
+	if t := nodeField(root, "template"); t != nil && t.Kind == yaml.MappingNode {
+		return t
+	}
+	return root
+}
+
+// flattenNestedProperties merges nested "properties" maps up one level.
+// When attr is "", the resource's own attrs["properties"] map is merged
+// into attrs. When attr names a list attribute (e.g. "security_rule"),
+// each list entry's nested "properties" map is merged into that entry.
+// This normalizes the azure-native API shape (which nests settings under
+// properties:) to the flat Terraform attribute layout the rules expect.
+// Keys are already snake_cased by value(); existing keys win on conflict.
+func flattenNestedProperties(attrs map[string]ir.Value, attr string) {
+	merge := func(dst map[string]ir.Value, v ir.Value) {
+		if m, ok := v.AsMap(); ok {
+			if props, ok := m["properties"]; ok {
+				if pm, ok := props.AsMap(); ok {
+					for k, pv := range pm {
+						if _, exists := dst[k]; !exists {
+							dst[k] = pv
+						}
+					}
+				}
+			}
+		}
+	}
+	if attr == "" {
+		if v, ok := attrs["properties"]; ok {
+			if m, ok := v.AsMap(); ok {
+				for k, pv := range m {
+					if _, exists := attrs[k]; !exists {
+						attrs[k] = pv
+					}
+				}
+			}
+			delete(attrs, "properties")
+		}
+		return
+	}
+	if v, ok := attrs[attr]; ok {
+		if lst, ok := v.Raw.([]ir.Value); ok {
+			for i := range lst {
+				if m, ok := lst[i].AsMap(); ok {
+					merge(m, lst[i])
+					delete(m, "properties")
+				}
+			}
+		} else {
+			merge(attrs, v)
+		}
+	}
+}
+
+// stringifyPolicyDoc renders a Pulumi policy-document mapping as a JSON
+// string. Keys stay snake_cased (the policy parsers match keys
+// case-insensitively); values are the literal scalars/lists/maps. Any
+// unresolved (Unknown) value aborts the conversion so no fabricated
+// document content is produced.
+func stringifyPolicyDoc(m map[string]ir.Value) (string, bool) {
+	plain, ok := plainValue(ir.Value{Raw: m, Known: true})
+	if !ok {
+		return "", false
+	}
+	b, err := json.Marshal(plain)
+	if err != nil {
+		return "", false
+	}
+	return string(b), true
+}
+
+// plainValue converts an ir.Value tree to plain Go values for JSON
+// marshalling. Unknown values abort the conversion.
+func plainValue(v ir.Value) (any, bool) {
+	if !v.Known {
+		return nil, false
+	}
+	switch t := v.Raw.(type) {
+	case map[string]ir.Value:
+		out := make(map[string]any, len(t))
+		for k, ev := range t {
+			pv, ok := plainValue(ev)
+			if !ok {
+				return nil, false
+			}
+			out[k] = pv
+		}
+		return out, true
+	case []ir.Value:
+		out := make([]any, 0, len(t))
+		for _, ev := range t {
+			pv, ok := plainValue(ev)
+			if !ok {
+				return nil, false
+			}
+			out = append(out, pv)
+		}
+		return out, true
+	default:
+		return t, true
+	}
+}
+
+// normalizeKVNetworkAcls unwraps azure-native Key Vault network ACL rule
+// lists: ipRules: [{value: ...}] -> ip_rules: [...] and
+// virtualNetworkRules: [{id: ...}] -> virtual_network_subnet_ids: [...],
+// the plain string lists the Azure rules read.
+func normalizeKVNetworkAcls(attrs map[string]ir.Value) {
+	nacls, ok := attrs["network_acls"]
+	if !ok {
+		return
+	}
+	m, ok := nacls.Raw.(map[string]ir.Value)
+	if !ok {
+		return
+	}
+	if ip, ok := m["ip_rules"]; ok {
+		if unwrapped, ok := unwrapSingleKeyList(ip, "value"); ok {
+			m["ip_rules"] = unwrapped
+		}
+	}
+	if vr, ok := m["virtual_network_rules"]; ok {
+		if unwrapped, ok := unwrapSingleKeyList(vr, "id"); ok {
+			m["virtual_network_subnet_ids"] = unwrapped
+			delete(m, "virtual_network_rules")
+		}
+	}
+}
+
+// unwrapSingleKeyList converts a list of single-key maps [{key: x}, ...]
+// to a plain list [x, ...]. Non-map elements or maps without the key
+// abort the conversion.
+func unwrapSingleKeyList(v ir.Value, key string) (ir.Value, bool) {
+	lst, ok := v.Raw.([]ir.Value)
+	if !ok {
+		return ir.Value{}, false
+	}
+	out := make([]ir.Value, 0, len(lst))
+	for _, e := range lst {
+		em, ok := e.Raw.(map[string]ir.Value)
+		if !ok {
+			return ir.Value{}, false
+		}
+		ev, ok := em[key]
+		if !ok || !ev.Known {
+			return ir.Value{}, false
+		}
+		out = append(out, ev)
+	}
+	return ir.Value{Raw: out, Known: true, Span: v.Span}, true
+}
+
+// renameAttr moves attrs[from] to attrs[to] when present and to is absent.
+// Used to normalize Pulumi-native property names to the Terraform attribute
+// names the rule packs expect.
+func renameAttr(attrs map[string]ir.Value, from, to string) {
+	if v, ok := attrs[from]; ok {
+		if _, exists := attrs[to]; !exists {
+			attrs[to] = v
+		}
+		delete(attrs, from)
+	}
 }
 
 // nodeMap returns the document's root mapping node, unwrapping the

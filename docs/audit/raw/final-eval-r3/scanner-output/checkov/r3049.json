@@ -1,0 +1,353 @@
+{
+    "check_type": "cloudformation",
+    "results": {
+        "failed_checks": [
+            {
+                "check_id": "CKV_AWS_58",
+                "bc_check_id": "BC_AWS_KUBERNETES_3",
+                "check_name": "Ensure EKS Cluster has Secrets Encryption Enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/EncryptionConfig/Resources"
+                    ]
+                },
+                "code_block": [
+                    [
+                        9,
+                        "  MainCluster:\n"
+                    ],
+                    [
+                        10,
+                        "    Type: AWS::EKS::Cluster\n"
+                    ],
+                    [
+                        11,
+                        "    Properties:\n"
+                    ],
+                    [
+                        12,
+                        "      Name: main-e9df5b\n"
+                    ],
+                    [
+                        13,
+                        "      RoleArn: arn:aws:iam::123456789012:role/eks-cluster\n"
+                    ],
+                    [
+                        14,
+                        "      ResourcesVpcConfig:\n"
+                    ],
+                    [
+                        15,
+                        "        SubnetIds: [subnet-aaa, subnet-bbb]\n"
+                    ],
+                    [
+                        16,
+                        "        EndpointPublicAccess: true\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3049/template.yaml",
+                "repo_file_path": "/corpus/r3049/template.yaml",
+                "file_line_range": [
+                    9,
+                    16
+                ],
+                "resource": "AWS::EKS::Cluster.MainCluster",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.EKSSecretsEncryption",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-kubernetes-policies/bc-aws-kubernetes-3",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null
+            },
+            {
+                "check_id": "CKV_AWS_118",
+                "bc_check_id": "BC_AWS_LOGGING_28",
+                "check_name": "Ensure that enhanced monitoring is enabled for Amazon RDS instances",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/MonitoringInterval"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "  AppDB:\n"
+                    ],
+                    [
+                        19,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        20,
+                        "    Properties:\n"
+                    ],
+                    [
+                        21,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        22,
+                        "      DBInstanceClass: db.t3.micro\n"
+                    ],
+                    [
+                        23,
+                        "      DBInstanceIdentifier: app-e9df5b\n"
+                    ],
+                    [
+                        24,
+                        "      AllocatedStorage: \"20\"\n"
+                    ],
+                    [
+                        25,
+                        "      StorageEncrypted: true\n"
+                    ],
+                    [
+                        26,
+                        "      MasterUsername: appadmin\n"
+                    ],
+                    [
+                        27,
+                        "      MasterUserPassword: !Ref DbPassword\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3049/template.yaml",
+                "repo_file_path": "/corpus/r3049/template.yaml",
+                "file_line_range": [
+                    18,
+                    27
+                ],
+                "resource": "AWS::RDS::DBInstance.AppDB",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSEnhancedMonitorEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-logging-policies/ensure-that-enhanced-monitoring-is-enabled-for-amazon-rds-instances",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "MasterUserPassword": [
+                        {
+                            "type": "parameters",
+                            "name": "DbPassword",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3049/template.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_161",
+                "bc_check_id": "BC_AWS_IAM_65",
+                "check_name": "Ensure RDS database has IAM authentication enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/EnableIAMDatabaseAuthentication"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "  AppDB:\n"
+                    ],
+                    [
+                        19,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        20,
+                        "    Properties:\n"
+                    ],
+                    [
+                        21,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        22,
+                        "      DBInstanceClass: db.t3.micro\n"
+                    ],
+                    [
+                        23,
+                        "      DBInstanceIdentifier: app-e9df5b\n"
+                    ],
+                    [
+                        24,
+                        "      AllocatedStorage: \"20\"\n"
+                    ],
+                    [
+                        25,
+                        "      StorageEncrypted: true\n"
+                    ],
+                    [
+                        26,
+                        "      MasterUsername: appadmin\n"
+                    ],
+                    [
+                        27,
+                        "      MasterUserPassword: !Ref DbPassword\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3049/template.yaml",
+                "repo_file_path": "/corpus/r3049/template.yaml",
+                "file_line_range": [
+                    18,
+                    27
+                ],
+                "resource": "AWS::RDS::DBInstance.AppDB",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSIAMAuthentication",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-iam-policies/ensure-rds-database-has-iam-authentication-enabled",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "MasterUserPassword": [
+                        {
+                            "type": "parameters",
+                            "name": "DbPassword",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3049/template.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            },
+            {
+                "check_id": "CKV_AWS_157",
+                "bc_check_id": "BC_AWS_GENERAL_73",
+                "check_name": "Ensure that RDS instances have Multi-AZ enabled",
+                "check_result": {
+                    "result": "FAILED",
+                    "evaluated_keys": [
+                        "Properties/MultiAZ"
+                    ]
+                },
+                "code_block": [
+                    [
+                        18,
+                        "  AppDB:\n"
+                    ],
+                    [
+                        19,
+                        "    Type: AWS::RDS::DBInstance\n"
+                    ],
+                    [
+                        20,
+                        "    Properties:\n"
+                    ],
+                    [
+                        21,
+                        "      Engine: postgres\n"
+                    ],
+                    [
+                        22,
+                        "      DBInstanceClass: db.t3.micro\n"
+                    ],
+                    [
+                        23,
+                        "      DBInstanceIdentifier: app-e9df5b\n"
+                    ],
+                    [
+                        24,
+                        "      AllocatedStorage: \"20\"\n"
+                    ],
+                    [
+                        25,
+                        "      StorageEncrypted: true\n"
+                    ],
+                    [
+                        26,
+                        "      MasterUsername: appadmin\n"
+                    ],
+                    [
+                        27,
+                        "      MasterUserPassword: !Ref DbPassword\n"
+                    ]
+                ],
+                "file_path": "/template.yaml",
+                "file_abs_path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3049/template.yaml",
+                "repo_file_path": "/corpus/r3049/template.yaml",
+                "file_line_range": [
+                    18,
+                    27
+                ],
+                "resource": "AWS::RDS::DBInstance.AppDB",
+                "evaluations": {},
+                "check_class": "checkov.cloudformation.checks.resource.aws.RDSMultiAZEnabled",
+                "fixed_definition": null,
+                "entity_tags": null,
+                "caller_file_path": null,
+                "caller_file_line_range": null,
+                "resource_address": null,
+                "severity": null,
+                "bc_category": null,
+                "benchmarks": null,
+                "description": null,
+                "short_description": null,
+                "vulnerability_details": null,
+                "connected_node": null,
+                "guideline": "https://docs.prismacloud.io/en/enterprise-edition/policy-reference/aws-policies/aws-general-policies/general-73",
+                "details": [],
+                "check_len": null,
+                "definition_context_file_path": null,
+                "breadcrumbs": {
+                    "MasterUserPassword": [
+                        {
+                            "type": "parameters",
+                            "name": "DbPassword",
+                            "path": "/home/hatch/workspace/aegis-engine/docs/audit/raw/final-eval-r3/corpus/r3049/template.yaml",
+                            "attribute_key": "Default"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "summary": {
+        "passed": 3,
+        "failed": 4,
+        "skipped": 0,
+        "parsing_errors": 0,
+        "resource_count": 2,
+        "checkov_version": "3.3.26"
+    }
+}
