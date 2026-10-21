@@ -1,0 +1,33 @@
+# Lint gate — golangci-lint with the repository's calibrated config
+# (.golangci.yml): errcheck, govet, ineffassign, staticcheck, unused,
+# with a short list of named, justified exclusions. Zero findings is
+# the bar; the config documents every exception.
+
+name: Lint
+
+on:
+  push:
+    branches: [main, master, mission/**]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  golangci:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.15.0

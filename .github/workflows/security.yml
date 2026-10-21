@@ -1,0 +1,58 @@
+# Aegis security scanning — CodeQL static analysis of the engine's own Go
+# code, plus govulncheck over the module graph (reachable-vulnerability
+# gate: this job is what caught the Go 1.25 stdlib findings that forced
+# the 1.26 toolchain upgrade in v2.1.1).
+#
+# CodeQL results land in the repository's Security tab (code scanning).
+# govulncheck is a hard gate: a reachable vulnerability fails the job.
+
+name: Security
+
+on:
+  push:
+    branches: [main, master, mission/**]
+  pull_request:
+  schedule:
+    # Weekly re-scan: new advisories against unchanged code still surface.
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    name: CodeQL (go)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go
+          build-mode: autobuild
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:go"
+
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run govulncheck
+        run: |
+          go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
