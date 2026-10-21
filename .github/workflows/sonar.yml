@@ -1,0 +1,123 @@
+# Aegis code quality — SonarQube, run the option-3 way: an EPHEMERAL
+# SonarQube server lives and dies inside this job. No SonarCloud
+# account, no token secret, no subscription (SonarCloud analysis of
+# private repos is paid; this is free and needs nothing provisioned).
+#
+# Flow: boot sonarqube:lts-community on the runner → provision a
+# throwaway admin + analysis token through the API → run the official
+# scanner against the tree → read the Quality Gate verdict from the
+# API and fail the job if it is ERROR → export the full issue list as
+# a run artifact (the ONLY durable record, since the server is
+# disposable) → runner teardown destroys the server.
+#
+# Trade-off, stated plainly: no persistent dashboard, no history or
+# trend between runs, and the default "Sonar way" quality gate starts
+# from zero every run. What you keep is a real Sonar analysis + gate
+# verdict on every push, at zero cost and zero administration.
+
+name: SonarQube (ephemeral)
+
+on:
+  push:
+    branches: [main, master, mission/**]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonarqube:
+    name: SonarQube scan + quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the scanner uses SCM blame for new-code data.
+          fetch-depth: 0
+
+      - name: Prepare host for SonarQube's Elasticsearch
+        run: sudo sysctl -w vm.max_map_count=524288
+
+      - name: Start ephemeral SonarQube
+        run: |
+          docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
+          echo "waiting for SonarQube to come UP..."
+          for i in $(seq 1 60); do
+            status=$(curl -s http://localhost:9000/api/system/status | jq -r .status 2>/dev/null || true)
+            echo "  [$i] status: ${status:-unreachable}"
+            [ "$status" = "UP" ] && exit 0
+            sleep 10
+          done
+          echo "SonarQube did not reach UP in time; last logs:"
+          docker logs --tail 100 sonarqube
+          exit 1
+
+      - name: Provision throwaway admin + analysis token
+        id: sonar-auth
+        run: |
+          NEWPASS="ci-$(date +%s)-ephemeral"
+          curl -sf -u admin:admin -X POST \
+            "http://localhost:9000/api/users/change_password?login=admin&password=${NEWPASS}&previousPassword=admin"
+          TOKEN=$(curl -sf -u "admin:${NEWPASS}" -X POST \
+            "http://localhost:9000/api/user_tokens/generate?name=ci-ephemeral" | jq -r .token)
+          [ -n "$TOKEN" ] && [ "$TOKEN" != "null" ] || { echo "token provisioning failed"; exit 1; }
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Run SonarScanner
+        run: |
+          docker run --rm --network host \
+            -v "${{ github.workspace }}:/usr/src" \
+            -e SONAR_HOST_URL="http://localhost:9000" \
+            -e SONAR_TOKEN="${{ steps.sonar-auth.outputs.token }}" \
+            sonarsource/sonar-scanner-cli \
+            -Dsonar.projectKey=aegis-engine \
+            -Dsonar.projectName="Aegis Engine" \
+            -Dsonar.sources=. \
+            -Dsonar.exclusions="benchmark/**,docs/audit/raw/**,**/testdata/**" \
+            -Dsonar.sourceEncoding=UTF-8
+
+      - name: Quality gate verdict + export issues
+        if: always()
+        env:
+          SONAR_TOKEN: ${{ steps.sonar-auth.outputs.token }}
+        run: |
+          mkdir -p sonar-results
+          # Wait for the Compute Engine task the scanner queued.
+          CE_URL=$(grep -o 'ceTaskUrl=[^ ]*' .scannerwork/report-task.txt | cut -d= -f2-)
+          echo "CE task: $CE_URL"
+          for i in $(seq 1 30); do
+            CE_STATUS=$(curl -sf -u "$SONAR_TOKEN:" "$CE_URL" | jq -r .task.status)
+            echo "  [$i] CE: $CE_STATUS"
+            [ "$CE_STATUS" = "SUCCESS" ] && break
+            [ "$CE_STATUS" = "FAILED" ] && { echo "analysis failed on the server"; exit 1; }
+            sleep 10
+          done
+          ANALYSIS_ID=$(curl -sf -u "$SONAR_TOKEN:" "$CE_URL" | jq -r .task.analysisId)
+          curl -sf -u "$SONAR_TOKEN:" \
+            "http://localhost:9000/api/qualitygates/project_status?analysisId=$ANALYSIS_ID" \
+            > sonar-results/qualitygate.json
+          GATE=$(jq -r .projectStatus.status sonar-results/qualitygate.json)
+          curl -sf -u "$SONAR_TOKEN:" \
+            "http://localhost:9000/api/issues/search?componentKeys=aegis-engine&ps=500&pageIndex=1" \
+            > sonar-results/issues-page1.json
+          TOTAL=$(jq -r .total sonar-results/issues-page1.json)
+          echo "Quality gate: $GATE | Issues exported: $TOTAL (page 1 of the export)"
+          jq -r '.projectStatus.conditions[]? | "  \(.status) \(.metricKey): \(.actualValue) vs \(.comparator) \(.errorThreshold)"' sonar-results/qualitygate.json || true
+          cp .scannerwork/report-task.txt sonar-results/ 2>/dev/null || true
+          [ "$GATE" = "OK" ] || { echo "QUALITY GATE: $GATE"; exit 1; }
+
+      - name: Archive Sonar results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonar-results
+          path: sonar-results/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Dump SonarQube logs on failure
+        if: failure()
+        run: docker logs --tail 200 sonarqube || true
