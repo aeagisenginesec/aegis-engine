@@ -363,7 +363,7 @@ func (s backupNoImmutability) Check(r ir.Resource) []ir.Finding {
 	if present && strings.EqualFold(strings.TrimSpace(v), "Locked") {
 		return nil
 	}
-	actual := "Disabled"
+	var actual string
 	if !present {
 		actual = "absent (provider default: Disabled)"
 	} else {

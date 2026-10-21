@@ -564,7 +564,7 @@ func topLevelCommasOnLine(src []byte, start int) []int {
 		case c == '/' && i+1 < len(src) && src[i+1] == '*':
 			// Skip to the closing */ (or end of line).
 			j := i + 2
-			for j+1 < len(src) && src[j] != '\n' && !(src[j] == '*' && src[j+1] == '/') {
+			for j+1 < len(src) && src[j] != '\n' && src[j] != '*' || src[j+1] != '/' {
 				j++
 			}
 			i = j + 2
@@ -628,7 +628,7 @@ func blockOpenBraceOffset(src []byte, pos hcl.Pos) (int, bool) {
 		case c == '/' && i+1 < len(src) && src[i+1] == '*':
 			// Skip to the closing */ (or end of line).
 			j := i + 2
-			for j+1 < len(src) && src[j] != '\n' && !(src[j] == '*' && src[j+1] == '/') {
+			for j+1 < len(src) && src[j] != '\n' && src[j] != '*' || src[j+1] != '/' {
 				j++
 			}
 			i = j + 2

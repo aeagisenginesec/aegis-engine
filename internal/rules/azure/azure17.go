@@ -412,7 +412,7 @@ func (s firewallThreatIntelOff) Check(r ir.Resource) []ir.Finding {
 	if present && strings.EqualFold(strings.TrimSpace(m), "Deny") {
 		return nil
 	}
-	actual := "Alert"
+	var actual string
 	if !present {
 		actual = "absent (provider default: Alert)"
 	} else {
@@ -491,7 +491,7 @@ func (s frontdoorWAFNotPrevent) Check(r ir.Resource) []ir.Finding {
 	if present && strings.EqualFold(strings.TrimSpace(m), "Prevention") {
 		return nil
 	}
-	actual := "Detection"
+	var actual string
 	if !present {
 		actual = "absent (provider default: Detection)"
 	} else {

@@ -12,7 +12,6 @@ func spanAt(line int) ir.Span {
 	return ir.Span{File: "test.tf", StartLine: line, StartCol: 1, EndLine: line, EndCol: 20}
 }
 
-func kv(b bool, line int) ir.Value { return ir.Value{Raw: b, Known: true, Span: spanAt(line)} }
 func ks(s string, line int) ir.Value {
 	return ir.Value{Raw: s, Known: true, Span: spanAt(line)}
 }

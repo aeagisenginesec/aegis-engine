@@ -345,7 +345,7 @@ func runFix(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		claimed := map[string]map[int]int{}
 		var selected []int // indexes into outcomes
 		for i, o := range outcomes {
-			if !(o.validation.Fixed && len(o.validation.NewFindings) == 0) {
+			if !o.validation.Fixed || len(o.validation.NewFindings) != 0 {
 				outcomes[i].skipped = "did not validate cleanly"
 				continue
 			}
@@ -1126,7 +1126,7 @@ func parseOneFile(f discovery.File, adapters []ir.Adapter) (pr fileParseResult) 
 	if discovery.IsExcluded(f.Path) {
 		pr.diags = append(pr.diags, ir.Diagnostic{
 			Level:   "warning",
-			Message: fmt.Sprintf("excluded by --exclude pattern; skipped"),
+			Message: "excluded by --exclude pattern; skipped",
 			Span:    ir.Span{File: f.Path},
 		})
 		return pr

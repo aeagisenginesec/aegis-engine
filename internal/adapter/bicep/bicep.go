@@ -677,12 +677,6 @@ func (p *parser) parseTypeString() string {
 
 // --- expression parsing ---
 
-// parseExpr parses a Bicep value expression.
-func (p *parser) parseExpr() tval {
-	v, _ := p.parseExprOK()
-	return v
-}
-
 // parseExprOK parses an expression, reporting whether it parsed cleanly.
 // A clean parse may still yield an Unknown value (undeclared identifier,
 // unsupported function, forward reference); only SYNTAX failures return
@@ -1041,7 +1035,6 @@ func (p *parser) parseIdentOrCall() (tval, bool) {
 							for _, part := range parts {
 								quoted = append(quoted, armQuote(part))
 							}
-							consumed = true
 							return expr("[resourceId(" + strings.Join(quoted, ", ") + ")]"), true
 						}
 					}

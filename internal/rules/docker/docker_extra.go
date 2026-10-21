@@ -1039,7 +1039,7 @@ func (yumNoClean) Check(r ir.Resource) []ir.Finding {
 			continue
 		}
 		lower := strings.ToLower(cmd)
-		if !(strings.Contains(lower, "yum install") || strings.Contains(lower, "dnf install")) {
+		if !strings.Contains(lower, "yum install") && !strings.Contains(lower, "dnf install") {
 			continue
 		}
 		if strings.Contains(lower, "clean all") {

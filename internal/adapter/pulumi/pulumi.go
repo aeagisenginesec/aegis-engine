@@ -270,11 +270,6 @@ func programFilesExt(dir string, exts map[string]bool) []string {
 	return out
 }
 
-// programFiles lists Pulumi Node.js program entrypoints (.ts/.js/…) in dir.
-func programFiles(dir string) []string {
-	return programFilesExt(dir, tsExtensions)
-}
-
 // hasAnyMarker reports whether dir contains any of the marker files.
 // A marker starting with "." matches by file extension (e.g. ".csproj");
 // otherwise it matches by exact file name, case-insensitively.
@@ -615,11 +610,15 @@ func (p *parser) scalar(n *yaml.Node, span ir.Span) ir.Value {
 		return ir.Value{Raw: n.Value == "true", Known: true, Span: span}
 	case "!!int":
 		var i int64
-		fmt.Sscanf(n.Value, "%d", &i)
+		if _, err := fmt.Sscanf(n.Value, "%d", &i); err != nil {
+			return ir.Value{Known: false, Span: span}
+		}
 		return ir.Value{Raw: float64(i), Known: true, Span: span}
 	case "!!float":
 		var f float64
-		fmt.Sscanf(n.Value, "%g", &f)
+		if _, err := fmt.Sscanf(n.Value, "%g", &f); err != nil {
+			return ir.Value{Known: false, Span: span}
+		}
 		return ir.Value{Raw: f, Known: true, Span: span}
 	default:
 		s := n.Value
@@ -736,9 +735,7 @@ func flattenNestedProperties(attrs map[string]ir.Value, attr string) {
 			for i := range lst {
 				if m, ok := lst[i].AsMap(); ok {
 					merge(m, lst[i])
-					if _, has := m["properties"]; has {
-						delete(m, "properties")
-					}
+					delete(m, "properties")
 				}
 			}
 		} else {

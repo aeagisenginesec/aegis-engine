@@ -18,16 +18,6 @@ func eaNum(n float64, line int) ir.Value {
 	return ir.Value{Raw: n, Known: true, Span: spanAt(line)}
 }
 
-// eaRef builds an unresolved reference value.
-func eaRef(ref string, line int) ir.Value {
-	return ir.Value{Known: false, Span: spanAt(line), Ref: ref}
-}
-
-// eaMapVal builds a known map attribute value.
-func eaMapVal(m map[string]ir.Value, line int) ir.Value {
-	return ir.Value{Raw: m, Known: true, Span: spanAt(line)}
-}
-
 // AEGIS-AWS-309: deprecated launch configuration. The rule fires on the
 // mere existence of an aws_launch_configuration (no attribute is read), so
 // the negative case is a resource type the rule does not apply to.
@@ -290,8 +280,6 @@ func eaM(pairs ...any) ir.Value {
 }
 
 func eaU() ir.Value { return ir.Value{Known: false} }
-
-func eaR(ref string) ir.Value { return ir.Value{Known: false, Ref: ref} }
 
 func eaRes(typ, name string, attrs map[string]ir.Value) ir.Resource {
 	return ir.Resource{Type: typ, Name: name, Provider: "audit", Attributes: attrs}

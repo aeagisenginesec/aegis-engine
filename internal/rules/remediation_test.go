@@ -87,7 +87,7 @@ func TestRemediationFor_NoWrongCloudRefs(t *testing.T) {
 		}
 		for _, w := range wordMarkers {
 			for _, tok := range strings.FieldsFunc(hay, func(c rune) bool {
-				return !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9')
+				return (c < 'a' || c > 'z') && (c < '0' || c > '9')
 			}) {
 				if tok == w {
 					t.Errorf("%s: remediation contains AWS word %q", r.ID(), w)

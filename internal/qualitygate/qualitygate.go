@@ -21,7 +21,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
 )
 
 // Default locations. Overridable via Options for tests.
@@ -185,14 +184,4 @@ func splitLines(s string) []string {
 	}
 	out = append(out, s[start:])
 	return out
-}
-
-// sortedKeys returns map keys in sorted order (deterministic output).
-func sortedKeys(m map[string]int) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }

@@ -147,7 +147,7 @@ func TestUncertainChain(t *testing.T) {
 			}
 		}
 		if c.Uncertain != foundUncertain {
-			// chain-level flag must match hop-level reality
+			t.Errorf("chain-level Uncertain = %v, want %v (must match hop-level reality)", c.Uncertain, foundUncertain)
 		}
 	}
 	if !foundUncertain {

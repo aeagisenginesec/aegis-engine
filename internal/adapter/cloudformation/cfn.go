@@ -77,16 +77,6 @@ func (Adapter) HandlesContent(path string, src []byte) bool {
 	return looksLikeCFNContent(src)
 }
 
-// looksLikeCFN reads the file (bounded) and checks for CloudFormation
-// markers. Prefer HandlesContent when the bytes are already in hand.
-func looksLikeCFN(path string) bool {
-	src, err := readBounded(path, 1<<20)
-	if err != nil {
-		return false
-	}
-	return looksLikeCFNContent(src)
-}
-
 // looksLikeCFNContent checks bytes for CloudFormation markers.
 func looksLikeCFNContent(src []byte) bool {
 	// Fast path: textual markers.
@@ -419,35 +409,6 @@ func mappingGet(m *yaml.Node, key string) *yaml.Node {
 	for i := 0; i+1 < len(m.Content); i += 2 {
 		if m.Content[i].Kind == yaml.ScalarNode && m.Content[i].Value == key {
 			found = m.Content[i+1]
-		}
-	}
-	return found
-}
-
-// mappingKeys returns the scalar keys of a mapping node.
-func mappingKeys(m *yaml.Node) []string {
-	var out []string
-	if m == nil || m.Kind != yaml.MappingNode {
-		return out
-	}
-	for i := 0; i+1 < len(m.Content); i += 2 {
-		if m.Content[i].Kind == yaml.ScalarNode {
-			out = append(out, m.Content[i].Value)
-		}
-	}
-	return out
-}
-
-// keyNode returns the key node for key in a mapping node (for spans).
-// Like mappingGet, LAST occurrence wins on duplicate keys.
-func keyNode(m *yaml.Node, key string) *yaml.Node {
-	if m == nil || m.Kind != yaml.MappingNode {
-		return nil
-	}
-	var found *yaml.Node
-	for i := 0; i+1 < len(m.Content); i += 2 {
-		if m.Content[i].Kind == yaml.ScalarNode && m.Content[i].Value == key {
-			found = m.Content[i]
 		}
 	}
 	return found

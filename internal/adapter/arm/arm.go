@@ -80,16 +80,6 @@ func (Adapter) HandlesContent(path string, src []byte) bool {
 	return looksLikeARMContent(src)
 }
 
-// looksLikeARM reads the file (bounded) and checks for the ARM deployment
-// template schema marker. Prefer HandlesContent when bytes are in hand.
-func looksLikeARM(path string) bool {
-	src, err := readBounded(path, 64<<10)
-	if err != nil {
-		return false
-	}
-	return looksLikeARMContent(src)
-}
-
 // looksLikeARMContent checks bytes for the ARM deployment template marker.
 func looksLikeARMContent(src []byte) bool {
 	// The canonical marker: "$schema": ".../deploymentTemplate.json#"
@@ -561,10 +551,8 @@ func (p *exprParser) applySuffixes(v ir.Value) (ir.Value, bool) {
 		default:
 			return v, true
 		}
-		if !v.Known {
-			// Once unknown, remaining suffixes keep it unknown.
-			// Still need to consume them for parse validity.
-		}
+		// Once unknown (!v.Known), remaining suffixes keep it
+		// unknown; they are still consumed for parse validity.
 	}
 }
 
@@ -1051,7 +1039,7 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 		}
 	}
 	for k, v := range props {
-		name := k
+		var name string
 		if rn, ok := renames[k]; ok {
 			name = rn
 		} else {
@@ -1144,7 +1132,7 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 							if pm, ok := pv.AsMap(); ok {
 								renames := propertyRenames("azurerm_network_security_rule")
 								for pk, pv2 := range pm {
-									name := pk
+									var name string
 									if rn, ok := renames[pk]; ok {
 										name = rn
 									} else {
@@ -1452,7 +1440,7 @@ func snake(s string) string {
 				prev := runes[i-1]
 				nextIsLower := i+1 < len(runes) && runes[i+1] >= 'a' && runes[i+1] <= 'z'
 				if (prev >= 'a' && prev <= 'z') || (prev >= '0' && prev <= '9') ||
-					(!(prev >= 'a' && prev <= 'z') && nextIsLower) {
+					((prev < 'a' || prev > 'z') && nextIsLower) {
 					b.WriteByte('_')
 				}
 			}

@@ -734,7 +734,7 @@ func TestLenientSameLineRecovery(t *testing.T) {
 				if !ok || !enc {
 					t.Errorf("encrypted = %v (known=%v), want true", enc, ok)
 				}
-				size, ok := mod.Resources[0].Attributes["size"].AsString()
+				size, _ := mod.Resources[0].Attributes["size"].AsString()
 				_ = size
 				if v, ok2 := mod.Resources[0].Attributes["size"]; !ok2 || !v.Known {
 					t.Errorf("size missing or unknown")

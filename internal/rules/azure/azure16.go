@@ -219,7 +219,7 @@ func ftpsCheck(rule ir.Rule, r ir.Resource) []ir.Finding {
 	if present && strings.EqualFold(strings.TrimSpace(st), "Disabled") {
 		return nil
 	}
-	actual := "AllAllowed"
+	var actual string
 	if !present {
 		actual = "absent (provider default: AllAllowed)"
 	} else {

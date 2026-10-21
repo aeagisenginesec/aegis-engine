@@ -203,24 +203,6 @@ func (s storageNoOAuthDefault) Check(r ir.Resource) []ir.Finding {
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-193: Storage account without blob soft delete
 
-// blockDays extracts a numeric day count from a block map; -1 when absent
-// or undecidable.
-func blockDays(m map[string]ir.Value, name string) float64 {
-	v, ok := m[name]
-	if !ok || !v.Known {
-		return -1
-	}
-	switch n := v.Raw.(type) {
-	case float64:
-		return n
-	case int:
-		return float64(n)
-	case int64:
-		return float64(n)
-	}
-	return -1
-}
-
 // ---------------------------------------------------------------------------
 // AEGIS-AZURE-194: Storage SAS policy not blocking on expiry
 // ---------------------------------------------------------------------------

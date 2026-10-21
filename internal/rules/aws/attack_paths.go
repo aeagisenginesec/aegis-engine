@@ -294,7 +294,6 @@ func refAddrOf(ref string) (string, bool) {
 					j += 2
 				} else {
 					addr += "." + parts[j]
-					j++
 					break
 				}
 			}

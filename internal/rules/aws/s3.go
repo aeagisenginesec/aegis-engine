@@ -330,13 +330,6 @@ func bucketIntentionallyPublicSet(b ir.Resource, publicSet map[string]bool) bool
 	return publicSet[scopeKey(b)]
 }
 
-// bucketIntentionallyPublic is the single-bucket convenience wrapper.
-// Prefer publicBucketScopeKeys + bucketIntentionallyPublicSet when
-// evaluating many buckets.
-func bucketIntentionallyPublic(resources []ir.Resource, b ir.Resource) bool {
-	return bucketIntentionallyPublicSet(b, publicBucketScopeKeys(resources))
-}
-
 // principalIsPublic reports whether a Principal value is "*" or contains "*"
 // (e.g. {"AWS": "*"} or {"AWS": ["arn:...", "*"]}).
 func principalIsPublic(p any) bool {

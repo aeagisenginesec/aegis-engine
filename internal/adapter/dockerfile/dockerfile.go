@@ -638,10 +638,7 @@ func isLiteralValue(v string) bool {
 	}
 	// Strip surrounding quotes for the check.
 	unq := strings.Trim(v, `"'`)
-	if strings.Contains(unq, "$") {
-		return false
-	}
-	return true
+	return !strings.Contains(unq, "$")
 }
 
 // secretNameHints matches ENV names that suggest a secret.

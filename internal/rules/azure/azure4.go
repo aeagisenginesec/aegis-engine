@@ -305,7 +305,7 @@ func nsgRuleOpenToWorld(r ir.Resource, port string) bool {
 		return false
 	}
 	proto, _, pp, pk := getString(r, "protocol")
-	if !pp || !pk || !(strings.EqualFold(proto, "Tcp") || proto == "*") {
+	if !pp || !pk || !strings.EqualFold(proto, "Tcp") && proto != "*" {
 		return false
 	}
 	dpr, _, drp, drk := getString(r, "destination_port_range")
@@ -354,7 +354,7 @@ func nsgBlockOpenToWorld(blk map[string]ir.Value, port string) bool {
 		return false
 	}
 	proto, _, pp, pk := blockString(blk, "protocol")
-	if !pp || !pk || !(strings.EqualFold(proto, "Tcp") || proto == "*") {
+	if !pp || !pk || !strings.EqualFold(proto, "Tcp") && proto != "*" {
 		return false
 	}
 	matched := false

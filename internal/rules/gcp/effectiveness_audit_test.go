@@ -260,8 +260,6 @@ func eaM(pairs ...any) ir.Value {
 
 func eaU() ir.Value { return ir.Value{Known: false} }
 
-func eaR(ref string) ir.Value { return ir.Value{Known: false, Ref: ref} }
-
 func eaRes(typ, name string, attrs map[string]ir.Value) ir.Resource {
 	return ir.Resource{Type: typ, Name: name, Provider: "audit", Attributes: attrs}
 }

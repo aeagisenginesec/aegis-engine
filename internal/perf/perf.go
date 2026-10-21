@@ -60,13 +60,6 @@ func percentile(sorted []float64, p float64) float64 {
 	return sorted[idx]
 }
 
-// median returns the median of values.
-func median(vals []float64) float64 {
-	sorted := append([]float64(nil), vals...)
-	sort.Float64s(sorted)
-	return percentile(sorted, 50)
-}
-
 // BenchmarkRemediationEnrichment measures EnrichRemediation in isolation.
 // This is the function that caused the 9x regression — it must stay fast.
 func BenchmarkRemediationEnrichment(b *testing.B) {
@@ -90,14 +83,6 @@ func BenchmarkRemediationEnrichment(b *testing.B) {
 			b.Fatalf("EnrichRemediation took %v, exceeds 5ms budget", elapsed)
 		}
 	}
-}
-
-// scanVuln200 runs a full scan on the vuln-200 corpus and returns findings.
-func scanVuln200(t *testing.B) []ir.Finding {
-	// This is a placeholder — the actual scan integration depends on
-	// the adapter. For now, we measure via the CLI in the CI gate.
-	t.Skip("Full scan benchmark requires CLI integration — see CI gate")
-	return nil
 }
 
 // BenchmarkFullScan measures complete scan performance on vuln-200.
