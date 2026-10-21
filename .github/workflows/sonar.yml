@@ -17,11 +17,12 @@
 # Scope: the same exclusions as every other gate in this repo. This
 # repository's PURPOSE includes containing deliberately vulnerable
 # fixtures (benchmark/), adjudicated evaluation corpora
-# (docs/audit/raw/), scanner testdata, and demo stacks (tests/demos/)
-# — Sonar's AutoScan, which ignores these exclusions, reported 986
-# "vulnerabilities", every one of them in fixture data; product code
-# (internal/, cmd/) had zero issues. The exclusions below are what
-# make the number mean something.
+# (docs/audit/raw/), scanner testdata, demo stacks (tests/demos/)
+# and adapter input fixtures (tests/fixtures/). Sonar's AutoScan,
+# which ignores these exclusions, reported 986 "vulnerabilities",
+# every one of them in fixture data; product code (internal/, cmd/)
+# had zero issues. The exclusions below are what make the number
+# mean something.
 #
 # The quality gate is a real gate: sonar.qualitygate.wait makes the
 # scanner block until SonarCloud computes the gate and fail this job
@@ -44,19 +45,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # Full history: Sonar uses SCM blame for new-code detection.
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: "1.26.x"
           cache: true
 
       - name: SonarCloud scan (waits for the quality gate)
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@2f77a1ec69fb1d595b06f35ab27e97605bdef703 # v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
@@ -64,5 +65,5 @@ jobs:
           args: >
             -Dsonar.organization=aeagisenginesec
             -Dsonar.projectKey=aeagisenginesec_aegis-engine
-            -Dsonar.exclusions=benchmark/**,docs/audit/raw/**,**/testdata/**,tests/demos/**
+            -Dsonar.exclusions=benchmark/**,docs/audit/raw/**,**/testdata/**,tests/demos/**,tests/fixtures/**
             -Dsonar.qualitygate.wait=true
