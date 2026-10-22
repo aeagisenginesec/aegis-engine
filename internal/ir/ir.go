@@ -226,12 +226,13 @@ type ContentSniffer interface {
 
 // ScanResult is the complete output of one scan.
 type ScanResult struct {
-	Target            string             `json:"target"`
-	Resources         int                `json:"resources_scanned"`
-	Findings          []Finding          `json:"findings"`
-	Diagnostics       []Diagnostic       `json:"diagnostics"`
-	Completeness      ScanCompleteness   `json:"scan_completeness"`
-	ComplianceSummary *ComplianceSummary `json:"compliance_summary,omitempty"`
+	Target              string               `json:"target"`
+	Resources           int                  `json:"resources_scanned"`
+	Findings            []Finding            `json:"findings"`
+	Diagnostics         []Diagnostic         `json:"diagnostics"`
+	Completeness        ScanCompleteness     `json:"scan_completeness"`
+	ComplianceSummary   *ComplianceSummary   `json:"compliance_summary,omitempty"`
+	ComplianceSummaries []*ComplianceSummary `json:"compliance_summaries,omitempty"`
 }
 
 // ComplianceSummary reports per-control pass/fail for a compliance
