@@ -32,7 +32,7 @@ CI reproduces locally byte-for-byte.
 | Input | Default | Purpose |
 |---|---|---|
 | `path` | `.` | Directory to scan. |
-| `version` | `v2.1.1` | Aegis release to run. Pinned per release; the download is SHA-256 verified. |
+| `version` | `v2.2.0` | Aegis release to run. Pinned per release; the download is SHA-256 verified. |
 | `fail-on` | `high` | Lowest severity that fails the job: `critical`, `high`, `medium`, `low`, or `none` (report-only). |
 | `baseline` | *(empty)* | Path to a baseline file. Baselined findings are suppressed and never fail the gate. |
 | `upload-sarif` | `true` | Upload SARIF to code scanning. Needs `security-events: write` on the job. |
