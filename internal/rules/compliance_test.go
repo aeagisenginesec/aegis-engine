@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"aegis/internal/ir"
-	"aegis/internal/rules/aws"
-	"aegis/internal/rules/gcp"
 )
 
 func TestComplianceFor_KnownRule(t *testing.T) {
@@ -51,13 +49,17 @@ func TestComplianceFor_Deterministic(t *testing.T) {
 
 func TestComplianceFrameworks(t *testing.T) {
 	fws := ComplianceFrameworks()
-	if len(fws) != 3 {
-		t.Fatalf("expected 3 frameworks, got %v", fws)
+	want := []string{
+		"CIS-AWS-1.5", "CIS-Azure-2.1", "CIS-Docker-1.6", "CIS-GCP-1.3",
+		"CIS-Kubernetes-1.8", "HIPAA", "ISO-27001-2022", "NIST-800-53",
+		"PCI-DSS-4.0", "SOC2",
 	}
-	// Must be sorted.
-	for i := 1; i < len(fws); i++ {
-		if fws[i-1] >= fws[i] {
-			t.Errorf("frameworks not sorted: %v", fws)
+	if len(fws) != len(want) {
+		t.Fatalf("expected %d frameworks, got %v", len(want), fws)
+	}
+	for i := range want {
+		if fws[i] != want[i] {
+			t.Fatalf("frameworks = %v, want %v", fws, want)
 		}
 	}
 }
@@ -66,8 +68,11 @@ func TestHasComplianceFramework(t *testing.T) {
 	if !HasComplianceFramework("CIS-AWS-1.5") {
 		t.Error("expected CIS-AWS-1.5 to be known")
 	}
-	if HasComplianceFramework("SOC2") {
-		t.Error("SOC2 should not be a known framework")
+	if !HasComplianceFramework("SOC2") {
+		t.Error("expected SOC2 to be a known framework")
+	}
+	if HasComplianceFramework("COBIT-2019") {
+		t.Error("COBIT-2019 should not be a known framework")
 	}
 	if HasComplianceFramework("") {
 		t.Error("empty framework should not be known")
@@ -96,7 +101,7 @@ func TestFilterByCompliance(t *testing.T) {
 
 func TestFilterByCompliance_UnknownFramework(t *testing.T) {
 	findings := []ir.Finding{{RuleID: "AEGIS-AWS-001"}}
-	if out := FilterByCompliance(findings, "SOC2"); len(out) != 0 {
+	if out := FilterByCompliance(findings, "COBIT-2019"); len(out) != 0 {
 		t.Errorf("expected empty result for unknown framework, got %d", len(out))
 	}
 }
@@ -115,13 +120,12 @@ func TestEnrichCompliance(t *testing.T) {
 	}
 }
 
-// Every mapped rule ID must exist in a known pack (catches typos).
+// Every mapped rule ID must exist in the default registry (catches typos).
+// The registry spans every pack — AWS, Azure, GCP, Kubernetes, Docker and
+// the rest — so any compliance entry is validated against the full rule set.
 func TestComplianceMap_RuleIDsExist(t *testing.T) {
 	known := map[string]bool{}
-	for _, r := range aws.Rules() {
-		known[r.ID()] = true
-	}
-	for _, r := range gcp.Rules() {
+	for _, r := range DefaultRegistry().All() {
 		known[r.ID()] = true
 	}
 	for id := range complianceMap {

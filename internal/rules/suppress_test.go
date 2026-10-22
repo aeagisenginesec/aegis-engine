@@ -281,6 +281,46 @@ func TestBaseline_ExpiredEntry(t *testing.T) {
 	}
 }
 
+// TestBaseline_ExpiryVisibility verifies the governance reporting on a
+// load: expired entries are listed (so the CLI can warn that the waiver
+// lapsed) and unparseable expiry values are listed (they still suppress,
+// but must never pass silently).
+func TestBaseline_ExpiryVisibility(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/baseline.json"
+	mk := func(rule, attr string) ir.Finding {
+		return ir.Finding{RuleID: rule, Resource: "aws_s3_bucket.data",
+			Evidence: ir.Evidence{Attribute: attr}}
+	}
+	findings := []ir.Finding{mk("AEGIS-AWS-001", "a1"), mk("AEGIS-AWS-002", "a2"), mk("AEGIS-AWS-004", "a3")}
+	ann := map[Fingerprint]BaselineAnnotation{
+		FingerprintOf(findings[0]): {Reason: "old waiver", Owner: "sec-team", Expires: "2000-01-01T00:00:00Z"},
+		FingerprintOf(findings[1]): {Reason: "typo waiver", Owner: "sec-team", Expires: "next-tuesday"},
+		FingerprintOf(findings[2]): {Reason: "live waiver", Owner: "sec-team", Expires: "2099-01-01T00:00:00Z"},
+	}
+	if err := WriteBaselineWithMetadata(path, findings, ann); err != nil {
+		t.Fatal(err)
+	}
+	b, err := LoadBaseline(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expired := b.ExpiredEntries()
+	if len(expired) != 1 || expired[0].RuleID != "AEGIS-AWS-001" {
+		t.Fatalf("expected the lapsed waiver reported, got %+v", expired)
+	}
+	invalid := b.InvalidExpiryEntries()
+	if len(invalid) != 1 || invalid[0].RuleID != "AEGIS-AWS-002" {
+		t.Fatalf("expected the unparseable-expiry waiver reported, got %+v", invalid)
+	}
+	if !b.Matches(findings[1]) {
+		t.Error("unparseable-expiry entry should still suppress (fail-open, but reported)")
+	}
+	if !b.Matches(findings[2]) {
+		t.Error("live waiver should suppress")
+	}
+}
+
 // TestBaseline_V1BackCompat verifies old flat-format baselines still load.
 func TestBaseline_V1BackCompat(t *testing.T) {
 	dir := t.TempDir()
