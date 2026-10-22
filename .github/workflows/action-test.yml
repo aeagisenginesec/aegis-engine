@@ -13,6 +13,15 @@
 # A fourth job proves the SARIF upload path against GitHub code
 # scanning (category: aegis) on the repo's own demo stack.
 #
+# Two further suites widen the proof:
+#
+#   4. An OS/architecture matrix runs the report-only demo scan on
+#      Linux x64, Linux ARM64, macOS ARM64, macOS x64 and Windows
+#      x64 — every release binary's resolve/download/checksum path.
+#   5. A consumer smoke job calls the PUBLISHED action
+#      (aeagisenginesec/aegis-engine@v2) instead of ./ — the exact
+#      line a real user's workflow contains.
+#
 # This is the dogfood for the Action. The repo's security self-gate
 # (.github/workflows/aegis.yml) deliberately keeps building Aegis
 # from the commit under test instead — a release gate must test the
@@ -100,3 +109,49 @@ jobs:
           path: demo
           fail-on: none
           upload-sarif: "true"
+
+  os-matrix:
+    name: Matrix (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-latest
+          - macos-13
+          - windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Scan demo/ report-only on ${{ matrix.os }}
+        id: aegis
+        uses: ./
+        with:
+          path: demo
+          fail-on: none
+          upload-sarif: "false"
+      - name: Assert findings were reported
+        shell: bash
+        run: |
+          echo "findings=${{ steps.aegis.outputs.findings }}"
+          test "${{ steps.aegis.outputs.findings }}" -gt 0
+
+  published-action-smoke:
+    name: Published @v2, consumer smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Scan demo/ via the published Action (aeagisenginesec/aegis-engine@v2)
+        id: aegis
+        uses: aeagisenginesec/aegis-engine@v2
+        with:
+          path: demo
+          fail-on: none
+          upload-sarif: "false"
+      - name: Assert findings were reported
+        shell: bash
+        run: |
+          echo "findings=${{ steps.aegis.outputs.findings }}"
+          test "${{ steps.aegis.outputs.findings }}" -gt 0
