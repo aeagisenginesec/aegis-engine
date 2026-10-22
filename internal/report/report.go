@@ -137,13 +137,14 @@ func flattenFindings(fs []ir.Finding) []jsonFinding {
 
 // jsonEnvelope is the versioned JSON report format.
 type jsonEnvelope struct {
-	Version           string                `json:"aegis_version"`
-	Target            string                `json:"target"`
-	Summary           jsonSummary           `json:"summary"`
-	Findings          []jsonFinding         `json:"findings"`
-	Diagnostics       []ir.Diagnostic       `json:"diagnostics"`
-	Completeness      ir.ScanCompleteness   `json:"scan_completeness"`
-	ComplianceSummary *ir.ComplianceSummary `json:"compliance_summary,omitempty"`
+	Version             string                  `json:"aegis_version"`
+	Target              string                  `json:"target"`
+	Summary             jsonSummary             `json:"summary"`
+	Findings            []jsonFinding           `json:"findings"`
+	Diagnostics         []ir.Diagnostic         `json:"diagnostics"`
+	Completeness        ir.ScanCompleteness     `json:"scan_completeness"`
+	ComplianceSummary   *ir.ComplianceSummary   `json:"compliance_summary,omitempty"`
+	ComplianceSummaries []*ir.ComplianceSummary `json:"compliance_summaries,omitempty"`
 }
 
 // WriteJSON writes the versioned JSON envelope.
@@ -154,13 +155,14 @@ func WriteJSON(w io.Writer, res ir.ScanResult) error {
 	}
 	redacted := redactFindings(res.Findings)
 	env := jsonEnvelope{
-		Version:           Version,
-		Target:            res.Target,
-		Summary:           summarize(res),
-		Findings:          flattenFindings(redacted),
-		Diagnostics:       diags,
-		Completeness:      res.Completeness,
-		ComplianceSummary: res.ComplianceSummary,
+		Version:             Version,
+		Target:              res.Target,
+		Summary:             summarize(res),
+		Findings:            flattenFindings(redacted),
+		Diagnostics:         diags,
+		Completeness:        res.Completeness,
+		ComplianceSummary:   res.ComplianceSummary,
+		ComplianceSummaries: res.ComplianceSummaries,
 	}
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
@@ -507,13 +509,21 @@ func WriteTextWithOptions(w io.Writer, res ir.ScanResult, opts TextOptions) erro
 		}
 	}
 	if cs := res.ComplianceSummary; cs != nil {
-		fmt.Fprintf(w, "\ncompliance %s: %d/%d controls passing", cs.Framework, cs.ControlsPassing, cs.ControlsTotal)
-		if cs.ControlsFailing > 0 {
-			fmt.Fprintf(w, " - FAILING: %s", strings.Join(cs.FailedControls, ", "))
-		}
-		fmt.Fprintf(w, "\n")
+		writeComplianceSummaryLine(w, cs)
+	}
+	for _, cs := range res.ComplianceSummaries {
+		writeComplianceSummaryLine(w, cs)
 	}
 	return nil
+}
+
+// writeComplianceSummaryLine renders one framework's pass/fail posture.
+func writeComplianceSummaryLine(w io.Writer, cs *ir.ComplianceSummary) {
+	fmt.Fprintf(w, "\ncompliance %s: %d/%d controls passing", cs.Framework, cs.ControlsPassing, cs.ControlsTotal)
+	if cs.ControlsFailing > 0 {
+		fmt.Fprintf(w, " - FAILING: %s", strings.Join(cs.FailedControls, ", "))
+	}
+	fmt.Fprintf(w, "\n")
 }
 
 // wrapField renders "    label: value" wrapped to width columns, with a
