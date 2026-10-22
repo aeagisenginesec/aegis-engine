@@ -42,8 +42,8 @@ func TestCLIAuditVersionStamped(t *testing.T) {
 	if code := run([]string{"--version"}, &stdout, &stderr); code != 0 {
 		t.Fatalf("--version exited %d, want 0; stderr: %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "2.1.1") {
-		t.Errorf("--version output %q does not contain stamped version 2.1.1", stdout.String())
+	if !strings.Contains(stdout.String(), "2.2.0") {
+		t.Errorf("--version output %q does not contain stamped version 2.2.0", stdout.String())
 	}
 }
 
@@ -60,6 +60,7 @@ func TestCLIAuditHelpDocumentsEveryFlag(t *testing.T) {
 		"version",
 		// scan
 		"format", "rules", "advisories", "baseline", "baseline-out",
+		"waiver-reason", "waiver-owner", "waiver-expires",
 		"compliance", "custom-rules", "config", "exclude", "attack-paths",
 		"max-file-size", "timeout", "strict", "fail-on", "color",
 		// fix
@@ -191,8 +192,8 @@ func TestCLIAuditJSONFormat(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil {
 		t.Fatalf("--format=json output is not valid JSON: %v", err)
 	}
-	if doc.Version != "2.1.1" {
-		t.Errorf("aegis_version = %q, want 2.1.1", doc.Version)
+	if doc.Version != "2.2.0" {
+		t.Errorf("aegis_version = %q, want 2.2.0", doc.Version)
 	}
 	if len(doc.Findings) == 0 {
 		t.Fatal("JSON report carries no findings for a vulnerable fixture")
@@ -257,7 +258,7 @@ func TestCLIAuditSARIFFormat(t *testing.T) {
 	}
 	// The log-level version is the SARIF FORMAT version (2.1.0) — it is
 	// not the Aegis version and must not move with releases. (This test
-	// asserted doc.Version == the Aegis version until v2.1.1; it passed
+	// asserted doc.Version == the Aegis version until v2.2.0; it passed
 	// only because Aegis 2.1.0 and SARIF 2.1.0 coincide numerically.)
 	if doc.Version != "2.1.0" {
 		t.Errorf("sarif format version = %q, want 2.1.0 (SARIF spec version)", doc.Version)
@@ -265,8 +266,8 @@ func TestCLIAuditSARIFFormat(t *testing.T) {
 	if len(doc.Runs) != 1 {
 		t.Fatalf("sarif runs = %d, want 1", len(doc.Runs))
 	}
-	if got := doc.Runs[0].Tool.Driver.Version; got != "2.1.1" {
-		t.Errorf("sarif driver version = %q, want 2.1.1 (aegis version)", got)
+	if got := doc.Runs[0].Tool.Driver.Version; got != "2.2.0" {
+		t.Errorf("sarif driver version = %q, want 2.2.0 (aegis version)", got)
 	}
 	r := doc.Runs[0]
 	if len(r.Results) == 0 {

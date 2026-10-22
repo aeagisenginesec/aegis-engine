@@ -92,6 +92,13 @@ type Baseline struct {
 	Entries      []BaselineEntry `json:"entries,omitempty"`
 	// index is built on load for O(1) matching; not serialized.
 	index map[Fingerprint]bool
+	// expired and invalidExpiry record the waiver-governance state found
+	// at load: entries whose Expires date has passed (they no longer
+	// suppress) and entries whose Expires value could not be parsed
+	// (they still suppress — but callers should surface them, because a
+	// mistyped expiry silently becomes a permanent waiver otherwise).
+	expired       []BaselineEntry
+	invalidExpiry []BaselineEntry
 }
 
 // FingerprintOf builds the stable fingerprint for a finding.
@@ -125,23 +132,59 @@ func LoadBaseline(path string) (*Baseline, error) {
 }
 
 // buildIndex (re)builds the fingerprint lookup set, merging the legacy
-// flat list and the enriched entries. Expired entries are skipped:
-// an entry with Expires set to a past RFC3339 date no longer suppresses.
+// flat list and the enriched entries. Expired entries are skipped: an
+// entry with Expires set to a past RFC3339 date no longer suppresses.
+// Skipped entries are remembered (see ExpiredEntries) so the lapse is
+// visible to the user instead of silent. An entry whose Expires cannot
+// be parsed keeps suppressing but is remembered too (InvalidExpiryEntries):
+// a typo must never quietly mint a permanent waiver.
 func (b *Baseline) buildIndex() {
 	n := len(b.Fingerprints) + len(b.Entries)
 	b.index = make(map[Fingerprint]bool, n)
 	for _, fp := range b.Fingerprints {
 		b.index[fp] = true
 	}
+	b.expired = nil
+	b.invalidExpiry = nil
 	now := time.Now()
 	for _, e := range b.Entries {
 		if e.Expires != "" {
-			if t, err := time.Parse(time.RFC3339, e.Expires); err == nil && t.Before(now) {
+			t, err := time.Parse(time.RFC3339, e.Expires)
+			switch {
+			case err != nil:
+				b.invalidExpiry = append(b.invalidExpiry, e)
+			case t.Before(now):
+				b.expired = append(b.expired, e)
 				continue // expired: no longer suppresses
 			}
 		}
 		b.index[e.Fingerprint] = true
 	}
+}
+
+// ExpiredEntries returns the baseline entries whose Expires date has
+// passed as of load time. Those entries did NOT suppress their
+// findings in this run — the waiver lapsed and the finding is back.
+func (b *Baseline) ExpiredEntries() []BaselineEntry {
+	if b == nil {
+		return nil
+	}
+	out := make([]BaselineEntry, len(b.expired))
+	copy(out, b.expired)
+	return out
+}
+
+// InvalidExpiryEntries returns the baseline entries whose Expires
+// value is not a valid RFC3339 date. They still suppress (fail-open
+// on content, by design), but they represent a governance defect the
+// user should fix: as written, the waiver never expires.
+func (b *Baseline) InvalidExpiryEntries() []BaselineEntry {
+	if b == nil {
+		return nil
+	}
+	out := make([]BaselineEntry, len(b.invalidExpiry))
+	copy(out, b.invalidExpiry)
+	return out
 }
 
 // Matches reports whether the finding's fingerprint is baselined.

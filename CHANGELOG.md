@@ -3,6 +3,44 @@
 All notable changes to Aegis are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.0] — 2026-10-22
+
+The compliance & governance release. Detection is unchanged (the same
+1,140 rules; quality gate precision/recall 100% on the locked corpora) —
+what changes is how completely findings speak the language of audits, and
+how accepted risk is governed.
+
+### Added
+
+- **Compliance coverage 240 → 943 rules (of 1,140).** Every provider pack
+  is now mapped — Azure (277 rules) and the Kubernetes/Docker/Compose/
+  Alibaba/OCI packs included. 197 rules remain deliberately unmapped where
+  no control genuinely applies; the doctrine (map only what truly fits)
+  is unchanged.
+- **Seven new frameworks**: CIS-Azure-2.1, CIS-GCP-1.3,
+  CIS-Kubernetes-1.8, CIS-Docker-1.6, ISO-27001-2022, SOC 2 and HIPAA —
+  ten in total. ISO/SOC 2/HIPAA references are crosswalked from each
+  rule's NIST 800-53 anchors.
+- **Multi-framework posture**: `--compliance` accepts a comma-separated
+  list or `all`, reporting one per-control pass/fail summary per
+  framework (text and JSON `compliance_summaries`). A single framework
+  keeps the original filter-and-summarize behaviour.
+- **HTML attestation report**: `--format=html` renders a standalone,
+  deterministic, secret-redacted attestation page (posture table for all
+  frameworks + full findings table).
+- **Waivers with visible expiry**: `--waiver-reason/--waiver-owner/
+  --waiver-expires` author expiring baseline waivers from the CLI. A
+  lapsed waiver reinstates its finding and warns on stderr (date, rule,
+  resource, owner); an unparseable expiry is flagged on every load
+  instead of silently becoming permanent.
+
+### Notes
+
+- CIS controls are cited only where the benchmark control is certain —
+  precision over coverage, as with the original map.
+- Posture means "no mapped finding fired in this tree": evidence for an
+  audit, not the audit itself. See docs/compliance.md.
+
 ## [2.1.1] — 2026-10-21
 
 Security-maintenance and CI/CD release. No rule changes: the detection

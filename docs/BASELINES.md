@@ -70,8 +70,18 @@ the next scan, forcing re-review.
 }
 ```
 
-v1 files load unchanged. `--baseline-out` writes v1 (flat list, no metadata).
-To add metadata, edit the JSON by hand or use the v2 `entries` form.
+v1 files load unchanged. Plain `--baseline-out` writes v1 (flat list, no
+metadata). To write v2 waiver entries from the CLI, add
+`--waiver-reason` / `--waiver-owner` / `--waiver-expires` to the
+`--baseline-out` run — every entry is stamped with those terms; hand-edit
+the JSON afterwards for per-entry terms.
+
+Expiry is **loud**: when an entry's `expires` date has passed, the entry
+stops suppressing and the scan warns on stderr for each lapsed waiver
+(date, rule, resource, owner — "finding reinstated"). An entry whose
+`expires` cannot be parsed keeps suppressing but is warned about on every
+load — a typo must never mint a permanent silent waiver. See
+[compliance.md](compliance.md) for the governance model.
 
 ## Inline suppressions
 

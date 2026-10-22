@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"aegis/internal/ir"
+	"aegis/internal/rules"
 	"aegis/internal/version"
 )
 
@@ -154,15 +156,15 @@ func TestScanComplianceFilter(t *testing.T) {
 func TestScanComplianceInvalidFramework(t *testing.T) {
 	dir := writeFixtures(t)
 	var stdout, stderr bytes.Buffer
-	code := run([]string{"scan", "--compliance", "SOC2", dir}, &stdout, &stderr)
+	code := run([]string{"scan", "--compliance", "COBIT-2019", dir}, &stdout, &stderr)
 	if code != 2 {
 		t.Fatalf("expected exit code 2, got %d", code)
 	}
 	errOut := stderr.String()
-	if !strings.Contains(errOut, "SOC2") {
+	if !strings.Contains(errOut, "COBIT-2019") {
 		t.Errorf("error should name the bad framework, got: %s", errOut)
 	}
-	for _, fw := range []string{"CIS-AWS-1.5", "NIST-800-53", "PCI-DSS-4.0"} {
+	for _, fw := range []string{"CIS-AWS-1.5", "ISO-27001-2022", "NIST-800-53", "PCI-DSS-4.0", "SOC2"} {
 		if !strings.Contains(errOut, fw) {
 			t.Errorf("error should list available framework %s, got: %s", fw, errOut)
 		}
@@ -178,6 +180,77 @@ func TestScanComplianceTextShowsControls(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "compliance:") {
 		t.Errorf("text output should show compliance controls, got:\n%s", stdout.String())
+	}
+}
+
+func TestScanComplianceMultiFrameworkJSON(t *testing.T) {
+	dir := writeFixtures(t)
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"scan", "--format", "json", "--compliance", "NIST-800-53,PCI-DSS-4.0", dir}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1 (findings), got %d; stderr: %s", code, stderr.String())
+	}
+	var env struct {
+		ComplianceSummary   *ir.ComplianceSummary   `json:"compliance_summary"`
+		ComplianceSummaries []*ir.ComplianceSummary `json:"compliance_summaries"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("invalid JSON output: %v", err)
+	}
+	if env.ComplianceSummary != nil {
+		t.Error("multi-framework run should not set the singular compliance_summary")
+	}
+	if len(env.ComplianceSummaries) != 2 {
+		t.Fatalf("expected 2 compliance summaries, got %d", len(env.ComplianceSummaries))
+	}
+	if env.ComplianceSummaries[0].Framework != "NIST-800-53" || env.ComplianceSummaries[1].Framework != "PCI-DSS-4.0" {
+		t.Errorf("summaries out of order or wrong: %v", env.ComplianceSummaries)
+	}
+}
+
+func TestScanComplianceAllFrameworks(t *testing.T) {
+	dir := writeFixtures(t)
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"scan", "--format", "json", "--compliance", "all", dir}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1 (findings), got %d; stderr: %s", code, stderr.String())
+	}
+	var env struct {
+		ComplianceSummaries []*ir.ComplianceSummary `json:"compliance_summaries"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("invalid JSON output: %v", err)
+	}
+	if len(env.ComplianceSummaries) != len(rules.ComplianceFrameworks()) {
+		t.Fatalf("expected summaries for all %d frameworks, got %d",
+			len(rules.ComplianceFrameworks()), len(env.ComplianceSummaries))
+	}
+}
+
+func TestScanComplianceInvalidInList(t *testing.T) {
+	dir := writeFixtures(t)
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"scan", "--compliance", "NIST-800-53,NOPE", dir}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("expected exit code 2, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "NOPE") {
+		t.Errorf("error should name the bad framework, got: %s", stderr.String())
+	}
+}
+
+func TestScanHTMLAttestation(t *testing.T) {
+	dir := writeFixtures(t)
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"scan", "--format", "html", dir}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1 (findings), got %d; stderr: %s", code, stderr.String())
+	}
+	out := stdout.String()
+	for _, want := range []string{"<!DOCTYPE html>", "Compliance posture", "ISO-27001-2022", "HIPAA", "Findings"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("HTML attestation should contain %q", want)
+		}
 	}
 }
 
@@ -249,6 +322,102 @@ func TestScanBaselineRoundtrip(t *testing.T) {
 	}
 	if findings := env["findings"].([]any); len(findings) != 0 {
 		t.Fatalf("expected 0 findings after baseline, got %d", len(findings))
+	}
+}
+
+func TestScanWaiverLifecycle(t *testing.T) {
+	dir := writeFixtures(t)
+	baseline := filepath.Join(dir, "baseline.json")
+	var stdout, stderr bytes.Buffer
+
+	// Author a waiver baseline: every current finding waived, owned,
+	// expiring in 2099.
+	code := run([]string{"scan", dir, "--baseline-out", baseline,
+		"--waiver-reason", "legacy fixture debt", "--waiver-owner", "sec-team",
+		"--waiver-expires", "2099-01-01T00:00:00Z"}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit 1 (findings), got %d; stderr: %s", code, stderr.String())
+	}
+	src, err := os.ReadFile(baseline)
+	if err != nil {
+		t.Fatalf("baseline not written: %v", err)
+	}
+	if !strings.Contains(string(src), "\"expires\": \"2099-01-01T00:00:00Z\"") ||
+		!strings.Contains(string(src), "\"owner\": \"sec-team\"") {
+		t.Fatalf("waiver metadata missing from baseline:\n%s", src)
+	}
+
+	// While the waiver lives: suppressed, and silent.
+	stdout.Reset()
+	stderr.Reset()
+	code = run([]string{"scan", dir, "--baseline", baseline}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit 0 under a live waiver, got %d; stderr: %s", code, stderr.String())
+	}
+	if strings.Contains(stderr.String(), "EXPIRED") {
+		t.Fatalf("live waiver should not warn, got: %s", stderr.String())
+	}
+
+	// Expire the waiver: findings return AND the lapse is loud.
+	expired := strings.ReplaceAll(string(src), "2099-01-01", "2000-01-01")
+	if err := os.WriteFile(baseline, []byte(expired), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	code = run([]string{"scan", dir, "--baseline", baseline}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit 1 after waiver expiry, got %d; stderr: %s", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "waiver EXPIRED") {
+		t.Fatalf("expired waiver should warn on stderr, got: %s", stderr.String())
+	}
+}
+
+func TestScanBaselineInvalidExpiryWarning(t *testing.T) {
+	dir := writeFixtures(t)
+	baseline := filepath.Join(dir, "baseline.json")
+	var stdout, stderr bytes.Buffer
+
+	// Author a waiver, then corrupt its expiry into an unparseable value.
+	code := run([]string{"scan", dir, "--baseline-out", baseline,
+		"--waiver-reason", "typo waiver", "--waiver-owner", "sec-team",
+		"--waiver-expires", "2099-01-01T00:00:00Z"}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit 1 (findings), got %d; stderr: %s", code, stderr.String())
+	}
+	src, err := os.ReadFile(baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	broken := strings.ReplaceAll(string(src), "2099-01-01T00:00:00Z", "next-tuesday")
+	if err := os.WriteFile(baseline, []byte(broken), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// The waiver still suppresses (fail-open on content) but the scan
+	// must warn that the expiry is unparseable — never silently.
+	stdout.Reset()
+	stderr.Reset()
+	code = run([]string{"scan", dir, "--baseline", baseline}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit 0 (still suppressed), got %d; stderr: %s", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "unparseable expires") {
+		t.Errorf("expected an unparseable-expiry warning, got: %s", stderr.String())
+	}
+}
+
+func TestScanWaiverBadExpiry(t *testing.T) {
+	dir := writeFixtures(t)
+	var stdout, stderr bytes.Buffer
+	code := run([]string{"scan", dir, "--baseline-out", filepath.Join(dir, "b.json"),
+		"--waiver-expires", "next-tuesday"}, &stdout, &stderr)
+	if code != 2 {
+		t.Fatalf("expected exit 2 for unparseable --waiver-expires, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "waiver-expires") {
+		t.Errorf("error should name the flag, got: %s", stderr.String())
 	}
 }
 

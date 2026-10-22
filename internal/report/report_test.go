@@ -178,6 +178,28 @@ func TestWriteSARIFLevels(t *testing.T) {
 	}
 }
 
+func TestWriteTextComplianceSummaries(t *testing.T) {
+	res := sampleResult()
+	res.ComplianceSummaries = []*ir.ComplianceSummary{
+		{Framework: "NIST-800-53", ControlsTotal: 10, ControlsPassing: 9, ControlsFailing: 1, FailedControls: []string{"SC-28"}},
+		{Framework: "SOC2", ControlsTotal: 5, ControlsPassing: 5},
+	}
+	var buf bytes.Buffer
+	if err := WriteText(&buf, res); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{
+		"compliance NIST-800-53: 9/10 controls passing",
+		"SC-28",
+		"compliance SOC2: 5/5 controls passing",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("text output should contain %q, got:\n%s", want, out)
+		}
+	}
+}
+
 func TestWriteText(t *testing.T) {
 	var buf bytes.Buffer
 	if err := WriteText(&buf, sampleResult()); err != nil {
