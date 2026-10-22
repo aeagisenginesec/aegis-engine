@@ -66,6 +66,35 @@ go build -o aegis ./cmd/aegis
 ./aegis doctor
 ```
 
+## GitHub Action
+
+Run Aegis in CI as the principal IaC scanner — findings land in GitHub
+code scanning as native annotations, and the job fails at the severity
+you choose:
+
+```yaml
+jobs:
+  aegis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # for the SARIF upload
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aeagisenginesec/aegis-engine@v2
+        with:
+          path: ./infra
+          fail-on: high        # critical | high | medium | low | none
+```
+
+The Action downloads the pinned Aegis release, verifies its SHA-256
+against the published `SHA256SUMS.txt`, scans, and uploads SARIF.
+Baselines (`--baseline-out` once, commit the file, pass
+`baseline: aegis-baseline.json`) suppress known debt so the gate only
+fires on new findings. Full guide, inputs and the phased
+shadow → gate → cutover adoption path:
+[docs/github-actions.md](docs/github-actions.md).
+
 ## Quick start
 
 ```bash
