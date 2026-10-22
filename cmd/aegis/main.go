@@ -53,7 +53,7 @@ type ruleRunner interface {
 const usageText = `aegis — Infrastructure-as-Code security scanner
 
 Usage:
-  aegis scan <dir> [--format=text|json|sarif] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW] [--config=aegis.yaml] [--exclude=globs]
+  aegis scan <dir> [--format=text|json|sarif|html] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW[,FW...]|all] [--config=aegis.yaml] [--exclude=globs]
   aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json] [--force]
   aegis serve [--addr=127.0.0.1:8734] [--auth-token=TOKEN]
   aegis quality-gate [--format=text|json] [--bench-dir=DIR] [--corpus-dir=DIR]
@@ -83,9 +83,17 @@ Flags:
   --fail-on    scan exits 1 only when a finding meets this severity
                (critical|high|medium|low); default: any finding fails
   --baseline     suppress findings fingerprinted in this baseline JSON file
-                 (rule_id + resource + attribute); see --baseline-out
+                 (rule_id + resource + attribute); see --baseline-out.
+                 Baseline entries may carry waiver metadata (reason, owner,
+                 expires): an entry whose expires date has passed no longer
+                 suppresses — the finding returns, with a warning
   --baseline-out write current findings as a baseline JSON file, then exit
                  reporting them normally (pair with --baseline on later runs)
+  --waiver-reason/--waiver-owner/--waiver-expires
+                 scan: with --baseline-out, stamp every baseline entry as a
+                 waiver with this reason, owner and RFC3339 expiry date
+                 (e.g. 2027-01-01T00:00:00Z). Hand-edit the JSON afterwards
+                 to give individual entries their own waiver terms
   --apply      fix: write validated patches to the target tree
   --force      fix: allow patches on IAM/networking resource types
                (blocked by default; review every diff before applying)
@@ -94,8 +102,15 @@ Flags:
                files larger than this are skipped with a diagnostic
   --timeout  scan: overall scan timeout in seconds (default 0 = no limit);
                the scan aborts with exit 2 when exceeded
-  --compliance scan: filter findings to a compliance framework and report a
-               per-control pass/fail summary (CIS-AWS-1.5, NIST-800-53, PCI-DSS-4.0)
+  --compliance scan: report per-control pass/fail posture for one or more
+               compliance frameworks (comma-separated, or "all"). A single
+               framework also filters findings to it; several frameworks (or
+               "all") keep every finding and report posture for each.
+               Frameworks: CIS-AWS-1.5, CIS-Azure-2.1, CIS-GCP-1.3,
+               CIS-Kubernetes-1.8, CIS-Docker-1.6, NIST-800-53, PCI-DSS-4.0,
+               ISO-27001-2022, SOC2, HIPAA. With --format=html the scan
+               renders a standalone attestation report (all frameworks
+               when --compliance is not given)
   --config   scan: project config YAML with severity_overrides and
                exclude_rules (see docs/PULUMI.md for the format)
   --exclude  scan: comma-separated glob patterns for paths to skip
@@ -616,6 +631,9 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	advisoriesPath := fs.String("advisories", "", "")
 	baselinePath := fs.String("baseline", "", "")
 	baselineOut := fs.String("baseline-out", "", "")
+	waiverReason := fs.String("waiver-reason", "", "")
+	waiverOwner := fs.String("waiver-owner", "", "")
+	waiverExpires := fs.String("waiver-expires", "", "")
 	complianceFw := fs.String("compliance", "", "")
 	customRulesDir := fs.String("custom-rules", "", "")
 	configPath := fs.String("config", "", "")
@@ -645,9 +663,9 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	}
 	discovery.SetExcludePatterns(excludePats)
 	switch *format {
-	case "text", "json", "sarif":
+	case "text", "json", "sarif", "html":
 	default:
-		fmt.Fprintf(stderr, "aegis: unknown --format %q (want text|json|sarif)\n", *format)
+		fmt.Fprintf(stderr, "aegis: unknown --format %q (want text|json|sarif|html)\n", *format)
 		return 2
 	}
 	color, ok := resolveColor(*colorMode, stdout)
@@ -655,10 +673,29 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "aegis: unknown --color %q (want auto|always|never)\n", *colorMode)
 		return 2
 	}
-	if *complianceFw != "" && !rules.HasComplianceFramework(*complianceFw) {
-		fmt.Fprintf(stderr, "aegis: unknown --compliance %q (want one of %s)\n",
-			*complianceFw, strings.Join(rules.ComplianceFrameworks(), ", "))
-		return 2
+	// --compliance accepts one framework, a comma-separated list, or
+	// "all". The HTML attestation format defaults to all frameworks
+	// when none are requested.
+	var complianceFws []string
+	if *complianceFw != "" {
+		if strings.EqualFold(*complianceFw, "all") {
+			complianceFws = rules.ComplianceFrameworks()
+		} else {
+			for _, p := range strings.Split(*complianceFw, ",") {
+				if p = strings.TrimSpace(p); p != "" {
+					complianceFws = append(complianceFws, p)
+				}
+			}
+			for _, fw := range complianceFws {
+				if !rules.HasComplianceFramework(fw) {
+					fmt.Fprintf(stderr, "aegis: unknown --compliance %q (want one of %s, or all)\n",
+						fw, strings.Join(rules.ComplianceFrameworks(), ", "))
+					return 2
+				}
+			}
+		}
+	} else if *format == "html" {
+		complianceFws = rules.ComplianceFrameworks()
 	}
 	packs := strings.Split(*ruleset, ",")
 	if unknown := rules.UnknownPacks(packs); len(unknown) > 0 {
@@ -747,12 +784,21 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	for _, d := range rules.ValidateSuppressedRuleIDs(rules.CollectSuppressedRuleIDs(resources), registry) {
 		fmt.Fprintf(stderr, "aegis: warning: %s\n", d.Message())
 	}
-	// Compliance: filter to the requested framework (narrowing refs), or
-	// enrich every finding with all its mapped controls.
-	if *complianceFw != "" {
-		res.Findings = rules.FilterByCompliance(res.Findings, *complianceFw)
-		res.ComplianceSummary = complianceSummary(*complianceFw, res.Findings)
-	} else {
+	// Compliance posture. A single requested framework keeps the
+	// original behaviour: findings are filtered to that framework and
+	// carry the singular summary. Several frameworks (or "all") keep
+	// every finding — enriched with all mapped controls — and report
+	// one summary per framework.
+	switch {
+	case len(complianceFws) == 1:
+		res.Findings = rules.FilterByCompliance(res.Findings, complianceFws[0])
+		res.ComplianceSummary = complianceSummary(complianceFws[0], res.Findings)
+	case len(complianceFws) > 1:
+		res.Findings = rules.EnrichCompliance(res.Findings)
+		for _, fw := range complianceFws {
+			res.ComplianceSummaries = append(res.ComplianceSummaries, complianceSummary(fw, res.Findings))
+		}
+	default:
 		res.Findings = rules.EnrichCompliance(res.Findings)
 	}
 	// --config severity overrides / rule exclusions apply after compliance
@@ -772,7 +818,25 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	// Baseline-out captures the post-inline-suppression findings so a later
 	// --baseline run over unchanged code reports nothing new.
 	if *baselineOut != "" {
-		if err := rules.WriteBaseline(*baselineOut, res.Findings); err != nil {
+		var err error
+		if *waiverReason != "" || *waiverOwner != "" || *waiverExpires != "" {
+			// Waiver authoring: stamp every entry with the waiver terms.
+			if *waiverExpires != "" {
+				if _, perr := time.Parse(time.RFC3339, *waiverExpires); perr != nil {
+					fmt.Fprintf(stderr, "aegis: --waiver-expires %q is not an RFC3339 date: %v\n", *waiverExpires, perr)
+					return 2
+				}
+			}
+			ann := rules.BaselineAnnotation{Reason: *waiverReason, Owner: *waiverOwner, Expires: *waiverExpires}
+			annotations := make(map[rules.Fingerprint]rules.BaselineAnnotation, len(res.Findings))
+			for _, f := range res.Findings {
+				annotations[rules.FingerprintOf(f)] = ann
+			}
+			err = rules.WriteBaselineWithMetadata(*baselineOut, res.Findings, annotations)
+		} else {
+			err = rules.WriteBaseline(*baselineOut, res.Findings)
+		}
+		if err != nil {
 			fmt.Fprintf(stderr, "aegis: baseline-out: %v\n", err)
 			return 2
 		}
@@ -783,6 +847,18 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		if err != nil {
 			fmt.Fprintf(stderr, "aegis: baseline: %v\n", err)
 			return 2
+		}
+		// Waiver governance: a lapsed waiver must be LOUD. The finding it
+		// suppressed is back in this run's results; say so, and say whose
+		// waiver it was. A waiver with an unparseable expiry never lapses
+		// — flag it before it becomes a permanent silent suppression.
+		for _, e := range baseline.ExpiredEntries() {
+			fmt.Fprintf(stderr, "aegis: warning: baseline waiver EXPIRED %s for %s on %s (owner: %s) — finding reinstated\n",
+				e.Expires, e.RuleID, e.Resource, e.Owner)
+		}
+		for _, e := range baseline.InvalidExpiryEntries() {
+			fmt.Fprintf(stderr, "aegis: warning: baseline waiver for %s on %s has unparseable expires %q — treated as non-expiring\n",
+				e.RuleID, e.Resource, e.Expires)
 		}
 		// Compatibility: warn about baseline entries referencing rule IDs
 		// that are not registered (removed by deduplication or typos).
@@ -804,6 +880,8 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		}
 	case "sarif":
 		werr = report.WriteSARIF(stdout, res)
+	case "html":
+		werr = report.WriteHTML(stdout, res)
 	default:
 		if *attackPaths {
 			werr = report.WriteAttackPathsText(stdout, res)
