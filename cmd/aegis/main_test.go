@@ -374,6 +374,40 @@ func TestScanWaiverLifecycle(t *testing.T) {
 	}
 }
 
+func TestScanBaselineInvalidExpiryWarning(t *testing.T) {
+	dir := writeFixtures(t)
+	baseline := filepath.Join(dir, "baseline.json")
+	var stdout, stderr bytes.Buffer
+
+	// Author a waiver, then corrupt its expiry into an unparseable value.
+	code := run([]string{"scan", dir, "--baseline-out", baseline,
+		"--waiver-reason", "typo waiver", "--waiver-owner", "sec-team",
+		"--waiver-expires", "2099-01-01T00:00:00Z"}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit 1 (findings), got %d; stderr: %s", code, stderr.String())
+	}
+	src, err := os.ReadFile(baseline)
+	if err != nil {
+		t.Fatal(err)
+	}
+	broken := strings.ReplaceAll(string(src), "2099-01-01T00:00:00Z", "next-tuesday")
+	if err := os.WriteFile(baseline, []byte(broken), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// The waiver still suppresses (fail-open on content) but the scan
+	// must warn that the expiry is unparseable — never silently.
+	stdout.Reset()
+	stderr.Reset()
+	code = run([]string{"scan", dir, "--baseline", baseline}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit 0 (still suppressed), got %d; stderr: %s", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "unparseable expires") {
+		t.Errorf("expected an unparseable-expiry warning, got: %s", stderr.String())
+	}
+}
+
 func TestScanWaiverBadExpiry(t *testing.T) {
 	dir := writeFixtures(t)
 	var stdout, stderr bytes.Buffer
