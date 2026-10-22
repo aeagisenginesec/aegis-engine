@@ -108,8 +108,11 @@ runs:
           cmd+=("${extra[@]}")
         fi
         echo "Running: ${cmd[*]}"
-        "${cmd[@]}" > "$sarif"
-        scan_exit=$?
+        # GitHub runs bash steps with -e: capture the scan's exit code
+        # explicitly so a findings-bearing scan cannot kill the step
+        # before outputs are written (report-only mode depends on it).
+        scan_exit=0
+        "${cmd[@]}" > "$sarif" || scan_exit=$?
         findings="$(jq '[.runs[].results[]] | length' "$sarif")"
         echo "sarif-file=$sarif" >> "$GITHUB_OUTPUT"
         echo "findings=$findings" >> "$GITHUB_OUTPUT"
