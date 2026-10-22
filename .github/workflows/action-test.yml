@@ -1,0 +1,102 @@
+# Action Test — the consumer contract, exercised on real runners.
+#
+# This workflow uses the GitHub Action defined in this repository
+# (action.yml) exactly as a consumer would, against three targets:
+#
+#   1. cmd/ — Go source, no IaC: the gate must PASS with 0 findings.
+#   2. demo/ — the deliberately vulnerable demo stack, report-only:
+#      the job must PASS and report > 0 findings.
+#   3. demo/ with the gate on: the step must FAIL (findings at low+),
+#      asserted by the job so the workflow stays green when the
+#      Action behaves correctly.
+#
+# A fourth job proves the SARIF upload path against GitHub code
+# scanning (category: aegis) on the repo's own demo stack.
+#
+# This is the dogfood for the Action. The repo's security self-gate
+# (.github/workflows/aegis.yml) deliberately keeps building Aegis
+# from the commit under test instead — a release gate must test the
+# code in the tree, not the last release.
+
+name: Action Test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - action.yml
+      - .github/workflows/action-test.yml
+
+permissions:
+  contents: read
+
+jobs:
+  clean-tree-passes:
+    name: Clean tree passes the gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Scan cmd/ (no IaC) with fail-on=low
+        id: aegis
+        uses: ./
+        with:
+          path: cmd
+          fail-on: low
+          upload-sarif: "false"
+      - name: Assert zero findings
+        shell: bash
+        run: |
+          echo "findings=${{ steps.aegis.outputs.findings }}"
+          test "${{ steps.aegis.outputs.findings }}" = "0"
+
+  demo-report-only:
+    name: Demo stack, report-only
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Scan demo/ with fail-on=none
+        id: aegis
+        uses: ./
+        with:
+          path: demo
+          fail-on: none
+          upload-sarif: "false"
+      - name: Assert findings were reported
+        shell: bash
+        run: |
+          echo "findings=${{ steps.aegis.outputs.findings }}"
+          test "${{ steps.aegis.outputs.findings }}" -gt 0
+
+  demo-gate-fails:
+    name: Demo stack trips the gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Scan demo/ with fail-on=low (expected to fail)
+        id: aegis
+        continue-on-error: true
+        uses: ./
+        with:
+          path: demo
+          fail-on: low
+          upload-sarif: "false"
+      - name: Assert the gate fired
+        shell: bash
+        run: |
+          echo "action outcome=${{ steps.aegis.outcome }}"
+          test "${{ steps.aegis.outcome }}" = "failure"
+
+  demo-sarif-upload:
+    name: Demo stack, SARIF upload
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Scan demo/ and upload SARIF to code scanning
+        uses: ./
+        with:
+          path: demo
+          fail-on: none
+          upload-sarif: "true"
