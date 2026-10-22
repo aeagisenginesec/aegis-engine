@@ -11,8 +11,21 @@
 # AutoScan is enabled.
 #
 # Token lifetime: the current SONAR_TOKEN was minted with SonarCloud's
-# 30-day default expiry — it lapses 2026-11-20 and must be regenerated
+# 30-day default expiry — it lapses 2026-11-21 and must be regenerated
 # (SonarCloud → My Account → Access Tokens) and the secret updated.
+#
+# Coverage: the scan step has no coverage data unless CI generates it —
+# without a report Sonar scores new code at 0% coverage and the default
+# gate fails any sizeable PR (learned on PR #6, 2026-10-22). The test
+# step below writes coverage.out and sonar.go.coverage.reportPaths
+# feeds it to the scanner.
+#
+# Duplication (CPD): internal/rules/compliance.go is a hand-reviewed
+# DATA table (framework control mappings), not logic — its entries are
+# inherently repetitive and read as ~55% "duplication" on new code.
+# It is excluded from the duplication metric only (sonar.cpd.exclusions);
+# every other analysis (bugs, vulnerabilities, smells, coverage) still
+# applies to it, and no other file is excluded.
 #
 # Scope: the same exclusions as every other gate in this repo. This
 # repository's PURPOSE includes containing deliberately vulnerable
@@ -58,6 +71,12 @@ jobs:
           go-version: "1.26.x"
           cache: true
 
+      - name: Generate Go coverage (feeds Sonar's coverage metric)
+        # -coverpkg counts cross-package coverage: CLI-level tests in
+        # cmd/aegis genuinely execute internal/report and internal/rules
+        # code, and Sonar should see that coverage where it belongs.
+        run: go test ./... -coverpkg=./... -coverprofile=coverage.out
+
       - name: SonarCloud scan (waits for the quality gate)
         uses: SonarSource/sonarqube-scan-action@2f77a1ec69fb1d595b06f35ab27e97605bdef703 # v5
         env:
@@ -68,4 +87,6 @@ jobs:
             -Dsonar.organization=aeagisenginesec
             -Dsonar.projectKey=aeagisenginesec_aegis-engine
             -Dsonar.exclusions=benchmark/**,docs/audit/raw/**,**/testdata/**,tests/demos/**,tests/fixtures/**,demo/**
+            -Dsonar.go.coverage.reportPaths=coverage.out
+            -Dsonar.cpd.exclusions=internal/rules/compliance.go
             -Dsonar.qualitygate.wait=true
