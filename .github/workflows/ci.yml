@@ -1,16 +1,24 @@
 # Aegis release CI — build, vet, test, quality gate, determinism.
 #
-# NOTE: authored 2026-10-14, not yet run against GitHub (the repository does
-# not exist yet). Review the first run's logs before trusting it as a gate.
+# Runs natively on every supported OS, not just cross-compiled from Linux:
+# the matrix below matches the Action's own os-matrix (action-test.yml) —
+# Linux x64, Linux ARM64, macOS ARM64, macOS Intel, Windows x64.
 #
-# What it does on every push and pull request:
+# What it does on every push and pull request, on each matrix leg:
 #   1. Builds Aegis from source with release ldflags (version stamp).
 #   2. Runs `go vet`.
 #   3. Runs the full test suite (`go test ./...`).
 #   4. Runs `go test -race` on the race-sensitive packages.
 #   5. Runs `aegis quality-gate` (precision/recall/coverage/perf/parser-safety).
 #   6. Determinism check: scans the multi-cloud fixture 5 times and fails if
-#      the JSON outputs are not byte-identical.
+#      the JSON outputs are not byte-identical (skips if the fixture is
+#      absent, e.g. on hosted runners).
+#   7. Uploads the native binary as a per-OS artifact.
+#
+# All `run:` steps use bash on every OS (Git Bash on Windows) so the same
+# commands run unchanged on Linux, macOS and Windows. The only OS-specific
+# piece is the binary name (`aegis` vs `aegis.exe`), set once in the
+# "Set binary name" step and reused everywhere via $BIN.
 #
 # The companion workflow `aegis.yml` runs Aegis against its own repository
 # (self-scan security gate); this workflow validates the codebase itself.
@@ -28,7 +36,21 @@ env:
 
 jobs:
   build-test-gate:
-    runs-on: ubuntu-latest
+    name: Build & test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-latest
+          - macos-15-intel
+          - windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -38,13 +60,21 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
+      - name: Set binary name
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            echo "BIN=aegis.exe" >> "$GITHUB_ENV"
+          else
+            echo "BIN=aegis" >> "$GITHUB_ENV"
+          fi
+
       - name: Build
         run: |
           go build -trimpath \
             -ldflags "-s -w -X aegis/internal/version.BuildDate=$(date -u +%F) -X aegis/internal/version.Commit=${GITHUB_SHA::7}" \
-            -o aegis ./cmd/aegis
-          ./aegis --version
-          ./aegis doctor
+            -o "$BIN" ./cmd/aegis
+          ./$BIN --version
+          ./$BIN doctor
 
       - name: Vet
         run: go vet ./...
@@ -64,7 +94,7 @@ jobs:
         run: go test -race ./internal/adapter/pulumi/ ./cmd/aegis/ ./internal/rules/ ./internal/rules/aws/ -count=1
 
       - name: Quality gate
-        run: ./aegis quality-gate
+        run: ./$BIN quality-gate
 
       - name: Determinism check
         run: |
@@ -76,7 +106,7 @@ jobs:
             exit 0
           fi
           for i in 1 2 3 4 5; do
-            ./aegis scan "$FIXTURE" --format=json > "/tmp/det-$i.json" || true
+            ./$BIN scan "$FIXTURE" --format=json > "/tmp/det-$i.json" || true
           done
           sha256sum /tmp/det-*.json | awk '{print $1}' | sort -u | wc -l | grep -qx 1 \
             || { echo "NON-DETERMINISTIC OUTPUT"; exit 1; }
@@ -85,5 +115,5 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: aegis-linux-amd64
-          path: aegis
+          name: aegis-${{ matrix.os }}
+          path: ${{ env.BIN }}
