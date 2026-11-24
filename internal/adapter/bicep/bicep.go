@@ -683,7 +683,7 @@ func (p *parser) parseTypeString() string {
 // ok=false. Callers use ok=false to emit a "failed to parse; treated as
 // unknown" diagnostic — without this signal, a malformed expression (e.g.
 // `var open = [~]`) degrades to Unknown silently, and a rule that needs
-// a known value (e.g. AEGIS-AZR-001) stops firing with no diagnostic.
+// a known value (e.g. AEGIS-AZURE-001) stops firing with no diagnostic.
 func (p *parser) parseExprOK() (tval, bool) {
 	v, ok := p.parseTernary()
 	if !ok {

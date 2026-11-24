@@ -20,10 +20,10 @@ const PackName = "aegis-azure"
 // Rules returns every rule in the Azure pack, in ID order.
 func Rules() []ir.Rule {
 	rules := []ir.Rule{
-		storagePublicBlobAccess{}, // AEGIS-AZR-001
-		storageMinTLS{},           // AEGIS-AZR-002
-		nsgOpenRule{},             // AEGIS-AZR-003
-		keyVaultPurgeProtection{}, // AEGIS-AZR-005
+		storagePublicBlobAccess{}, // AEGIS-AZURE-001
+		storageMinTLS{},           // AEGIS-AZURE-002
+		nsgOpenRule{},             // AEGIS-AZURE-003
+		keyVaultPurgeProtection{}, // AEGIS-AZURE-005
 	}
 	rules = append(rules, Azure2Rules()...)  // AEGIS-AZURE-006..025
 	rules = append(rules, Azure3Rules()...)  // AEGIS-AZURE-026..043
@@ -119,12 +119,12 @@ func mkFinding(rule ir.Rule, r ir.Resource, attr string, span ir.Span, actual, e
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZR-001: Storage account allows public blob access
+// AEGIS-AZURE-001: Storage account allows public blob access
 // ---------------------------------------------------------------------------
 
 type storagePublicBlobAccess struct{}
 
-func (storagePublicBlobAccess) ID() string { return "AEGIS-AZR-001" }
+func (storagePublicBlobAccess) ID() string { return "AEGIS-AZURE-001" }
 func (storagePublicBlobAccess) Title() string {
 	return "Storage account allows public blob access"
 }
@@ -151,12 +151,12 @@ func (s storagePublicBlobAccess) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZR-002: Storage account below TLS 1.2
+// AEGIS-AZURE-002: Storage account below TLS 1.2
 // ---------------------------------------------------------------------------
 
 type storageMinTLS struct{}
 
-func (storageMinTLS) ID() string { return "AEGIS-AZR-002" }
+func (storageMinTLS) ID() string { return "AEGIS-AZURE-002" }
 func (storageMinTLS) Title() string {
 	return "Storage account below TLS 1.2"
 }
@@ -184,12 +184,12 @@ func (s storageMinTLS) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZR-003: NSG rule open to the internet
+// AEGIS-AZURE-003: NSG rule open to the internet
 // ---------------------------------------------------------------------------
 
 type nsgOpenRule struct{}
 
-func (nsgOpenRule) ID() string { return "AEGIS-AZR-003" }
+func (nsgOpenRule) ID() string { return "AEGIS-AZURE-003" }
 func (nsgOpenRule) Title() string {
 	return "NSG rule open to the internet"
 }
@@ -252,12 +252,12 @@ func (s nsgOpenRule) Check(r ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZR-005: Key Vault without purge protection
+// AEGIS-AZURE-005: Key Vault without purge protection
 // ---------------------------------------------------------------------------
 
 type keyVaultPurgeProtection struct{}
 
-func (keyVaultPurgeProtection) ID() string { return "AEGIS-AZR-005" }
+func (keyVaultPurgeProtection) ID() string { return "AEGIS-AZURE-005" }
 func (keyVaultPurgeProtection) Title() string {
 	return "Key Vault without purge protection"
 }

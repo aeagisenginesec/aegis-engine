@@ -73,8 +73,8 @@ func mustFinding(t *testing.T, f []ir.Finding, ruleID string) ir.Finding {
 func TestRulesInIDOrder(t *testing.T) {
 	rules := Rules()
 	want := []string{
-		"AEGIS-AZR-001", "AEGIS-AZR-002", "AEGIS-AZR-003",
-		"AEGIS-AZR-005",
+		"AEGIS-AZURE-001", "AEGIS-AZURE-002", "AEGIS-AZURE-003",
+		"AEGIS-AZURE-005",
 		"AEGIS-AZURE-006",
 		"AEGIS-AZURE-010", "AEGIS-AZURE-011", "AEGIS-AZURE-012", "AEGIS-AZURE-013",
 		"AEGIS-AZURE-014", "AEGIS-AZURE-015", "AEGIS-AZURE-016", "AEGIS-AZURE-017",
@@ -169,14 +169,14 @@ func TestRulesInIDOrder(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZR-001
+// AEGIS-AZURE-001
 // ---------------------------------------------------------------------------
 
 func TestStoragePublicBlobAccess_Fires(t *testing.T) {
 	r := res("azurerm_storage_account", "data", map[string]ir.Value{
 		"allow_blob_public_access": kv(true, 3),
 	})
-	f := mustFinding(t, runRule(storagePublicBlobAccess{}, r), "AEGIS-AZR-001")
+	f := mustFinding(t, runRule(storagePublicBlobAccess{}, r), "AEGIS-AZURE-001")
 	if f.Severity != ir.SeverityHigh {
 		t.Fatalf("wrong severity: %s", f.Severity)
 	}
@@ -208,14 +208,14 @@ func TestStoragePublicBlobAccess_AbsentNoFinding(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZR-002
+// AEGIS-AZURE-002
 // ---------------------------------------------------------------------------
 
 func TestStorageMinTLS_Fires(t *testing.T) {
 	r := res("azurerm_storage_account", "data", map[string]ir.Value{
 		"min_tls_version": ks("TLS1_0", 3),
 	})
-	mustFinding(t, runRule(storageMinTLS{}, r), "AEGIS-AZR-002")
+	mustFinding(t, runRule(storageMinTLS{}, r), "AEGIS-AZURE-002")
 }
 
 func TestStorageMinTLS_TLS12OK(t *testing.T) {
@@ -237,7 +237,7 @@ func TestStorageMinTLS_UnknownNoFinding(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZR-003
+// AEGIS-AZURE-003
 // ---------------------------------------------------------------------------
 
 func openNSGRule(sourceAttr string, v ir.Value) ir.Resource {
@@ -249,15 +249,15 @@ func openNSGRule(sourceAttr string, v ir.Value) ir.Resource {
 }
 
 func TestNSGOpenRule_StarFires(t *testing.T) {
-	mustFinding(t, runRule(nsgOpenRule{}, openNSGRule("source_address_prefix", ks("*", 4))), "AEGIS-AZR-003")
+	mustFinding(t, runRule(nsgOpenRule{}, openNSGRule("source_address_prefix", ks("*", 4))), "AEGIS-AZURE-003")
 }
 
 func TestNSGOpenRule_InternetKeywordFires(t *testing.T) {
-	mustFinding(t, runRule(nsgOpenRule{}, openNSGRule("source_address_prefix", ks("Internet", 4))), "AEGIS-AZR-003")
+	mustFinding(t, runRule(nsgOpenRule{}, openNSGRule("source_address_prefix", ks("Internet", 4))), "AEGIS-AZURE-003")
 }
 
 func TestNSGOpenRule_PrefixListFires(t *testing.T) {
-	mustFinding(t, runRule(nsgOpenRule{}, openNSGRule("source_address_prefixes", strList(4, "10.0.0.0/8", "0.0.0.0/0"))), "AEGIS-AZR-003")
+	mustFinding(t, runRule(nsgOpenRule{}, openNSGRule("source_address_prefixes", strList(4, "10.0.0.0/8", "0.0.0.0/0"))), "AEGIS-AZURE-003")
 }
 
 func TestNSGOpenRule_RestrictedOK(t *testing.T) {
@@ -306,14 +306,14 @@ func TestNSGOpenRule_UnknownDirectionNoFinding(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AZR-005
+// AEGIS-AZURE-005
 // ---------------------------------------------------------------------------
 
 func TestKeyVaultPurgeProtection_Fires(t *testing.T) {
 	r := res("azurerm_key_vault", "secrets", map[string]ir.Value{
 		"purge_protection_enabled": kv(false, 3),
 	})
-	f := mustFinding(t, runRule(keyVaultPurgeProtection{}, r), "AEGIS-AZR-005")
+	f := mustFinding(t, runRule(keyVaultPurgeProtection{}, r), "AEGIS-AZURE-005")
 	if f.Severity != ir.SeverityHigh {
 		t.Fatalf("wrong severity: %s", f.Severity)
 	}

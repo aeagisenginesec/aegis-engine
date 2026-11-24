@@ -2,6 +2,11 @@
 //
 // IAM deep rules (AEGIS-AWS-650..679): granular IAM hygiene and privilege
 // checks. Unknown-value contract (hard rule): a present-but-unresolved
+//
+// AEGIS-AWS-859 (IAM administrative access without MFA condition) is also
+// defined in this file, but it is registered at the tail of the AWS pack
+// (pack.go) instead of in IAMDeepRules: the pack must stay in strict ID
+// order and 859 sorts after the 680-849 deep blocks.
 // attribute yields NO finding. An ABSENT attribute fires only when the
 // provider default is insecure, via absentInsecureDefault.
 package aws
@@ -35,7 +40,6 @@ func IAMDeepRules() []ir.Rule {
 		iamRoleForceDetach{},         // AEGIS-AWS-665
 		iamAttachmentAdminAccess{},   // AEGIS-AWS-666
 		iamRoleNoBoundary{},          // AEGIS-AWS-667
-		iamAccessKeyUnencrypted{},    // AEGIS-AWS-668
 		iamAttachmentPowerUser{},     // AEGIS-AWS-669
 		iamPolicyIamStarScoped{},     // AEGIS-AWS-670
 		iamPolicyNotResourceAllow{},  // AEGIS-AWS-671
@@ -747,40 +751,6 @@ func (r iamRoleNoBoundary) Check(res ir.Resource) []ir.Finding {
 }
 
 // ---------------------------------------------------------------------------
-// AEGIS-AWS-668: IAM access key created without pgp_key
-// ---------------------------------------------------------------------------
-
-type iamAccessKeyUnencrypted struct{}
-
-func (iamAccessKeyUnencrypted) ID() string { return "AEGIS-AWS-668" }
-func (iamAccessKeyUnencrypted) Title() string {
-	return "IAM access key secret not encrypted with pgp_key"
-}
-func (iamAccessKeyUnencrypted) Description() string {
-	return "An active access key is created without pgp_key, so the secret " +
-		"access key is stored in plaintext in the Terraform state. Anyone " +
-		"with state access can read the long-lived credential. Set pgp_key " +
-		"to encrypt the secret."
-}
-func (iamAccessKeyUnencrypted) Severity() ir.Severity { return ir.SeverityLow }
-func (iamAccessKeyUnencrypted) AppliesTo(resType string) bool {
-	return resType == "aws_iam_access_key"
-}
-func (r iamAccessKeyUnencrypted) Check(res ir.Resource) []ir.Finding {
-	status, _, present, known := getString(res, "status")
-	// Provider default status is Active when unset.
-	active := !present || (known && strings.EqualFold(strings.TrimSpace(status), "Active"))
-	if !active {
-		return nil
-	}
-	if _, _, pgpPresent, _ := getString(res, "pgp_key"); pgpPresent {
-		return nil // set or unresolved: assume encrypted / undecidable
-	}
-	return iamDeepFinding(r, res, "pgp_key", res.Span,
-		"absent (secret stored in plaintext in state)", "pgp_key set")
-}
-
-// ---------------------------------------------------------------------------
 // AEGIS-AWS-669: policy attachment grants PowerUserAccess
 // ---------------------------------------------------------------------------
 
@@ -1195,4 +1165,137 @@ func (r iamRoleReadOnlyProd) Check(res ir.Resource) []ir.Finding {
 		}
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-AWS-859: IAM administrative access granted without MFA condition
+// ---------------------------------------------------------------------------
+//
+// An Allow statement that grants administrative access — a trust policy
+// with Principal "*" or a policy with Action "*"/"iam:*" — with no
+// Condition requiring MFA (aws:MultiFactorAuthAge /
+// aws:MultiFactorAuthPresent) lets the grant be exercised with a single
+// factor. AEGIS-AWS-101 already flags an unconditioned open trust as
+// Critical; this rule covers the adjacent gap: a wildcard grant whose
+// Condition exists but does not require MFA (and, per its trigger
+// conditions, an administrative policy statement with no MFA condition at
+// all). Scope is deliberately conservative: the statement must be an
+// Allow with a wildcard principal or an administrative action, and no
+// Condition key anywhere in the statement may mention MFA. Statements
+// using NotAction/NotResource are skipped (cannot decide -> silent),
+// matching the rest of the IAM pack.
+
+type iamAdminAccessNoMFA struct{}
+
+func (iamAdminAccessNoMFA) ID() string { return "AEGIS-AWS-859" }
+func (iamAdminAccessNoMFA) Title() string {
+	return "IAM administrative access granted without MFA condition"
+}
+func (iamAdminAccessNoMFA) Description() string {
+	return "An Allow statement grants administrative access — a trust policy " +
+		"with Principal \"*\" or a policy with Action \"*\"/\"iam:*\" — without " +
+		"a Condition requiring multi-factor authentication " +
+		"(aws:MultiFactorAuthAge / aws:MultiFactorAuthPresent). The grant can " +
+		"be exercised with a single factor. Add a Condition requiring MFA, " +
+		"or scope the principal and actions to least privilege."
+}
+func (iamAdminAccessNoMFA) Severity() ir.Severity { return ir.SeverityMedium }
+func (iamAdminAccessNoMFA) AppliesTo(resType string) bool {
+	return resType == "aws_iam_role" ||
+		resType == "aws_iam_policy" ||
+		resType == "aws_iam_role_policy" ||
+		resType == "aws_iam_user_policy" ||
+		resType == "aws_iam_group_policy"
+}
+func (r iamAdminAccessNoMFA) Check(res ir.Resource) []ir.Finding {
+	if res.Type == "aws_iam_role" {
+		pol, span, present, known := getString(res, "assume_role_policy")
+		if !present || !known {
+			return nil // absent or unresolved: cannot decide
+		}
+		for _, s := range policyStatements(pol) {
+			if s["Effect"] != "Allow" {
+				continue
+			}
+			if _, hasNotAction := s["NotAction"]; hasNotAction {
+				continue // negative logic: cannot decide -> silent
+			}
+			if _, hasNotPrincipal := s["NotPrincipal"]; hasNotPrincipal {
+				continue
+			}
+			if !principalAllowsAnyone(s["Principal"]) {
+				continue
+			}
+			if statementRequiresMFA(s) {
+				continue
+			}
+			return iamDeepFinding(r, res, "assume_role_policy", span,
+				"Allow with Principal \"*\" and no MFA condition",
+				"Condition requiring aws:MultiFactorAuthAge / aws:MultiFactorAuthPresent")
+		}
+		return nil
+	}
+	pol, span, present, known := getString(res, "policy")
+	if !present || !known {
+		return nil // absent or unresolved: cannot decide
+	}
+	for _, s := range policyStatements(pol) {
+		if s["Effect"] != "Allow" {
+			continue
+		}
+		if _, hasNotAction := s["NotAction"]; hasNotAction {
+			continue // negative logic: cannot decide -> silent
+		}
+		if _, hasNotResource := s["NotResource"]; hasNotResource {
+			continue
+		}
+		if !actionIsAdminLike(s["Action"]) {
+			continue
+		}
+		if statementRequiresMFA(s) {
+			continue
+		}
+		return iamDeepFinding(r, res, "policy", span,
+			"Allow with Action \"*\"/\"iam:*\" and no MFA condition",
+			"Condition requiring aws:MultiFactorAuthAge / aws:MultiFactorAuthPresent")
+	}
+	return nil
+}
+
+// statementRequiresMFA reports whether a policy statement's Condition
+// mentions an MFA condition key (aws:MultiFactorAuthAge or
+// aws:MultiFactorAuthPresent, matched case-insensitively anywhere in the
+// Condition tree). A Condition that gates on something else (e.g. source
+// IP or org ID) does not count: the grant is still exercisable without a
+// second factor.
+func statementRequiresMFA(s map[string]any) bool {
+	cond, ok := s["Condition"].(map[string]any)
+	if !ok {
+		return false
+	}
+	return mfaKeyPresent(cond)
+}
+
+// mfaKeyPresent walks a decoded JSON value looking for an MFA condition
+// key at any depth.
+func mfaKeyPresent(v any) bool {
+	switch t := v.(type) {
+	case map[string]any:
+		for k, child := range t {
+			if strings.EqualFold(k, "aws:MultiFactorAuthAge") ||
+				strings.EqualFold(k, "aws:MultiFactorAuthPresent") {
+				return true
+			}
+			if mfaKeyPresent(child) {
+				return true
+			}
+		}
+	case []any:
+		for _, item := range t {
+			if mfaKeyPresent(item) {
+				return true
+			}
+		}
+	}
+	return false
 }

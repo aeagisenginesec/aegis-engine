@@ -633,3 +633,66 @@ resource "aws_s3_bucket" "data" {
 		}
 	}
 }
+
+// TestScanSingleFile exercises `aegis scan <file>`: a single .tf file is
+// scanned as a one-file set with the same exit codes and output formats
+// as a directory scan.
+func TestScanSingleFile(t *testing.T) {
+	dir := writeFixtures(t)
+	target := filepath.Join(dir, "vuln.tf")
+
+	// Text format: findings reported, exit 1.
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"scan", target}, &stdout, &stderr); code != 1 {
+		t.Fatalf("scan single file: expected exit 1 (findings), got %d; stderr: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "AEGIS-AWS-002") {
+		t.Errorf("expected AEGIS-AWS-002 in single-file scan output, got:\n%s", stdout.String())
+	}
+
+	// JSON format: parseable, same findings.
+	stdout.Reset()
+	stderr.Reset()
+	if code := run([]string{"scan", target, "--format=json"}, &stdout, &stderr); code != 1 {
+		t.Fatalf("scan single file --format=json: expected exit 1, got %d; stderr: %s", code, stderr.String())
+	}
+	var env map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &env); err != nil {
+		t.Fatalf("single-file JSON output is not valid JSON: %v\n%s", err, stdout.String())
+	}
+	findings, ok := env["findings"].([]any)
+	if !ok || len(findings) == 0 {
+		t.Fatalf("expected findings in single-file JSON output, got %v", env["findings"])
+	}
+}
+
+func TestScanSingleFileClean(t *testing.T) {
+	dir := writeFixtures(t)
+	target := filepath.Join(dir, "clean.tf")
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"scan", target}, &stdout, &stderr); code != 0 {
+		t.Errorf("scan clean single file: expected exit 0, got %d; stdout: %s; stderr: %s", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestScanNonexistentTarget(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"scan", filepath.Join(t.TempDir(), "nope.tf")}, &stdout, &stderr); code != 2 {
+		t.Errorf("scan nonexistent target: expected exit 2, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "cannot be read") {
+		t.Errorf("expected a readable-target error on stderr, got: %s", stderr.String())
+	}
+}
+
+func TestFixSingleFileRejected(t *testing.T) {
+	dir := writeFixtures(t)
+	target := filepath.Join(dir, "vuln.tf")
+	var stdout, stderr bytes.Buffer
+	if code := run([]string{"fix", target}, &stdout, &stderr); code != 2 {
+		t.Errorf("fix on a single file: expected exit 2, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "requires a target directory") {
+		t.Errorf("expected directory requirement on stderr, got: %s", stderr.String())
+	}
+}

@@ -82,5 +82,6 @@ func Rules() []ir.Rule {
 	base = append(base, EOLImageRules()...)               // AEGIS-AWS-856
 	base = append(base, CFNParameterSecretRules()...)     // AEGIS-AWS-857
 	base = append(base, sgDatabasePort{})                 // AEGIS-AWS-858
+	base = append(base, iamAdminAccessNoMFA{})            // AEGIS-AWS-859
 	return base
 }

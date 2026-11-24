@@ -816,12 +816,6 @@ var complianceMap = map[string][]ir.ComplianceRef{
 		ref(nist, "IA-5"), ref(iso, "A.5.17"),
 		ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
 	},
-	"AEGIS-AWS-668": { // IAM access key secret not encrypted with pgp_key
-		ref(nist, "IA-5"), ref(nist, "SC-12"),
-		ref(iso, "A.5.17"), ref(iso, "A.8.24"),
-		ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
-		ref(hipaa, "164.312(a)(2)(iv)"),
-	},
 	"AEGIS-AWS-669": { // IAM role policy attachment grants PowerUserAccess
 		ref(nist, "IA-5"), ref(iso, "A.5.17"),
 		ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
@@ -1551,6 +1545,11 @@ var complianceMap = map[string][]ir.ComplianceRef{
 		ref(nist, "AC-3"), ref(nist, "SC-7"), ref(pci, "1.4.1"), ref(iso, "A.5.15"), ref(iso, "A.8.3"),
 		ref(iso, "A.8.20"), ref(iso, "A.8.22"), ref(soc2, "CC6.1"), ref(soc2, "CC6.6"), ref(hipaa, "164.312(a)(1)"),
 	},
+	"AEGIS-AWS-859": { // IAM administrative access granted without MFA condition
+		ref(nist, "IA-2"), ref(nist, "IA-5"),
+		ref(iso, "A.5.17"), ref(iso, "A.8.5"),
+		ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
+	},
 
 	// --- AWS expansion: encryption at rest and key management ---
 	"AEGIS-AWS-349": { // MQ broker without customer-managed encryption
@@ -1925,7 +1924,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 		ref(nist, "SI-2"), ref(iso, "A.8.8"), ref(soc2, "CC7.1"),
 	},
 	// --- Azure: public / anonymous access ---
-	"AEGIS-AZR-001": { // Storage account allows public blob access
+	"AEGIS-AZURE-001": { // Storage account allows public blob access
 		ref(cisazure, "3.5"), ref(nist, "AC-3"), ref(pci, "1.4.1"),
 		ref(iso, "A.5.15"), ref(iso, "A.8.3"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(a)(1)"),
 	},
@@ -1955,7 +1954,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	},
 
 	// --- Azure: network boundary / public network exposure ---
-	"AEGIS-AZR-003": { // NSG rule open to the internet
+	"AEGIS-AZURE-003": { // NSG rule open to the internet
 		ref(nist, "SC-7"), ref(pci, "1.4.1"),
 		ref(iso, "A.8.20"), ref(iso, "A.8.22"), ref(soc2, "CC6.6"), ref(hipaa, "164.312(a)(1)"),
 	},
@@ -2233,7 +2232,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	},
 
 	// --- Azure: encryption in transit / TLS ---
-	"AEGIS-AZR-002": { // Storage account below TLS 1.2
+	"AEGIS-AZURE-002": { // Storage account below TLS 1.2
 		ref(cisazure, "3.13"), ref(nist, "SC-8"), ref(pci, "4.2.1"),
 		ref(iso, "A.8.24"), ref(soc2, "CC6.7"), ref(hipaa, "164.312(e)(1)"),
 	},
@@ -2417,7 +2416,7 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	},
 
 	// --- Azure: key management / customer-managed keys ---
-	"AEGIS-AZR-005": { // Key Vault without purge protection
+	"AEGIS-AZURE-005": { // Key Vault without purge protection
 		ref(cisazure, "8.5"), ref(nist, "SC-12"),
 		ref(iso, "A.8.24"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(a)(2)(iv)"),
 	},

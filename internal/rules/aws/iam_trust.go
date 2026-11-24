@@ -122,6 +122,15 @@ func principalAllowsAnyone(p any) bool {
 
 // policyStatements parses the Statement element of an IAM policy document,
 // accepting a single object or a list. Anything unparseable yields nil.
+//
+// Known blind spot: this parser returns statements verbatim — it does NOT
+// resolve NotAction/NotResource semantics. Every caller must skip statements
+// using NotAction/NotResource ("cannot decide -> silent"), because their
+// effective permissions require the full action/resource space to evaluate.
+// A policy that grants broad access via NotAction is therefore silently
+// missed by the rules built on this parser. That is a deliberate
+// soundness trade-off (no false positives from negative logic), not an
+// oversight — but treat it as a known gap, not as proof of safety.
 func policyStatements(doc string) []map[string]any {
 	var parsed struct {
 		Statement json.RawMessage `json:"Statement"`

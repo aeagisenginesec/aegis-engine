@@ -52,7 +52,7 @@ func TestItem6bNumberAtEOF(t *testing.T) {
 }
 
 // diagnostic, silently suppressing rules that need a known value
-// (AEGIS-AZR-001 stops firing when allowBlobPublicAccess is unknown).
+// (AEGIS-AZURE-001 stops firing when allowBlobPublicAccess is unknown).
 // Syntax failures must warn; legitimate unknowns (undeclared identifiers,
 // forward references) must NOT warn.
 func TestItem6bFailedExprWarns(t *testing.T) {

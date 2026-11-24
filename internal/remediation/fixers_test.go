@@ -199,7 +199,7 @@ func TestFixer001Negative(t *testing.T) {
 	}
 }
 
-// --- 012: versioning block ---
+// --- 012: standalone versioning resource (provider v4+) ---
 
 func TestFixer012Positive(t *testing.T) {
 	src := "resource \"aws_s3_bucket\" \"assets\" {\n  bucket = \"x\"\n}\n"
@@ -211,8 +211,82 @@ func TestFixer012Positive(t *testing.T) {
 		t.Fatalf("want 1 patch, got %d", len(patches))
 	}
 	out := applySingle(t, patches[0], src)
-	if !strings.Contains(out, "versioning {") || !strings.Contains(out, "enabled = true") {
-		t.Errorf("patched content missing versioning block:\n%s", out)
+	// The patch must be a separate aws_s3_bucket_versioning resource
+	// (provider v4+), never the deprecated inline versioning block.
+	if !strings.Contains(out, `resource "aws_s3_bucket_versioning" "assets_versioning"`) {
+		t.Errorf("patched content missing standalone versioning resource:\n%s", out)
+	}
+	if !strings.Contains(out, `bucket = aws_s3_bucket.assets.id`) {
+		t.Errorf("patched content missing bucket reference:\n%s", out)
+	}
+	if !strings.Contains(out, `status = "Enabled"`) {
+		t.Errorf("patched content missing Enabled status:\n%s", out)
+	}
+	// The original bucket block must be intact, with no inline
+	// versioning block added to it.
+	if !strings.Contains(out, "resource \"aws_s3_bucket\" \"assets\" {\n  bucket = \"x\"\n}") {
+		t.Errorf("original bucket block changed:\n%s", out)
+	}
+	if strings.Contains(out, "versioning {\n  enabled = true") {
+		t.Errorf("patched content uses the deprecated inline versioning block:\n%s", out)
+	}
+}
+
+func TestFixer012SkipsExistingStandalone(t *testing.T) {
+	// A versioning resource already targeting this bucket — Enabled or
+	// Suspended — must suppress the patch: the provider allows exactly
+	// one versioning resource per bucket.
+	for _, status := range []string{"Enabled", "Suspended"} {
+		src := "resource \"aws_s3_bucket\" \"assets\" {\n  bucket = \"x\"\n}\n\n" +
+			"resource \"aws_s3_bucket_versioning\" \"assets_versioning\" {\n  bucket = aws_s3_bucket.assets.id\n\n  versioning_configuration {\n    status = \"" + status + "\"\n  }\n}\n"
+		res := ir.Resource{Type: "aws_s3_bucket", Name: "assets",
+			Attributes: map[string]ir.Value{}, Span: spanOf("s3.tf", 1, 3)}
+		f := findingFor("AEGIS-AWS-012", "aws_s3_bucket.assets", "versioning", "s3.tf", 1, 3)
+		if patches := newFixer012().Propose(f, res, []byte(src)); len(patches) != 0 {
+			t.Errorf("status %s: existing versioning resource should yield no patch, got %d", status, len(patches))
+		}
+	}
+}
+
+func TestFixer012SkipsUnresolvableVersioningTarget(t *testing.T) {
+	// A versioning resource whose bucket is a variable: cannot prove it
+	// targets a different bucket, so the patch must be skipped rather
+	// than risking a duplicate versioning resource.
+	src := "resource \"aws_s3_bucket\" \"assets\" {\n  bucket = \"x\"\n}\n\n" +
+		"resource \"aws_s3_bucket_versioning\" \"v\" {\n  bucket = var.bucket_name\n\n  versioning_configuration {\n    status = \"Suspended\"\n  }\n}\n"
+	res := ir.Resource{Type: "aws_s3_bucket", Name: "assets",
+		Attributes: map[string]ir.Value{}, Span: spanOf("s3.tf", 1, 3)}
+	f := findingFor("AEGIS-AWS-012", "aws_s3_bucket.assets", "versioning", "s3.tf", 1, 3)
+	if patches := newFixer012().Propose(f, res, []byte(src)); len(patches) != 0 {
+		t.Errorf("unresolvable versioning target should yield no patch, got %d", len(patches))
+	}
+}
+
+func TestFixer012AllowsOtherBucketVersioning(t *testing.T) {
+	// A versioning resource clearly targeting a DIFFERENT bucket must
+	// not suppress the patch for this bucket.
+	src := "resource \"aws_s3_bucket\" \"assets\" {\n  bucket = \"x\"\n}\n\n" +
+		"resource \"aws_s3_bucket_versioning\" \"other_versioning\" {\n  bucket = aws_s3_bucket.other.id\n\n  versioning_configuration {\n    status = \"Enabled\"\n  }\n}\n"
+	res := ir.Resource{Type: "aws_s3_bucket", Name: "assets",
+		Attributes: map[string]ir.Value{}, Span: spanOf("s3.tf", 1, 3)}
+	f := findingFor("AEGIS-AWS-012", "aws_s3_bucket.assets", "versioning", "s3.tf", 1, 3)
+	if patches := newFixer012().Propose(f, res, []byte(src)); len(patches) != 1 {
+		t.Errorf("versioning for another bucket should not suppress the patch, got %d", len(patches))
+	}
+}
+
+func TestFixer012SkipsInlineVersioning(t *testing.T) {
+	// An inline versioning block (deprecated syntax) already present:
+	// a standalone resource would conflict with it.
+	src := "resource \"aws_s3_bucket\" \"assets\" {\n  bucket = \"x\"\n  versioning {\n    enabled = false\n  }\n}\n"
+	res := ir.Resource{Type: "aws_s3_bucket", Name: "assets",
+		Attributes: map[string]ir.Value{
+			"versioning": {Raw: nil, Known: true, Span: spanOf("s3.tf", 3, 5)},
+		},
+		Span: spanOf("s3.tf", 1, 6)}
+	f := findingFor("AEGIS-AWS-012", "aws_s3_bucket.assets", "versioning", "s3.tf", 1, 6)
+	if patches := newFixer012().Propose(f, res, []byte(src)); len(patches) != 0 {
+		t.Errorf("inline versioning block should yield no patch, got %d", len(patches))
 	}
 }
 
@@ -274,5 +348,28 @@ func TestAttrEditSpanMismatch(t *testing.T) {
 	f := findingFor("AEGIS-AWS-007", "aws_db_instance.main", "storage_encrypted", "db.tf", 9, 9)
 	if patches := newFixer007().Propose(f, res, []byte(src)); len(patches) != 0 {
 		t.Errorf("span mismatch should yield no patch, got %d", len(patches))
+	}
+}
+
+func TestFixer012CRLF(t *testing.T) {
+	src := "resource \"aws_s3_bucket\" \"assets\" {\r\n  bucket = \"x\"\r\n}\r\n"
+	res := ir.Resource{Type: "aws_s3_bucket", Name: "assets",
+		Attributes: map[string]ir.Value{}, Span: spanOf("s3.tf", 1, 3)}
+	f := findingFor("AEGIS-AWS-012", "aws_s3_bucket.assets", "versioning", "s3.tf", 1, 3)
+	patches := newFixer012().Propose(f, res, []byte(src))
+	if len(patches) != 1 {
+		t.Fatalf("want 1 patch, got %d", len(patches))
+	}
+	out := applySingle(t, patches[0], src)
+	// No doubled carriage returns: every line ending must be \r\n,
+	// never \r\r\n (a lone \r is a parse error in HCL).
+	if strings.Contains(out, "\r\r") {
+		t.Errorf("patched content has doubled carriage returns:\n%q", out)
+	}
+	if !strings.Contains(out, `resource "aws_s3_bucket_versioning" "assets_versioning"`) {
+		t.Errorf("patched content missing standalone versioning resource:\n%s", out)
+	}
+	if !strings.HasSuffix(out, "}\r\n") && !strings.HasSuffix(out, "}\n") {
+		t.Errorf("patched content has unexpected ending:\n%q", out)
 	}
 }

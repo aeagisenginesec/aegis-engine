@@ -246,13 +246,19 @@ func linkedBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 		// Match by the bucket's Name (its CFN logical ID) in scope.
 		if strings.HasPrefix(v.Ref, "cfn.resource.") {
 			lid := strings.TrimPrefix(v.Ref, "cfn.resource.")
+			var match *ir.Resource
+			matches := 0
 			for _, b := range resources {
 				if b.Type != "aws_s3_bucket" || !sameScope(r, b) {
 					continue
 				}
 				if b.Name == lid {
-					return scopeKey(b), true
+					match = &b
+					matches++
 				}
+			}
+			if matches == 1 {
+				return scopeKey(*match), true
 			}
 			return "", false
 		}
@@ -260,13 +266,19 @@ func linkedBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 		if !ok {
 			return "", false
 		}
+		var match *ir.Resource
+		matches := 0
 		for _, b := range resources {
 			if b.Type != "aws_s3_bucket" {
 				continue
 			}
 			if b.Address() == addr && sameScope(r, b) {
-				return scopeKey(b), true
+				match = &b
+				matches++
 			}
+		}
+		if matches == 1 {
+			return scopeKey(*match), true
 		}
 		return "", false
 	}
@@ -275,6 +287,8 @@ func linkedBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 		return "", false
 	}
 	name = strings.TrimSpace(name)
+	var match *ir.Resource
+	matches := 0
 	for _, b := range resources {
 		if b.Type != "aws_s3_bucket" {
 			continue
@@ -283,11 +297,17 @@ func linkedBucketAddr(r ir.Resource, resources []ir.Resource) (string, bool) {
 			continue
 		}
 		if b.Name == name {
-			return scopeKey(b), true
+			match = &b
+			matches++
+			continue
 		}
 		if bn, _, _, known := getString(b, "bucket"); known && strings.TrimSpace(bn) == name {
-			return scopeKey(b), true
+			match = &b
+			matches++
 		}
+	}
+	if matches == 1 {
+		return scopeKey(*match), true
 	}
 	return "", false
 }
@@ -327,13 +347,19 @@ func linkedTargetBucketAddr(r ir.Resource, resources []ir.Resource) (string, boo
 		if !ok {
 			return "", false
 		}
+		var match *ir.Resource
+		matches := 0
 		for _, b := range resources {
 			if b.Type != "aws_s3_bucket" {
 				continue
 			}
 			if b.Address() == addr && sameScope(r, b) {
-				return scopeKey(b), true
+				match = &b
+				matches++
 			}
+		}
+		if matches == 1 {
+			return scopeKey(*match), true
 		}
 		return "", false
 	}
@@ -342,6 +368,8 @@ func linkedTargetBucketAddr(r ir.Resource, resources []ir.Resource) (string, boo
 		return "", false
 	}
 	name = strings.TrimSpace(name)
+	var match *ir.Resource
+	matches := 0
 	for _, b := range resources {
 		if b.Type != "aws_s3_bucket" {
 			continue
@@ -350,11 +378,17 @@ func linkedTargetBucketAddr(r ir.Resource, resources []ir.Resource) (string, boo
 			continue
 		}
 		if b.Name == name {
-			return scopeKey(b), true
+			match = &b
+			matches++
+			continue
 		}
 		if bn, _, _, known := getString(b, "bucket"); known && strings.TrimSpace(bn) == name {
-			return scopeKey(b), true
+			match = &b
+			matches++
 		}
+	}
+	if matches == 1 {
+		return scopeKey(*match), true
 	}
 	return "", false
 }

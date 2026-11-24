@@ -21,13 +21,15 @@ import (
 )
 
 // labeledRules are the top-20 Critical/High AWS rule IDs (9 critical, then
-// the 11 lowest-numbered high), each with a paired fixture directory.
+// the 11 lowest-numbered high), plus AEGIS-AWS-859 (Medium MFA rule),
+// each with a paired fixture directory.
 var labeledRules = []string{
 	"AEGIS-AWS-003", "AEGIS-AWS-006", "AEGIS-AWS-101", "AEGIS-AWS-104",
 	"AEGIS-AWS-202", "AEGIS-AWS-501", "AEGIS-AWS-502", "AEGIS-AWS-534",
 	"AEGIS-AWS-629", "AEGIS-AWS-001", "AEGIS-AWS-002", "AEGIS-AWS-004",
 	"AEGIS-AWS-007", "AEGIS-AWS-011", "AEGIS-AWS-102", "AEGIS-AWS-103",
 	"AEGIS-AWS-105", "AEGIS-AWS-201", "AEGIS-AWS-203", "AEGIS-AWS-204",
+	"AEGIS-AWS-859",
 }
 
 type labeledExpected struct {

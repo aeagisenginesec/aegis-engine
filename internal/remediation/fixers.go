@@ -7,7 +7,9 @@
 //	009 EBS encrypted ........ encrypted = true
 //	010 CloudTrail validation  enable_log_file_validation = true
 //	011 RDS publicly_accessible publicly_accessible = false
-//	012 S3 no versioning ...... insert versioning { enabled = true }
+//	012 S3 no versioning ...... append a standalone
+//	    aws_s3_bucket_versioning resource (provider v4+; the inline
+//	    `versioning {}` block inside aws_s3_bucket is deprecated)
 //
 // Deliberately NOT fixed (human judgment required):
 //
@@ -427,22 +429,283 @@ func (fixer002) Propose(f ir.Finding, res ir.Resource, src []byte) []Patch {
 	}, src)}
 }
 
-type fixer012 struct{ blockFixer }
+type fixer012 struct{}
 
-// newFixer012. Audit: (a) one block insert before the closing brace,
-// skipped when versioning already exists; (b) re-parse enforced by
-// ValidatePatch; (c) resType pinned to aws_s3_bucket — no IAM or
-// security-group resource can ever match.
-func newFixer012() Fixer {
-	return fixer012{blockFixer{
-		ruleID:  "AEGIS-AWS-012",
-		resType: "aws_s3_bucket",
-		block:   "versioning",
-		text: `versioning {
-  enabled = true
-}`,
-		desc: "Enable versioning on the bucket",
-	}}
+// newFixer012. Audit: (a) one new top-level resource appended at the end
+// of the file — appendResourceEdit replaces only the file's last line with
+// itself plus the new block, so nothing else in the file moves; no new
+// resource is ever added when versioning already exists (inline block, or
+// a standalone aws_s3_bucket_versioning resource targeting this bucket —
+// including one whose bucket reference cannot be resolved, which is
+// treated as a possible match); (b) re-parse enforced by ValidatePatch —
+// the new resource must parse, the bucket must still parse, and the
+// re-scan must clear AEGIS-AWS-012 with no new findings; (c) resType
+// pinned to aws_s3_bucket — no IAM or security-group resource can ever
+// match. The versioning resource is a separate aws_s3_bucket_versioning
+// resource (AWS provider v4+), never the deprecated inline
+// `versioning {}` block inside aws_s3_bucket.
+func newFixer012() Fixer { return fixer012{} }
+
+func (fixer012) RuleID() string { return "AEGIS-AWS-012" }
+
+func (fixer012) Propose(f ir.Finding, res ir.Resource, src []byte) []Patch {
+	if res.Type != "aws_s3_bucket" {
+		return nil
+	}
+	// Inline versioning block (deprecated provider syntax) already
+	// present: a standalone versioning resource would conflict with it,
+	// so never add a second versioning configuration.
+	if _, ok := res.Attr("versioning"); ok {
+		return nil
+	}
+	// A standalone versioning resource already targeting this bucket:
+	// the provider allows exactly one per bucket, so never propose a
+	// duplicate — the ValidatePatch re-scan cannot detect the
+	// duplication (the new Enabled resource would clear the finding).
+	if hasStandaloneVersioning(src, res) {
+		return nil
+	}
+	block := `resource "aws_s3_bucket_versioning" "` + res.Name + `_versioning" {
+  bucket = ` + res.Address() + `.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}`
+	edit, ok := appendResourceEdit(src, res, block)
+	if !ok {
+		return nil
+	}
+	return []Patch{withDiff(Patch{
+		RuleID:      "AEGIS-AWS-012",
+		Resource:    res.Address(),
+		Description: "Enable versioning via a standalone aws_s3_bucket_versioning resource",
+		Edits:       []Edit{edit},
+	}, src)}
+}
+
+// appendResourceEdit builds an Edit appending blockText as a new top-level
+// resource at the end of the file. It replaces only the file's last line
+// with itself plus a blank line and the block, so nothing else moves.
+// Returns ok=false on an empty file or a resource without file info.
+func appendResourceEdit(src []byte, res ir.Resource, blockText string) (Edit, bool) {
+	lines := splitLines(src)
+	if len(lines) == 0 {
+		return Edit{}, false
+	}
+	if res.Span.File == "" {
+		return Edit{}, false
+	}
+	last := lines[len(lines)-1]
+	// Preserve CRLF: in a CRLF file the appended lines use CRLF too,
+	// so the patch does not mix line endings. The line's own trailing
+	// \r (if any) is its terminator — strip it first, or the joiner
+	// would add a second \r and corrupt the line ending.
+	joiner := "\n"
+	if strings.HasSuffix(last, "\r") {
+		joiner = "\r\n"
+		last = strings.TrimSuffix(last, "\r")
+	}
+	block := strings.Join(strings.Split(blockText, "\n"), joiner)
+	var newText string
+	if strings.TrimSpace(last) == "" {
+		// File ends with a blank line: replace it with the block.
+		newText = block
+	} else {
+		newText = last + joiner + joiner + block
+	}
+	return Edit{
+		File:      res.Span.File,
+		StartLine: len(lines),
+		EndLine:   len(lines),
+		NewText:   newText,
+	}, true
+}
+
+// hasStandaloneVersioning reports whether src already contains an
+// aws_s3_bucket_versioning resource that targets this bucket — or whose
+// target cannot be determined. Either case must suppress the patch: the
+// AWS provider allows exactly one versioning resource per bucket, so a
+// second one is invalid Terraform. A versioning resource that clearly
+// targets a different bucket (reference to another address, or a literal
+// name matching neither this bucket's label nor its bucket attribute)
+// does not suppress.
+//
+// The scan is textual and brace-aware: it finds each
+// `resource "aws_s3_bucket_versioning" ... {` block, tracks its brace
+// depth (ignoring braces inside strings and comments), and reads the
+// top-level `bucket = ...` value inside it.
+func hasStandaloneVersioning(src []byte, res ir.Resource) bool {
+	lines := splitLines(src)
+	bucketName := ""
+	if v, ok := res.Attr("bucket"); ok && v.Known {
+		if s, ok := v.AsString(); ok {
+			bucketName = strings.TrimSpace(s)
+		}
+	}
+	for i := 0; i < len(lines); i++ {
+		if !isVersioningResourceLine(lines[i]) {
+			continue
+		}
+		depth := 0
+		opened := false
+		bucketSeen := false
+		bucketVal := ""
+		for j := i; j < len(lines); j++ {
+			depth += braceDelta(lines[j])
+			if depth > 0 {
+				opened = true
+			}
+			if opened && depth == 1 && !bucketSeen {
+				if v, ok := topLevelBucketValue(lines[j]); ok {
+					bucketVal = v
+					bucketSeen = true
+				}
+			}
+			if opened && depth == 0 {
+				break
+			}
+		}
+		if !bucketSeen {
+			// No bucket attribute found in the block: cannot rule this
+			// bucket out — treat as a possible match.
+			return true
+		}
+		if versioningBucketTargets(bucketVal, res.Name, bucketName) {
+			return true
+		}
+	}
+	return false
+}
+
+// isVersioningResourceLine reports whether line opens a
+// `resource "aws_s3_bucket_versioning" "<label>" {` block.
+func isVersioningResourceLine(line string) bool {
+	t := strings.TrimSpace(line)
+	if !strings.HasPrefix(t, "resource") {
+		return false
+	}
+	rest := strings.TrimSpace(t[len("resource"):])
+	if !strings.HasPrefix(rest, `"aws_s3_bucket_versioning"`) {
+		return false
+	}
+	rest = strings.TrimSpace(rest[len(`"aws_s3_bucket_versioning"`):])
+	if !strings.HasPrefix(rest, `"`) {
+		return false
+	}
+	end := strings.Index(rest[1:], `"`)
+	if end < 0 {
+		return false
+	}
+	rest = strings.TrimSpace(rest[1+end+1:])
+	return strings.HasPrefix(rest, "{")
+}
+
+// stripHCLStringsAndComments removes double-quoted string literals and
+// trailing # / // comments from a line, so brace counting is not thrown
+// off by braces inside strings or comments. It is a heuristic for the
+// fixer's guard scan, not a parser.
+func stripHCLStringsAndComments(line string) string {
+	var sb strings.Builder
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+		if c == '"' {
+			i++
+			for i < len(line) && line[i] != '"' {
+				if line[i] == '\\' {
+					i++
+				}
+				i++
+			}
+			continue
+		}
+		if c == '#' {
+			break
+		}
+		if c == '/' && i+1 < len(line) && line[i+1] == '/' {
+			break
+		}
+		sb.WriteByte(c)
+	}
+	return sb.String()
+}
+
+// braceDelta counts net opening braces on a line, ignoring braces inside
+// strings and comments.
+func braceDelta(line string) int {
+	stripped := stripHCLStringsAndComments(line)
+	return strings.Count(stripped, "{") - strings.Count(stripped, "}")
+}
+
+// topLevelBucketValue extracts the value of a top-level `bucket = ...`
+// attribute line, or reports ok=false. The caller only passes lines at
+// depth 1 inside a resource block.
+func topLevelBucketValue(line string) (string, bool) {
+	t := strings.TrimSpace(line)
+	if !strings.HasPrefix(t, "bucket") {
+		return "", false
+	}
+	rest := strings.TrimSpace(t[len("bucket"):])
+	if !strings.HasPrefix(rest, "=") {
+		return "", false
+	}
+	rest = strings.TrimSpace(rest[1:])
+	if rest == "" {
+		return "", false
+	}
+	if strings.HasPrefix(rest, `"`) {
+		// Quoted string: value is up to the closing quote.
+		i := 1
+		for i < len(rest) {
+			if rest[i] == '\\' {
+				i += 2
+				continue
+			}
+			if rest[i] == '"' {
+				return rest[:i+1], true
+			}
+			i++
+		}
+		return "", false // unterminated string
+	}
+	// Bare value: strip a trailing comment and return the remainder.
+	if idx := strings.Index(rest, "#"); idx >= 0 {
+		rest = rest[:idx]
+	}
+	if idx := strings.Index(rest, "//"); idx >= 0 {
+		rest = rest[:idx]
+	}
+	rest = strings.TrimSpace(rest)
+	if rest == "" {
+		return "", false
+	}
+	return rest, true
+}
+
+// versioningBucketTargets reports whether a bucket attribute value from
+// an aws_s3_bucket_versioning block targets the given bucket — or cannot
+// be resolved to a different bucket. Indeterminate values (variable,
+// local, data source, function call, interpolation, conditional) count
+// as a possible match, so the patch is skipped rather than risking a
+// duplicate versioning resource.
+func versioningBucketTargets(val, bucketLabel, bucketName string) bool {
+	val = strings.TrimSpace(val)
+	if strings.HasPrefix(val, `"`) && strings.HasSuffix(val, `"`) && len(val) >= 2 {
+		// Literal name: matches the bucket's label or its bucket attribute.
+		name := val[1 : len(val)-1]
+		return name == bucketLabel || (bucketName != "" && name == bucketName)
+	}
+	if strings.HasPrefix(val, "aws_s3_bucket.") {
+		// Reference: aws_s3_bucket.<label>[.<attr>|...]
+		rest := val[len("aws_s3_bucket."):]
+		label := rest
+		if idx := strings.IndexAny(rest, ".["); idx >= 0 {
+			label = rest[:idx]
+		}
+		return label == bucketLabel
+	}
+	// Any other form: cannot prove it targets a different bucket.
+	return true
 }
 
 // boolFixer audit (applies to 007/008/009/010/011): (a) one attribute flip

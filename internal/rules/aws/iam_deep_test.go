@@ -473,44 +473,6 @@ func Test667_BoundarySetQuiet(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// 668: access key without pgp_key
-// ---------------------------------------------------------------------------
-
-func Test668_ActiveNoPgpFires(t *testing.T) {
-	r := res("aws_iam_access_key", "k", map[string]ir.Value{
-		"status": ks("Active", 3),
-	})
-	if got := runRule(iamAccessKeyUnencrypted{}, r); len(got) != 1 {
-		t.Fatalf("expected 1 finding, got %d", len(got))
-	}
-	// status absent: provider default is Active.
-	def := res("aws_iam_access_key", "k", map[string]ir.Value{})
-	if got := runRule(iamAccessKeyUnencrypted{}, def); len(got) != 1 {
-		t.Fatalf("default status: expected 1 finding, got %d", len(got))
-	}
-}
-
-func Test668_InactiveOrEncryptedQuiet(t *testing.T) {
-	inactive := res("aws_iam_access_key", "k", map[string]ir.Value{
-		"status": ks("Inactive", 3),
-	})
-	if got := runRule(iamAccessKeyUnencrypted{}, inactive); len(got) != 0 {
-		t.Fatalf("inactive: expected 0 findings, got %d", len(got))
-	}
-	enc := res("aws_iam_access_key", "k", map[string]ir.Value{
-		"status":  ks("Active", 3),
-		"pgp_key": ks("keybase:someone", 4),
-	})
-	if got := runRule(iamAccessKeyUnencrypted{}, enc); len(got) != 0 {
-		t.Fatalf("encrypted: expected 0 findings, got %d", len(got))
-	}
-	unk := res("aws_iam_access_key", "k", map[string]ir.Value{"status": ku(3)})
-	if got := runRule(iamAccessKeyUnencrypted{}, unk); len(got) != 0 {
-		t.Fatalf("unknown status: expected 0 findings, got %d", len(got))
-	}
-}
-
-// ---------------------------------------------------------------------------
 // 669: PowerUserAccess attachment
 // ---------------------------------------------------------------------------
 
@@ -812,5 +774,82 @@ func Test679_NonProdQuiet(t *testing.T) {
 	})
 	if got := runRule(iamRoleReadOnlyProd{}, unk); len(got) != 0 {
 		t.Fatalf("unknown arns: expected 0 findings, got %d", len(got))
+	}
+}
+
+// ---------------------------------------------------------------------------
+// 859: administrative access without MFA condition
+// ---------------------------------------------------------------------------
+
+const trustOpenNoMFA = `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":"*","Action":"sts:AssumeRole"}]}`
+const trustOpenWithMFAAge = `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":"*","Action":"sts:AssumeRole","Condition":{"NumericLessThan":{"aws:MultiFactorAuthAge":"3600"}}}]}`
+const trustOpenWithMFAPresent = `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":"*","Action":"sts:AssumeRole","Condition":{"Bool":{"aws:MultiFactorAuthPresent":"true"}}}]}`
+const trustOpenWithOrgID = `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":"*","Action":"sts:AssumeRole","Condition":{"StringEquals":{"aws:PrincipalOrgID":"o-1234"}}}]}`
+const trustScopedService = `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}`
+const adminPolicyNoMFA = `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}`
+const adminPolicyWithMFA = `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"iam:*","Resource":"*","Condition":{"NumericLessThan":{"aws:MultiFactorAuthAge":"3600"}}}]}`
+const mfaScopedPolicy = `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"*"}]}`
+
+func Test859_TrustOpenNoMFAFires(t *testing.T) {
+	r := res("aws_iam_role", "r", map[string]ir.Value{"assume_role_policy": ks(trustOpenNoMFA, 3)})
+	if got := runRule(iamAdminAccessNoMFA{}, r); len(got) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(got))
+	}
+}
+
+func Test859_TrustOpenWithMFAQuiet(t *testing.T) {
+	for name, doc := range map[string]string{
+		"MultiFactorAuthAge":     trustOpenWithMFAAge,
+		"MultiFactorAuthPresent": trustOpenWithMFAPresent,
+	} {
+		r := res("aws_iam_role", "r", map[string]ir.Value{"assume_role_policy": ks(doc, 3)})
+		if got := runRule(iamAdminAccessNoMFA{}, r); len(got) != 0 {
+			t.Fatalf("%s: expected 0 findings, got %d", name, len(got))
+		}
+	}
+}
+
+func Test859_TrustOpenWithNonMFAConditionFires(t *testing.T) {
+	// A Condition that gates on something other than MFA does not count.
+	r := res("aws_iam_role", "r", map[string]ir.Value{"assume_role_policy": ks(trustOpenWithOrgID, 3)})
+	if got := runRule(iamAdminAccessNoMFA{}, r); len(got) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(got))
+	}
+}
+
+func Test859_TrustScopedQuiet(t *testing.T) {
+	r := res("aws_iam_role", "r", map[string]ir.Value{"assume_role_policy": ks(trustScopedService, 3)})
+	if got := runRule(iamAdminAccessNoMFA{}, r); len(got) != 0 {
+		t.Fatalf("expected 0 findings, got %d", len(got))
+	}
+}
+
+func Test859_PolicyAdminNoMFAFires(t *testing.T) {
+	r := res("aws_iam_policy", "p", map[string]ir.Value{"policy": ks(adminPolicyNoMFA, 3)})
+	if got := runRule(iamAdminAccessNoMFA{}, r); len(got) != 1 {
+		t.Fatalf("expected 1 finding, got %d", len(got))
+	}
+}
+
+func Test859_PolicyAdminWithMFAQuiet(t *testing.T) {
+	r := res("aws_iam_policy", "p", map[string]ir.Value{"policy": ks(adminPolicyWithMFA, 3)})
+	if got := runRule(iamAdminAccessNoMFA{}, r); len(got) != 0 {
+		t.Fatalf("expected 0 findings, got %d", len(got))
+	}
+}
+
+func Test859_PolicyScopedAndNotActionQuiet(t *testing.T) {
+	scoped := res("aws_iam_policy", "p", map[string]ir.Value{"policy": ks(mfaScopedPolicy, 3)})
+	if got := runRule(iamAdminAccessNoMFA{}, scoped); len(got) != 0 {
+		t.Fatalf("scoped: expected 0 findings, got %d", len(got))
+	}
+	// NotAction: cannot decide -> silent.
+	notAction := res("aws_iam_policy", "p", map[string]ir.Value{"policy": ks(notActionPolicy, 3)})
+	if got := runRule(iamAdminAccessNoMFA{}, notAction); len(got) != 0 {
+		t.Fatalf("NotAction: expected 0 findings, got %d", len(got))
+	}
+	bad := res("aws_iam_policy", "p", map[string]ir.Value{"policy": ks("not json", 3)})
+	if got := runRule(iamAdminAccessNoMFA{}, bad); len(got) != 0 {
+		t.Fatalf("unparseable: expected 0 findings, got %d", len(got))
 	}
 }

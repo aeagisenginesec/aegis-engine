@@ -1,11 +1,41 @@
-# Aegis AWS Coverage Matrix
+# Aegis Coverage Matrix
 
-**Date:** 2026-10-11
-**AWS rules:** 245 | **Resource types:** 131 | **Test functions:** 500+
+**Date:** 2026-11-24
+**Current for:** v2.3.0 (counts verified from the v2.2.0 rule registry)
+**Total rules:** 1,140 | **AWS rules:** 470 | **Resource types (AWS):** 131 | **Test functions:** 500+
 
-Systematic inventory of AWS detection coverage organized by the 8 roadmap
-threat categories. This matrix guides future rule development — gaps are
-ranked by (severity × prevalence × exploitability).
+Systematic inventory of detection coverage. The multi-cloud overview below
+gives the per-pack rule counts for v2.2.0; sections 1–8 are the AWS
+category inventory, organized by the 8 roadmap threat categories. This
+matrix guides future rule development — gaps are ranked by
+(severity × prevalence × exploitability).
+
+> **Note on the AWS sections:** sections 1–8 were written 2026-10-11,
+> when the AWS pack held 245 rules. The AWS pack has since grown to 470
+> rules. The category tables below remain accurate for the rules they
+> list, but they are not exhaustive for the current pack — new AWS rules
+> added since 2026-10-11 are not yet categorized here.
+
+## Multi-cloud coverage (v2.2.0)
+
+| Pack | Rules | Notes |
+|------|------:|-------|
+| AWS | 470 | Deepest coverage; IAM privesc tier (501–505) and multi-hop attack paths (629/630) |
+| Azure | 277 | Storage, Key Vault, NSG, SQL, AKS, managed identity |
+| GCP | 278 | IAM bindings, GCS, BigQuery, GKE workload identity, KMS |
+| Kubernetes | 32 | Pod security, RBAC, network policy, image hygiene |
+| Docker | 37 | Dockerfile and image best practice |
+| Compose | 9 | docker-compose services |
+| Supply chain | 9 | IaC supply-chain code patterns (user_data, provisioners, unpinned images/AMIs) |
+| Terraform | 8 | Generic Terraform hygiene |
+| OCI | 8 | Oracle Cloud Infrastructure |
+| Alibaba | 12 | Alibaba Cloud |
+| **Total** | **1,140** | |
+
+Compliance mappings cover 943 of the 1,140 rules (82.7%) across ten
+frameworks — see `docs/COMPLIANCE.md`. CIS coverage is a subset (12 of
+~60 CIS-AWS-1.5 controls); most unmapped CIS controls need live-cloud
+evidence and are not statically provable from IaC.
 
 ---
 
@@ -259,7 +289,8 @@ supply-chain pack (SC-001–009) handles Terraform-level threats.
 | Databases | 10/10 | 54 | — (complete) |
 | Logging and detection | 7/10 | 24 | Security Hub (567) |
 | Supply chain and deployment | 7/10 | 22 | CodeArtifact (571) |
-| **Overall** | **8.25/10** | **245** | |
+| **Overall (AWS categories, 2026-10-11 inventory)** | **8.25/10** | **245** | |
+| **Overall (all packs, v2.2.0)** | — | **1,140** | See multi-cloud overview above |
 
 ## Top 20 Gap Priority List (AEGIS-AWS-552+)
 

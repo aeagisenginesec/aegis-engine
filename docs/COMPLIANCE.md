@@ -1,16 +1,51 @@
 # Compliance Framework Mappings
 
-Aegis maps rule violations to controls in three compliance frameworks.
+Aegis maps rule violations to controls in ten compliance frameworks.
 Mappings live in `internal/rules/compliance.go` (not on the rules), so
 detection logic and framework coverage evolve independently.
+
+**Coverage (v2.2.0, verified from `internal/rules/compliance.go`): 943 of
+1,140 rules (82.7%) carry at least one control reference; 197 rules are
+deliberately unmapped** (build hygiene, availability tuning — no control
+genuinely applies). Only map where the control genuinely applies; when in
+doubt, leave the rule unmapped rather than stretching a control.
 
 ## Frameworks
 
 | ID | Framework |
 |----|-----------|
 | `CIS-AWS-1.5` | CIS Amazon Web Services Foundations Benchmark v1.5 |
+| `CIS-Azure-2.1` | CIS Microsoft Azure Foundations Benchmark v2.1 |
+| `CIS-GCP-1.3` | CIS Google Cloud Platform Foundation Benchmark v1.3 |
+| `CIS-Kubernetes-1.8` | CIS Kubernetes Benchmark v1.8 |
+| `CIS-Docker-1.6` | CIS Docker Benchmark v1.6 |
 | `NIST-800-53` | NIST Special Publication 800-53 Rev. 5 |
 | `PCI-DSS-4.0` | PCI Data Security Standard v4.0 |
+| `ISO-27001-2022` | ISO/IEC 27001:2022 Annex A controls |
+| `SOC2` | AICPA SOC 2 Trust Services Criteria (CC series) |
+| `HIPAA` | HIPAA Administrative Simplification, 45 CFR Part 164 |
+
+## Coverage summary
+
+| Framework | Rules mapped | Distinct controls | Notes |
+|-----------|------------:|------:|-------|
+| CIS-AWS-1.5 | 47 | 12 | Subset: 12 of ~60 CIS AWS Foundations v1.5 controls |
+| CIS-Azure-2.1 | 18 | 10 | |
+| CIS-GCP-1.3 | 11 | 7 | |
+| CIS-Kubernetes-1.8 | 3 | 3 | Thinnest CIS mapping (5.1.1, 5.1.3, 5.3.1) |
+| CIS-Docker-1.6 | 8 | 5 | |
+| NIST-800-53 | 942 | 16 | Broadest mapping; the anchor for the ISO/SOC2/HIPAA crosswalks |
+| PCI-DSS-4.0 | 291 | 7 | |
+| ISO-27001-2022 | 942 | 12 | Crosswalked from NIST anchors, not deep native coverage |
+| SOC2 | 942 | 8 | Crosswalked from NIST anchors, not deep native coverage |
+| HIPAA | 888 | 7 | Crosswalked from NIST anchors, not deep native coverage |
+
+CIS coverage is a subset by design: most unmapped CIS controls need
+live-cloud evidence (CloudTrail configuration, IAM credential reports,
+CloudWatch alarms, runtime state) that is not statically provable from
+Terraform, so the gap is honest, not a defect. Do not present the CIS
+posture report as full-benchmark coverage — `--compliance=CIS-AWS-1.5`
+reports on 12 controls, not the full ~60.
 
 ## CLI
 
@@ -21,20 +56,27 @@ aegis scan ./infra --compliance CIS-AWS-1.5
 aegis scan ./infra --compliance NIST-800-53 --format json
 ```
 
-Unknown frameworks error with the available list:
+`--compliance=all` (or no `--compliance` value filtering) reports posture
+for every framework. Unknown frameworks error with the available list:
 
 ```
-$ aegis scan ./infra --compliance SOC2
-aegis: unknown --compliance "SOC2" (want one of CIS-AWS-1.5, NIST-800-53, PCI-DSS-4.0)
+$ aegis scan ./infra --compliance CIS-AWS-2.0
+aegis: unknown --compliance "CIS-AWS-2.0" (want one of CIS-AWS-1.5, CIS-Azure-2.1, CIS-Docker-1.6, CIS-GCP-1.3, CIS-Kubernetes-1.8, HIPAA, ISO-27001-2022, NIST-800-53, PCI-DSS-4.0, SOC2, or all)
 ```
 
 Without the flag, every finding is enriched with all its mapped controls
 (`compliance` field in JSON, `compliance:` line in text output).
 
+Posture semantics are honest: a control "passes" when no mapped finding
+fired in the scanned tree. That is evidence for an audit, not the audit
+itself — live-cloud evidence (drift, runtime config, IAM activity) is out
+of scope for a static IaC scanner by design.
+
 ## Mapping table
 
-91 rules mapped (all 5 criticals + 86 highs). Only mapped where the
-control genuinely applies.
+Core AWS mapping (original 91 rules). The full mapping now covers 943
+rules across all ten frameworks above; this table shows the original core
+set for the three frameworks it was written against.
 
 | Rule | Title | CIS-AWS-1.5 | NIST-800-53 | PCI-DSS-4.0 |
 |------|-------|-------------|-------------|-------------|
@@ -139,3 +181,17 @@ control genuinely applies.
   the mapping never invents controls for unproven configurations.
 - **Adding a framework** means adding refs in `complianceMap` — no rule
   changes, no engine changes.
+- **ISO/SOC2/HIPAA are crosswalks.** Their refs are derived from each
+  rule's NIST 800-53 anchors using the standard published
+  correspondences, and are only attached where the underlying concept
+  genuinely falls in that framework's scope (e.g. HIPAA refs appear only
+  for access-control, audit, integrity, authentication,
+  transmission-security, encryption and backup concepts). They are not
+  deep native coverage — 7–12 distinct controls each.
+- **SARIF is compliance-blind.** SARIF output carries rule metadata and
+  findings but no framework/control tags; use JSON or HTML output for
+  audit evidence.
+- **Single-framework JSON omits the posture summary.** In
+  `--compliance=<one framework>` mode the posture summary appears in text
+  output but `compliance_summaries` is null in JSON; use
+  `--compliance=all` for a JSON posture object.

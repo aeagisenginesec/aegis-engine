@@ -90,6 +90,17 @@ var skipDirs = map[string]bool{
 	"node_modules": true, ".hg": true, ".svn": true, "__pycache__": true,
 }
 
+// outputFileNames are the tool's own default output file names. A previous
+// scan's `out.json` (or aegis.json / out.sarif / ...) sitting in the
+// scanned tree must not be re-parsed as a manifest — it only produces
+// spurious diagnostics. Basename match, case-sensitive. Discovery skips
+// them only below the scan root: an explicitly named single-file target
+// is still scanned.
+var outputFileNames = map[string]bool{
+	"out.json": true, "out.sarif": true, "out.html": true,
+	"aegis.json": true, "aegis.sarif": true,
+}
+
 var tfExts = map[string]bool{".tf": true, ".tfvars": true}
 
 // manifestExts covers Kubernetes YAML and CloudFormation templates.
@@ -166,6 +177,12 @@ func DiscoverWithReport(root string) ([]File, []Skipped, error) {
 		}
 		// Skip symlinked files outright.
 		if d.Type()&fs.ModeSymlink != 0 {
+			return nil
+		}
+		// Skip the tool's own output files below the scan root (see
+		// outputFileNames). An explicitly named single-file target
+		// (path == root) is still scanned.
+		if path != root && outputFileNames[d.Name()] {
 			return nil
 		}
 		ext := strings.ToLower(filepath.Ext(path))

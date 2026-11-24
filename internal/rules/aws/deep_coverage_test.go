@@ -20,9 +20,10 @@ func TestDeepRulesCoverage(t *testing.T) {
 	rules = append(rules, KMSSecretsDeepRules()...)
 	rules = append(rules, ServicesDeepRules()...)
 	rules = append(rules, EdgeDeepRules()...)
-	// 188 - 3: AWS-840/811/812 removed in Sprint 2 (duplicates).
-	if len(rules) != 185 {
-		t.Fatalf("expected 185 deep rules, got %d", len(rules))
+	// 188 - 4: AWS-840/811/812 removed in Sprint 2 (duplicates);
+	// AWS-668 removed (duplicate of 552, access-key PGP).
+	if len(rules) != 184 {
+		t.Fatalf("expected 184 deep rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	for _, r := range rules {
@@ -53,7 +54,7 @@ func TestDeepRulesCoverage(t *testing.T) {
 	// AEGIS-AWS-665
 	// AEGIS-AWS-666
 	// AEGIS-AWS-667
-	// AEGIS-AWS-668
+	// AEGIS-AWS-668 (removed: duplicate of 552, access-key PGP)
 	// AEGIS-AWS-669
 	// AEGIS-AWS-670
 	// AEGIS-AWS-671
@@ -235,4 +236,5 @@ func TestDeepRulesCoverage(t *testing.T) {
 	// AEGIS-AWS-847
 	// AEGIS-AWS-848
 	// AEGIS-AWS-849
+	// AEGIS-AWS-859
 }

@@ -8,9 +8,11 @@
 package report
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"aegis/internal/ir"
@@ -194,19 +196,21 @@ type sarifDriver struct {
 }
 
 type sarifRule struct {
-	ID               string            `json:"id"`
-	Name             string            `json:"name"`
-	ShortDescription sarifMessage      `json:"shortDescription"`
-	Help             sarifMessage      `json:"help,omitempty"`
-	HelpURI          string            `json:"helpUri,omitempty"`
-	Properties       map[string]string `json:"properties,omitempty"`
+	ID               string         `json:"id"`
+	Name             string         `json:"name"`
+	ShortDescription sarifMessage   `json:"shortDescription"`
+	Help             sarifMessage   `json:"help,omitempty"`
+	HelpURI          string         `json:"helpUri,omitempty"`
+	Properties       map[string]any `json:"properties,omitempty"`
 }
 
 type sarifResult struct {
-	RuleID    string          `json:"ruleId"`
-	Level     string          `json:"level"`
-	Message   sarifMessage    `json:"message"`
-	Locations []sarifLocation `json:"locations"`
+	RuleID              string            `json:"ruleId"`
+	Level               string            `json:"level"`
+	Message             sarifMessage      `json:"message"`
+	Locations           []sarifLocation   `json:"locations"`
+	PartialFingerprints map[string]string `json:"partialFingerprints,omitempty"`
+	Properties          map[string]any    `json:"properties,omitempty"`
 }
 
 type sarifMessage struct {
@@ -308,16 +312,70 @@ func renderPathASCII(f ir.Finding) string {
 	return sb.String()
 }
 
+// complianceTags formats a finding's compliance mappings as stable
+// "Framework:Control" tags, sorted and deduplicated, e.g.
+// "CIS-AWS-1.5:2.1.1", "NIST-800-53:AC-4". Returns nil when the finding
+// carries no mappings.
+func complianceTags(refs []ir.ComplianceRef) []string {
+	if len(refs) == 0 {
+		return nil
+	}
+	seen := map[string]bool{}
+	var tags []string
+	for _, r := range refs {
+		tag := r.Framework + ":" + r.Control
+		if !seen[tag] {
+			seen[tag] = true
+			tags = append(tags, tag)
+		}
+	}
+	sort.Strings(tags)
+	return tags
+}
+
+// mergeTags returns the sorted, deduplicated union of two tag lists.
+func mergeTags(a, b []string) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, t := range append(a, b...) {
+		if !seen[t] {
+			seen[t] = true
+			out = append(out, t)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// sarifFingerprint returns a stable fingerprint for a finding, as a
+// SHA-256 hex of rule ID + resource + file + line. The same finding
+// always yields the same fingerprint, so SARIF consumers (e.g. GitHub
+// code scanning) can dedupe results across runs.
+func sarifFingerprint(f ir.Finding) string {
+	sum := sha256.Sum256([]byte(strings.Join([]string{
+		f.RuleID,
+		f.Resource,
+		f.Evidence.Span.File,
+		fmt.Sprintf("%d", f.Evidence.Span.StartLine),
+	}, "\x00")))
+	return fmt.Sprintf("%x", sum)
+}
+
 // WriteSARIF writes a valid SARIF 2.1.0 log. Rules are derived from the
 // findings' rule IDs (deduplicated); every result carries ruleId, level,
-// message and a physical location with region.
+// message and a physical location with region. Results also carry a
+// stable partialFingerprints entry ("aegis/v1") and, when the finding
+// maps to compliance controls, properties.tags with "Framework:Control"
+// entries; rule metadata carries the union of its findings' tags.
 func WriteSARIF(w io.Writer, res ir.ScanResult) error {
 	findings := redactFindings(res.Findings)
 
 	seen := map[string]bool{}
+	ruleTags := map[string][]string{}
 	var rules []sarifRule
 	var results []sarifResult
 	for _, f := range findings {
+		tags := complianceTags(f.Compliance)
 		if !seen[f.RuleID] {
 			seen[f.RuleID] = true
 			helpText := f.Description
@@ -328,17 +386,26 @@ func WriteSARIF(w io.Writer, res ir.ScanResult) error {
 			if len(f.References) > 0 {
 				helpURI = f.References[0]
 			}
+			props := map[string]any{"severity": string(f.Severity)}
+			if len(tags) > 0 {
+				props["tags"] = tags
+			}
 			rules = append(rules, sarifRule{
 				ID:               f.RuleID,
 				Name:             f.Title,
 				ShortDescription: sarifMessage{Text: f.Title},
 				Help:             sarifMessage{Text: helpText},
 				HelpURI:          helpURI,
-				Properties:       map[string]string{"severity": string(f.Severity)},
+				Properties:       props,
 			})
+			ruleTags[f.RuleID] = tags
+		} else if len(tags) > 0 {
+			// A rule can fire on several resources mapped to different
+			// controls; the rule metadata carries the union.
+			ruleTags[f.RuleID] = mergeTags(ruleTags[f.RuleID], tags)
 		}
 		span := f.Evidence.Span
-		results = append(results, sarifResult{
+		result := sarifResult{
 			RuleID:  f.RuleID,
 			Level:   sarifLevel(f.Severity),
 			Message: sarifMessage{Text: fmt.Sprintf("%s (%s)", f.Title, f.Resource)},
@@ -353,7 +420,19 @@ func WriteSARIF(w io.Writer, res ir.ScanResult) error {
 					},
 				},
 			}},
-		})
+			PartialFingerprints: map[string]string{"aegis/v1": sarifFingerprint(f)},
+		}
+		if len(tags) > 0 {
+			result.Properties = map[string]any{"tags": tags}
+		}
+		results = append(results, result)
+	}
+	// Apply the unioned tags to rule metadata (rules built before later
+	// findings of the same rule were seen need the merged set).
+	for i, r := range rules {
+		if tags := ruleTags[r.ID]; len(tags) > 0 {
+			rules[i].Properties["tags"] = tags
+		}
 	}
 	if rules == nil {
 		rules = []sarifRule{}

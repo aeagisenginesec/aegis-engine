@@ -1,6 +1,6 @@
 // Package azure — storage account hardening rules, round 3 (AEGIS-AZURE-144..149).
 //
-// Gaps not covered by AEGIS-AZR-001/002, AEGIS-AZURE-006/021 or 119..126
+// Gaps not covered by AEGIS-AZURE-001/002, AEGIS-AZURE-006/021 or 119..126
 // (public access, TLS, shared keys, SAS policy, soft delete, queue logging,
 // private endpoints): infrastructure (double) encryption, cross-tenant
 // replication, blob versioning, change feed, public network access (strict),

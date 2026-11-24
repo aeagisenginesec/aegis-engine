@@ -205,9 +205,19 @@ func TestScanComplianceSummary(t *testing.T) {
 		t.Fatal(err)
 	}
 	env, _, _ := scanJSON(t, dir, "--format=json", "--compliance=CIS-AWS-1.5")
-	sum, ok := env["compliance_summary"].(map[string]any)
+	// Single-framework mode reports the posture in compliance_summaries
+	// (same shape as the multi-framework case, with one entry); the
+	// legacy singular key must not be set.
+	if _, present := env["compliance_summary"]; present {
+		t.Errorf("single-framework run should not set the singular compliance_summary")
+	}
+	sums, ok := env["compliance_summaries"].([]any)
+	if !ok || len(sums) != 1 {
+		t.Fatalf("expected exactly 1 compliance summary, got %v", env["compliance_summaries"])
+	}
+	sum, ok := sums[0].(map[string]any)
 	if !ok {
-		t.Fatalf("missing compliance_summary in JSON output")
+		t.Fatalf("compliance summary entry is not an object: %v", sums[0])
 	}
 	if sum["framework"] != "CIS-AWS-1.5" {
 		t.Errorf("framework = %v", sum["framework"])

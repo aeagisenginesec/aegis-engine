@@ -68,7 +68,7 @@ func fallbackRemediation(ruleID string) (string, []string) {
 // target. Unknown prefixes fall back to neutral, never AWS-specific.
 func fallbackCloud(ruleID string) string {
 	switch {
-	case strings.HasPrefix(ruleID, "AEGIS-AZURE-") || strings.HasPrefix(ruleID, "AEGIS-AZR-"):
+	case strings.HasPrefix(ruleID, "AEGIS-AZURE-"):
 		return "azure"
 	case strings.HasPrefix(ruleID, "AEGIS-GCP-"):
 		return "gcp"
@@ -966,9 +966,12 @@ var remediationDB = map[string]remediationEntry{
 		},
 	},
 	"AEGIS-AWS-552": {
-		fix: "Rotate IAM access keys every 90 days or less. Prefer short-lived credentials:\n" +
-			"federate via IAM Identity Center / SSO, or use instance profiles and ECS task roles\n" +
-			"instead of long-lived keys. Audit with IAM Access Analyzer unused-access findings.",
+		fix: "Set pgp_key on the aws_iam_access_key to a PGP public key (e.g. a Keybase key)\n" +
+			"so the secret access key is encrypted at creation instead of stored in plaintext\n" +
+			"in Terraform state. Rotate the key after adding pgp_key, since the previously\n" +
+			"created secret was already written to state in plaintext. Prefer short-lived\n" +
+			"credentials (IAM Identity Center / SSO, instance profiles, ECS task roles)\n" +
+			"instead of long-lived keys where possible.",
 		refs: []string{
 			"https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html",
 		},
@@ -1234,6 +1237,21 @@ var remediationDB = map[string]remediationEntry{
 			"}",
 		refs: []string{
 			"https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role#description",
+		},
+	},
+	"AEGIS-AWS-859": {
+		fix: "Require MFA for the administrative grant by adding a Condition on\n" +
+			"aws:MultiFactorAuthAge (or aws:MultiFactorAuthPresent) to the statement:\n" +
+			"\"Condition\": {\n" +
+			"  \"NumericLessThan\": { \"aws:MultiFactorAuthAge\": \"3600\" }\n" +
+			"}\n" +
+			"For a trust policy, also scope the Principal to specific accounts, roles,\n" +
+			"or services instead of \"*\"; for a policy, scope the actions and resources\n" +
+			"to least privilege. A grant that can be exercised with a single factor\n" +
+			"should be the exception, not the default.",
+		refs: []string{
+			"https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html",
+			"https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_configure-api-require.html",
 		},
 	},
 	"AEGIS-AZURE-046": {

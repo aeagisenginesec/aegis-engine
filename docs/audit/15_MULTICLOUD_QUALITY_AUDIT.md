@@ -597,8 +597,8 @@ disagreement, 15 remediation mismatches** (all 15 fixed; see §16.4).
 | AEGIS-AWS-696 | aws_instance.legacy_web | high | TP | ok | ok |  |
 | AEGIS-AWS-699 | aws_instance.legacy_web | low | TP | ok | ok |  |
 | AEGIS-AWS-706 | aws_db_instance.public_database | low | TP | ok | ok |  |
-| AEGIS-AZR-002 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
-| AEGIS-AZR-005 | azurerm_key_vault.weak_vault | high | TP | ok | ok |  |
+| AEGIS-AZURE-002 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |
+| AEGIS-AZURE-005 | azurerm_key_vault.weak_vault | high | TP | ok | ok |  |
 | AEGIS-AZURE-007 | azurerm_key_vault.weak_vault | high | TP | ok | ok |  |
 | AEGIS-AZURE-026 | azurerm_storage_account.public_data | high | TP | ok | ok |  |
 | AEGIS-AZURE-027 | azurerm_storage_account.public_data | medium | TP | ok | ok |  |

@@ -71,7 +71,7 @@ control is defense-in-depth, not an active exposure.
 
 | Removed ID | Canonical ID | Reason |
 |------------|--------------|--------|
-| AEGIS-AZURE-036 | AEGIS-AZR-005 | Exact duplicate: Key Vault purge protection |
+| AEGIS-AZURE-036 | AEGIS-AZURE-005 | Exact duplicate: Key Vault purge protection |
 | AEGIS-AZURE-213 | AEGIS-AZURE-012 | Exact duplicate: App Service TLS |
 | AEGIS-AZURE-312 | AEGIS-AZURE-020 | Exact duplicate: Redis TLS |
 | AEGIS-AZURE-206 | AEGIS-AZURE-025 | Exact duplicate: SQL Server TLS |
@@ -110,7 +110,7 @@ Per the "higher wins" policy, the following canonical rules had their severity i
 
 - AEGIS-AWS-320: Medium → High
 - AEGIS-AWS-321: Medium → High
-- AEGIS-AZR-005: Medium → High
+- AEGIS-AZURE-005: Medium → High
 - AEGIS-AZURE-020: Medium → High
 - AEGIS-AZURE-032: Low → Medium
 - AEGIS-AZURE-155: Medium → High

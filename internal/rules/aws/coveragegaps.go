@@ -24,9 +24,10 @@ func (iamAccessKeyNoPGP) Title() string {
 	return "IAM access key created without PGP encryption"
 }
 func (iamAccessKeyNoPGP) Description() string {
-	return "IAM access keys should be created with pgp_key so the secret " +
-		"access key is encrypted at creation. Without it, the plaintext " +
-		"secret is stored in Terraform state. Set pgp_key to a PGP public key."
+	return "An IAM access key is created without pgp_key, so the secret " +
+		"access key is stored in plaintext in the Terraform state. Anyone " +
+		"with state access can read the long-lived credential. Set pgp_key " +
+		"to a PGP public key so the secret is encrypted at creation."
 }
 func (iamAccessKeyNoPGP) Severity() ir.Severity { return ir.SeverityHigh }
 func (iamAccessKeyNoPGP) AppliesTo(resType string) bool {

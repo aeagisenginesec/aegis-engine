@@ -403,7 +403,7 @@ func TestScanInMemoryARMParity(t *testing.T) {
 	for _, f := range resp.Findings {
 		seen[f.RuleID] = true
 	}
-	if !seen["AEGIS-AZR-001"] {
-		t.Errorf("missing AEGIS-AZR-001 on in-memory ARM scan; got %v", keys(seen))
+	if !seen["AEGIS-AZURE-001"] {
+		t.Errorf("missing AEGIS-AZURE-001 on in-memory ARM scan; got %v", keys(seen))
 	}
 }

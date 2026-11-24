@@ -1,6 +1,10 @@
 package discovery
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 func TestIsExcludedGlobs(t *testing.T) {
 	SetExcludePatterns([]string{"vendor/**", "*.tfvars", "docs/*.md"})
@@ -71,5 +75,54 @@ func TestGlobToRegex(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestOutputFileNamesSkippedBelowRoot(t *testing.T) {
+	dir := t.TempDir()
+	// A vulnerable .tf file plus the tool's own output names (one empty,
+	// one with garbage content) and a legitimately named JSON manifest.
+	tf := "resource \"aws_s3_bucket\" \"b\" {\n  bucket = \"x\"\n}\n"
+	if err := os.WriteFile(filepath.Join(dir, "main.tf"), []byte(tf), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"out.json", "out.sarif", "out.html", "aegis.json", "aegis.sarif"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte{}, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(dir, "template.json"), []byte(`{"AWSTemplateFormatVersion": "2010-09-09"}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	files, _, err := DiscoverWithReport(dir)
+	if err != nil {
+		t.Fatalf("DiscoverWithReport: %v", err)
+	}
+	seen := map[string]bool{}
+	for _, f := range files {
+		seen[filepath.Base(f.Path)] = true
+	}
+	for _, name := range []string{"out.json", "out.sarif", "out.html", "aegis.json", "aegis.sarif"} {
+		if seen[name] {
+			t.Errorf("output file %s should be skipped, got files %v", name, files)
+		}
+	}
+	if !seen["main.tf"] || !seen["template.json"] {
+		t.Errorf("expected main.tf and template.json to be discovered, got %v", files)
+	}
+}
+
+func TestOutputFileNameAsExplicitRootStillScanned(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "out.json")
+	if err := os.WriteFile(out, []byte(`{"AWSTemplateFormatVersion": "2010-09-09"}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	files, _, err := DiscoverWithReport(out)
+	if err != nil {
+		t.Fatalf("DiscoverWithReport: %v", err)
+	}
+	if len(files) != 1 || files[0].Path != out {
+		t.Errorf("explicitly named out.json should still be scanned, got %v", files)
 	}
 }

@@ -66,7 +66,7 @@ safe (all later accesses are guarded). Regression test
 ### 1.3 Bicep: failed expressions degraded to Unknown with no diagnostic
 
 Demonstrated: `var open = [~]` feeding
-`allowBlobPublicAccess: open` suppressed `AEGIS-AZR-001` (which needs
+`allowBlobPublicAccess: open` suppressed `AEGIS-AZURE-001` (which needs
 a known bool) with **zero diagnostics** — the conservative rule
 `AEGIS-AZURE-028` still fired, so the finding class was not wholly
 lost, but the precise rule vanished silently. (This is the "residual

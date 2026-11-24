@@ -140,7 +140,7 @@ func TestDefaultRegistry_HasAllPacks(t *testing.T) {
 	for _, r := range all {
 		ids[r.ID()] = true
 	}
-	for _, want := range []string{"AEGIS-AWS-001", "AEGIS-AWS-104", "AEGIS-AZR-001", "AEGIS-GCP-001", "AEGIS-K8S-001", "AEGIS-SC-001", "AEGIS-TF-001", "AEGIS-ALI-001", "AEGIS-OCI-001"} {
+	for _, want := range []string{"AEGIS-AWS-001", "AEGIS-AWS-104", "AEGIS-AZURE-001", "AEGIS-GCP-001", "AEGIS-K8S-001", "AEGIS-SC-001", "AEGIS-TF-001", "AEGIS-ALI-001", "AEGIS-OCI-001"} {
 		if !ids[want] {
 			t.Errorf("default registry missing %s", want)
 		}

@@ -3,6 +3,91 @@
 All notable changes to Aegis are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.3.0] — 2026-11-24
+
+The five-agent test release. All five cloud-engineer specialist agents
+(ObsidianX-CSPM, ObsidianX-DevSecOps, ObsidianX-SOC, ObsidianX-IAM,
+ObsidianX-Compliance) ran a complex test of v2.2.0 and every finding in
+this release answers one of their requirements. Rule count stays 1,140
+(net zero: one duplicate removed, one new rule added).
+
+### Fixed
+
+- **Cross-file address-collision suppression (false negatives).**
+  `linkedBucketAddr` / `linkedTargetBucketAddr` now return no link when
+  a bucket reference is ambiguous (the same resource address defined in
+  multiple files in one directory). Previously a public bucket policy in
+  one file silently suppressed S3 encryption (001) and public-access-block
+  (206) findings on a different bucket sharing the address. Legitimate
+  cross-file correlation inside a real module (unique addresses) is
+  unaffected. Fail-safe: ambiguous links suppress nothing.
+- **Duplicate IAM rule removed: AEGIS-AWS-668.** The access-key PGP
+  issue was flagged twice (552 High, 668 Low). Kept 552 (correct
+  severity, dedicated unit tests, remediation entry); ported 668's
+  better description wording into 552 and fixed 552's remediation text
+  (it wrongly described key rotation instead of `pgp_key`).
+- **Azure rule-prefix inconsistency.** `AEGIS-AZR-001/002/003/005`
+  renamed to `AEGIS-AZURE-001/002/003/005`; all 277 Azure rules now use
+  the single `AEGIS-AZURE-` prefix. (`AEGIS-AZR-004` remains only as a
+  deprecated-mapping pointer pinned by migration tests.)
+- **Single-framework JSON omitted the posture summary.**
+  `--compliance=CIS-AWS-1.5 --format=json` returned
+  `compliance_summaries: null`; it now returns a one-element array,
+  the same shape as `--compliance=all`.
+- **`aegis fix` S3 versioning patch used deprecated syntax.** The
+  versioning fixer now proposes a separate `aws_s3_bucket_versioning`
+  resource instead of the inline `versioning {}` block (deprecated in
+  AWS provider v4+). Guards against duplicating an existing versioning
+  resource; CRLF files handled.
+- **`aegis scan` required a directory.** Single files are now accepted
+  (`aegis scan main.tf`); `fix` still requires a directory. Symlinks
+  and non-regular files are rejected; nonexistent targets error cleanly.
+- **Scan outputs were parsed as manifests.** `out.json`, `out.sarif`,
+  `out.html`, `aegis.json`, `aegis.sarif` are now skipped when collecting
+  scan targets below the scan root (an explicitly named file is still
+  scanned).
+
+### Added
+
+- **New IAM rule AEGIS-AWS-859 (Medium): admin access without MFA
+  condition.** Fires on an open trust (`Principal "*"`) or an admin
+  policy (`Action "*"` / `iam:*`) with no Condition requiring
+  `aws:MultiFactorAuthAge` or `aws:MultiFactorAuthPresent`. A Condition
+  on anything else does not satisfy it.
+- **SARIF compliance tags.** Results and rule metadata now carry
+  `properties.tags` with `Framework:Control` entries (e.g.
+  `CIS-AWS-1.5:2.1.1`, `NIST-800-53:AC-4`) for every finding that has
+  compliance mappings.
+- **SARIF partialFingerprints.** Every result carries a stable SHA-256
+  fingerprint (`aegis/v1`, from rule + resource + file + line) for
+  GitHub code scanning dedup.
+
+### Changed
+
+- **Benchmark manifest updated.** Scenario 07 now expects
+  `AEGIS-AWS-604` (rule 005 deliberately fires only on security groups
+  attached to a workload); scenario 10 now expects `AEGIS-AWS-666`
+  (AWS-managed `AdministratorAccess` attachments). The secure 07
+  fixture now carries a `description` on the security group and its
+  egress rule, so 604 stays silent there and the scenario
+  discriminates. All 34 scenarios match, 0 mismatches.
+- **Docs refreshed.** `docs/COMPLIANCE.md` rewritten (10 frameworks,
+  943/1,140 rules mapped); `docs/COVERAGE_MATRIX.md` updated to the
+  1,140-rule inventory and marked current for v2.3.0.
+- **NotAction/NotResource blind spot documented in code.** The shared
+  policy parser now notes that statements using `NotAction` /
+  `NotResource` are skipped ("cannot decide → silent") — a deliberate
+  soundness trade-off, not proof of safety.
+
+### Notes
+
+- Rule count is unchanged at 1,140 (668 out, 859 in). Quality gate:
+  precision 100%, recall 100%, rule-coverage 355/355.
+- CIS coverage remains a subset by design (12/60 AWS controls) — the
+  posture report covers the mapped controls, not the full benchmark.
+- `compliance_summary` (singular) is no longer populated by the CLI in
+  single-framework mode; read `compliance_summaries[0]` instead.
+
 ## [2.2.0] — 2026-10-22
 
 The compliance & governance release. Detection is unchanged (the same

@@ -351,3 +351,101 @@ func TestWrapField(t *testing.T) {
 		t.Errorf("bad hanging indent: %q", lines[1])
 	}
 }
+
+func TestWriteSARIFComplianceTags(t *testing.T) {
+	res := sampleResult()
+	res.Findings[0].Compliance = []ir.ComplianceRef{
+		{Framework: "NIST-800-53", Control: "AC-4"},
+		{Framework: "CIS-AWS-1.5", Control: "2.1.1"},
+	}
+	var buf bytes.Buffer
+	if err := WriteSARIF(&buf, res); err != nil {
+		t.Fatal(err)
+	}
+	var log map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &log); err != nil {
+		t.Fatalf("SARIF output does not parse as JSON: %v", err)
+	}
+	run := log["runs"].([]any)[0].(map[string]any)
+	results := run["results"].([]any)
+	// Result 0 carries its finding's compliance tags, sorted.
+	r0 := results[0].(map[string]any)
+	props, ok := r0["properties"].(map[string]any)
+	if !ok {
+		t.Fatalf("result 0 missing properties: %v", r0)
+	}
+	tags, ok := props["tags"].([]any)
+	if !ok || len(tags) != 2 {
+		t.Fatalf("result 0 tags = %v, want 2 entries", props["tags"])
+	}
+	if tags[0] != "CIS-AWS-1.5:2.1.1" || tags[1] != "NIST-800-53:AC-4" {
+		t.Errorf("result 0 tags = %v, want [CIS-AWS-1.5:2.1.1 NIST-800-53:AC-4]", tags)
+	}
+	// Rule metadata carries the union of its findings' tags.
+	rules := run["tool"].(map[string]any)["driver"].(map[string]any)["rules"].([]any)
+	ruleProps, ok := rules[0].(map[string]any)["properties"].(map[string]any)
+	if !ok {
+		t.Fatalf("rule 0 missing properties: %v", rules[0])
+	}
+	ruleTags, ok := ruleProps["tags"].([]any)
+	if !ok || len(ruleTags) != 2 {
+		t.Fatalf("rule 0 tags = %v, want 2 entries", ruleProps["tags"])
+	}
+	if ruleProps["severity"] != "high" {
+		t.Errorf("rule 0 severity = %v, want high", ruleProps["severity"])
+	}
+	// Result 1 has no compliance mappings, so no tags key.
+	r1 := results[1].(map[string]any)
+	if _, present := r1["properties"]; present {
+		t.Errorf("result 1 should have no properties (no compliance mappings): %v", r1["properties"])
+	}
+}
+
+func TestWriteSARIFPartialFingerprints(t *testing.T) {
+	sarifFingerprints := func(res ir.ScanResult) []string {
+		var buf bytes.Buffer
+		if err := WriteSARIF(&buf, res); err != nil {
+			t.Fatal(err)
+		}
+		var log map[string]any
+		if err := json.Unmarshal(buf.Bytes(), &log); err != nil {
+			t.Fatalf("SARIF output does not parse as JSON: %v", err)
+		}
+		results := log["runs"].([]any)[0].(map[string]any)["results"].([]any)
+		var fps []string
+		for _, r := range results {
+			pf, ok := r.(map[string]any)["partialFingerprints"].(map[string]any)
+			if !ok {
+				t.Fatalf("result missing partialFingerprints: %v", r)
+			}
+			fp, ok := pf["aegis/v1"].(string)
+			if !ok || fp == "" {
+				t.Fatalf("missing aegis/v1 fingerprint: %v", pf)
+			}
+			if len(fp) != 64 {
+				t.Errorf("fingerprint %q is not a SHA-256 hex string", fp)
+			}
+			fps = append(fps, fp)
+		}
+		return fps
+	}
+	// Stable across runs on the same input.
+	first := sarifFingerprints(sampleResult())
+	second := sarifFingerprints(sampleResult())
+	for i := range first {
+		if first[i] != second[i] {
+			t.Errorf("fingerprint unstable across runs: %q vs %q", first[i], second[i])
+		}
+	}
+	// Distinct findings get distinct fingerprints.
+	if first[0] == first[1] {
+		t.Errorf("distinct findings share a fingerprint: %q", first[0])
+	}
+	// Moving a finding to another line changes its fingerprint.
+	moved := sampleResult()
+	moved.Findings[0].Evidence.Span.StartLine = 99
+	third := sarifFingerprints(moved)
+	if third[0] == first[0] {
+		t.Errorf("fingerprint did not change when the line moved")
+	}
+}

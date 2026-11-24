@@ -2,7 +2,7 @@
 //
 // Usage:
 //
-//	aegis scan <dir> [--format=text|json|sarif] [--rules=aws]
+//	aegis scan <dir|file> [--format=text|json|sarif] [--rules=aws]
 //
 // Exit codes are CI-gate friendly: 0 = clean, 1 = findings, 2 = usage/scan
 // error. The scanner never executes scanned content and never fails silently:
@@ -53,7 +53,7 @@ type ruleRunner interface {
 const usageText = `aegis — Infrastructure-as-Code security scanner
 
 Usage:
-  aegis scan <dir> [--format=text|json|sarif|html] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW[,FW...]|all] [--config=aegis.yaml] [--exclude=globs]
+  aegis scan <dir|file> [--format=text|json|sarif|html] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW[,FW...]|all] [--config=aegis.yaml] [--exclude=globs]
   aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json] [--force]
   aegis serve [--addr=127.0.0.1:8734] [--auth-token=TOKEN]
   aegis quality-gate [--format=text|json] [--bench-dir=DIR] [--corpus-dir=DIR]
@@ -61,7 +61,7 @@ Usage:
   aegis --version
 
 Commands:
-  scan  scan a directory, print findings
+  scan  scan a directory or a single file, print findings
   fix   propose validated patches for findings (dry run by default;
         --apply writes only patches that fix cleanly with no new findings;
         IAM/networking resources are never patched unless --force)
@@ -216,7 +216,11 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runServe(addr, authToken)
 	}
 	if len(posArgs) < 2 {
-		fmt.Fprintf(stderr, "aegis: %s requires a target directory\n", cmd)
+		if cmd == "fix" {
+			fmt.Fprintf(stderr, "aegis: %s requires a target directory\n", cmd)
+		} else {
+			fmt.Fprintf(stderr, "aegis: %s requires a target directory or file\n", cmd)
+		}
 		fmt.Fprint(stderr, usageText)
 		return 2
 	}
@@ -225,8 +229,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "aegis: unexpected argument %q\n", posArgs[2])
 		return 2
 	}
-	if st, err := os.Stat(target); err != nil || !st.IsDir() {
-		fmt.Fprintf(stderr, "aegis: %s target %q is not a readable directory\n", cmd, target)
+	// scan accepts a directory or a single file; fix requires a
+	// directory (its validation copies the whole target tree).
+	if err := checkScanTarget(cmd, target); err != nil {
+		fmt.Fprintf(stderr, "aegis: %s\n", err)
 		return 2
 	}
 
@@ -236,6 +242,32 @@ func run(args []string, stdout, stderr io.Writer) int {
 	default:
 		return runScan(target, flagArgs, stdout, stderr)
 	}
+}
+
+// checkScanTarget validates the scan/fix target: it must exist and be
+// readable. A directory is always fine. A single regular file is fine
+// for scan (discovery treats it as a one-file set) but not for fix,
+// whose validation copies the target tree. Symlinks and non-regular files
+// are rejected: a symlinked file would otherwise be skipped by discovery
+// and report a silent clean result.
+func checkScanTarget(cmd, target string) error {
+	st, err := os.Lstat(target)
+	if err != nil {
+		return fmt.Errorf("%s target %q cannot be read: %v", cmd, target, err)
+	}
+	if st.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("%s target %q is a symlink; pass a real directory or file", cmd, target)
+	}
+	if st.IsDir() {
+		return nil
+	}
+	if !st.Mode().IsRegular() {
+		return fmt.Errorf("%s target %q is not a readable directory or file", cmd, target)
+	}
+	if cmd == "fix" {
+		return fmt.Errorf("fix target %q is a file; fix requires a target directory", target)
+	}
+	return nil
 }
 
 // runQualityGate executes `aegis quality-gate [--format=text|json]
@@ -784,15 +816,16 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	for _, d := range rules.ValidateSuppressedRuleIDs(rules.CollectSuppressedRuleIDs(resources), registry) {
 		fmt.Fprintf(stderr, "aegis: warning: %s\n", d.Message())
 	}
-	// Compliance posture. A single requested framework keeps the
-	// original behaviour: findings are filtered to that framework and
-	// carry the singular summary. Several frameworks (or "all") keep
-	// every finding — enriched with all mapped controls — and report
-	// one summary per framework.
+	// Compliance posture. A single requested framework filters findings
+	// to that framework and reports one summary for it, in the same
+	// compliance_summaries shape as the multi-framework case (one
+	// entry). Several frameworks (or "all") keep every finding —
+	// enriched with all mapped controls — and report one summary per
+	// framework.
 	switch {
 	case len(complianceFws) == 1:
 		res.Findings = rules.FilterByCompliance(res.Findings, complianceFws[0])
-		res.ComplianceSummary = complianceSummary(complianceFws[0], res.Findings)
+		res.ComplianceSummaries = []*ir.ComplianceSummary{complianceSummary(complianceFws[0], res.Findings)}
 	case len(complianceFws) > 1:
 		res.Findings = rules.EnrichCompliance(res.Findings)
 		for _, fw := range complianceFws {
