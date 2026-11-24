@@ -35,7 +35,13 @@ func TestItem6bNestedModuleSourceNotResolvedAgainstRoot(t *testing.T) {
 	write("main.tf", `module "m" { source = "./sub/m" }`)
 	write("sub/m/main.tf", `module "s" { source = "../secret" }
 resource "aws_s3_bucket" "in_m" { bucket = "in-m" }`)
-	write(filepath.Join(outside, "main.tf"), `resource "aws_s3_bucket" "outside" { bucket = "outside-target" }`)
+	// The outside file lives in a sibling of the scan root. Write it
+	// directly: the write() helper joins its argument under root, and
+	// passing it an absolute path builds an invalid path on Windows
+	// (a bare "C:" component) and a nested path under root on Unix.
+	if err := os.WriteFile(filepath.Join(outside, "main.tf"), []byte(`resource "aws_s3_bucket" "outside" { bucket = "outside-target" }`), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	mods := parseTree(t, root)
 	res, diags := ExpandModules(root, mods, &terraform.Adapter{}, 2)

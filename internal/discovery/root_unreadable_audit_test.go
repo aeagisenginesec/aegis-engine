@@ -3,6 +3,7 @@ package discovery
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -13,6 +14,9 @@ import (
 // read error like any mid-walk entry. Now a root-level walk error is a
 // hard discovery error (callers map it to exit 2).
 func TestAuditUnreadableRootIsHardError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod-based unreadable probes need Unix permission bits; Windows ACLs do not make a path unreadable this way")
+	}
 	if os.Geteuid() == 0 {
 		t.Skip("unreadable-dir probe needs a non-root user; root bypasses permission checks")
 	}
@@ -31,6 +35,9 @@ func TestAuditUnreadableRootIsHardError(t *testing.T) {
 // A single unreadable file below a readable root must still be skipped,
 // not fail the scan (mid-walk leniency is by design).
 func TestAuditUnreadableFileBelowRootSkipped(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod-based unreadable probes need Unix permission bits; Windows ACLs do not make a path unreadable this way")
+	}
 	if os.Geteuid() == 0 {
 		t.Skip("unreadable-file probe needs a non-root user; root bypasses permission checks")
 	}
