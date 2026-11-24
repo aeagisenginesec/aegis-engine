@@ -23,10 +23,7 @@ type twinKey struct {
 }
 
 func twinKeyOf(r ir.Resource) twinKey {
-	file := r.Span.File
-	if abs, err := filepath.Abs(file); err == nil {
-		file = abs
-	}
+	file := canonicalFile(r.Span.File)
 	return twinKey{
 		file:      file,
 		startLine: r.Span.StartLine,
@@ -34,6 +31,40 @@ func twinKeyOf(r ir.Resource) twinKey {
 		endLine:   r.Span.EndLine,
 		endCol:    r.Span.EndCol,
 		typ:       r.Type,
+	}
+}
+
+// canonicalFile returns the absolute, symlink-resolved form of a source
+// file path, so resources recorded with different path spellings still
+// compare equal: relative vs absolute (root parsing uses discovery paths
+// while module expansion uses absolute paths), and paths that pass
+// through a symlinked directory (macOS temp dirs live under /var, which
+// is a symlink to /private/var, so os.Getwd() resolves it while the
+// stored path does not).
+//
+// The file itself may not exist (synthetic spans in tests), so symlinks
+// are resolved on the longest existing ancestor and the remainder is
+// re-appended. If nothing resolves, the plain absolute path is returned.
+func canonicalFile(p string) string {
+	abs, err := filepath.Abs(p)
+	if err != nil {
+		return p
+	}
+	if resolved, err := filepath.EvalSymlinks(abs); err == nil {
+		return resolved
+	}
+	dir := abs
+	var rest []string
+	for {
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return abs // reached the root without resolving anything
+		}
+		rest = append([]string{filepath.Base(dir)}, rest...)
+		dir = parent
+		if resolved, err := filepath.EvalSymlinks(dir); err == nil {
+			return filepath.Join(append([]string{resolved}, rest...)...)
+		}
 	}
 }
 
