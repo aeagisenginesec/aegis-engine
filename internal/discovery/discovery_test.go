@@ -86,7 +86,7 @@ func TestOutputFileNamesSkippedBelowRoot(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "main.tf"), []byte(tf), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"out.json", "out.sarif", "out.html", "aegis.json", "aegis.sarif"} {
+	for _, name := range []string{"out.json", "out.sarif", "out.html", "aegis.json", "aegis.sarif", "sbom.spdx.json", "sbom.cyclonedx.json"} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte{}, 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -102,7 +102,7 @@ func TestOutputFileNamesSkippedBelowRoot(t *testing.T) {
 	for _, f := range files {
 		seen[filepath.Base(f.Path)] = true
 	}
-	for _, name := range []string{"out.json", "out.sarif", "out.html", "aegis.json", "aegis.sarif"} {
+	for _, name := range []string{"out.json", "out.sarif", "out.html", "aegis.json", "aegis.sarif", "sbom.spdx.json", "sbom.cyclonedx.json"} {
 		if seen[name] {
 			t.Errorf("output file %s should be skipped, got files %v", name, files)
 		}

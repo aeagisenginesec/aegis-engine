@@ -243,6 +243,34 @@ type ContentSniffer interface {
 	HandlesContent(path string, src []byte) bool
 }
 
+// Dependency is one entry of the scanned project's dependency inventory
+// (SBOM input). It records only what the parsers already know statically:
+// provider requirements, module sources, and container base images. It
+// deliberately does NOT resolve transitive dependencies, lock files, or
+// registry metadata — see internal/sbom for the boundary.
+type Dependency struct {
+	// Kind classifies the dependency: "terraform-provider",
+	// "terraform-module", or "container-image".
+	Kind string `json:"kind"`
+	// Name is the dependency's canonical name: a provider source address
+	// ("hashicorp/aws"), a module call name, or a container image name
+	// without tag or digest.
+	Name string `json:"name"`
+	// Version is the pinned version where one is known statically: a
+	// provider version constraint ("~> 5.0"), a module version input or
+	// git ?ref=, or a container image tag. Empty when unpinned/unknown.
+	// NOTE: for providers this is a constraint, not an exact version —
+	// the exact version lives in the lock file, which Aegis does not read.
+	Version string `json:"version,omitempty"`
+	// Source is the dependency reference as written: the module source
+	// string, the full container image reference, or the provider source
+	// address.
+	Source string `json:"source,omitempty"`
+	// File/Line locate the declaration in the scanned tree.
+	File string `json:"file,omitempty"`
+	Line int    `json:"line,omitempty"`
+}
+
 // ScanResult is the complete output of one scan.
 type ScanResult struct {
 	Target              string               `json:"target"`
@@ -252,6 +280,11 @@ type ScanResult struct {
 	Completeness        ScanCompleteness     `json:"scan_completeness"`
 	ComplianceSummary   *ComplianceSummary   `json:"compliance_summary,omitempty"`
 	ComplianceSummaries []*ComplianceSummary `json:"compliance_summaries,omitempty"`
+	// Dependencies is the scanned project's dependency inventory,
+	// collected by internal/sbom from the parsed modules and resources.
+	// Empty (nil) when the scan collected none; never populated by the
+	// serve API, which builds its own response type.
+	Dependencies []Dependency `json:"dependencies,omitempty"`
 }
 
 // ComplianceSummary reports per-control pass/fail for a compliance

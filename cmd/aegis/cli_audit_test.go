@@ -66,6 +66,7 @@ func TestCLIAuditHelpDocumentsEveryFlag(t *testing.T) {
 		"webhook", "webhook-secret", "webhook-header", "webhook-timeout",
 		"webhook-attempts", "webhook-allow-http", "webhook-dry-run",
 		"webhook-fail-on-error",
+		"sbom", "sbom-out",
 		// fix
 		"apply", "force", "rule",
 		// serve (manually parsed, not via flag.FlagSet)

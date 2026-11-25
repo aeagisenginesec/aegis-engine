@@ -40,6 +40,7 @@ import (
 	"aegis/internal/report"
 	"aegis/internal/rules"
 	"aegis/internal/rules/custom"
+	"aegis/internal/sbom"
 	"aegis/internal/semantics"
 	"aegis/internal/version"
 	"aegis/internal/webhook"
@@ -55,7 +56,7 @@ type ruleRunner interface {
 const usageText = `aegis — Infrastructure-as-Code security scanner
 
 Usage:
-  aegis scan <dir|file> [--format=text|json|sarif|html] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW[,FW...]|all] [--config=aegis.yaml] [--exclude=globs] [--webhook=https://...] [--webhook-secret=TOKEN] [--webhook-header="Name: value"] [--webhook-timeout=10] [--webhook-attempts=3] [--webhook-allow-http] [--webhook-dry-run] [--webhook-fail-on-error]
+  aegis scan <dir|file> [--format=text|json|sarif|html] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW[,FW...]|all] [--config=aegis.yaml] [--exclude=globs] [--sbom=spdx-json|cyclonedx-json] [--sbom-out=file] [--webhook=https://...] [--webhook-secret=TOKEN] [--webhook-header="Name: value"] [--webhook-timeout=10] [--webhook-attempts=3] [--webhook-allow-http] [--webhook-dry-run] [--webhook-fail-on-error]
   aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json] [--force]
   aegis serve [--addr=127.0.0.1:8734] [--auth-token=TOKEN]
   aegis quality-gate [--format=text|json] [--bench-dir=DIR] [--corpus-dir=DIR]
@@ -118,6 +119,15 @@ Flags:
   --exclude  scan: comma-separated glob patterns for paths to skip
                (e.g. "vendor/**,*.tfvars"); skipped files are reported
   --strict   scan: fail with exit 2 if any file fails to parse
+  --sbom     scan: also write a dependency inventory (SBOM) for the
+               scanned project: spdx-json (SPDX 2.3) or cyclonedx-json
+               (CycloneDX 1.6). Written to --sbom-out, or to
+               sbom.spdx.json / sbom.cyclonedx.json in the working
+               directory by default. The inventory covers Terraform
+               required_providers + module sources, Dockerfile base
+               images, and Compose service images — direct references
+               only, no transitive resolution (see docs/SBOM.md)
+  --sbom-out scan: output path for --sbom (default as above)
   --attack-paths scan: report only attack-chain findings (internet-to-data
                kill chains and exposure paths); works with text and json
   --auth-token serve: require "Authorization: Bearer TOKEN" on /v1/scan
@@ -730,6 +740,8 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	configPath := fs.String("config", "", "")
 	exclude := fs.String("exclude", "", "")
 	attackPaths := fs.Bool("attack-paths", false, "")
+	sbomFormat := fs.String("sbom", "", "")
+	sbomOut := fs.String("sbom-out", "", "")
 	maxFileSize := fs.Int64("max-file-size", 0, "")
 	timeoutSecs := fs.Int("timeout", 0, "")
 	webhookURL := fs.String("webhook", "", "")
@@ -796,6 +808,12 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	case "text", "json", "sarif", "html":
 	default:
 		fmt.Fprintf(stderr, "aegis: unknown --format %q (want text|json|sarif|html)\n", *format)
+		return 2
+	}
+	switch *sbomFormat {
+	case "", "spdx-json", "cyclonedx-json":
+	default:
+		fmt.Fprintf(stderr, "aegis: unknown --sbom %q (want spdx-json|cyclonedx-json)\n", *sbomFormat)
 		return 2
 	}
 	color, ok := resolveColor(*colorMode, stdout)
@@ -1033,6 +1051,18 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 			return code
 		}
 	}
+	// --sbom: write the dependency inventory alongside the findings
+	// report. A write failure is a scan error (exit 2): a missing SBOM
+	// must never look like a produced one. The exit code for findings
+	// is decided below, unchanged by the SBOM.
+	if *sbomFormat != "" {
+		path, serr := writeSBOM(*sbomFormat, *sbomOut, target, res.Dependencies)
+		if serr != nil {
+			fmt.Fprintf(stderr, "aegis: sbom: %v\n", serr)
+			return 2
+		}
+		fmt.Fprintf(stderr, "aegis: wrote SBOM (%d packages) to %s\n", len(res.Dependencies), path)
+	}
 	// --strict: fail if any file could not be parsed (incomplete scan)
 	if *strict && !res.Completeness.Complete() {
 		fmt.Fprintf(stderr, "aegis: strict mode: %d file(s) failed to parse\n",
@@ -1095,6 +1125,43 @@ func deliverWebhook(cfg webhook.Config, res ir.ScanResult, stderr io.Writer) int
 	}
 	fmt.Fprintf(stderr, "aegis: webhook delivered: %d findings to %s\n", len(res.Findings), cfg.URL)
 	return 0
+}
+
+// writeSBOM renders the scan's dependency inventory in the requested
+// format and writes it to outPath, defaulting to sbom.spdx.json /
+// sbom.cyclonedx.json in the working directory. It returns the path
+// written. The timestamp is the current time: two runs never claim the
+// same SPDX document namespace or CycloneDX serial number.
+func writeSBOM(format, outPath, target string, deps []ir.Dependency) (string, error) {
+	switch format {
+	case "spdx-json":
+		if outPath == "" {
+			outPath = "sbom.spdx.json"
+		}
+	case "cyclonedx-json":
+		if outPath == "" {
+			outPath = "sbom.cyclonedx.json"
+		}
+	default:
+		return "", fmt.Errorf("unknown --sbom %q (want spdx-json|cyclonedx-json)", format)
+	}
+	f, err := os.Create(outPath)
+	if err != nil {
+		return "", fmt.Errorf("cannot write %s: %w", outPath, err)
+	}
+	switch format {
+	case "spdx-json":
+		err = sbom.WriteSPDX(f, target, deps, time.Now())
+	default:
+		err = sbom.WriteCycloneDX(f, target, deps, time.Now())
+	}
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		return "", fmt.Errorf("cannot write %s: %w", outPath, err)
+	}
+	return outPath, nil
 }
 
 // scanWithTimeout runs scanFull, aborting with an error if timeoutSecs > 0
@@ -1337,6 +1404,7 @@ func scanFull(target string, adapters []ir.Adapter, engine ruleRunner) (ir.ScanR
 		}
 	}
 	res.Resources = len(resources)
+	res.Dependencies = sbom.Collect(mods, resources)
 	res.Completeness = completeness
 	if engine != nil {
 		if findings := engine.Run(resources); findings != nil {

@@ -3,6 +3,21 @@
 All notable changes to Aegis are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased] — v2.4.0
+
+### Added
+
+- **SBOM generation for scanned projects (`--sbom`).**
+  `aegis scan --sbom spdx-json|cyclonedx-json <dir>` writes a dependency
+  inventory alongside the findings report: SPDX 2.3 JSON (primary) or
+  CycloneDX 1.6 JSON. Covers Terraform `required_providers` + module
+  sources (with versions where pinned), Dockerfile base images, and
+  Compose service images — direct references only, no transitive
+  resolution, no lock-file or registry lookups (see `docs/SBOM.md`).
+  Default outputs `sbom.spdx.json` / `sbom.cyclonedx.json` are skipped
+  by discovery on later scans. Version stays 2.3.0 in code until the
+  v2.4.0 release bump.
+
 ## [2.3.0] — 2026-11-24
 
 The five-agent test release. All five cloud-engineer specialist agents
