@@ -102,6 +102,7 @@ shadow → gate → cutover adoption path:
 ./aegis scan ./my-infra --attack-paths                    # evidence-backed kill chains
 ./aegis scan ./my-infra --format=sarif > aegis.sarif      # GitHub code scanning
 ./aegis scan ./my-infra --sbom spdx-json                # SPDX 2.3 dependency inventory (see docs/SBOM.md)
+./aegis scan ./my-infra --webhook https://siem.example.com/hook  # POST the JSON report to SIEM/SOAR (see docs/WEBHOOK.md)
 ./aegis fix ./my-infra                                    # safe fixes (dry run by default)
 ./aegis quality-gate                                      # release gates: precision / recall / perf
 ```
@@ -162,7 +163,7 @@ data: [docs/audit/32_FINAL_EVAL_R7_REPORT.md](docs/audit/32_FINAL_EVAL_R7_REPORT
 | vuln-10000 (177,760 lines) | 100,926 | ~5.4 s |
 | vuln-100000 (1.7M lines) | 1,003,677 | ~2 min |
 
-Methodology: [docs/audit/14_TRIVY_OUTPERFORM_REPORT.md](docs/audit/14_TRIVY_OUTPERFORM_REPORT.md) ·
+Methodology: [R7 evaluation protocol](docs/audit/31_EVAL_R7_PROTOCOL.md) ·
 [docs/BENCHMARKS.md](docs/BENCHMARKS.md) · [CHANGELOG.md](CHANGELOG.md)
 
 ## Coverage
@@ -172,7 +173,7 @@ Methodology: [docs/audit/14_TRIVY_OUTPERFORM_REPORT.md](docs/audit/14_TRIVY_OUTP
 | **Cloud** | AWS · Azure · GCP · Alibaba Cloud · OCI |
 | **Formats** | Terraform / HCL · Terraform plan JSON · CloudFormation · ARM · Bicep · Kubernetes YAML · Dockerfile · docker-compose · Pulumi YAML |
 | **Rule packs** | AWS, Azure, GCP, Alibaba, OCI, Kubernetes, Docker, Compose, supply-chain, Terraform-generic, custom YAML rules |
-| **Mappings** | CIS AWS 1.5 · NIST 800-53 · PCI DSS 4.0 |
+| **Mappings** | CIS AWS 1.5 · CIS Azure 2.1 · CIS GCP 1.3 · CIS Kubernetes 1.8 · CIS Docker 1.6 · NIST 800-53 · PCI DSS 4.0 · ISO 27001 · SOC 2 · HIPAA |
 
 Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 
@@ -186,7 +187,7 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
   evaluated with real policy semantics instead of silently skipped
 - **Secret taint tracking** — user data, tags, outputs, variable defaults; values redacted in all output
 - **Quality gates** (`quality-gate`) — precision/recall/coverage/perf checks that block releases
-- **Safe remediation** (`fix`) — dry-run default, minimal diffs, re-parse validation; IAM and security groups never auto-patched without `--force`
+- **Safe remediation** (`fix`) — dry-run default, minimal diffs, re-parse validation; IAM and security groups never auto-patched without `--force`; attack-path findings get ordered SOC steps (contain → audit → recover → verify)
 - **Suppressions & baselines** — `# aegis:ignore=RULE-ID`, stable baseline files for CI
 - **YAML custom rules** — user-defined checks without writing Go
 - **SARIF / JSON / text** output; SARIF chunking for GitHub code scanning
@@ -208,12 +209,13 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 
 ## Docs
 
-- [Final state (v2.1.0 closeout)](docs/audit/26_AEGIS_FINAL_STATE.md) — the complete accuracy record
+- [Evaluation record](docs/audit/32_FINAL_EVAL_R7_REPORT.md) — R7 blind eval (v2.4.0) · [R6 blind eval](docs/audit/28_FINAL_EVAL_R6_REPORT.md) · [final state (v2.1.0 closeout)](docs/audit/26_AEGIS_FINAL_STATE.md)
 - [Changelog](CHANGELOG.md) — what changed in every release
 - [Coverage matrix](docs/COVERAGE_MATRIX.md) — per-service rule inventory
 - [Architecture](docs/ARCHITECTURE.md) · [CI integration](docs/CI_INTEGRATION.md) · [Baselines](docs/BASELINES.md)
 - [Compliance & waivers](docs/compliance.md) — framework mappings, posture reporting, HTML attestation, expiring waivers
 - [SIEM/SOAR webhook](docs/WEBHOOK.md) — push scan results to an HTTPS endpoint after a scan
+- [SBOM generation](docs/SBOM.md) — SPDX 2.3 / CycloneDX 1.6 dependency inventory of the scanned project
 - [Attack paths](docs/PHASE3_ATTACK_PATHS.md) · [Production hardening](docs/PHASE4_PRODUCTION.md)
 - [Final verdict](docs/FINAL_VERDICT.md) — the honest comparison
 - Release notes: [v2.0.0](docs/audit/16_RELEASE_NOTES_v2.0.0.md) · [v1.0.0](docs/RELEASE_NOTES_v1.0.0.md)
@@ -232,6 +234,7 @@ internal/remediation/ safe auto-fix with IAM/networking blocklist
 internal/graph/       resource relationship graph
 internal/report/      text / JSON / SARIF renderers (secrets redacted)
 internal/webhook/     SIEM/SOAR webhook delivery (HTTPS, Bearer, bounded retry)
+internal/sbom/        SBOM generation (SPDX 2.3 / CycloneDX 1.6)
 benchmark/            held-out corpus generator + raw results
 docs/                 coverage matrix, validation, release notes
 examples/             sample projects and workflows
