@@ -215,8 +215,8 @@ func TestDeterminism(t *testing.T) {
 
 func TestPackRules(t *testing.T) {
 	rs := Rules()
-	if len(rs) != 9 {
-		t.Errorf("Rules() returned %d rules, want 9", len(rs))
+	if len(rs) != 10 {
+		t.Errorf("Rules() returned %d rules, want 10", len(rs))
 	}
 	if len(rs) > 0 && rs[0].ID() != "AEGIS-SC-001" {
 		t.Errorf("Rules()[0] = %q, want AEGIS-SC-001", rs[0].ID())

@@ -16,7 +16,7 @@ func kvmap(line int, pairs ...any) ir.Value {
 	return ir.Value{Raw: m, Known: true, Span: spanAt(line)}
 }
 
-// Pack registration: GCP9Rules must return 24 rules in ID order
+// Pack registration: GCP9Rules must return 25 rules in ID order
 // (269, 272, 280, 281, 283, 287 removed as duplicates of existing rules).
 func TestGCP9RegisteredInIDOrder(t *testing.T) {
 	rules := GCP9Rules()
@@ -27,7 +27,7 @@ func TestGCP9RegisteredInIDOrder(t *testing.T) {
 		"AEGIS-GCP-277", "AEGIS-GCP-278", "AEGIS-GCP-279", "AEGIS-GCP-282",
 		"AEGIS-GCP-284", "AEGIS-GCP-285", "AEGIS-GCP-286", "AEGIS-GCP-288",
 		"AEGIS-GCP-289", "AEGIS-GCP-290", "AEGIS-GCP-291", "AEGIS-GCP-292",
-		"AEGIS-GCP-293", "AEGIS-GCP-294",
+		"AEGIS-GCP-293", "AEGIS-GCP-294", "AEGIS-GCP-295",
 	}
 	if len(rules) != len(wantIDs) {
 		t.Fatalf("expected %d rules, got %d", len(wantIDs), len(rules))

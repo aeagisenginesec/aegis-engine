@@ -255,7 +255,7 @@ func (mskNoEncryption) Check(r ir.Resource) []ir.Finding {
 			"absent", "encryption_info block with client_broker set to TLS")
 	}
 	for _, b := range blks {
-		cb, _, cpresent, cknown := blockString(b, "client_broker")
+		cb, _, cpresent, cknown := mskClientBrokerValue(b)
 		if cpresent && !cknown {
 			return nil // unresolved: cannot decide
 		}
@@ -265,6 +265,38 @@ func (mskNoEncryption) Check(r ir.Resource) []ir.Finding {
 		}
 	}
 	return nil
+}
+
+// mskClientBrokerValue reads the effective client-broker encryption value
+// from one encryption_info block, accepting every shape the adapters
+// produce:
+//   - the legacy client_broker attribute (hand-written TF / older docs);
+//   - the real Terraform provider attribute
+//     encryption_in_transit_client_broker;
+//   - the CloudFormation nested EncryptionInfo.EncryptionInTransit.
+//     ClientBroker shape (generic snake_case conversion nests it).
+//
+// Returns (value, span, present, known) in the blockString tri-state
+// convention: present but unknown means undecidable, never a finding.
+func mskClientBrokerValue(b map[string]ir.Value) (string, ir.Span, bool, bool) {
+	for _, name := range []string{"client_broker", "encryption_in_transit_client_broker"} {
+		if v, ok := b[name]; ok {
+			s, kok := v.AsString()
+			return s, v.Span, true, kok
+		}
+	}
+	if nested, ok := b["encryption_in_transit"]; ok {
+		if !nested.Known {
+			return "", nested.Span, true, false
+		}
+		if m, ok := nested.AsMap(); ok {
+			if v, ok := m["client_broker"]; ok {
+				s, kok := v.AsString()
+				return s, v.Span, true, kok
+			}
+		}
+	}
+	return "", ir.Span{}, false, false
 }
 
 // ---------------------------------------------------------------------------

@@ -201,3 +201,59 @@ func TestUnknownInstructionWarns(t *testing.T) {
 		t.Errorf("expected warning diagnostic for unknown instruction, got %v", diags)
 	}
 }
+
+// Phase B tests: HEALTHCHECK NONE counts as a present directive
+// (DOCKER-005 FP fix), and COPY --from sources are surfaced separately
+// (DOCKER-038 surface).
+
+func TestParseHealthcheckNonePresent(t *testing.T) {
+	rs := parse(t, "Dockerfile", "FROM ubuntu:22.04\nHEALTHCHECK NONE\n")
+	if len(rs) != 1 {
+		t.Fatalf("expected 1 stage, got %d", len(rs))
+	}
+	hc, _ := rs[0].Attributes["has_healthcheck"].AsBool()
+	if !hc {
+		t.Fatal("HEALTHCHECK NONE must set has_healthcheck = true")
+	}
+	none, _ := rs[0].Attributes["healthcheck_none"].AsBool()
+	if !none {
+		t.Fatal("HEALTHCHECK NONE must set healthcheck_none = true")
+	}
+}
+
+func TestParseHealthcheckCmdNotNone(t *testing.T) {
+	rs := parse(t, "Dockerfile", "FROM ubuntu:22.04\nHEALTHCHECK CMD curl -f http://localhost/ || exit 1\n")
+	hc, _ := rs[0].Attributes["has_healthcheck"].AsBool()
+	if !hc {
+		t.Fatal("HEALTHCHECK CMD must set has_healthcheck = true")
+	}
+	if none, _ := rs[0].Attributes["healthcheck_none"].AsBool(); none {
+		t.Fatal("HEALTHCHECK CMD must not set healthcheck_none")
+	}
+}
+
+func TestParseCopyFromSources(t *testing.T) {
+	src := "FROM golang:1.22-bookworm AS build\nCOPY .env /src/.env\nFROM debian:bookworm-slim\nCOPY --from=build /src/.env /app/.env\nCOPY --from=build /app/server /app/server\n"
+	rs := parse(t, "Dockerfile", src)
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 stages, got %d", len(rs))
+	}
+	v, ok := rs[1].Attributes["copy_from_sources"]
+	if !ok {
+		t.Fatal("final stage missing copy_from_sources")
+	}
+	lst, ok := v.AsList()
+	if !ok || len(lst) != 2 {
+		t.Fatalf("expected 2 copy_from_sources entries, got %v", v.Raw)
+	}
+	first, ok := lst[0].AsMap()
+	if !ok {
+		t.Fatalf("copy_from_sources[0] is not a map: %v", lst[0].Raw)
+	}
+	if s, _ := first["source"].AsString(); s != "/src/.env" {
+		t.Errorf("source = %q, want /src/.env", s)
+	}
+	if s, _ := first["from"].AsString(); s != "build" {
+		t.Errorf("from = %q, want build", s)
+	}
+}

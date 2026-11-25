@@ -185,6 +185,52 @@ func attachedSecurityGroups(resources []ir.Resource) map[string]bool {
 	}
 	return attached
 }
+// portRangeSuffix formats a known from/to port pair for evidence:
+// " to port 3389" for a single port, " to ports 8000-9000" for a
+// range, " to all ports" for 0-65535. Returns "" when the ports are
+// absent or unresolved — the evidence then stays the bare CIDR.
+func portRangeSuffix(from, to float64, known bool) string {
+	if !known {
+		return ""
+	}
+	if from == 0 && to == 65535 {
+		return " to all ports"
+	}
+	if from == to {
+		return fmt.Sprintf(" to port %d", int(from))
+	}
+	return fmt.Sprintf(" to ports %d-%d", int(from), int(to))
+}
+
+// portSuffixForBlock formats the port range of one ingress/egress block
+// for evidence. A protocol of -1/all covers every port regardless of
+// the (conventionally 0) from/to values.
+func portSuffixForBlock(b map[string]ir.Value) string {
+	proto, _, pPresent, pKnown := blockString(b, "protocol")
+	if pPresent && pKnown && (proto == "-1" || strings.EqualFold(strings.TrimSpace(proto), "all")) {
+		return " to all ports"
+	}
+	from, _, fPresent, fKnown := blockNumber(b, "from_port")
+	to, _, tPresent, tKnown := blockNumber(b, "to_port")
+	return portRangeSuffix(from, to, fPresent && tPresent && fKnown && tKnown)
+}
+
+// portSuffixForResource formats the port range of a single-rule resource
+// for evidence. The protocol attribute is "protocol" on
+// aws_security_group_rule and "ip_protocol" on the VPC rule resources.
+func portSuffixForResource(r ir.Resource) string {
+	proto, _, pPresent, pKnown := getString(r, "protocol")
+	if !pPresent || !pKnown {
+		proto, _, pPresent, pKnown = getString(r, "ip_protocol")
+	}
+	if pPresent && pKnown && (proto == "-1" || strings.EqualFold(strings.TrimSpace(proto), "all")) {
+		return " to all ports"
+	}
+	from, _, fPresent, fKnown := getNumber(r, "from_port")
+	to, _, tPresent, tKnown := getNumber(r, "to_port")
+	return portRangeSuffix(from, to, fPresent && tPresent && fKnown && tKnown)
+}
+
 func checkSGBlocks(r ir.Resource, blockName string, rule ir.Rule) []ir.Finding {
 	blks, _, present, known := getBlocks(r, blockName)
 	if !present || !known {
@@ -206,7 +252,10 @@ func checkSGBlocks(r ir.Resource, blockName string, rule ir.Rule) []ir.Finding {
 				Evidence: ir.Evidence{
 					Attribute: blockName + ".cidr_blocks",
 					Span:      evidenceSpan(blockSpan(b, "cidr_blocks"), r.Span),
-					Actual:    worldCIDR,
+					// Port range included so a scorer (and a human)
+					// can tell an admin-port open ingress from any
+					// other open ingress; absent when unknown.
+					Actual:    worldCIDR + portSuffixForBlock(b),
 					Expected:  "restricted source CIDR ranges",
 				},
 			})
@@ -249,7 +298,8 @@ func checkRuleCIDRs(r ir.Resource, attr string, rule ir.Rule) []ir.Finding {
 			Evidence: ir.Evidence{
 				Attribute: attr,
 				Span:      evidenceSpan(v.Span, r.Span),
-				Actual:    worldCIDR,
+				// Port range included (see checkSGBlocks).
+				Actual:    worldCIDR + portSuffixForResource(r),
 				Expected:  "restricted CIDR ranges",
 			},
 		}}

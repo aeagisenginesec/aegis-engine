@@ -719,7 +719,13 @@ func (vmPasswordAuth) Description() string {
 func (vmPasswordAuth) Severity() ir.Severity { return ir.SeverityHigh }
 
 func (vmPasswordAuth) AppliesTo(resType string) bool {
-	return resType == "azurerm_linux_virtual_machine"
+	// azurerm_linux_virtual_machine is the Terraform type; ARM
+	// Microsoft.Compute/virtualMachines maps to the generic
+	// azurerm_virtual_machine, whose nested
+	// osProfile.linuxConfiguration.disablePasswordAuthentication the ARM
+	// adapter promotes to the same flat attribute.
+	return resType == "azurerm_linux_virtual_machine" ||
+		resType == "azurerm_virtual_machine"
 }
 
 func (s vmPasswordAuth) Check(r ir.Resource) []ir.Finding {

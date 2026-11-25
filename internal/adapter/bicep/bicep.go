@@ -154,8 +154,11 @@ func (p *parser) parse() (map[string]any, []ir.Diagnostic) {
 			break
 		}
 		// decorators: @name or @name(...)
+		var decorators []string
 		for p.peek() == '@' {
-			p.skipDecorator()
+			if d := p.skipDecorator(); d != "" {
+				decorators = append(decorators, d)
+			}
 			p.skipWSAndComments()
 		}
 		kw := p.parseKeyword()
@@ -164,6 +167,19 @@ func (p *parser) parse() (map[string]any, []ir.Diagnostic) {
 			name, ptype, def := p.parseParam()
 			if name == "" {
 				break
+			}
+			// @secure() marks a string/object parameter as a secure
+			// value: ARM represents it as secureString/secureObject,
+			// and the declared Bicep type alone ("string") would lose
+			// that. Translate the decorator, not just the type, so
+			// secret-default rules can see it.
+			if hasDecorator(decorators, "secure") {
+				switch ptype {
+				case "string":
+					ptype = "secureString"
+				case "object":
+					ptype = "secureObject"
+				}
 			}
 			p.params[name] = true
 			entry := map[string]any{"type": ptype}
@@ -264,10 +280,11 @@ func (p *parser) expect(ch byte) bool {
 	return false
 }
 
-// skipDecorator consumes @name or @name(...).
-func (p *parser) skipDecorator() {
+// skipDecorator consumes @name or @name(...) and returns the decorator
+// name ("" when none could be read).
+func (p *parser) skipDecorator() string {
 	p.pos++ // @
-	p.parseIdent()
+	name := p.parseIdent()
 	p.skipWSAndComments()
 	if p.peek() == '(' {
 		depth := 0
@@ -289,6 +306,18 @@ func (p *parser) skipDecorator() {
 			p.pos++
 		}
 	}
+	return name
+}
+
+// hasDecorator reports whether name (case-insensitive) is among the
+// decorators collected before a statement.
+func hasDecorator(decorators []string, name string) bool {
+	for _, d := range decorators {
+		if strings.EqualFold(d, name) {
+			return true
+		}
+	}
+	return false
 }
 
 // skipBicepString consumes a '...' or ”'...”' string.

@@ -406,11 +406,11 @@ func (s mskPlaintextBrokers) Check(r ir.Resource) []ir.Finding {
 	if !present || !known || len(blks) == 0 {
 		return nil // provider default is TLS_PLAINTEXT: absent is safe
 	}
-	val, span, vpresent, vknown := blockString(blks[0], "client_broker")
+	val, span, vpresent, vknown := mskClientBrokerValue(blks[0])
 	if !vpresent || !vknown {
 		return nil
 	}
-	if val != "PLAINTEXT" {
+	if !strings.EqualFold(strings.TrimSpace(val), "PLAINTEXT") {
 		return nil
 	}
 	return []ir.Finding{sdFinding(s, r, "encryption_info.client_broker", span,

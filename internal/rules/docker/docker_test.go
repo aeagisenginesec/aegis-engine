@@ -103,7 +103,9 @@ func Test004_AddInsteadOfCopy(t *testing.T) {
 func Test005_NoHealthcheck(t *testing.T) {
 	expectFinding(t, noHealthcheck{}, stage(t, "FROM ubuntu:22.04\n"), 1)
 	expectFinding(t, noHealthcheck{}, stage(t, "FROM ubuntu:22.04\nHEALTHCHECK CMD curl -f http://localhost/ || exit 1\n"), 0)
-	expectFinding(t, noHealthcheck{}, stage(t, "FROM ubuntu:22.04\nHEALTHCHECK NONE\n"), 1)
+	// HEALTHCHECK NONE is a deliberate opt-out, not an absent
+	// directive: the directive is present, so 005 stays quiet.
+	expectFinding(t, noHealthcheck{}, stage(t, "FROM ubuntu:22.04\nHEALTHCHECK NONE\n"), 0)
 }
 
 func Test006_ExposedSSH(t *testing.T) {
@@ -155,8 +157,8 @@ func Test010_FirstPartyRegistries(t *testing.T) {
 
 func TestRules_IDOrder(t *testing.T) {
 	rules := Rules()
-	if len(rules) != 37 {
-		t.Fatalf("want 37 rules, got %d", len(rules))
+	if len(rules) != 38 {
+		t.Fatalf("want 38 rules, got %d", len(rules))
 	}
 	for i, r := range rules {
 		want := "AEGIS-DOCKER-" + pad3(i+1)

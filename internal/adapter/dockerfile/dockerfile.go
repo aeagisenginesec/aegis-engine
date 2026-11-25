@@ -8,8 +8,12 @@
 //   - exposed_ports: []Value of port strings from EXPOSE
 //   - env_names: []Value of ENV variable names (values never stored)
 //   - env_secrets: []Value of {name, span} maps for ENV names that look
-//     like secrets with literal values (values redacted)
-//   - has_healthcheck: bool
+//     like secrets with literal values, ARG->ENV ${} passthroughs of
+//     secret-like names, or values that are URLs embedding credentials
+//     (values redacted)
+//   - has_healthcheck: bool (any HEALTHCHECK directive present,
+//     including an explicit HEALTHCHECK NONE)
+//   - healthcheck_none: bool (HEALTHCHECK NONE: deliberately disabled)
 //   - uses_add: bool (ADD used instead of COPY)
 //   - run_commands: []Value of RUN command bodies (for package/sudo analysis)
 //   - sudo_used: bool
@@ -24,6 +28,8 @@
 //   - uses_volume: bool
 //   - uses_maintainer: bool (deprecated MAINTAINER instruction)
 //   - copy_sources: []Value of COPY source paths (dest excluded)
+//   - copy_from_sources: []Value of {source, from, span} maps for COPY
+//     --from=<stage> sources (dest excluded)
 //   - copy_chown_used: bool (any COPY used --chown)
 //   - cmd_shell_form / entrypoint_shell_form: bool
 //   - add_remote: bool (ADD fetched a remote http(s) URL)
@@ -127,10 +133,12 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 		maintainer          bool
 		maintainerSpan      ir.Span
 		copySources         []ir.Value
+		copyFromSources      []ir.Value // []Value of map[string]ir.Value{source, from, span} for COPY --from=<stage>
 		copyChown           bool
 		cmdShellForm        bool
 		entrypointShellForm bool
 		healthcheck         bool
+		healthcheckNone     bool // HEALTHCHECK NONE: directive present but explicitly disabled
 		usesAdd             bool
 		addSpan             ir.Span
 		addRemote           bool
@@ -174,10 +182,12 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			"uses_volume":           {Raw: cur.volume, Known: true, Span: cur.span},
 			"uses_maintainer":       {Raw: cur.maintainer, Known: true, Span: cur.span},
 			"copy_sources":          {Raw: cur.copySources, Known: true, Span: cur.span},
+			"copy_from_sources":     {Raw: cur.copyFromSources, Known: true, Span: cur.span},
 			"copy_chown_used":       {Raw: cur.copyChown, Known: true, Span: cur.span},
 			"cmd_shell_form":        {Raw: cur.cmdShellForm, Known: true, Span: cur.span},
 			"entrypoint_shell_form": {Raw: cur.entrypointShellForm, Known: true, Span: cur.span},
 			"has_healthcheck":       {Raw: cur.healthcheck, Known: true, Span: cur.span},
+			"healthcheck_none":      {Raw: cur.healthcheckNone, Known: true, Span: cur.span},
 			"uses_add":              {Raw: cur.usesAdd, Known: true, Span: cur.span},
 			"add_remote":            {Raw: cur.addRemote, Known: true, Span: cur.span},
 			"run_commands":          {Raw: cur.runs, Known: true, Span: cur.span},
@@ -297,9 +307,19 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			if cur == nil {
 				continue
 			}
-			srcs, chown := parseCopy(in.args)
+			srcs, from, chown := parseCopy(in.args)
 			for _, s := range srcs {
 				cur.copySources = append(cur.copySources, ir.Value{Raw: s, Known: true, Span: span})
+				if from != "" {
+					cur.copyFromSources = append(cur.copyFromSources, ir.Value{
+						Raw: map[string]ir.Value{
+							"source": {Raw: s, Known: true, Span: span},
+							"from":   {Raw: from, Known: true, Span: span},
+						},
+						Known: true,
+						Span:  span,
+					})
+				}
 			}
 			if chown {
 				cur.copyChown = true
@@ -350,7 +370,21 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			}
 			for _, kv := range parseEnv(in.args) {
 				cur.envNames = append(cur.envNames, ir.Value{Raw: kv.name, Known: true, Span: span})
-				if isSecretName(kv.name) && kv.literal {
+				// A secret-named ENV is flagged when the value is a
+				// literal, or when the value is a URL embedding
+				// credentials — even when the name itself is not
+				// secret-like. A pure ${VAR} passthrough is flagged
+				// only when VAR is a declared ARG of this stage and
+				// the ENV name or VAR is secret-like: the build-time
+				// value is then baked into image history. A bare
+				// $VAR with no ARG declared expands to empty and
+				// bakes nothing in.
+				secret := (isSecretName(kv.name) && kv.literal) || kv.credURL
+				if !secret && kv.refVar != "" && argDeclared(cur.argNames, kv.refVar) &&
+					(isSecretName(kv.name) || isSecretName(kv.refVar)) {
+					secret = true
+				}
+				if secret {
 					cur.envSecrets = append(cur.envSecrets, ir.Value{
 						Raw: map[string]ir.Value{
 							"name": {Raw: kv.name, Known: true, Span: span},
@@ -364,8 +398,13 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			if cur == nil {
 				continue
 			}
-			if !strings.HasPrefix(strings.ToUpper(strings.TrimSpace(in.args)), "NONE") {
-				cur.healthcheck = true
+			// Any HEALTHCHECK directive counts as present — including
+			// an explicit HEALTHCHECK NONE, which is a deliberate
+			// opt-out, not an absent directive. The NONE case is
+			// recorded separately for rules that want it.
+			cur.healthcheck = true
+			if strings.HasPrefix(strings.ToUpper(strings.TrimSpace(in.args)), "NONE") {
+				cur.healthcheckNone = true
 			}
 		case "ADD":
 			if cur == nil {
@@ -555,8 +594,18 @@ func imageTag(img string) string {
 
 // envKV is one parsed ENV assignment.
 type envKV struct {
-	name    string
-	literal bool // value is a static literal (not a variable expansion)
+	name string
+	// literal is true when the value is a static literal (not a
+	// variable expansion).
+	literal bool
+	// refVar is the variable name when the value is a pure ${VAR}/$VAR
+	// expansion (allowing :- / - / :+ / := default operators inside
+	// the braces), or "" otherwise.
+	refVar string
+	// credURL is true when the value is a URL embedding credentials
+	// (scheme://user:password@host), even when the name is not
+	// secret-like.
+	credURL bool
 }
 
 // parseEnv parses ENV args in both `KEY=val` and `KEY val` forms.
@@ -565,6 +614,15 @@ func parseEnv(args string) []envKV {
 	fields := splitEnvFields(args)
 	if len(fields) == 0 {
 		return out
+	}
+	add := func(name, val string) {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			return
+		}
+		kv := envKV{name: name, literal: isLiteralValue(val), credURL: hasEmbeddedCredentials(val)}
+		kv.refVar = expansionVar(val)
+		out = append(out, kv)
 	}
 	// If the first field contains '=', use KEY=val form for all fields.
 	if strings.Contains(fields[0], "=") {
@@ -575,27 +633,76 @@ func parseEnv(args string) []envKV {
 				name = f[:i]
 				val = f[i+1:]
 			}
-			name = strings.TrimSpace(name)
-			if name == "" {
-				continue
-			}
-			out = append(out, envKV{name: name, literal: isLiteralValue(val)})
+			add(name, val)
 		}
 		return out
 	}
 	// KEY val [KEY val ...] form.
 	for i := 0; i < len(fields); i += 2 {
-		name := strings.TrimSpace(fields[i])
-		if name == "" {
-			continue
-		}
 		val := ""
 		if i+1 < len(fields) {
 			val = fields[i+1]
 		}
-		out = append(out, envKV{name: name, literal: isLiteralValue(val)})
+		add(fields[i], val)
 	}
 	return out
+}
+
+// expansionVar returns the variable name when v is exactly a $VAR or
+// ${VAR...} expansion (allowing :- / - / :+ / := default operators
+// inside the braces), or "" otherwise.
+func expansionVar(v string) string {
+	v = strings.Trim(strings.TrimSpace(v), `"'`)
+	if !strings.HasPrefix(v, "$") {
+		return ""
+	}
+	rest := v[1:]
+	if strings.HasPrefix(rest, "{") {
+		rest = rest[1:]
+		// Variable name ends at the first non-name character.
+		end := 0
+		for end < len(rest) {
+			c := rest[end]
+			if (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' {
+				end++
+				continue
+			}
+			break
+		}
+		if end == 0 {
+			return ""
+		}
+		return rest[:end]
+	}
+	// $VAR form: the whole remainder must be a bare name.
+	for _, c := range rest {
+		if !((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_') {
+			return ""
+		}
+	}
+	if rest == "" {
+		return ""
+	}
+	return rest
+}
+
+// hasEmbeddedCredentials reports whether v is a URL whose authority
+// embeds user:password credentials (scheme://user:password@host).
+func hasEmbeddedCredentials(v string) bool {
+	v = strings.Trim(strings.TrimSpace(v), `"'`)
+	i := strings.Index(v, "://")
+	if i < 0 {
+		return false
+	}
+	rest := v[i+3:]
+	if j := strings.Index(rest, "/"); j >= 0 {
+		rest = rest[:j]
+	}
+	at := strings.Index(rest, "@")
+	if at < 0 {
+		return false
+	}
+	return strings.Contains(rest[:at], ":")
 }
 
 // splitEnvFields splits on whitespace outside quotes.
@@ -645,6 +752,7 @@ func isLiteralValue(v string) bool {
 var secretNameHints = []string{
 	"PASSWORD", "PASSWD", "SECRET", "TOKEN", "API_KEY", "APIKEY",
 	"PRIVATE_KEY", "PRIVATEKEY", "CREDENTIAL", "AUTH",
+	"MASTER_KEY", "DATABASE_URL", "DB_URL", "CONNECTION_STRING",
 }
 
 // isSecretName reports whether an ENV name looks like a secret.
@@ -652,6 +760,16 @@ func isSecretName(name string) bool {
 	up := strings.ToUpper(name)
 	for _, h := range secretNameHints {
 		if strings.Contains(up, h) {
+			return true
+		}
+	}
+	return false
+}
+
+// argDeclared reports whether name is among a stage's ARG names.
+func argDeclared(args []ir.Value, name string) bool {
+	for _, a := range args {
+		if s, ok := a.AsString(); ok && s == name {
 			return true
 		}
 	}
@@ -710,10 +828,11 @@ func isExecForm(args string) bool {
 	return strings.HasPrefix(strings.TrimSpace(args), "[")
 }
 
-// parseCopy extracts COPY source paths (destination excluded) and reports
-// whether --chown was passed. Handles flag=value and flag value forms,
-// plus the JSON-array form COPY ["src", "dst"].
-func parseCopy(args string) (srcs []string, chown bool) {
+// parseCopy extracts COPY source paths (destination excluded), the
+// --from stage when present ("" for context copies), and whether
+// --chown was passed. Handles flag=value and flag value forms, plus the
+// JSON-array form COPY ["src", "dst"].
+func parseCopy(args string) (srcs []string, from string, chown bool) {
 	trimmed := strings.TrimSpace(args)
 	if strings.HasPrefix(trimmed, "[") {
 		// JSON-array form: quoted strings; all but the last are sources.
@@ -744,7 +863,7 @@ func parseCopy(args string) (srcs []string, chown bool) {
 		if len(strs) > 1 {
 			srcs = strs[:len(strs)-1]
 		}
-		return srcs, false
+		return srcs, "", false
 	}
 	fields := strings.Fields(args)
 	var rest []string
@@ -755,21 +874,27 @@ func parseCopy(args string) (srcs []string, chown bool) {
 			continue
 		}
 		name := f
+		val := ""
 		if eq := strings.Index(f, "="); eq >= 0 {
 			name = f[:eq]
+			val = f[eq+1:]
 		} else if i+1 < len(fields) && !strings.HasPrefix(fields[i+1], "--") {
 			// --flag value form: consume the value.
+			val = fields[i+1]
 			i++
 		}
-		if name == "--chown" {
+		switch name {
+		case "--chown":
 			chown = true
+		case "--from":
+			from = val
 		}
 	}
 	// All but the last non-flag field are sources; the last is the dest.
 	if len(rest) > 1 {
 		srcs = rest[:len(rest)-1]
 	}
-	return srcs, chown
+	return srcs, from, chown
 }
 
 // addHasRemoteURL reports whether an ADD instruction fetches an http(s)
