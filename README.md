@@ -3,9 +3,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.2.0"><img src="https://img.shields.io/badge/release-v2.2.0-a855f7" alt="Release v2.2.0"></a>
+  <a href="https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.4.0"><img src="https://img.shields.io/badge/release-v2.4.0-a855f7" alt="Release v2.4.0"></a>
   <a href="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml"><img src="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml/badge.svg" alt="Aegis Release CI"></a>
-  <img src="https://img.shields.io/badge/rules-1140%20active-7c3aed" alt="1,140 active rules">
+  <img src="https://img.shields.io/badge/rules-1148%20active-7c3aed" alt="1,148 active rules">
   <img src="https://img.shields.io/badge/go-1.26-00ADD8" alt="Go 1.26">
   <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macOS%20%7C%20windows-lightgrey" alt="Platforms">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license">
@@ -39,7 +39,7 @@ from the internet to your data stores.
 
 ## Install
 
-**Download a release binary** (v2.2.0 — Linux, macOS, Windows):
+**Download a release binary** (v2.4.0 — Linux, macOS, Windows):
 
 | OS | Asset |
 |----|-------|
@@ -49,14 +49,14 @@ from the internet to your data stores.
 | macOS Apple Silicon | `aegis-darwin-arm64` |
 | Windows x86-64 | `aegis-windows-amd64.exe` |
 
-Grab them from the [**v2.2.0 release page**](https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.2.0)
+Grab them from the [**v2.4.0 release page**](https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.4.0)
 and verify against `SHA256SUMS.txt`:
 
 ```bash
 # Linux / macOS example
-curl -LO https://github.com/aeagisenginesec/aegis-engine/releases/download/v2.2.0/aegis-linux-amd64
+curl -LO https://github.com/aeagisenginesec/aegis-engine/releases/download/v2.4.0/aegis-linux-amd64
 chmod +x aegis-linux-amd64
-./aegis-linux-amd64 doctor        # aegis 2.1.0 — 1,140 rules loaded
+./aegis-linux-amd64 doctor        # aegis 2.4.0 — 1,148 rules loaded
 ```
 
 **Or build from source** (Go 1.26+):
@@ -110,7 +110,7 @@ shadow → gate → cutover adoption path:
 ### What a finding looks like
 
 ```text
-Aegis 2.1.0 - scan: ./infra
+Aegis 2.4.0 - scan: ./infra
 ================================================================
   files:     1 discovered, 1 parsed
   resources: 2
@@ -147,6 +147,24 @@ pipeline for every tool):
 | F1 | **1.000** | 0.331 | 0.371 | 0.279 |
 | Sweep wall time (210 projects) | **2.2 s** | — | — | 324.9 s |
 
+**R7 blind evaluation** (v2.4.0, frozen 151-concept ground truth, 210 *new*
+projects, same pipeline for every tool — the gain from the R6 gap fixes
+held on fresh code, not just the tuned corpus):
+
+| Metric | Aegis 2.4.0 | Checkov |
+|--------|------------:|--------:|
+| F1 | **0.925** | 0.530 |
+| Recall | **0.861** | 0.361 |
+| True positives | **125** | 45 |
+| False positives | 0 | 0 |
+| Median scan time | **0.010 s** | 5.92 s |
+
+Aegis leads on all 8 formats and all 4 providers. Honest verdict: **not yet
+a clean win** — the false-positive criterion fails on a genuine 0–0 tie
+(both scanners factually perfect on 2,355 adjudicated findings), so it can
+only be settled on a corpus where Checkov slips and Aegis does not. Full
+data: [docs/audit/32_FINAL_EVAL_R7_REPORT.md](docs/audit/32_FINAL_EVAL_R7_REPORT.md).
+
 **Scale** (generated fixtures, seeded and reproducible):
 
 | Fixture | Findings | Wall time |
@@ -179,8 +197,12 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 
 ## Features
 
-- **1,140 active detection rules**, each with positive/negative regression tests
+- **1,148 active detection rules**, each with positive/negative regression tests
 - **Attack paths** (`--attack-paths`) — cross-resource kill chains with cited evidence
+- **IAM kill-chain links** — Lambda/EC2 roles with over-broad grants and open
+  trust relationships linked to in-scope data stores, evidence-backed, no invented hops
+- **IAM negative-logic evaluation** — `NotAction` / `NotResource` statements are
+  evaluated with real policy semantics instead of silently skipped
 - **Secret taint tracking** — user data, tags, outputs, variable defaults; values redacted in all output
 - **Quality gates** (`quality-gate`) — precision/recall/coverage/perf checks that block releases
 - **Safe remediation** (`fix`) — dry-run default, minimal diffs, re-parse validation; IAM and security groups never auto-patched without `--force`
@@ -238,5 +260,5 @@ examples/             sample projects and workflows
 ```
 
 <p align="center">
-  <sub>Built with Go 1.25 · Deterministic by design · Every claim in this README is measured — see <a href="docs/audit/26_AEGIS_FINAL_STATE.md">the audit record</a>.</sub>
+  <sub>Built with Go 1.26 · Deterministic by design · Every claim in this README is measured — see <a href="docs/audit/26_AEGIS_FINAL_STATE.md">the audit record</a>.</sub>
 </p>
