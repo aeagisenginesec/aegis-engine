@@ -429,7 +429,7 @@ func checkBucketExfiltration(b ir.Resource, policies, acls []ir.Resource) *ir.Fi
 		if !present || !known {
 			continue // cannot decide for this policy
 		}
-		if policyGrantsPublicRead(doc) {
+		if open, note := policyGrantsPublicReadForBucket(doc, s3BucketARNs(b)); open {
 			grantSpan := evidenceSpan(span, p.Span)
 			return &ir.Finding{
 				RuleID:      "AEGIS-AWS-104",
@@ -440,7 +440,7 @@ func checkBucketExfiltration(b ir.Resource, policies, acls []ir.Resource) *ir.Fi
 				Evidence: ir.Evidence{
 					Attribute: "policy",
 					Span:      grantSpan,
-					Actual:    "bucket policy allows s3:GetObject for Principal \"*\"",
+					Actual:    withNote("bucket policy allows s3:GetObject for Principal \"*\"", note),
 					Expected:  "no public s3:GetObject grant in the bucket policy",
 				},
 				Path: []ir.PathStep{
@@ -503,57 +503,77 @@ func checkBucketExfiltration(b ir.Resource, policies, acls []ir.Resource) *ir.Fi
 	return nil
 }
 
-// policyGrantsPublicRead reports whether any Allow statement grants
-// s3:GetObject (or s3:*) to Principal "*". Malformed JSON or unexpected
-// shapes yield false (cannot decide -> no finding).
 // policyGrantsPublicRead reports whether a policy document grants
 // s3:GetObject (or s3:*) to everyone. Statement keys are matched
 // case-insensitively: some adapters snake_case document keys
 // (Statement -> statement, Effect -> effect), and the public-read
 // conclusion must not depend on the producer's casing (same rationale
-// as policyAllowsPublicPrincipal in s3.go).
+// as policyAllowsPublicPrincipal in s3.go). A statement with NotAction
+// grants s3:GetObject unless its exclusion list covers it; a statement
+// with NotResource is narrowed to the bucket by
+// policyGrantsPublicReadForBucket. Malformed JSON or unexpected shapes
+// yield false (cannot decide -> no finding).
 func policyGrantsPublicRead(doc string) bool {
+	open, _ := policyGrantsPublicReadForBucket(doc, nil)
+	return open
+}
+
+// policyGrantsPublicReadForBucket is policyGrantsPublicRead narrowed to
+// one bucket: when bucketARNs is non-empty, a statement whose NotResource
+// excludes every listed ARN does not grant on this bucket, so the path
+// stays quiet. Resource allowlists are NOT evaluated (pre-existing
+// behavior: a bucket policy is attached to this bucket, and the rule
+// fires on the Principal "*" grant regardless of the Resource element);
+// only an explicit NotResource exclusion of this bucket narrows the
+// claim. With nil bucketARNs (bucket name unknown) the behavior is
+// exactly policyGrantsPublicRead. The second return value is the
+// exclusion note of the granting statement ("" for a plain grant).
+func policyGrantsPublicReadForBucket(doc string, bucketARNs []string) (bool, string) {
 	for _, s := range policyStatements(doc) {
-		eff, _ := lookupMapFold(s, "Effect").(string)
-		if eff != "Allow" {
-			continue
-		}
 		if lookupMapFold(s, "NotPrincipal") != nil {
 			continue
 		}
 		if !principalAllowsAnyone(lookupMapFold(s, "Principal")) {
 			continue
 		}
-		if actionMatches(lookupMapFold(s, "Action"), "s3:GetObject", "s3:*") {
-			return true
+		n := normalizeIAMStmt(s)
+		if n == nil || !n.grantsAction("s3:getobject") {
+			continue
 		}
+		if len(bucketARNs) > 0 && n.hasNotResource {
+			granted := false
+			for _, arn := range bucketARNs {
+				if n.grantsResource(arn) {
+					granted = true
+					break
+				}
+			}
+			if !granted {
+				continue // this bucket is explicitly excluded
+			}
+		}
+		return true, n.exclusionNote()
 	}
-	return false
+	return false, ""
 }
 
-// actionMatches reports whether v (string or list) contains any of the
-// target actions (case-insensitive, trimmed).
-func actionMatches(v any, targets ...string) bool {
-	match := func(s string) bool {
-		s = strings.TrimSpace(s)
-		for _, t := range targets {
-			if strings.EqualFold(s, t) {
-				return true
-			}
-		}
-		return false
+// s3BucketARNs returns the ARN form of a bucket resource relevant to
+// s3:GetObject — the object ARN — for NotResource evaluation, or nil
+// when the bucket name cannot be determined. The bare bucket ARN is
+// deliberately not included: it governs ListBucket, not GetObject, so a
+// NotResource excluding only the bare ARN does not exclude object reads.
+func s3BucketARNs(b ir.Resource) []string {
+	name := ""
+	if bn, _, present, known := getString(b, "bucket"); present && known {
+		name = strings.TrimSpace(bn)
 	}
-	switch t := v.(type) {
-	case string:
-		return match(t)
-	case []any:
-		for _, item := range t {
-			if s, ok := item.(string); ok && match(s) {
-				return true
-			}
-		}
+	if name == "" {
+		name = strings.TrimSpace(b.Name)
 	}
-	return false
+	if name == "" {
+		return nil
+	}
+	return []string{"arn:aws:s3:::" + name + "/*"}
 }
 
 // isPublicACL reports whether an ACL value grants public read.

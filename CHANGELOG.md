@@ -17,6 +17,26 @@ All notable changes to Aegis are documented here. The format is based on
   Default outputs `sbom.spdx.json` / `sbom.cyclonedx.json` are skipped
   by discovery on later scans. Version stays 2.3.0 in code until the
   v2.4.0 release bump.
+- **NotAction / NotResource policy-evaluation semantics (IAM #4, v2.4.0).**
+  The IAM pack no longer silently skips statements using `NotAction` /
+  `NotResource` ("cannot decide -> silent"). A new shared evaluator
+  (`internal/rules/aws/iam_policy_eval.go`) gives every IAM rule real
+  policy-evaluation semantics: a `NotAction` statement grants every
+  action its exclusion list does not cover, and a `NotResource` statement
+  grants on every resource its exclusion list does not cover. A broad
+  grant such as `NotAction: ["iam:DeleteUser"]` on `*` is now treated as
+  the near-admin grant it is, and findings carry the exclusion in their
+  evidence so a finding never claims a resource the policy explicitly
+  excludes. Rules now evaluating negative logic: 006, 101, 102, 333,
+  501–505, 660, 661, 670, 676, 859, and the 104 attack-path public-read
+  link. No new rules: 553 and 671 still flag the `NotAction` /
+  `NotResource` constructs themselves. Deliberate limits: coverage is
+  tested per exclusion pattern (not over the list's union); explicit
+  Deny interaction is still out of scope; `?` wildcards are literals.
+  One golden updated for the intended behavior change: 661 now fires on
+  the `iam-wildcard/vuln` parity fixture (Action `*` grants
+  `iam:PassRole` on `*`, as 502 already treated it), 8 → 9 findings on
+  all five adapters.
 
 ## [2.3.0] — 2026-11-24
 
