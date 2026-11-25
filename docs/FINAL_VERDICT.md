@@ -3,6 +3,18 @@
 **Date:** 2026-10-11
 **Method:** Two independent benchmarks + attack-path validation
 
+> **Update (2026-11-25, benchmark authority, SOC #18):** the Benchmark 2
+> numbers below (P=0.700 / F1=0.824, FP=60) are the **Oct-11 pre-FP-fix
+> run** (326 rules, any-finding standard) and are kept as history. The
+> current `benchmark/heldout_results.json` was regenerated 2026-11-25
+> from the current build (1,148 rules) under the medium+ standard —
+> Aegis TP=140 FP=0 FN=0 TN=60, P=R=F1=1.000; Checkov unchanged at
+> TP=140 FP=60, P=0.700, F1=0.824. The stale pre-fix snapshots
+> `benchmark/detect_results.json` and
+> `benchmark/heldout_severity_results.json` were deleted. The rigorous
+> corpus numbers in the Oct-12 update below reproduce unchanged on the
+> current build (see `docs/BENCHMARKS.md`).
+
 ## Benchmark 1: Original 3-Corpus Comparison
 
 | Corpus | Aegis findings | Checkov findings |
