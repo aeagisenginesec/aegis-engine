@@ -215,18 +215,15 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
   (providers, modules, base images); see [docs/SBOM.md](docs/SBOM.md)
 - **Completeness auditing** — skipped, oversize and unreadable files are reported, never silently dropped
 
-## Scope — what Aegis is and isn't
+## What's next
 
-Aegis scans **static infrastructure-as-code for misconfigurations**. It does
-**not** scan container images, SBOMs, licenses, or live cloud accounts, and it
-is **not** a CVE scanner. All benchmark claims are measured on
-IaC-misconfiguration workloads only.
-
-Pulumi programs written in TypeScript/JavaScript, Python, Go, .NET, or Java are
-**detected but not analyzed** (a static scanner cannot evaluate them without
-executing code, which Aegis never does). The scanner emits a warning diagnostic
-naming the unparsed program files, so "0 findings" is never misread as "clean".
-See [docs/PULUMI.md](docs/PULUMI.md) and [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
+- **R8 fresh blind evaluation** — a new 210-project corpus to confirm the
+  v2.4.0 gains on fresh code and settle the false-positive question where
+  Checkov slips and Aegis does not.
+- **Closing the last gaps** — the 17 findings Aegis still misses on R7, led
+  by hard-coded secrets in Bicep parameter files and public RDS snapshots.
+- **ARM & Bicep depth** — the two formats where Checkov still leads, now the
+  focus of the next rule batch.
 
 ## Docs
 
