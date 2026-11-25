@@ -17,6 +17,37 @@ func TestRemediationFor_DetailedEntry(t *testing.T) {
 	}
 }
 
+// TestRemediationFor_AttackPathEntries pins the SOC #16 remediation pass
+// (v2.4.0): every attack-path rule (103, 104, 105, 629, 630) must ship
+// specific, path-aware, SOC-actionable fix steps — not a generic fallback
+// template, and not a pointer to another rule's fix.
+func TestRemediationFor_AttackPathEntries(t *testing.T) {
+	cases := map[string][]string{
+		"AEGIS-AWS-103": {"publicly_accessible = false", "0.0.0.0/0", "rotate the database credentials"},
+		"AEGIS-AWS-104": {"block_public_acls", "Principal \"*\"", "s3:GetObject"},
+		"AEGIS-AWS-105": {"0.0.0.0/0", "stepping stone", "publicly_accessible = false"},
+		"AEGIS-AWS-629": {"IAM-reachability", "AdministratorAccess", "aegis scan --attack-paths"},
+		"AEGIS-AWS-630": {"iam:PassRole", "Access Analyzer", "role → policy → workload"},
+	}
+	for id, wants := range cases {
+		fix, refs := RemediationFor(id)
+		for _, want := range wants {
+			if !strings.Contains(fix, want) {
+				t.Errorf("%s: remediation should prescribe %q, got: %.200q", id, want, fix)
+			}
+		}
+		if len(refs) == 0 {
+			t.Errorf("%s: no references", id)
+		}
+		if strings.Contains(fix, "Review the flagged configuration against AWS security best practices") {
+			t.Errorf("%s: remediation is still the generic fallback template", id)
+		}
+		if strings.Contains(fix, "see AEGIS-AWS-") {
+			t.Errorf("%s: remediation must not punt to another rule's fix, got: %.200q", id, fix)
+		}
+	}
+}
+
 func TestRemediationFor_CriticalEntries(t *testing.T) {
 	critical := []string{
 		"AEGIS-AWS-003", "AEGIS-AWS-006", "AEGIS-AWS-101", "AEGIS-AWS-104",
