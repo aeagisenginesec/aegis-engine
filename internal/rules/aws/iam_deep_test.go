@@ -843,7 +843,8 @@ func Test859_PolicyScopedAndNotActionQuiet(t *testing.T) {
 	if got := runRule(iamAdminAccessNoMFA{}, scoped); len(got) != 0 {
 		t.Fatalf("scoped: expected 0 findings, got %d", len(got))
 	}
-	// NotAction: cannot decide -> silent.
+	// NotAction ["iam:*"] excludes every IAM action, so no administrative
+	// grant exists: silent (evaluated, not skipped).
 	notAction := res("aws_iam_policy", "p", map[string]ir.Value{"policy": ks(notActionPolicy, 3)})
 	if got := runRule(iamAdminAccessNoMFA{}, notAction); len(got) != 0 {
 		t.Fatalf("NotAction: expected 0 findings, got %d", len(got))

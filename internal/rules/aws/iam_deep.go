@@ -103,20 +103,6 @@ func iamDeepStmtStrings(v any) []string {
 	return nil
 }
 
-// iamDeepActionIs reports whether any action equals one of the targets
-// (case-insensitive, trimmed).
-func iamDeepActionIs(actions []string, targets ...string) bool {
-	for _, a := range actions {
-		a = strings.TrimSpace(a)
-		for _, t := range targets {
-			if strings.EqualFold(a, t) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // ---------------------------------------------------------------------------
 // AEGIS-AWS-650: IAM password policy minimum length < 14
 // ---------------------------------------------------------------------------
@@ -412,24 +398,20 @@ func (r iamPolicySensitiveWildcard) Check(res ir.Resource) []ir.Finding {
 		return nil
 	}
 	for _, s := range policyStatements(pol) {
-		if s["Effect"] != "Allow" {
-			continue
-		}
-		if _, hasNotAction := s["NotAction"]; hasNotAction {
-			continue // negative logic: handled by AEGIS-AWS-670
-		}
-		if !stringOrListHasStar(s["Resource"]) {
+		n := normalizeIAMStmt(s)
+		if n == nil || !n.grantsOnStar() {
 			continue
 		}
 		// AEGIS-AWS-102 already flags Action "*"/"iam:*" on "*"; skip that
 		// exact overlap so the same statement is not reported twice.
-		if actionIsAdminLike(s["Action"]) {
+		// A NotAction statement that is admin by the same test is 102's
+		// territory too.
+		if n.isAdmin() {
 			continue
 		}
-		actions := iamDeepStmtStrings(s["Action"])
 		var matched []string
 		for _, t := range []string{"iam:*", "kms:*", "sts:*"} {
-			if iamDeepActionIs(actions, t) {
+			if n.grantsAction(t) {
 				matched = append(matched, t)
 			}
 		}
@@ -437,7 +419,7 @@ func (r iamPolicySensitiveWildcard) Check(res ir.Resource) []ir.Finding {
 			continue
 		}
 		return iamDeepFinding(r, res, "policy", span,
-			"Allow with Action "+strings.Join(matched, ",")+" on Resource \"*\"",
+			withNote("Allow with Action "+strings.Join(matched, ",")+" on Resource \"*\"", n.exclusionNote()),
 			"scoped Action and Resource lists")
 	}
 	return nil
@@ -475,20 +457,21 @@ func (r iamPolicyPassRoleStar) Check(res ir.Resource) []ir.Finding {
 		return nil
 	}
 	for _, s := range policyStatements(pol) {
-		if s["Effect"] != "Allow" {
+		n := normalizeIAMStmt(s)
+		if n == nil {
 			continue
 		}
-		if _, hasNotAction := s["NotAction"]; hasNotAction {
+		// PassRole acts on roles: the grant must cover the role-ARN
+		// class, so a NotResource that excludes every role silences the
+		// rule while excluding an unrelated bucket does not.
+		if !n.grantsAction("iam:passrole") {
 			continue
 		}
-		if !iamDeepActionIs(iamDeepStmtStrings(s["Action"]), "iam:PassRole") {
-			continue
-		}
-		if !stringOrListHasStar(s["Resource"]) {
+		if !n.grantsOnClass(iamRoleARNClass) {
 			continue
 		}
 		return iamDeepFinding(r, res, "policy", span,
-			"Allow with Action \"iam:PassRole\" on Resource \"*\"",
+			withNote("Allow with Action \"iam:PassRole\" on Resource \"*\"", n.exclusionNote()),
 			"iam:PassRole scoped to specific role ARNs")
 	}
 	return nil
@@ -813,24 +796,24 @@ func (r iamPolicyIamStarScoped) Check(res ir.Resource) []ir.Finding {
 		return nil
 	}
 	for _, s := range policyStatements(pol) {
-		if s["Effect"] != "Allow" {
+		n := normalizeIAMStmt(s)
+		if n == nil {
 			continue
 		}
-		if _, hasNotAction := s["NotAction"]; hasNotAction {
-			continue // negative logic: handled by AEGIS-AWS-553
-		}
-		if !iamDeepActionIs(iamDeepStmtStrings(s["Action"]), "iam:*") {
+		if !n.grantsAction("iam:*") {
 			continue
 		}
-		resVal, hasResource := s["Resource"]
-		if !hasResource {
+		if !n.hasResource {
 			continue // no Resource element: cannot decide
 		}
-		if stringOrListHasStar(resVal) {
+		if n.hasNotResource {
+			continue // near-"*" grant: handled by AEGIS-AWS-102
+		}
+		if n.grantsOnStar() {
 			continue // Resource "*": handled by AEGIS-AWS-102
 		}
 		return iamDeepFinding(r, res, "policy", span,
-			"Allow with Action \"iam:*\" on scoped resources",
+			withNote("Allow with Action \"iam:*\" on scoped resources", n.exclusionNote()),
 			"least-privilege IAM actions")
 	}
 	return nil
@@ -1029,17 +1012,18 @@ func (r iamRoleTagSessionOpen) Check(res ir.Resource) []ir.Finding {
 		return nil
 	}
 	for _, s := range policyStatements(pol) {
-		if s["Effect"] != "Allow" {
-			continue
-		}
-		if _, hasCond := s["Condition"]; hasCond {
+		if lookupMapFold(s, "Condition") != nil {
 			continue // conditioned: cannot prove it is open
 		}
-		if !iamDeepActionIs(iamDeepStmtStrings(s["Action"]), "sts:TagSession") {
+		n := normalizeIAMStmt(s)
+		if n == nil {
+			continue
+		}
+		if !n.grantsAction("sts:tagSession") {
 			continue
 		}
 		return iamDeepFinding(r, res, "assume_role_policy", span,
-			"Allow grants sts:TagSession with no Condition",
+			withNote("Allow grants sts:TagSession with no Condition", n.exclusionNote()),
 			"Condition on aws:RequestTag / aws:TagKeys")
 	}
 	return nil
@@ -1181,9 +1165,10 @@ func (r iamRoleReadOnlyProd) Check(res ir.Resource) []ir.Finding {
 // conditions, an administrative policy statement with no MFA condition at
 // all). Scope is deliberately conservative: the statement must be an
 // Allow with a wildcard principal or an administrative action, and no
-// Condition key anywhere in the statement may mention MFA. Statements
-// using NotAction/NotResource are skipped (cannot decide -> silent),
-// matching the rest of the IAM pack.
+// Condition key anywhere in the statement may mention MFA. NotAction /
+// NotResource statements are evaluated with policy-evaluation semantics
+// (see iam_policy_eval.go): a broad grant via NotAction fires, while an
+// exclusion that covers the admin action class stays silent.
 
 type iamAdminAccessNoMFA struct{}
 
@@ -1214,23 +1199,24 @@ func (r iamAdminAccessNoMFA) Check(res ir.Resource) []ir.Finding {
 			return nil // absent or unresolved: cannot decide
 		}
 		for _, s := range policyStatements(pol) {
-			if s["Effect"] != "Allow" {
+			n := normalizeIAMStmt(s)
+			if n == nil {
 				continue
 			}
-			if _, hasNotAction := s["NotAction"]; hasNotAction {
-				continue // negative logic: cannot decide -> silent
-			}
-			if _, hasNotPrincipal := s["NotPrincipal"]; hasNotPrincipal {
+			if lookupMapFold(s, "NotPrincipal") != nil {
 				continue
 			}
-			if !principalAllowsAnyone(s["Principal"]) {
+			if !principalAllowsAnyone(lookupMapFold(s, "Principal")) {
 				continue
+			}
+			if n.hasNotAction && !n.grantsAction("sts:assumerole") {
+				continue // AssumeRole is explicitly excluded
 			}
 			if statementRequiresMFA(s) {
 				continue
 			}
 			return iamDeepFinding(r, res, "assume_role_policy", span,
-				"Allow with Principal \"*\" and no MFA condition",
+				withNote("Allow with Principal \"*\" and no MFA condition", n.exclusionNote()),
 				"Condition requiring aws:MultiFactorAuthAge / aws:MultiFactorAuthPresent")
 		}
 		return nil
@@ -1240,23 +1226,15 @@ func (r iamAdminAccessNoMFA) Check(res ir.Resource) []ir.Finding {
 		return nil // absent or unresolved: cannot decide
 	}
 	for _, s := range policyStatements(pol) {
-		if s["Effect"] != "Allow" {
-			continue
-		}
-		if _, hasNotAction := s["NotAction"]; hasNotAction {
-			continue // negative logic: cannot decide -> silent
-		}
-		if _, hasNotResource := s["NotResource"]; hasNotResource {
-			continue
-		}
-		if !actionIsAdminLike(s["Action"]) {
+		n := normalizeIAMStmt(s)
+		if n == nil || !n.isAdmin() || !n.grantsOnStar() {
 			continue
 		}
 		if statementRequiresMFA(s) {
 			continue
 		}
 		return iamDeepFinding(r, res, "policy", span,
-			"Allow with Action \"*\"/\"iam:*\" and no MFA condition",
+			withNote("Allow with Action \"*\"/\"iam:*\" and no MFA condition", n.exclusionNote()),
 			"Condition requiring aws:MultiFactorAuthAge / aws:MultiFactorAuthPresent")
 	}
 	return nil
@@ -1269,7 +1247,7 @@ func (r iamAdminAccessNoMFA) Check(res ir.Resource) []ir.Finding {
 // IP or org ID) does not count: the grant is still exercisable without a
 // second factor.
 func statementRequiresMFA(s map[string]any) bool {
-	cond, ok := s["Condition"].(map[string]any)
+	cond, ok := lookupMapFold(s, "Condition").(map[string]any)
 	if !ok {
 		return false
 	}

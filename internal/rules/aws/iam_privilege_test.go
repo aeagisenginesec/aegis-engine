@@ -344,14 +344,43 @@ func Test501_505_DenyOnlySilent(t *testing.T) {
 	}
 }
 
-func Test501_505_NotActionSilent(t *testing.T) {
-	// NotAction semantics need the full action space: cannot decide -> silent.
+func Test501_505_NotActionBroadGrantFires(t *testing.T) {
+	// NotAction ["iam:Get*"] grants every action except iam:Get* — including
+	// the policy-authoring, attachment, PassRole, exfiltration, IAM-write
+	// and unconstrained-write actions. All five privilege rules fire.
 	p := res("aws_iam_policy", "na", map[string]ir.Value{
 		"policy": ks(`{"Statement":[{"Effect":"Allow","NotAction":"iam:Get*","Resource":"*"}]}`, 3),
 	})
 	for _, r := range IAMPrivilegeRules() {
+		if f := runRule(r, p); len(f) != 1 {
+			t.Fatalf("%s must fire on a broad NotAction grant, got %d", r.ID(), len(f))
+		}
+	}
+}
+
+func Test501_505_NotActionExcludedSilent(t *testing.T) {
+	// NotAction ["iam:*"] grants no IAM action at all: 501, 502 and 504
+	// stay quiet. 503 and 505 still fire: s3/ec2 writes are granted.
+	p := res("aws_iam_policy", "na", map[string]ir.Value{
+		"policy": ks(`{"Statement":[{"Effect":"Allow","NotAction":"iam:*","Resource":"*"}]}`, 3),
+	})
+	for _, r := range []ir.Rule{iamPrivilegeEscalation{}, iamPassRoleEscalation{}, iamPermissionsMgmt{}} {
 		if f := runRule(r, p); len(f) != 0 {
-			t.Fatalf("%s must not fire on NotAction statements, got %d", r.ID(), len(f))
+			t.Fatalf("%s must not fire when NotAction excludes all IAM actions, got %d", r.ID(), len(f))
+		}
+	}
+	for _, r := range []ir.Rule{iamDataExfiltration{}, iamWriteNoConstraints{}} {
+		if f := runRule(r, p); len(f) != 1 {
+			t.Fatalf("%s must fire: NotAction [iam:*] still grants s3/ec2 writes, got %d", r.ID(), len(f))
+		}
+	}
+	// NotAction ["*"] grants nothing at all: every privilege rule is quiet.
+	none := res("aws_iam_policy", "na", map[string]ir.Value{
+		"policy": ks(`{"Statement":[{"Effect":"Allow","NotAction":"*","Resource":"*"}]}`, 3),
+	})
+	for _, r := range IAMPrivilegeRules() {
+		if f := runRule(r, none); len(f) != 0 {
+			t.Fatalf("%s must not fire on NotAction [\"*\"], got %d", r.ID(), len(f))
 		}
 	}
 }
