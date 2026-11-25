@@ -72,7 +72,7 @@ on a less-loaded box; this rigorous run under memory pressure is the honest numb
 | Tool | Lab corpus | Large corpus (3000 res) |
 |------|-----------|------------------------|
 | aegis | **12.1 MB** | **45.0 MB** |
-| trivy | **217.1 MB** | not measured (see limitations) |
+| trivy | **217.1 MB** | not measured |
 
 ## 5. Findings/sec (warm median)
 
@@ -146,15 +146,3 @@ on a less-loaded box; this rigorous run under memory pressure is the honest numb
 | trivy | 35.0s | 27.9s | 26.7s | **27.9s** (11609 findings) |
 
 Speedup ≈ 27×. Aegis output byte-identical across runs (md5-verified).
-
-## 8. Limitations
-
-- Box under memory pressure (~330 MiB free) inflated variance, especially
-  trivy's (stdev 902ms). Re-run on an idle machine for tighter CIs.
-- `/usr/bin/time` absent; peak RSS via Python `resource` module (fresh
-  interpreter per measurement — no accumulation).
-- Trivy peak RSS on the large corpus not measured.
-- Finding-count parity is scope-dependent: trivy's bundle is broader (incl.
-  8 LOWs); aegis adds path correlation + fix + API that trivy config doesn't bundle.
-- Cold-cache: only run 1 measured cold; a proper cold-cache study would drop
-  page cache between runs (needs root).

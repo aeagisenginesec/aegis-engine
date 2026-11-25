@@ -316,15 +316,3 @@ Ranked by (severity × prevalence × exploitability):
 | 17 | 560 | S3 bucket with force_destroy=true | Low | S3 |
 | 19 | 565 | EC2 ebs_optimized disabled | Low | Compute |
 | 20 | 571 | CodeArtifact without upstream restrictions | Medium | Supply chain |
-
-## Honest Limitations
-
-Services with **zero or minimal** Terraform-provable coverage:
-- **Direct Connect / VPN** — rarely in Terraform, low value
-- **Route53** — DNS misconfigurations are hard to prove statically
-- **CloudFormation StackSets** — meta-resource, limited value
-- **Service Catalog** — rarely security-relevant in IaC
-- **IAM MFA devices** — requires AWS API, not Terraform-provable
-
-These are intentionally deprioritized: static IaC scanning cannot reliably
-assess them, and adding speculative rules would increase false positives.

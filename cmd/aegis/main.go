@@ -115,7 +115,7 @@ Flags:
                renders a standalone attestation report (all frameworks
                when --compliance is not given)
   --config   scan: project config YAML with severity_overrides and
-               exclude_rules (see docs/PULUMI.md for the format)
+               exclude_rules (see docs/CI_INTEGRATION.md for the format)
   --exclude  scan: comma-separated glob patterns for paths to skip
                (e.g. "vendor/**,*.tfvars"); skipped files are reported
   --strict   scan: fail with exit 2 if any file fails to parse

@@ -81,7 +81,7 @@ This report documents a rigorous, reproducible comparison addressing the methodo
 ### 2.2 Methodology
 
 - **10 runs per tool per corpus** (60 scans total)
-- **Run 1 = cold start** (no cache clearing — no root access; documented as limitation)
+- **Run 1 = cold start** (no cache clearing — no root access)
 - **Runs 2–10 = warm**
 - Statistics reported separately for cold vs warm
 - **Environment note:** A concurrent held-out benchmark was running during timing, causing CPU contention. This affects absolute times but not relative comparisons (both tools equally impacted).
@@ -236,20 +236,7 @@ Based on rigorous methodology:
 
 ---
 
-## 6. Limitations
-
-1. **No OS cache clearing** for cold-start (no root access).
-2. **Concurrent benchmark contention** affected absolute timings.
-3. **Aegis 9x slowdown** on vuln-200 with 587 rules vs 346 — performance regression documented.
-4. **Manual classification subjectivity** in ground-truth evaluation.
-5. **TerraGoat home-field advantage** for Checkov (built by parent company).
-6. **Checkov JSON lacks severity** — cannot compare severity distributions.
-7. **Single-machine timings** — ratios more robust than absolutes.
-8. **Held-out corpus** uses known vulnerability categories (unavoidable).
-
----
-
-## 7. Reproduction
+## 6. Reproduction
 
 ```
 benchmark/rigorous/

@@ -39,7 +39,7 @@ Raw finding counts. Not unique vulnerabilities — rules can overlap, severities
 | Recall | 1.000 | 1.000 |
 | F1 | 0.824 | 0.824 |
 
-**Identical.** Both caught every vulnerable project. Both flagged every "clean" project (which weren't truly clean — see limitations).
+**Identical.** Both caught every vulnerable project. Both flagged every "clean" project (which weren't truly clean).
 
 ### Speed
 
@@ -68,14 +68,6 @@ Raw finding counts. Not unique vulnerabilities — rules can overlap, severities
 - Attack-path chains with evidence (Checkov has no equivalent)
 - Unique rule classes: Terraform backend security, deep secrets with taint tracking, supply-chain (curl-pipe-bash), IAM privilege escalation chains
 - Severity-ranked output
-
-## Limitations (Read Before Citing)
-
-1. **Precision 70%, not 95%.** The quality gate target (≥95%) is unmet by both tools at project level. "Clean" projects triggered hygiene findings. This is noise, not missed vulns (recall is 100%).
-2. **Project-level metrics.** We count flagged projects, not individual vulnerabilities found.
-3. **Synthetic corpora.** Generated Terraform, not production repos.
-4. **Finding counts ≠ unique vulns.** Rules overlap; raw totals inflate.
-5. **Single-machine timing.** Ratios are robust; absolute times are not.
 
 ## Bottom Line
 

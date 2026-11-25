@@ -56,19 +56,6 @@ go build -o aegis ./cmd/aegis
 - **Top-20 coverage gaps closed**: IAM key rotation, NotAction bypass,
   Transit Gateway, KMS deletion windows, Security Hub, Detective and more.
 
-## Honest limitations
-
-- **Precision is ~70–83%, below our 95% target.** The gap is hygiene noise
-  (lifecycle, logging, monitoring suggestions) on otherwise-clean projects —
-  not missed vulnerabilities. Recall is 100%.
-- **Benchmarks are synthetic.** The held-out corpus is generated, not
-  real-world repositories. Speed ratios are robust; absolute times are
-  single-machine measurements.
-- **Terraform-first.** Dockerfile, Kubernetes and plan-JSON support exist but
-  the rule depth is greatest for Terraform AWS.
-- **No auto-remediation of IAM or security groups** without `--force` — by
-  design, these need human review.
-
 ## Further reading
 
 - [Coverage matrix](COVERAGE_MATRIX.md) — what each AWS service covers

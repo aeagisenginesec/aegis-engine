@@ -144,7 +144,7 @@ aegis scan ./infra --config=aegis.yaml --fail-on=high
 
 Overrides apply at report time (rule ID, evidence, and remediation stay
 intact); invalid severities and unmatched overrides produce warnings, never
-hard failures. See [PULUMI.md](PULUMI.md) for the full format.
+hard failures.
 
 ## Compliance gates
 

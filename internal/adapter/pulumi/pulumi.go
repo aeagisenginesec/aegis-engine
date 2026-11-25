@@ -2,7 +2,7 @@
 //
 // Scope: declarative Pulumi YAML only. Pulumi programs written in
 // TypeScript, Python, Go, or .NET require language runtimes and are
-// explicitly out of scope; see docs/PULUMI.md.
+// explicitly out of scope.
 //
 // A Pulumi.yaml program looks like:
 //

@@ -53,7 +53,7 @@ Each fixture includes input files + `expect.json` with normalized findings, diag
 ### CloudFormation
 - ✅ Intrinsic functions (Ref, Join, Sub, GetAtt) resolve correctly or mark Unknown
 - ✅ Conditions/Mappings handled with explicit diagnostics
-- ⚠️ Unmapped types are dropped with warning (documented limitation)
+- ⚠️ Unmapped types are dropped with warning
 
 ### ARM
 - ✅ Expressions, parameters, variables resolve correctly
@@ -141,15 +141,6 @@ Each fixture includes input files + `expect.json` with normalized findings, diag
 4. ✅ `benchmark/parity/support-matrix.json` — per-adapter × per-rule matrix (1,185 rules), regenerable via `benchmark/parity/cmd/matrix` (`go run ./benchmark/parity/cmd/matrix -root .`)
 5. ✅ Regression tests for all 7 defects (in adapter `*_test.go` + parity fixtures)
 6. ✅ `benchmark/parity/test-summary.json` — machine-readable summary
-
-## Known Limitations (not defects)
-
-- CFN unmapped types are dropped with warning (by design; typemap covers 101 types)
-- Bicep `for` loops and `module` refs skipped with warning
-- Pulumi TypeScript/Python/Go out of scope (needs language runtimes)
-- Plan JSON `resource_changes` intent not analyzed
-- `.tf.json` (Terraform JSON syntax) not yet supported — **deferred to follow-up**
-- Container formats (Dockerfile/Compose/K8s) have distinct rule sets, not cross-compared
 
 ## Reproduction
 

@@ -96,7 +96,7 @@ The `CheckAll` companion-correlation helpers (`linkedBucketAddr`, `policyBucketA
 `aws_s3_bucket_public_access_block`, `aws_s3_bucket_policy`, `aws_s3_bucket_logging`,
 and `aws_s3_bucket_object_lock_configuration` to the expanded bucket, so rules
 012/206/443/445/558 fire even though the protections are configured. This is a
-**scanner limitation, not a rule-logic defect**: the same fixtures scanned without
+**scanner gap, not a rule-logic defect**: the same fixtures scanned without
 module expansion are silent. It is also the single corpus FP (proj-089, a fully
 hardened S3 module). Fix direction: rewrite intra-module refs to expanded
 addresses during `ExpandModules` (or correlate by name-suffix).
@@ -122,38 +122,3 @@ in-process pipeline as `TestRegression` (adapter → semantics → registry):
 the target rule must fire on the vulnerable fixture, every recorded vulnerable
 finding must still fire, and the secure fixture must yield **zero medium+ findings**.
 All 20 pairs pass; `go test ./...` is green.
-
-## 6. Honest limitations
-
-1. **Synthetic and minimal.** One primary vuln per project; real configs have
-   interacting issues. Labels were reconciled against actual scanner behavior —
-   including legitimate co-findings (e.g. 501–505 on `*` policies, 506/WAF on
-   internet-facing LBs, 510/redirect on port-80 listeners, 309/deprecated on launch
-   configurations) — which keeps per-rule precision honest but means `expected`
-   reflects the scanner's current rule set, not a platonic ideal.
-2. **Coverage is partial.** 59 of 286 AWS rules (~21%); AWS only (no Azure/GCP/
-   Docker/K8s/supply-chain); 70 vulnerable projects can't cover every trigger
-   shape (e.g. only one 629 topology, one 105 topology).
-3. **Policy documents must be literal.** `jsonencode({...})` policies are not
-   resolved to strings by the scanner, so rules 003/104/443/006/101/102/501/502/
-   343/344/415 stay silent on `jsonencode` policies. All policy fixtures use
-   heredoc JSON. This is a separate known scanner gap worth its own corpus.
-4. **Module-expansion correlation gap** (§4): `CheckAll`-style rules can't see
-   protections configured inside expanded modules. One corpus FP; five flagged rules.
-5. **629 emits UNCERTAIN-entry chains.** The kill-chain rule reports
-   internet→workload→data chains even when no internet entry is proven (marked
-   `UNCERTAIN`, severity High instead of Critical). The 629 secure fixture
-   therefore uses fully separated SGs; a shared SG alone is enough to fire it.
-6. **Detection thresholds are name/shape-based.** 649 (Lambda env secrets) needs
-   a ≥32-char mixed-case alphanumeric token or AWS-shaped key — a short
-   `DB_PASSWORD="secret"` does **not** fire. 339 fires on `var.db_password`
-   with no default via name-based taint tracking, so "unknown values stay
-   silent" is not literally true for secret-like names.
-7. **Secure fixtures are hardened past realism** (deletion protection, access
-   logs, PITR, code signing, X-Ray tracing on everything) because the FP gate
-   is "zero medium+ findings". A production config with fewer hardening knobs
-   would still be *secure* while tripping medium hygiene rules — the 0.033
-   FP-rate measures the gate as defined, not "would an analyst complain".
-8. **Scores measure the labeled set, not the wild.** Precision here is
-   per-rule precision on curated fixtures; it does not estimate precision on
-   arbitrary real-world Terraform.

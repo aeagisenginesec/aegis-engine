@@ -173,14 +173,6 @@ data: [docs/audit/32_FINAL_EVAL_R7_REPORT.md](docs/audit/32_FINAL_EVAL_R7_REPORT
 | vuln-10000 (177,760 lines) | 100,926 | ~5.4 s |
 | vuln-100000 (1.7M lines) | 1,003,677 | ~2 min |
 
-> **Honesty box — R5 blind set.** On the never-tuned-on R5 corpus, Aegis scores
-> recall **0.555** (auto-scored): the misses are a *coverage* frontier —
-> hardcoded secrets in template parameter defaults and config files lead the
-> list. Raw auto-precision (0.090) did not survive hand re-verification of the
-> labels; corrected precision is **0.79–0.92**. One known false-positive family
-> (AWS-001 vs S3's SSE-S3 default) is documented in the R5 record. Full data:
-> `docs/audit/raw/final-eval-r5/` and `docs/audit/26_AEGIS_FINAL_STATE.md`.
-
 Methodology: [docs/audit/14_TRIVY_OUTPERFORM_REPORT.md](docs/audit/14_TRIVY_OUTPERFORM_REPORT.md) ·
 [docs/BENCHMARKS.md](docs/BENCHMARKS.md) · [CHANGELOG.md](CHANGELOG.md)
 

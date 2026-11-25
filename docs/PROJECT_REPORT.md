@@ -96,18 +96,7 @@ aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json]
 aegis serve [--addr=127.0.0.1:8734]
 ```
 
-## 8. Known limitations
-
-- Variables without defaults, data sources, `each`/`count`, module outputs,
-  string interpolation, conditionals, and function calls (except `jsonencode`)
-  stay unknown — by design, never guessed
-- No auto-fix for judgment calls: CIDR ranges, policy rewrites, trust redesign
-- Helm chart rendering not implemented (scan rendered manifests)
-- CFN Conditions/Mappings not processed; K8s pod-level securityContext not consulted
-- YAML bomb mitigation relies on file-size caps
-- Checkov/KICS not benchmarked (not installed / no clean version in sandbox)
-
-## 9. What's next (if commissioned)
+## 8. What's next (if commissioned)
 
 1. Deeper per-cloud rule coverage (the remaining Trivy LOWs + criticals)
 2. Checkov/KICS benchmark points for a three-way comparison
@@ -115,7 +104,7 @@ aegis serve [--addr=127.0.0.1:8734]
 4. `helm template` integration for chart scanning
 5. Signed release builds + versioned rule-pack distribution
 
-## 10. Hardening phase (2026-10-10, per external assessment)
+## 9. Hardening phase (2026-10-10, per external assessment)
 
 Four adversarial verification tracks; every failure was fixed, not filed.
 
@@ -143,7 +132,7 @@ Four adversarial verification tracks; every failure was fixed, not filed.
 Final state: **38 rules, 310+ tests, 15/15 packages green with -race**,
 lab 30 findings (19 high / 8 medium / 3 critical), 0 false positives found.
 
-## 11. AWS expansion (2026-10-10)
+## 10. AWS expansion (2026-10-10)
 
 Five service-area rule packs added in parallel, each with positive /
 compliant-negative / unknown-value tests:
@@ -166,7 +155,7 @@ AWS: 25 → **75 rules**. Total: 38 → **88 rules**.
 Lab: 30 → **37 findings** (23 high / 11 medium / 3 critical), all new
 ones spot-verified true positives. Clean corpus unchanged (2 findings).
 
-## 12. Full AWS service coverage (2026-10-10)
+## 11. Full AWS service coverage (2026-10-10)
 
 Second expansion: every remaining meaningful AWS service got rules.
 
@@ -187,7 +176,7 @@ Honest boundary: services whose misconfigurations can't be proven from
 Terraform alone (Route53 DNSSEC, Shield, ACM expiry, Macie/Inspector
 presence) have no rules — no rule without evidence.
 
-## 13. AWS specialist completion (2026-10-11)
+## 12. AWS specialist completion (2026-10-11)
 
 Final wave: every remaining AWS service with provable misconfigurations.
 
@@ -206,7 +195,7 @@ Lab holds at 38 findings (corpus lacks the new service types — no false
 positives introduced). The engine is now an AWS scanning specialist:
 every AWS service with Terraform-provable misconfigurations is covered.
 
-## 14. AWS specialist — complete (2026-10-11)
+## 13. AWS specialist — complete (2026-10-11)
 
 Final sweep closed every remaining provable gap:
 
@@ -234,7 +223,7 @@ Detective enablement, ACM expiry; (b) no security-relevant knob —
 SES, Direct Connect, Service Catalog, Pinpoint, WorkMail, Chime, Connect
 and similar. No rule without evidence.
 
-## 15. Checkov comparison (2026-10-11)
+## 14. Checkov comparison (2026-10-11)
 
 `docs/CHECKOV_COMPARISON.md` — vs Checkov **3.3.26** on the vuln lab:
 
@@ -249,7 +238,7 @@ Checkov's remaining unique hits are mostly low-signal checks we
 deliberately skip (descriptions, lifecycle, notifications, replication).
 Aegis-only: attack paths, hardcoded secrets, auto-fix.
 
-## 16. Custom rules engine (2026-10-11)
+## 15. Custom rules engine (2026-10-11)
 
 `internal/rules/custom/` — YAML-defined user rules, the extensibility
 moat. `aegis scan <dir> --custom-rules ./rules.d` loads `.yaml`/`.yml`

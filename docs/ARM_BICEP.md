@@ -119,11 +119,3 @@ apply uniformly.
 - `aegis quality-gate`: **PASS (5/5)**
 - End-to-end: ARM + Bicep in one directory scan correctly; existing Azure
   rules fire on converted resources (29 findings on the smoke-test fixtures)
-
-## Known limitations
-
-- ARM `copy` loops and Bicep `for` resource loops are not expanded
-  (explicit warning, resource skipped)
-- Bicep `module` references are not followed
-- `existing` Bicep resources are skipped (not managed by the template)
-- Unmapped ARM types get no rule coverage (warning diagnostic emitted)

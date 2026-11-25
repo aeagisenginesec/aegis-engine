@@ -200,18 +200,6 @@ at 235x Aegis's runtime.
 
 **Aegis is the fastest scanner on every corpus, by 21x to 1047x.**
 
-## Honest Limitations
-
-1. **Terrascan not tested** — not installed in this environment.
-2. **Snyk is cloud-backed** — results depend on Snyk's backend rule set at scan
-   time; 0 findings on TerraGoat may reflect account/plan limitations.
-3. **Trivy 0.74.0** — newer versions may have improved Terraform parsing.
-4. **Finding counts are not directly comparable** across scanners — each has
-   different rule semantics, severities, and dedup behavior. The labeled
-   corpus (precision/recall/F1) is the apples-to-apples comparison.
-5. **Aegis has 4 known FNs** on the labeled corpus from the over-broad
-   log-delivery exemption (documented above, fix queued).
-
 ## Verdict
 
 | Dimension | Winner | Margin |

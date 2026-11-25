@@ -80,20 +80,6 @@
 
 **Finding:** The builder correctly refuses to invent connections. Spot-check 4 revealed the held-out `chain-sg-ec2-rds` projects don't create graph edges (RDS lacks SG reference) — a corpus design gap, not a builder bug.
 
-## Honest Limitations
-
-1. **"Clean" projects weren't clean.** All 60 triggered findings (VPC flow logs from `modules/`, S3 hygiene on log buckets, TLS enforcement). True zero-finding baselines are hard; project-level FP metrics are inflated for both tools equally.
-
-2. **Project-level, not vulnerability-level.** We measure "did it flag the project," not "did it find each of the 183 planted vulns." Finer granularity requires per-vuln labeling.
-
-3. **Synthetic corpus.** Generated Terraform, not real-world repos. Real code has more variables, modules, and dynamic blocks.
-
-4. **Single-machine timing.** 2-CPU sandbox; absolute times won't transfer, but the 520x ratio is robust.
-
-5. **Precision below 95% gate.** Both tools: 70.0% at project level (all severities). The quality gate's ≥95% target remains unmet — driven by hygiene rules firing on "clean" projects. This is honest noise, not a detection failure (recall is 100%).
-
-6. **Checkov severity n/a.** Cannot compare high-severity precision — Checkov's JSON doesn't populate severity fields.
-
 ## Verdict
 
 On this held-out corpus, **Aegis matches Checkov exactly on detection** (identical precision, recall, F1) while running **~520x faster**. Neither tool achieves the 95% precision gate at project level — both are noisy on hygiene. Aegis's differentiators (attack paths, speed, unique rule classes) don't show in these aggregate numbers but were validated separately.

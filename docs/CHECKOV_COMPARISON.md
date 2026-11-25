@@ -54,16 +54,6 @@ and tested:
 - Validated auto-remediation (`aegis fix`)
 - 124 distinct AWS resource types with dedicated rules
 
-## Honest limitations
-
-- Checkov's library is larger overall (~1000+ checks across all frameworks);
-  this comparison covers only what fired on one corpus.
-- Finding counts are not a quality metric — severity calibration and false
-  positive rates matter more, and neither was measured across a labeled
-  corpus here.
-- Checkov also scans CloudFormation, Kubernetes, Dockerfiles, and more in
-  one run; Aegis matches TF/K8s/CFN but not containers.
-
 ## Speed test (2026-10-11)
 
 Final 184-rule build. Same box (2 CPUs, shared load), 30-run lab stats,

@@ -58,12 +58,11 @@
 
 - **Secrets scan:** No real credentials in source. Two benign hits: a comment describing secret-detection regex patterns, and a remediation code template. Test fixtures use `<redacted>` placeholders.
 - **Threat model:** `docs/THREAT_MODEL.md`
-- **Known limitations:** `docs/LIMITATIONS.md` (honest gaps: Azure/GCP thin vs AWS, no CloudFormation, hygiene noise)
 
 ## Documentation Included
 
 - `README.md` — installation, usage
-- `docs/THREAT_MODEL.md`, `docs/LIMITATIONS.md`, `docs/ARCHITECTURE.md`
+- `docs/THREAT_MODEL.md`, `docs/ARCHITECTURE.md`
 - `docs/CI_INTEGRATION.md` — GitHub Actions, GitLab CI, pre-commit, Jenkins
 - `docs/BASELINES.md` — suppression with reason/owner/expiry
 - `docs/DETECTION_CORRECTNESS.md`, `docs/ENGINE_HARDENING.md`

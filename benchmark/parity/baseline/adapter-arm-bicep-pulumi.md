@@ -292,7 +292,7 @@ beyond the warning.
 
 Source: `pulumi.go` (353 lines), `typemap.go` (240 lines).
 Scope (package comment): **declarative Pulumi YAML only**; TypeScript/Python/Go/.NET
-programs are out of scope — see `docs/PULUMI.md`.
+programs are out of scope.
 
 ### 3.1 Entry point & detection
 

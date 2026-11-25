@@ -38,7 +38,7 @@ a locked held-out split that rule authors must not tune against.
 - **Held-out:** 50 projects (`heldout/`) — 35 vulnerable + 15 secure, selected by
   secret-seeded stratified shuffle. Manifest chmod 600, sha256 recorded in `SPLIT.md`.
 - **known_gap (RESOLVED 2026-10-12):** 2 projects documented genuine scanner
-  limitations (dynamic-block expansion, policy-document data sources).
+  gaps (dynamic-block expansion, policy-document data sources).
   Both gaps are now fixed: dynamic blocks expand after variable resolution
   with explicit diagnostics for unresolvable for_each; data
   `aws_iam_policy_document` references resolve to constructed policy JSON.

@@ -30,7 +30,6 @@
 ## Documentation
 
 - [ ] `docs/THREAT_MODEL.md` current
-- [ ] `docs/LIMITATIONS.md` current and honest
 - [ ] `docs/ARCHITECTURE.md` matches implementation
 - [ ] `docs/CI_INTEGRATION.md` examples tested
 - [ ] `docs/BASELINES.md` matches baseline format

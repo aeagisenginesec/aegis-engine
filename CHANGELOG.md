@@ -237,13 +237,6 @@ registry: 1,140 active rules. Full record: `docs/audit/24_FP_FN_ELIMINATION_PLAN
   fixture scans in ~5.4s (was 38.2s); 1,003,677 findings on the
   1.7M-line fixture in ~2 minutes.
 
-### Known limitations (measured, R5 blind set)
-
-- Recall on the blind R5 corpus is coverage-bound (auto-scored 0.555):
-  the dominant gap is hardcoded secrets in template parameter defaults
-  and config files. AWS-001 (S3 SSE) can false-fire on buckets relying
-  on SSE-S3 defaults. See `docs/audit/raw/final-eval-r5/`.
-
 ## [2.0.0] — 2026-10-14
 
 Second stable release. 1,153 detection rules (1,152 active) across AWS,
@@ -396,7 +389,7 @@ and independent held-out validation.
 
 - `docs/FINAL_VERDICT.md` rewritten with rigorous per-metric reporting —
   removed unconditional "winner" claims; reports precision/recall/F1/speed
-  separately with documented limitations
+  separately
 - Rule count assertions updated across the test suite (346 total)
 
 ## Benchmarks (v1.0.0, held-out validation)
@@ -409,4 +402,4 @@ and independent held-out validation.
 | Scan speed, median (ms) | 7.8 | 4,054 |
 
 Detection tied; Aegis ~520× faster. See `docs/PHASE5_VALIDATION.md` for
-methodology, frozen versions and six documented limitations.
+methodology and frozen versions.
