@@ -55,11 +55,15 @@ var _ ir.Adapter = Adapter{}
 func (Adapter) Name() string { return "pulumi" }
 
 // Handles reports whether this adapter parses the given path: only files
-// literally named Pulumi.yaml / Pulumi.yml (any case). It must be consulted
-// before the manifests adapter, which claims every .yaml file.
+// literally named Pulumi.yaml / Pulumi.yml (any case), plus stack config
+// files Pulumi.<stack>.yaml / Pulumi.<stack>.yml (which carry config:
+// only — their plaintext secrets are still scannable). It must be
+// consulted before the manifests adapter, which claims every .yaml file.
 func (Adapter) Handles(path string) bool {
 	base := strings.ToLower(filepath.Base(path))
-	return base == "pulumi.yaml" || base == "pulumi.yml"
+	// Pulumi.yaml, Pulumi.yml, and Pulumi.<stack>.yaml/.yml.
+	return strings.HasPrefix(base, "pulumi.") &&
+		(strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml"))
 }
 
 // Parse converts a Pulumi.yaml program into IR resources. A document without
@@ -105,7 +109,10 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 	// has no resources: section, so without this check it scans as
 	// "0 findings" with nothing explaining that the program's language is
 	// not analyzed. Detect it and say so explicitly instead of staying
-	// silent.
+	// silent. Stack config is still emitted on this path: the config
+	// values ARE analyzable even when the program is not.
+	p.collectVars(root, prog)
+	configs := p.configResources(root, prog)
 	if lang, files := detectUnanalyzedProgram(root, prog, path); lang != "" {
 		msg := fmt.Sprintf("pulumi: %s is a Pulumi %s program; program files are not analyzed — scan results do not cover this program's resources", path, lang)
 		if len(files) > 0 {
@@ -116,17 +123,20 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			Message: msg,
 			Span:    ir.Span{File: path},
 		})
-		return nil, p.diags, nil
+		return configs, p.diags, nil
 	}
-	p.collectVars(prog)
 	resNode := nodeField(prog, "resources")
 	if resNode == nil || resNode.Kind != yaml.MappingNode {
+		msg := fmt.Sprintf("pulumi: %s has no resources: section; nothing to scan", path)
+		if len(configs) > 0 {
+			msg = fmt.Sprintf("pulumi: %s has no resources: section; only stack config scanned", path)
+		}
 		p.diags = append(p.diags, ir.Diagnostic{
 			Level:   "warning",
-			Message: fmt.Sprintf("pulumi: %s has no resources: section; nothing to scan", path),
+			Message: msg,
 			Span:    ir.Span{File: path},
 		})
-		return nil, p.diags, nil
+		return configs, p.diags, nil
 	}
 	var out []ir.Resource
 	names := sortedKeys(resNode)
@@ -154,6 +164,7 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 		}
 		out = append(out, p.resource(name, rn))
 	}
+	out = append(out, configs...)
 	return out, p.diags, nil
 }
 
@@ -353,40 +364,56 @@ type parser struct {
 const maxPulumiWork = 20000000
 
 // collectVars indexes variables: and configuration: defaults for ${...}
-// reference resolution.
-func (p *parser) collectVars(root *yaml.Node) {
+// reference resolution. prog is the program node (root, or the
+// template:-nested node); root is the document root. In the template
+// layout, config: may live at the document root while resources: live
+// under template: — both are indexed, with the root winning on a
+// duplicate key as the canonical location.
+func (p *parser) collectVars(root, prog *yaml.Node) {
 	p.vars = map[string]*yaml.Node{}
 	p.resourceNames = map[string]bool{}
 	p.resourceTypes = map[string]string{}
-	if v := nodeField(root, "variables"); v != nil && v.Kind == yaml.MappingNode {
-		for _, k := range sortedKeys(v) {
-			p.vars[k] = nodeField(v, k)
-		}
-	}
-	collectConfig := func(c *yaml.Node) {
-		for _, k := range sortedKeys(c) {
-			cn := nodeField(c, k)
-			if cn == nil {
-				continue
+	collectVarsAndConfig := func(n *yaml.Node) {
+		if v := nodeField(n, "variables"); v != nil && v.Kind == yaml.MappingNode {
+			for _, k := range sortedKeys(v) {
+				p.vars[k] = nodeField(v, k)
 			}
-			if cn.Kind == yaml.MappingNode {
-				// {type:, default:, secret:} form.
-				if d := nodeField(cn, "default"); d != nil {
-					p.vars[k] = d
+		}
+		collectConfig := func(c *yaml.Node) {
+			for _, k := range sortedKeys(c) {
+				cn := nodeField(c, k)
+				if cn == nil {
+					continue
 				}
-				// secret without default: stays unknown (absent from vars).
-			} else {
-				p.vars[k] = cn
+				if cn.Kind == yaml.MappingNode {
+					// {value:, secret:} form (Pulumi.yaml config:) and
+					// {type:, default:, secret:} form (configuration:
+					// declarations). The value: entry is the actual
+					// value; default: is the declaration default.
+					if v := nodeField(cn, "value"); v != nil {
+						p.vars[k] = v
+					} else if d := nodeField(cn, "default"); d != nil {
+						p.vars[k] = d
+					}
+					// secret without value/default: stays unknown
+					// (absent from vars).
+				} else {
+					p.vars[k] = cn
+				}
 			}
 		}
+		if c := nodeField(n, "configuration"); c != nil && c.Kind == yaml.MappingNode {
+			collectConfig(c)
+		} else if c := nodeField(n, "config"); c != nil && c.Kind == yaml.MappingNode {
+			// Modern Pulumi YAML reference uses config: instead of configuration:.
+			collectConfig(c)
+		}
 	}
-	if c := nodeField(root, "configuration"); c != nil && c.Kind == yaml.MappingNode {
-		collectConfig(c)
-	} else if c := nodeField(root, "config"); c != nil && c.Kind == yaml.MappingNode {
-		// Modern Pulumi YAML reference uses config: instead of configuration:.
-		collectConfig(c)
+	collectVarsAndConfig(prog)
+	if prog != root {
+		collectVarsAndConfig(root)
 	}
-	if r := nodeField(root, "resources"); r != nil && r.Kind == yaml.MappingNode {
+	if r := nodeField(prog, "resources"); r != nil && r.Kind == yaml.MappingNode {
 		for _, k := range sortedKeys(r) {
 			p.resourceNames[k] = true
 			// Record canonical type for Ref qualification.
@@ -399,6 +426,90 @@ func (p *parser) collectVars(root *yaml.Node) {
 			}
 		}
 	}
+}
+
+// configValueNode returns the plaintext value node for one config entry:
+// the scalar itself, or the `value:` / `default:` field of a mapping.
+// Returns nil for `secure:` ciphertext entries (encrypted by
+// construction) and declarations without a value.
+func configValueNode(cn *yaml.Node) *yaml.Node {
+	if cn.Kind == yaml.ScalarNode {
+		return cn
+	}
+	if cn.Kind != yaml.MappingNode {
+		return nil
+	}
+	if s := nodeField(cn, "secure"); s != nil {
+		return nil
+	}
+	if v := nodeField(cn, "value"); v != nil {
+		return v
+	}
+	if d := nodeField(cn, "default"); d != nil {
+		return d
+	}
+	return nil
+}
+
+// configResources emits pulumi_config resources for plaintext config
+// entries (Pulumi.yaml inline config: and Pulumi.<stack>.yaml stack
+// config), mirroring the CFN adapter's cfn_parameter emission so rules
+// can flag hardcoded secrets (AEGIS-SC-010). Entries whose value cannot
+// be resolved to a known non-empty scalar are skipped: there is nothing
+// literal to flag. Config may live at the document root, under
+// template:, or both; a key present in both is emitted once, with the
+// root (canonical location) winning.
+func (p *parser) configResources(root, prog *yaml.Node) []ir.Resource {
+	seen := map[string]bool{}
+	var out []ir.Resource
+	emit := func(c *yaml.Node) {
+		if c == nil || c.Kind != yaml.MappingNode {
+			return
+		}
+		for _, key := range sortedKeys(c) {
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			cn := nodeField(c, key)
+			if cn == nil {
+				continue
+			}
+			valNode := configValueNode(cn)
+			if valNode == nil {
+				continue
+			}
+			v := p.value(valNode, p.spanOf(valNode, p.path))
+			s, ok := v.AsString()
+			if !ok || strings.TrimSpace(s) == "" {
+				continue
+			}
+			out = append(out, ir.Resource{
+				Type:     "pulumi_config",
+				Name:     key,
+				Provider: "pulumi",
+				Attributes: map[string]ir.Value{
+					"key":   {Raw: key, Known: true, Span: p.spanOf(cn, p.path)},
+					"value": {Raw: s, Known: true, Span: v.Span},
+				},
+				Span: p.spanOf(cn, p.path),
+			})
+		}
+	}
+	configNode := func(n *yaml.Node) *yaml.Node {
+		if c := nodeField(n, "configuration"); c != nil && c.Kind == yaml.MappingNode {
+			return c
+		}
+		if c := nodeField(n, "config"); c != nil && c.Kind == yaml.MappingNode {
+			return c
+		}
+		return nil
+	}
+	emit(configNode(root))
+	if prog != root {
+		emit(configNode(prog))
+	}
+	return out
 }
 
 // resource converts one named resource entry to an IR resource.

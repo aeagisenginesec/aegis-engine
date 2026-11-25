@@ -1,6 +1,7 @@
 package compose
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -120,11 +121,11 @@ func TestC008_LatestTag(t *testing.T) {
 
 func TestCompose_IDOrder(t *testing.T) {
 	rules := Rules()
-	if len(rules) != 9 {
-		t.Fatalf("want 9 rules, got %d", len(rules))
+	if len(rules) != 10 {
+		t.Fatalf("want 10 rules, got %d", len(rules))
 	}
 	for i, r := range rules {
-		want := "AEGIS-COMPOSE-00" + string(rune('1'+i))
+		want := fmt.Sprintf("AEGIS-COMPOSE-%03d", i+1)
 		if r.ID() != want {
 			t.Fatalf("want %s at %d, got %s", want, i, r.ID())
 		}
@@ -224,4 +225,28 @@ func TestC007_UnknownUserQuiet(t *testing.T) {
 func TestC007_RootWithGroupFires(t *testing.T) {
 	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"0:1000\"\n")), 1)
 	expectFinding(t, composeRootUser{}, service(t, svcBody("    image: nginx:1.25\n    user: \"1001:1001\"\n")), 0)
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-COMPOSE-010: database port published to host
+// ---------------------------------------------------------------------------
+
+func TestC010_DatabasePortPublished(t *testing.T) {
+	expectFinding(t, dbPortPublished{}, service(t, svcBody("    image: postgres:16\n    ports:\n      - \"5432:5432\"\n")), 1)
+	expectFinding(t, dbPortPublished{}, service(t, svcBody("    image: mysql:8\n    ports:\n      - \"3306:3306\"\n")), 1)
+	// Host port remapped: still published.
+	expectFinding(t, dbPortPublished{}, service(t, svcBody("    image: redis:7\n    ports:\n      - \"6380:6379\"\n")), 1)
+	// Bare container port counts as published.
+	expectFinding(t, dbPortPublished{}, service(t, svcBody("    image: mongo:7\n    ports:\n      - \"27017\"\n")), 1)
+	// Long syntax.
+	expectFinding(t, dbPortPublished{}, service(t, svcBody("    image: postgres:16\n    ports:\n      - target: 5432\n        published: 5432\n        protocol: tcp\n")), 1)
+}
+
+func TestC010_DatabasePortNotPublished(t *testing.T) {
+	// No ports at all.
+	expectFinding(t, dbPortPublished{}, service(t, svcBody("    image: postgres:16\n")), 0)
+	// Only a non-database port published.
+	expectFinding(t, dbPortPublished{}, service(t, svcBody("    image: postgres:16\n    ports:\n      - \"8080:80\"\n")), 0)
+	// Database port exposed (container-only), not published.
+	expectFinding(t, dbPortPublished{}, service(t, svcBody("    image: postgres:16\n    expose:\n      - \"5432\"\n")), 0)
 }

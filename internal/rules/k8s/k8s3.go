@@ -27,7 +27,7 @@ import (
 	"aegis/internal/ir"
 )
 
-// K8s3Rules returns Kubernetes hardening rules 028..032 in ID order.
+// K8s3Rules returns Kubernetes hardening rules 028..033 in ID order.
 func K8s3Rules() []ir.Rule {
 	return []ir.Rule{
 		readOnlyRootNotTrue{},     // AEGIS-K8S-028
@@ -35,6 +35,7 @@ func K8s3Rules() []ir.Rule {
 		capabilitiesDropNotAll{},  // AEGIS-K8S-030
 		workloadNoNetworkPolicy{}, // AEGIS-K8S-031
 		imageNoDigest{},           // AEGIS-K8S-032
+		capabilitiesAddSysAdmin{}, // AEGIS-K8S-033
 	}
 }
 
@@ -166,6 +167,14 @@ func goodSeccompType(t string) bool {
 	return false
 }
 
+// isUnconfinedSeccompType reports whether t is the explicit Unconfined
+// profile. That case belongs to AEGIS-K8S-017 alone: a profile IS set,
+// just an unconfined one, so "without seccomp profile" must not fire
+// on it (it would duplicate K8S-017 with a factually wrong title).
+func isUnconfinedSeccompType(t string) bool {
+	return strings.EqualFold(strings.TrimSpace(t), "unconfined")
+}
+
 func (r noSeccompProfile) Check(res ir.Resource) []ir.Finding {
 	var out []ir.Finding
 	for _, ps := range podSpecs(res) {
@@ -178,6 +187,9 @@ func (r noSeccompProfile) Check(res ir.Resource) []ir.Finding {
 			case "known":
 				if goodSeccompType(ct) {
 					continue
+				}
+				if isUnconfinedSeccompType(ct) {
+					continue // K8S-017 owns the explicit Unconfined case
 				}
 				out = append(out, finding(r, res, c, cv,
 					"securityContext.seccompProfile.type",
@@ -193,6 +205,9 @@ func (r noSeccompProfile) Check(res ir.Resource) []ir.Finding {
 			case "known":
 				if goodSeccompType(pt) {
 					continue
+				}
+				if isUnconfinedSeccompType(pt) {
+					continue // K8S-017 owns the explicit Unconfined case
 				}
 				out = append(out, finding(r, res, c, pv,
 					"securityContext.seccompProfile.type",
@@ -287,6 +302,75 @@ func (r capabilitiesDropNotAll) Check(res ir.Resource) []ir.Finding {
 			out = append(out, finding(r, res, c, dropv,
 				"securityContext.capabilities.drop",
 				actual, "drop: [ALL]"))
+		}
+	}
+	return out
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-K8S-033: container adds the SYS_ADMIN Linux capability. The
+// effective capability set is default + add - drop, so adding SYS_ADMIN
+// after dropping ALL still leaves SYS_ADMIN: the drop-ALL rule (030)
+// correctly stays silent while this rule fires. One finding per
+// container. The check is an exact token match (case-insensitive), not
+// a substring: SYS_ADMINISTRATOR must not match.
+// ---------------------------------------------------------------------------
+
+type capabilitiesAddSysAdmin struct{}
+
+func (capabilitiesAddSysAdmin) ID() string { return "AEGIS-K8S-033" }
+func (capabilitiesAddSysAdmin) Title() string {
+	return "Container adds SYS_ADMIN Linux capability"
+}
+func (capabilitiesAddSysAdmin) Description() string {
+	return "The container adds the SYS_ADMIN Linux capability, which " +
+		"grants broad administrative operations (mount, namespace and " +
+		"host configuration) and is close to root-equivalent inside the " +
+		"container. Dropping ALL does not remove an explicitly added " +
+		"capability. Remove SYS_ADMIN from securityContext.capabilities." +
+		"add and use narrower capabilities instead. " +
+		"(AEGIS-K8S-016 covers the explicit capabilities.add: ALL case; " +
+		"AEGIS-K8S-030 covers the missing drop: ALL case.)"
+}
+func (capabilitiesAddSysAdmin) Severity() ir.Severity         { return ir.SeverityHigh }
+func (capabilitiesAddSysAdmin) AppliesTo(resType string) bool { return appliesTo(resType) }
+
+func (r capabilitiesAddSysAdmin) Check(res ir.Resource) []ir.Finding {
+	var out []ir.Finding
+	for _, ps := range podSpecs(res) {
+		for _, c := range containersOf(ps) {
+			if c.sc == nil {
+				continue
+			}
+			capv, ok := c.sc["capabilities"]
+			if !ok {
+				continue
+			}
+			capm, ok := capv.AsMap()
+			if !ok {
+				continue // unresolved: cannot decide
+			}
+			addv, ok := capm["add"]
+			if !ok {
+				continue
+			}
+			addl, ok := addv.AsList()
+			if !ok {
+				continue // unresolved: cannot decide
+			}
+			for _, av := range addl {
+				s, kok := av.AsString()
+				if !kok {
+					continue // unresolved entry: cannot decide it
+				}
+				if strings.EqualFold(strings.TrimSpace(s), "SYS_ADMIN") {
+					out = append(out, finding(r, res, c, av,
+						"securityContext.capabilities.add",
+						fmt.Sprintf("SYS_ADMIN (container %q)", c.name),
+						"remove SYS_ADMIN from capabilities.add"))
+					break
+				}
+			}
 		}
 	}
 	return out

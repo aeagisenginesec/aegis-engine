@@ -27,6 +27,7 @@ func Rules() []ir.Rule {
 		composeRootUser{},    // AEGIS-COMPOSE-007
 		composeLatestTag{},   // AEGIS-COMPOSE-008
 		hostNetworkMode{},    // AEGIS-COMPOSE-009
+		dbPortPublished{},    // AEGIS-COMPOSE-010
 	}
 }
 
@@ -496,4 +497,102 @@ func (hostNetworkMode) Check(r ir.Resource) []ir.Finding {
 		r, "network_mode", nspan, "host",
 		"published ports on the default bridge network",
 	)}
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-COMPOSE-010: database port published to host (high)
+// ---------------------------------------------------------------------------
+// A service that publishes a database port to the host exposes the
+// database to anything that can reach the host (including the internet
+// when the host is). Both short-syntax ([HOST:]CONTAINER) and long-syntax
+// ({target:, published:}) port specs are surfaced by the adapter as the
+// container port. Match on the container port number, not the service
+// name: a postgres image under any service name must fire, and a
+// non-database port on a "db" service must not.
+
+type dbPortPublished struct{}
+
+func (dbPortPublished) ID() string { return "AEGIS-COMPOSE-010" }
+func (dbPortPublished) Title() string {
+	return "Database port published to host"
+}
+func (dbPortPublished) Description() string {
+	return "A Compose service publishes a database port (PostgreSQL " +
+		"5432, MySQL 3306, SQL Server 1433, Redis 6379, MongoDB 27017, " +
+		"Oracle 1521, Cassandra 9042) to the host, exposing the " +
+		"database to the network. Keep database ports inside the " +
+		"Compose network (use expose: for inter-service access) and " +
+		"publish only through a bastion or private network."
+}
+func (dbPortPublished) Severity() ir.Severity         { return ir.SeverityHigh }
+func (dbPortPublished) AppliesTo(resType string) bool { return appliesToCompose(resType) }
+
+// dbPorts maps published database port numbers to their service names.
+var dbPorts = map[int]string{
+	5432:  "PostgreSQL",
+	3306:  "MySQL",
+	1433:  "SQL Server",
+	6379:  "Redis",
+	27017: "MongoDB",
+	1521:  "Oracle",
+	9042:  "Cassandra",
+}
+
+// publishedContainerPort extracts the container port from a short-syntax
+// Compose port spec ([HOST:]CONTAINER[/PROTOCOL], HOST may itself be an
+// IP with colons). A bare "5432" still publishes the container port to
+// a random host port, so it counts. Returns (port, true) on success.
+func publishedContainerPort(spec string) (int, bool) {
+	spec = strings.TrimSpace(spec)
+	if spec == "" {
+		return 0, false
+	}
+	// Strip /protocol suffix.
+	if i := strings.Index(spec, "/"); i >= 0 {
+		spec = spec[:i]
+	}
+	// Container port is the last colon-separated segment.
+	last := spec
+	if i := strings.LastIndex(spec, ":"); i >= 0 {
+		last = spec[i+1:]
+	}
+	// Port ranges (5432-5433): use the first port of the range.
+	if i := strings.Index(last, "-"); i >= 0 {
+		last = last[:i]
+	}
+	port, err := strconv.Atoi(strings.TrimSpace(last))
+	if err != nil || port <= 0 || port > 65535 {
+		return 0, false
+	}
+	return port, true
+}
+
+func (dbPortPublished) Check(r ir.Resource) []ir.Finding {
+	rule := dbPortPublished{}
+	ports, _, present, known := getList(r, "ports")
+	if !present || !known {
+		return nil
+	}
+	var out []ir.Finding
+	for _, p := range ports {
+		s, ok := p.AsString()
+		if !ok {
+			continue
+		}
+		port, ok := publishedContainerPort(s)
+		if !ok {
+			continue
+		}
+		name, isDB := dbPorts[port]
+		if !isDB {
+			continue
+		}
+		out = append(out, finding(
+			rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+			r, "ports", p.Span,
+			fmt.Sprintf("%s port %d published to host (%s)", name, port, s),
+			"publish only application ports; keep database ports internal",
+		))
+	}
+	return out
 }

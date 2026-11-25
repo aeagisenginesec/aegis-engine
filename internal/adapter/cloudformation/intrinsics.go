@@ -421,8 +421,87 @@ func yamlToNativePreserveCase(n *yaml.Node, t *template, span ir.Span) any {
 	}
 }
 
-// yamlToNative converts a YAML node to Go natives, resolving intrinsics.
-// Returns nil if any part is unresolvable.
+// jsonStringPreserveCaseLenient is like jsonStringPreserveCase but
+// unresolvable leaves render as "" instead of aborting the whole
+// document. Used for SQS/SNS/ECR policy documents, whose Resource fields
+// routinely hold !GetAtt references no static evaluation can resolve —
+// the public-principal check only reads Effect/Principal, so a blanked
+// Resource loses nothing while a failed encode would silence the rule
+// entirely. Never use for documents whose unresolvable parts ARE the
+// security decision (e.g. a Principal that is itself a Ref).
+func jsonStringPreserveCaseLenient(path string, n *yaml.Node, t *template) ir.Value {
+	span := nodeSpan(path, n)
+	native := yamlToNativePreserveCaseLenient(n, t, span)
+	if native == nil {
+		return unknownRef(span, "cfn.jsonencode")
+	}
+	b, err := json.Marshal(native)
+	if err != nil {
+		return unknownRef(span, "cfn.jsonencode")
+	}
+	return ir.Value{Raw: string(b), Known: true, Span: span}
+}
+
+// yamlToNativePreserveCaseLenient converts a YAML node to Go natives
+// without transforming key casing, substituting "" for any leaf that
+// cannot be resolved statically. A nil return means the node itself is
+// structurally unusable (nil alias target); every other failure mode
+// degrades to "".
+func yamlToNativePreserveCaseLenient(n *yaml.Node, t *template, span ir.Span) any {
+	// Handle intrinsic tags first
+	if len(n.Tag) > 1 && n.Tag[0] == '!' && n.Tag[1] != '!' {
+		if v, ok := t.resolveTag(n.Tag[1:], n, span); ok {
+			if !v.Known {
+				return ""
+			}
+			return valueToNative(v)
+		}
+	}
+	switch n.Kind {
+	case yaml.ScalarNode:
+		v := scalarValue(t.path, n)
+		if !v.Known {
+			return ""
+		}
+		return v.Raw
+	case yaml.SequenceNode:
+		out := make([]any, 0, len(n.Content))
+		for _, item := range n.Content {
+			out = append(out, yamlToNativePreserveCaseLenient(item, t, span))
+		}
+		return out
+	case yaml.MappingNode:
+		// Check for intrinsic
+		if len(n.Content) == 2 && n.Content[0].Kind == yaml.ScalarNode {
+			if v, ok := t.resolveIntrinsic(n.Content[0].Value, n.Content[1], span); ok {
+				if !v.Known {
+					return ""
+				}
+				return valueToNative(v)
+			}
+			if isIntrinsicKey(n.Content[0].Value) {
+				return ""
+			}
+		}
+		m := make(map[string]any, len(n.Content)/2)
+		for i := 0; i+1 < len(n.Content); i += 2 {
+			k := n.Content[i]
+			if k.Kind != yaml.ScalarNode {
+				continue
+			}
+			// PRESERVE original key casing (no snakeCase)
+			m[k.Value] = yamlToNativePreserveCaseLenient(n.Content[i+1], t, span)
+		}
+		return m
+	case yaml.AliasNode:
+		if n.Alias != nil {
+			return yamlToNativePreserveCaseLenient(n.Alias, t, span)
+		}
+		return nil
+	default:
+		return ""
+	}
+}
 func yamlToNative(n *yaml.Node, t *template, span ir.Span) any {
 	v := t.resolveValue(n)
 	if !v.Known {

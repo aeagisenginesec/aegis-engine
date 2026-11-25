@@ -1545,6 +1545,10 @@ var complianceMap = map[string][]ir.ComplianceRef{
 		ref(nist, "AC-3"), ref(nist, "SC-7"), ref(pci, "1.4.1"), ref(iso, "A.5.15"), ref(iso, "A.8.3"),
 		ref(iso, "A.8.20"), ref(iso, "A.8.22"), ref(soc2, "CC6.1"), ref(soc2, "CC6.6"), ref(hipaa, "164.312(a)(1)"),
 	},
+	"AEGIS-AWS-860": { // EBS snapshot shared with everyone (group all)
+		ref(nist, "AC-3"), ref(iso, "A.5.15"), ref(iso, "A.8.3"),
+		ref(soc2, "CC6.1"), ref(hipaa, "164.312(a)(1)"),
+	},
 	"AEGIS-AWS-859": { // IAM administrative access granted without MFA condition
 		ref(nist, "IA-2"), ref(nist, "IA-5"),
 		ref(iso, "A.5.17"), ref(iso, "A.8.5"),
@@ -2662,6 +2666,13 @@ var complianceMap = map[string][]ir.ComplianceRef{
 		ref(nist, "IA-5"),
 		ref(iso, "A.5.17"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
 	},
+	"AEGIS-AZURE-315": { // MySQL flexible server with public network access enabled
+		ref(nist, "SC-7"), ref(pci, "1.4.1"),
+		ref(iso, "A.8.20"), ref(iso, "A.8.22"), ref(soc2, "CC6.6"), ref(hipaa, "164.312(a)(1)"),
+	},
+	"AEGIS-AZURE-316": { // SecureString parameter should not have hardcoded default value
+		ref(nist, "IA-5"), ref(iso, "A.5.17"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
+	},
 
 	// --- Azure: logging / auditing / monitoring ---
 	"AEGIS-AZURE-034": { // Storage account queue without logging
@@ -2918,6 +2929,10 @@ var complianceMap = map[string][]ir.ComplianceRef{
 		ref(soc2, "CC6.1"), ref(hipaa, "164.312(a)(1)"),
 	},
 	"AEGIS-GCP-097": { // Cloud Run service allows public invocation
+		ref(nist, "AC-3"), ref(iso, "A.5.15"), ref(iso, "A.8.3"),
+		ref(soc2, "CC6.1"), ref(hipaa, "164.312(a)(1)"),
+	},
+	"AEGIS-GCP-295": { // Cloud Function invoker granted to allUsers
 		ref(nist, "AC-3"), ref(iso, "A.5.15"), ref(iso, "A.8.3"),
 		ref(soc2, "CC6.1"), ref(hipaa, "164.312(a)(1)"),
 	},
@@ -3788,13 +3803,17 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	"AEGIS-COMPOSE-006": { // Secret in service environment
 		ref(nist, "IA-5"), ref(iso, "A.5.17"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
 	},
+	"AEGIS-COMPOSE-010": { // Database port published to host
+		ref(nist, "AC-3"), ref(nist, "SC-7"), ref(iso, "A.5.15"), ref(iso, "A.8.3"),
+		ref(soc2, "CC6.1"), ref(soc2, "CC6.6"), ref(hipaa, "164.312(a)(1)"),
+	},
 	"AEGIS-COMPOSE-007": { // Service runs as root
 		ref(nist, "AC-6"), ref(iso, "A.5.15"), ref(iso, "A.8.2"), ref(soc2, "CC6.1"), ref(soc2, "CC6.3"), ref(hipaa, "164.312(a)(1)"),
 	},
 	"AEGIS-DOCKER-002": { // Container runs as root
 		ref(cisdocker, "4.1"), ref(nist, "AC-6"), ref(iso, "A.5.15"), ref(iso, "A.8.2"), ref(soc2, "CC6.1"), ref(soc2, "CC6.3"), ref(hipaa, "164.312(a)(1)"),
 	},
-	"AEGIS-DOCKER-003": { // Secret in ENV directive
+	"AEGIS-DOCKER-003": { // Hardcoded secret in ENV directive
 		ref(cisdocker, "4.10"), ref(nist, "IA-5"), ref(iso, "A.5.17"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
 	},
 	"AEGIS-DOCKER-011": { // Secret in ARG default value
@@ -3804,6 +3823,9 @@ var complianceMap = map[string][]ir.ComplianceRef{
 		ref(nist, "AC-3"), ref(iso, "A.5.15"), ref(iso, "A.8.3"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(a)(1)"),
 	},
 	"AEGIS-DOCKER-021": { // Sensitive file copied into image
+		ref(cisdocker, "4.10"), ref(nist, "IA-5"), ref(iso, "A.5.17"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
+	},
+	"AEGIS-DOCKER-038": { // Secret file from builder stage copied into final image
 		ref(cisdocker, "4.10"), ref(nist, "IA-5"), ref(iso, "A.5.17"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
 	},
 	"AEGIS-DOCKER-034": { // Credentials embedded in RUN layer
@@ -3911,6 +3933,10 @@ var complianceMap = map[string][]ir.ComplianceRef{
 		ref(nist, "AC-6"), ref(nist, "CM-7"), ref(pci, "2.2.1"),
 		ref(iso, "A.5.15"), ref(iso, "A.8.2"), ref(iso, "A.8.9"), ref(soc2, "CC6.1"), ref(soc2, "CC6.3"), ref(soc2, "CC6.6"), ref(soc2, "CC7.1"), ref(hipaa, "164.312(a)(1)"),
 	},
+	"AEGIS-K8S-033": { // Container adds SYS_ADMIN Linux capability
+		ref(nist, "AC-6"), ref(nist, "CM-7"), ref(pci, "2.2.1"),
+		ref(iso, "A.5.15"), ref(iso, "A.8.2"), ref(iso, "A.8.9"), ref(soc2, "CC6.1"), ref(soc2, "CC6.3"), ref(soc2, "CC6.6"), ref(soc2, "CC7.1"), ref(hipaa, "164.312(a)(1)"),
+	},
 	"AEGIS-K8S-017": { // Seccomp profile set to Unconfined
 		ref(nist, "CM-7"), ref(iso, "A.8.9"), ref(soc2, "CC6.6"), ref(soc2, "CC7.1"),
 	},
@@ -3984,6 +4010,9 @@ var complianceMap = map[string][]ir.ComplianceRef{
 	},
 	"AEGIS-SC-009": { // Lambda function uses a layer from an unrecognized account
 		ref(nist, "SI-7"), ref(iso, "A.8.9"), ref(soc2, "CC7.1"), ref(hipaa, "164.312(c)(1)"),
+	},
+	"AEGIS-SC-010": { // Hardcoded secret in Pulumi stack config
+		ref(nist, "IA-5"), ref(iso, "A.5.17"), ref(soc2, "CC6.1"), ref(hipaa, "164.312(d)"),
 	},
 	"AEGIS-TF-002": { // Terraform S3 backend without state locking (concurrent writes can corrupt state)
 		ref(nist, "SI-7"), ref(iso, "A.8.9"), ref(soc2, "CC7.1"), ref(hipaa, "164.312(c)(1)"),

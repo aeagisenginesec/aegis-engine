@@ -14,7 +14,7 @@ import (
 	"aegis/internal/ir"
 )
 
-// extraRules returns rules AEGIS-DOCKER-011 through AEGIS-DOCKER-037.
+// extraRules returns rules AEGIS-DOCKER-011 through AEGIS-DOCKER-038.
 func extraRules() []ir.Rule {
 	return []ir.Rule{
 		argSecrets{},           // AEGIS-DOCKER-011
@@ -44,6 +44,7 @@ func extraRules() []ir.Rule {
 		addRemoteURL{},         // AEGIS-DOCKER-035
 		buildToolsInFinal{},    // AEGIS-DOCKER-036
 		nopasswdSudoers{},      // AEGIS-DOCKER-037
+		multistageSecretCopy{}, // AEGIS-DOCKER-038
 	}
 }
 
@@ -537,6 +538,11 @@ func isSensitiveCopySrc(src string) bool {
 			return true
 		}
 		lp := strings.ToLower(p)
+		// *.env suffix forms (e.g. deploy.env, app.env): a dotenv file
+		// under any name is still a secret file.
+		if strings.HasSuffix(lp, ".env") {
+			return true
+		}
 		if strings.HasSuffix(lp, ".pem") || strings.HasSuffix(lp, ".key") {
 			return true
 		}
@@ -559,6 +565,104 @@ func (sensitiveCopy) Check(r ir.Resource) []ir.Finding {
 			rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
 			r, "COPY", spans[i], "copies "+s,
 			"exclude via .dockerignore; never COPY secrets into layers",
+		))
+	}
+	return out
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-DOCKER-038: secret file from builder stage copied into final image
+// ---------------------------------------------------------------------------
+
+type multistageSecretCopy struct{}
+
+func (multistageSecretCopy) ID() string { return "AEGIS-DOCKER-038" }
+func (multistageSecretCopy) Title() string {
+	return "Secret file from builder stage copied into final image"
+}
+func (multistageSecretCopy) Description() string {
+	return "A COPY --from=<stage> that carries a secret-named file " +
+		"(dotenv file, private key, credentials) into the final image " +
+		"bakes the secret into the shipped layers, where anyone with " +
+		"the image can read it. Build stages are for compiling; keep " +
+		"secrets out of the final stage (multi-stage builds do not " +
+		"erase files copied from the builder). (AEGIS-DOCKER-021 " +
+		"covers context copies of the same files.)"
+}
+func (multistageSecretCopy) Severity() ir.Severity         { return ir.SeverityHigh }
+func (multistageSecretCopy) AppliesTo(resType string) bool { return appliesToDocker(resType) }
+
+// isSecretStageCopySrc reports whether a COPY --from source path's
+// basename looks like a secret file: exact .env, *.env suffix forms
+// (deploy.env), .env.* variants, *.pem/*.key, private-key names,
+// credentials stores, or any name containing "secret".
+func isSecretStageCopySrc(src string) bool {
+	s := strings.Trim(src, `"'`)
+	if s == "" {
+		return false
+	}
+	parts := strings.Split(s, "/")
+	base := parts[len(parts)-1]
+	lb := strings.ToLower(base)
+	switch {
+	case lb == ".env", strings.HasSuffix(lb, ".env"), strings.HasPrefix(lb, ".env."):
+		return true
+	case strings.HasSuffix(lb, ".pem"), strings.HasSuffix(lb, ".key"):
+		return true
+	case lb == ".ssh", lb == ".aws", lb == "credentials":
+		return true
+	case strings.HasPrefix(lb, "id_rsa"), strings.HasPrefix(lb, "id_dsa"),
+		strings.HasPrefix(lb, "id_ecdsa"), strings.HasPrefix(lb, "id_ed25519"):
+		return true
+	case strings.Contains(lb, "secret"):
+		return true
+	}
+	return false
+}
+
+func (multistageSecretCopy) Check(r ir.Resource) []ir.Finding {
+	rule := multistageSecretCopy{}
+	// Only the final stage ships: intermediate stages legitimately
+	// hold build artifacts, and a secret copied builder->intermediate
+	// never reaches a shipped image unless the final stage copies it
+	// (which this rule then flags on the final stage itself).
+	if fin, _, present, known := getBool(r, "is_final_stage"); present && known && !fin {
+		return nil
+	}
+	v, ok := r.Attributes["copy_from_sources"]
+	if !ok || !v.Known {
+		return nil
+	}
+	l, ok := v.AsList()
+	if !ok {
+		return nil
+	}
+	var out []ir.Finding
+	for _, item := range l {
+		m, ok := item.AsMap()
+		if !ok {
+			continue
+		}
+		sv, ok := m["source"]
+		if !ok {
+			continue
+		}
+		src, kok := sv.AsString()
+		if !kok || !isSecretStageCopySrc(src) {
+			continue
+		}
+		from := ""
+		if fv, ok := m["from"]; ok {
+			from, _ = fv.AsString()
+		}
+		actual := "COPY --from=" + from + " " + src
+		if from == "" {
+			actual = "COPY --from <stage> " + src
+		}
+		out = append(out, finding(
+			rule.ID(), rule.Title(), rule.Description(), rule.Severity(),
+			r, "COPY", sv.Span, actual,
+			"do not copy secrets from builder stages into the final image",
 		))
 	}
 	return out

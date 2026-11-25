@@ -397,12 +397,17 @@ template:
         bucket: ${bucketName}
         acl: public-read
 `)
-	if len(rs) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(rs))
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 resources (bucket + pulumi_config), got %d", len(rs))
 	}
 	r := rs[0]
 	if r.Type != "aws_s3_bucket" {
 		t.Errorf("type = %q, want aws_s3_bucket", r.Type)
+	}
+	// template.configuration defaults are also emitted as a
+	// pulumi_config resource (SC-010 surface).
+	if rs[1].Type != "pulumi_config" || rs[1].Name != "bucketName" {
+		t.Errorf("rs[1] = %s %s, want pulumi_config bucketName", rs[1].Type, rs[1].Name)
 	}
 	// ${bucketName} must resolve against template.configuration defaults.
 	if s, ok := attrString(t, r, "bucket"); !ok || s != "my-data" {
@@ -584,11 +589,14 @@ template:
       properties:
         bucket: ${bucketName}
 `)
-	if len(rs) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(rs))
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 resources (bucket + pulumi_config), got %d", len(rs))
 	}
 	if s, ok := attrString(t, rs[0], "bucket"); !ok || s != "my-data" {
 		t.Errorf("bucket = %q, %v; want my-data", s, ok)
+	}
+	if rs[1].Type != "pulumi_config" || rs[1].Name != "bucketName" {
+		t.Errorf("rs[1] = %s %s, want pulumi_config bucketName", rs[1].Type, rs[1].Name)
 	}
 }
 

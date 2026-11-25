@@ -11,7 +11,10 @@
 //   - Findings carry evidence: the exact attribute, span, and actual value.
 package ir
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Severity of a finding, ordered low -> critical.
 type Severity string
@@ -71,8 +74,24 @@ func (v Value) IsRef() bool { return v.Ref != "" }
 
 // Helpers to extract typed values safely.
 func (v Value) AsBool() (bool, bool) {
-	b, ok := v.Raw.(bool)
-	return b, v.Known && ok
+	if b, ok := v.Raw.(bool); ok {
+		return b, v.Known
+	}
+	// CloudFormation parameters are declared Type: String, so a boolean
+	// property driven by !Ref to a parameter default arrives as the
+	// string "true"/"false" (e.g. PubliclyAccessible: !Ref PublicAccess
+	// with Default: "true"). A known string that is exactly a boolean
+	// literal is unambiguous: read it as a bool so boolean rules can
+	// decide it. Any other string stays undecidable as a bool.
+	if s, ok := v.Raw.(string); ok && v.Known {
+		switch strings.ToLower(strings.TrimSpace(s)) {
+		case "true":
+			return true, true
+		case "false":
+			return false, true
+		}
+	}
+	return false, false
 }
 
 func (v Value) AsString() (string, bool) {
