@@ -814,9 +814,16 @@ template:
 	}
 }
 
-// 24. Parity (item 2): a policy with an unresolved reference is NOT
-// stringified (its Unknown part must not become fabricated JSON).
-func TestPolicyWithUnknownNotStringified(t *testing.T) {
+// 24. Parity (item 2), REVISED Phase B: a policy with an unresolved
+// reference IS stringified, with the unknown leaf rendered as "".
+// The original pin (never stringify when any part is Unknown, "so nothing
+// is fabricated") silently dropped every policy whose Resource is the
+// idiomatic ${resource.arn} reference — R6 r6110 sqs-public-policy, a
+// Principal "*" Allow statement no rule ever saw. "" matches no public or
+// wildcard pattern, so no finding can be fabricated from an unknown value
+// (see TestPhaseBUnknownPrincipalNotPublic); the known parts of the
+// document (Effect, Principal, Action) stay analyzable.
+func TestPolicyWithUnknownStringified(t *testing.T) {
 	rs, _ := parse(t, "Pulumi.yaml", `
 name: s3pol
 runtime: yaml
@@ -841,8 +848,15 @@ template:
 	if !ok {
 		t.Fatalf("policy attribute missing")
 	}
-	if _, isMap := v.Raw.(map[string]ir.Value); !isMap {
-		t.Errorf("policy with Unknown content was stringified; want mapping left intact")
+	s, isStr := v.Raw.(string)
+	if !isStr {
+		t.Fatalf("policy with Unknown leaf was left as %T; want a JSON string with the unknown leaf rendered as \"\"", v.Raw)
+	}
+	if !strings.Contains(s, `"principal":"*"`) || !strings.Contains(s, `"effect":"Allow"`) {
+		t.Errorf("stringified policy lost known content: %s", s)
+	}
+	if !strings.Contains(s, `"resource":""`) {
+		t.Errorf("unknown Resource leaf must render as \"\", got: %s", s)
 	}
 }
 
