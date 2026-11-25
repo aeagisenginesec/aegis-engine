@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"aegis/internal/discovery"
+	"aegis/internal/version"
 )
 
 // documentedFlags extracts every --flag name mentioned in the CLI help text.
@@ -42,8 +43,8 @@ func TestCLIAuditVersionStamped(t *testing.T) {
 	if code := run([]string{"--version"}, &stdout, &stderr); code != 0 {
 		t.Fatalf("--version exited %d, want 0; stderr: %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "2.3.0") {
-		t.Errorf("--version output %q does not contain stamped version 2.3.0", stdout.String())
+	if !strings.Contains(stdout.String(), version.Version) {
+		t.Errorf("--version output %q does not contain stamped version %s", stdout.String(), version.Version)
 	}
 }
 
@@ -198,8 +199,8 @@ func TestCLIAuditJSONFormat(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil {
 		t.Fatalf("--format=json output is not valid JSON: %v", err)
 	}
-	if doc.Version != "2.3.0" {
-		t.Errorf("aegis_version = %q, want 2.3.0", doc.Version)
+	if doc.Version != version.Version {
+		t.Errorf("aegis_version = %q, want %s", doc.Version, version.Version)
 	}
 	if len(doc.Findings) == 0 {
 		t.Fatal("JSON report carries no findings for a vulnerable fixture")
@@ -272,8 +273,8 @@ func TestCLIAuditSARIFFormat(t *testing.T) {
 	if len(doc.Runs) != 1 {
 		t.Fatalf("sarif runs = %d, want 1", len(doc.Runs))
 	}
-	if got := doc.Runs[0].Tool.Driver.Version; got != "2.3.0" {
-		t.Errorf("sarif driver version = %q, want 2.3.0 (aegis version)", got)
+	if got := doc.Runs[0].Tool.Driver.Version; got != version.Version {
+		t.Errorf("sarif driver version = %q, want %s (aegis version)", got, version.Version)
 	}
 	r := doc.Runs[0]
 	if len(r.Results) == 0 {
