@@ -3,7 +3,7 @@
 All notable changes to Aegis are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased] — v2.4.0
+## [2.4.0] — 2026-11-25
 
 ### Added
 
@@ -15,8 +15,7 @@ All notable changes to Aegis are documented here. The format is based on
   Compose service images — direct references only, no transitive
   resolution, no lock-file or registry lookups (see `docs/SBOM.md`).
   Default outputs `sbom.spdx.json` / `sbom.cyclonedx.json` are skipped
-  by discovery on later scans. Version stays 2.3.0 in code until the
-  v2.4.0 release bump.
+  by discovery on later scans.
 - **NotAction / NotResource policy-evaluation semantics (IAM #4, v2.4.0).**
   The IAM pack no longer silently skips statements using `NotAction` /
   `NotResource` ("cannot decide -> silent"). A new shared evaluator
