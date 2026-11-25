@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"strings"
 	"testing"
 
 	"aegis/internal/ir"
@@ -99,6 +100,132 @@ func TestKillChain629_NoDataStoreQuiet(t *testing.T) {
 	findings := (killChain{}).CheckAll(resources)
 	if len(findings) != 0 {
 		t.Fatalf("AEGIS-AWS-629: expected 0 findings with no data store, got %d", len(findings))
+	}
+}
+
+// IAM-only kill chain (v2.4.0): a Lambda with s3:* on * reaches an S3
+// bucket through its role even with no network edge at all. The chain
+// must carry an IAM-reachability hop, and its entry must be UNCERTAIN
+// (no proven internet entry) so the finding is Medium, not High.
+func TestKillChain629IAMOnly(t *testing.T) {
+	resources := []ir.Resource{
+		apResource("aws_iam_role", "app", map[string]ir.Value{
+			"assume_role_policy": apStrVal(`{"Statement":[{"Effect":"Allow","Principal":{"Service":"lambda.amazonaws.com"},"Action":"sts:AssumeRole"}]}`),
+		}),
+		apResource("aws_iam_policy", "broad", map[string]ir.Value{
+			"policy": apStrVal(`{"Statement":[{"Effect":"Allow","Action":"s3:*","Resource":"*"}]}`),
+		}),
+		apResource("aws_iam_role_policy_attachment", "att", map[string]ir.Value{
+			"role":       apRefVal("aws_iam_role.app.name"),
+			"policy_arn": apRefVal("aws_iam_policy.broad.arn"),
+		}),
+		apResource("aws_lambda_function", "api", map[string]ir.Value{
+			"role": apRefVal("aws_iam_role.app.arn"),
+		}),
+		apResource("aws_s3_bucket", "assets", map[string]ir.Value{
+			"bucket": apStrVal("assets"),
+		}),
+	}
+	findings := (killChain{}).CheckAll(resources)
+	if len(findings) == 0 {
+		t.Fatal("AEGIS-AWS-629: expected an IAM-only kill chain finding")
+	}
+	f := findings[0]
+	if f.Severity != ir.SeverityMedium {
+		t.Errorf("IAM-only chain with no proven entry must be Medium, got %s", f.Severity)
+	}
+	foundIAM := false
+	for _, s := range f.Path {
+		if strings.Contains(s.Detail, "IAM reachability:") {
+			foundIAM = true
+		}
+		if s.Detail == "" || s.Resource == "" {
+			t.Errorf("path step missing resource/detail: %+v", s)
+		}
+	}
+	if !foundIAM {
+		t.Fatalf("IAM-only chain must name the IAM-reachability hop in its path: %+v", f.Path)
+	}
+}
+
+// Open-trust kill chain (v2.4.0): a role anyone can assume whose policy
+// grants s3:GetObject on one bucket is reachable directly from the
+// internet — no workload needed. The finding is Critical (proven entry,
+// IAM privilege hop), and the path must cite the trust policy.
+func TestKillChain629OpenTrust(t *testing.T) {
+	resources := []ir.Resource{
+		apResource("aws_iam_role", "open", map[string]ir.Value{
+			"assume_role_policy": apStrVal(`{"Statement":[{"Effect":"Allow","Principal":"*","Action":"sts:AssumeRole"}]}`),
+		}),
+		apResource("aws_iam_policy", "reader", map[string]ir.Value{
+			"policy": apStrVal(`{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:s3:::assets/*"}]}`),
+		}),
+		apResource("aws_iam_role_policy_attachment", "att", map[string]ir.Value{
+			"role":       apRefVal("aws_iam_role.open.name"),
+			"policy_arn": apRefVal("aws_iam_policy.reader.arn"),
+		}),
+		apResource("aws_s3_bucket", "assets", map[string]ir.Value{
+			"bucket": apStrVal("assets"),
+		}),
+	}
+	findings := (killChain{}).CheckAll(resources)
+	if len(findings) == 0 {
+		t.Fatal("AEGIS-AWS-629: expected an open-trust kill chain finding")
+	}
+	f := findings[0]
+	if f.Severity != ir.SeverityCritical {
+		t.Errorf("open-trust chain must be Critical, got %s", f.Severity)
+	}
+	if !strings.Contains(f.Path[0].Detail, "aws_iam_role.open") {
+		t.Errorf("open-trust chain must start at the assumable role, got path %+v", f.Path)
+	}
+}
+
+// Negative: a scoped grant on a workload role creates no IAM-only chain.
+func TestKillChain629IAMScopedGrantQuiet(t *testing.T) {
+	resources := []ir.Resource{
+		apResource("aws_iam_role", "app", map[string]ir.Value{
+			"assume_role_policy": apStrVal(`{"Statement":[{"Effect":"Allow","Principal":{"Service":"lambda.amazonaws.com"},"Action":"sts:AssumeRole"}]}`),
+		}),
+		apResource("aws_iam_policy", "scoped", map[string]ir.Value{
+			"policy": apStrVal(`{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:s3:::assets/*"}]}`),
+		}),
+		apResource("aws_iam_role_policy_attachment", "att", map[string]ir.Value{
+			"role":       apRefVal("aws_iam_role.app.name"),
+			"policy_arn": apRefVal("aws_iam_policy.scoped.arn"),
+		}),
+		apResource("aws_lambda_function", "api", map[string]ir.Value{
+			"role": apRefVal("aws_iam_role.app.arn"),
+		}),
+		apResource("aws_s3_bucket", "assets", map[string]ir.Value{
+			"bucket": apStrVal("assets"),
+		}),
+	}
+	if findings := (killChain{}).CheckAll(resources); len(findings) != 0 {
+		t.Fatalf("scoped grant: expected 0 kill-chain findings, got %d: %+v", len(findings), findings)
+	}
+}
+
+// Negative: a conditioned open trust (org restriction) creates no
+// open-trust chain.
+func TestKillChain629ConditionedTrustQuiet(t *testing.T) {
+	resources := []ir.Resource{
+		apResource("aws_iam_role", "open", map[string]ir.Value{
+			"assume_role_policy": apStrVal(`{"Statement":[{"Effect":"Allow","Principal":"*","Action":"sts:AssumeRole","Condition":{"StringEquals":{"aws:PrincipalOrgID":"o-123"}}}]}`),
+		}),
+		apResource("aws_iam_policy", "broad", map[string]ir.Value{
+			"policy": apStrVal(`{"Statement":[{"Effect":"Allow","Action":"s3:*","Resource":"*"}]}`),
+		}),
+		apResource("aws_iam_role_policy_attachment", "att", map[string]ir.Value{
+			"role":       apRefVal("aws_iam_role.open.name"),
+			"policy_arn": apRefVal("aws_iam_policy.broad.arn"),
+		}),
+		apResource("aws_s3_bucket", "assets", map[string]ir.Value{
+			"bucket": apStrVal("assets"),
+		}),
+	}
+	if findings := (killChain{}).CheckAll(resources); len(findings) != 0 {
+		t.Fatalf("conditioned trust: expected 0 kill-chain findings, got %d", len(findings))
 	}
 }
 

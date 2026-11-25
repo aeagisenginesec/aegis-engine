@@ -99,6 +99,9 @@ var skipDirs = map[string]bool{
 var outputFileNames = map[string]bool{
 	"out.json": true, "out.sarif": true, "out.html": true,
 	"aegis.json": true, "aegis.sarif": true,
+	// Default --sbom outputs: a previous `scan --sbom` run's SBOM file
+	// sitting in the scanned tree must not be re-parsed as a manifest.
+	"sbom.spdx.json": true, "sbom.cyclonedx.json": true,
 }
 
 var tfExts = map[string]bool{".tf": true, ".tfvars": true}

@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"sort"
 	"strings"
 
@@ -61,7 +60,7 @@ func (inlineAdminPolicyRule) Check(r ir.Resource) []ir.Finding {
 			Evidence: ir.Evidence{
 				Attribute: "policy",
 				Span:      evidenceSpan(span, r.Span),
-				Actual:    "Allow statement with Action \"*\" (or \"*:*\") on Resource \"*\"",
+				Actual:    withNote("Allow statement with Action \"*\" (or \"*:*\") on Resource \"*\"", firstAdminStmtNote(pol, false)),
 				Expected:  "scoped Action and Resource lists",
 			},
 		}}
@@ -71,71 +70,25 @@ func (inlineAdminPolicyRule) Check(r ir.Resource) []ir.Finding {
 
 // inlinePolicyIsAdmin parses a policy JSON document and reports whether any
 // Allow statement has Action "*" (or "*:*") with Resource "*". Action and
-// Resource may each be a string or a list. Malformed JSON or unexpected
+// Resource may each be a string or a list. A NotAction statement counts
+// as admin when its exclusion list leaves the IAM action class intact
+// (see iamNormalizedStmt.isAdmin); a NotResource statement counts when
+// its exclusion list does not cover "*". Malformed JSON or unexpected
 // shapes yield false (cannot decide -> no finding).
 func inlinePolicyIsAdmin(doc string) bool {
-	var parsed struct {
-		Statement json.RawMessage `json:"Statement"`
-	}
-	if err := json.Unmarshal([]byte(doc), &parsed); err != nil {
-		return false
-	}
-	if len(parsed.Statement) == 0 {
-		return false
-	}
-	var stmts []map[string]any
-	if parsed.Statement[0] == '[' {
-		if err := json.Unmarshal(parsed.Statement, &stmts); err != nil {
-			return false
-		}
-	} else {
-		var one map[string]any
-		if err := json.Unmarshal(parsed.Statement, &one); err != nil {
-			return false
-		}
-		stmts = []map[string]any{one}
-	}
-	for _, s := range stmts {
-		eff, _ := s["Effect"].(string)
-		if eff != "Allow" {
+	for _, s := range policyStatements(doc) {
+		n := normalizeIAMStmt(s)
+		if n == nil || !n.grantsOnStar() {
 			continue
 		}
-		if actionIsStar(s["Action"]) && resourceIsStar(s["Resource"]) {
-			return true
-		}
-	}
-	return false
-}
-
-// actionIsStar reports whether v is "*", "*:*", or a list containing either.
-func actionIsStar(v any) bool {
-	switch t := v.(type) {
-	case string:
-		s := strings.TrimSpace(t)
-		return s == "*" || s == "*:*"
-	case []any:
-		for _, item := range t {
-			if s, ok := item.(string); ok {
-				s = strings.TrimSpace(s)
-				if s == "*" || s == "*:*" {
+		if n.hasAction {
+			for _, a := range n.actions {
+				if a == "*" || a == "*:*" {
 					return true
 				}
 			}
-		}
-	}
-	return false
-}
-
-// resourceIsStar reports whether v is "*" or a list containing "*".
-func resourceIsStar(v any) bool {
-	switch t := v.(type) {
-	case string:
-		return strings.TrimSpace(t) == "*"
-	case []any:
-		for _, item := range t {
-			if s, ok := item.(string); ok && strings.TrimSpace(s) == "*" {
-				return true
-			}
+		} else if n.hasNotAction && n.notActionIsAdmin() {
+			return true
 		}
 	}
 	return false

@@ -57,7 +57,7 @@ func checkRoleOpenTrust(r ir.Resource) []ir.Finding {
 	if !present || !known {
 		return nil // absent or unresolved: cannot decide
 	}
-	if trustPolicyOpenToAnyone(pol) {
+	if note, open := trustPolicyOpenToAnyoneNote(pol); open {
 		return []ir.Finding{{
 			RuleID:      "AEGIS-AWS-101",
 			Title:       (iamRoleOpenTrust{}).Title(),
@@ -67,7 +67,7 @@ func checkRoleOpenTrust(r ir.Resource) []ir.Finding {
 			Evidence: ir.Evidence{
 				Attribute: "assume_role_policy",
 				Span:      evidenceSpan(span, r.Span),
-				Actual:    "Allow statement with Principal \"*\"",
+				Actual:    withNote("Allow statement with Principal \"*\"", note),
 				Expected:  "Principal restricted to specific AWS identities",
 			},
 			Path: []ir.PathStep{{
@@ -83,24 +83,40 @@ func checkRoleOpenTrust(r ir.Resource) []ir.Finding {
 // trustPolicyOpenToAnyone parses a trust-policy JSON document and reports
 // whether any Allow statement grants Principal "*". A statement carrying a
 // Condition is skipped: the condition may legitimately scope the wildcard
-// (e.g. aws:PrincipalOrgID), so we cannot prove it is open. Malformed JSON
+// (e.g. aws:PrincipalOrgID), so we cannot prove it is open. A statement
+// with NotAction grants sts:AssumeRole unless its exclusion list covers
+// it (see iam_policy_eval.go); a statement with no action element at all
+// keeps the historical behavior of counting as a grant. Malformed JSON
 // or unexpected shapes yield false (cannot decide -> no finding).
 func trustPolicyOpenToAnyone(doc string) bool {
+	_, open := trustPolicyOpenToAnyoneNote(doc)
+	return open
+}
+
+// trustPolicyOpenToAnyoneNote is trustPolicyOpenToAnyone plus the
+// exclusion note of the granting statement ("" when the grant uses plain
+// Action), so the finding's evidence names the scope the policy
+// explicitly excludes.
+func trustPolicyOpenToAnyoneNote(doc string) (string, bool) {
 	for _, s := range policyStatements(doc) {
-		if s["Effect"] != "Allow" {
+		if lookupMapFold(s, "Condition") != nil {
 			continue
 		}
-		if _, hasCond := s["Condition"]; hasCond {
+		if lookupMapFold(s, "NotPrincipal") != nil {
 			continue
 		}
-		if _, hasNotPrincipal := s["NotPrincipal"]; hasNotPrincipal {
+		n := normalizeIAMStmt(s)
+		if n == nil {
 			continue
 		}
-		if principalAllowsAnyone(s["Principal"]) {
-			return true
+		if n.hasNotAction && !n.grantsAction("sts:assumerole") {
+			continue // AssumeRole is explicitly excluded
+		}
+		if principalAllowsAnyone(lookupMapFold(s, "Principal")) {
+			return n.exclusionNote(), true
 		}
 	}
-	return false
+	return "", false
 }
 
 // principalAllowsAnyone reports whether a Principal value grants access to
@@ -123,14 +139,13 @@ func principalAllowsAnyone(p any) bool {
 // policyStatements parses the Statement element of an IAM policy document,
 // accepting a single object or a list. Anything unparseable yields nil.
 //
-// Known blind spot: this parser returns statements verbatim — it does NOT
-// resolve NotAction/NotResource semantics. Every caller must skip statements
-// using NotAction/NotResource ("cannot decide -> silent"), because their
-// effective permissions require the full action/resource space to evaluate.
-// A policy that grants broad access via NotAction is therefore silently
-// missed by the rules built on this parser. That is a deliberate
-// soundness trade-off (no false positives from negative logic), not an
-// oversight — but treat it as a known gap, not as proof of safety.
+// NotAction/NotResource are returned verbatim in the statement maps; they
+// are evaluated with policy-evaluation semantics by normalizeIAMStmt
+// (iam_policy_eval.go), which every rule built on this parser now uses.
+// A statement with NotAction grants every action its exclusion list does
+// not cover; a statement with NotResource grants on every resource its
+// exclusion list does not cover. There is no silent skip anymore: see
+// the v2.4.0 entry in CHANGELOG.md.
 func policyStatements(doc string) []map[string]any {
 	var parsed struct {
 		Statement json.RawMessage `json:"Statement"`
@@ -212,7 +227,7 @@ func checkAdminManagedPolicy(r ir.Resource) []ir.Finding {
 			Evidence: ir.Evidence{
 				Attribute: "policy",
 				Span:      evidenceSpan(span, r.Span),
-				Actual:    "Allow statement with Action \"*\"/\"iam:*\" on Resource \"*\"",
+				Actual:    withNote("Allow statement with Action \"*\"/\"iam:*\" on Resource \"*\"", firstAdminStmtNote(pol, false)),
 				Expected:  "scoped Action and Resource lists",
 			},
 			Path: []ir.PathStep{{
@@ -225,40 +240,19 @@ func checkAdminManagedPolicy(r ir.Resource) []ir.Finding {
 	return nil
 }
 
-// managedPolicyIsAdmin reports whether any Allow statement has Action "*"
-// or "iam:*" on Resource "*". Action may be a string or a list. Statements
-// with NotAction are skipped (cannot decide). Malformed JSON yields false.
+// managedPolicyIsAdmin reports whether any Allow statement grants
+// administrative access: Action "*" or "iam:*" on Resource "*". A
+// NotAction statement counts as admin when its exclusion list leaves the
+// IAM action class intact (see iamNormalizedStmt.isAdmin); a NotResource
+// statement counts when its exclusion list does not cover "*".
+// Malformed JSON yields false.
 func managedPolicyIsAdmin(doc string) bool {
 	for _, s := range policyStatements(doc) {
-		if s["Effect"] != "Allow" {
+		n := normalizeIAMStmt(s)
+		if n == nil || !n.isAdmin() || !n.grantsOnStar() {
 			continue
 		}
-		if _, hasNotAction := s["NotAction"]; hasNotAction {
-			continue
-		}
-		if actionIsAdminLike(s["Action"]) && stringOrListHasStar(s["Resource"]) {
-			return true
-		}
-	}
-	return false
-}
-
-// actionIsAdminLike reports whether v is "*" or "iam:*", or a list
-// containing either (case-insensitive, trimmed).
-func actionIsAdminLike(v any) bool {
-	switch t := v.(type) {
-	case string:
-		s := strings.TrimSpace(t)
-		return s == "*" || strings.EqualFold(s, "iam:*")
-	case []any:
-		for _, item := range t {
-			if s, ok := item.(string); ok {
-				s = strings.TrimSpace(s)
-				if s == "*" || strings.EqualFold(s, "iam:*") {
-					return true
-				}
-			}
-		}
+		return true
 	}
 	return false
 }

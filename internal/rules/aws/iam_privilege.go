@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"strings"
 
 	"aegis/internal/ir"
@@ -15,144 +14,54 @@ import (
 // They mirror Checkov's CKV_AWS_286..290 checks.
 //
 // Shared helpers below parse a policy document into normalized Allow
-// statements. Unparseable documents, unknown values, and statements using
-// NotAction/NotResource yield no findings (cannot decide -> silent).
+// statements (see iam_policy_eval.go). NotAction/NotResource are evaluated
+// with real policy-evaluation semantics: a NotAction statement grants
+// every action its exclusion list does not cover, and a NotResource
+// statement grants on every resource its exclusion list does not cover.
+// Unparseable documents and unknown values still yield no findings
+// (cannot decide -> silent).
 // ---------------------------------------------------------------------------
 
-// iamAllowStmt is one normalized Allow statement: the actions it grants and
-// the resources it grants them on. Actions are lower-cased for matching
-// (IAM actions are case-insensitive).
+// iamAllowStmt is one normalized Allow statement. Actions are lower-cased
+// for matching (IAM actions are case-insensitive); see
+// iamNormalizedStmt in iam_policy_eval.go for the evaluation semantics.
 type iamAllowStmt struct {
-	actions   []string
-	resources []string
+	n *iamNormalizedStmt
 }
 
 // parseIAMAllowStatements extracts Allow statements from a policy JSON
 // document. Returns nil when the document cannot be parsed or has no
 // usable Allow statements. Statements using NotAction/NotResource are
-// skipped (their semantics require the full action space to evaluate).
+// evaluated with policy-evaluation semantics, not skipped.
 func parseIAMAllowStatements(doc string) []iamAllowStmt {
-	var parsed struct {
-		Statement json.RawMessage `json:"Statement"`
-	}
-	if err := json.Unmarshal([]byte(doc), &parsed); err != nil {
-		return nil
-	}
-	if len(parsed.Statement) == 0 {
-		return nil
-	}
-	var raw []map[string]any
-	if len(parsed.Statement) > 0 && parsed.Statement[0] == '[' {
-		if err := json.Unmarshal(parsed.Statement, &raw); err != nil {
-			return nil
-		}
-	} else {
-		var one map[string]any
-		if err := json.Unmarshal(parsed.Statement, &one); err != nil {
-			return nil
-		}
-		raw = []map[string]any{one}
-	}
 	var out []iamAllowStmt
-	for _, s := range raw {
-		eff, _ := s["Effect"].(string)
-		if !strings.EqualFold(strings.TrimSpace(eff), "Allow") {
+	for _, s := range policyStatements(doc) {
+		n := normalizeIAMStmt(s)
+		// No action element: nothing is granted by this statement.
+		if n == nil || (!n.hasAction && !n.hasNotAction) {
 			continue
 		}
-		// NotAction/NotResource: cannot evaluate safely -> skip statement.
-		if _, ok := s["NotAction"]; ok {
-			continue
-		}
-		if _, ok := s["NotResource"]; ok {
-			continue
-		}
-		actions := stringListAny(s["Action"])
-		if len(actions) == 0 {
-			continue
-		}
-		resources := stringListAny(s["Resource"])
-		if len(resources) == 0 {
-			resources = []string{"*"} // Resource omitted defaults to "*"
-		}
-		lowered := make([]string, 0, len(actions))
-		for _, a := range actions {
-			a = strings.TrimSpace(a)
-			if a != "" {
-				lowered = append(lowered, strings.ToLower(a))
-			}
-		}
-		if len(lowered) == 0 {
-			continue
-		}
-		out = append(out, iamAllowStmt{actions: lowered, resources: resources})
+		out = append(out, iamAllowStmt{n: n})
 	}
 	return out
-}
-
-// stringList normalizes a JSON string-or-list into a []string.
-// Anything else yields nil.
-func stringListAny(v any) []string {
-	switch t := v.(type) {
-	case string:
-		return []string{t}
-	case []any:
-		var out []string
-		for _, item := range t {
-			if s, ok := item.(string); ok {
-				out = append(out, s)
-			}
-		}
-		return out
-	}
-	return nil
 }
 
 // iamActionCovers reports whether a granted action pattern (which may
 // contain "*") covers a concrete wanted action. Both are matched
 // case-insensitively; wanted must already be lower-cased.
 func iamActionCovers(granted, wanted string) bool {
-	granted = strings.ToLower(strings.TrimSpace(granted))
-	if granted == "" {
-		return false
-	}
-	if !strings.Contains(granted, "*") {
-		return granted == wanted
-	}
-	// Glob match: split on "*" and require ordered segment containment.
-	parts := strings.Split(granted, "*")
-	pos := 0
-	for i, p := range parts {
-		if p == "" {
-			continue
-		}
-		if i == 0 && !strings.HasPrefix(granted, "*") {
-			if !strings.HasPrefix(wanted[pos:], p) {
-				return false
-			}
-			pos += len(p)
-			continue
-		}
-		idx := strings.Index(wanted[pos:], p)
-		if idx < 0 {
-			return false
-		}
-		pos += idx + len(p)
-	}
-	if last := parts[len(parts)-1]; last != "" && !strings.HasSuffix(granted, "*") {
-		return strings.HasSuffix(wanted, last)
-	}
-	return true
+	return iamGlobMatch(granted, wanted, true)
 }
 
 // iamGrantsAny reports whether any statement grants (covers) any of the
-// wanted concrete actions. Wanted actions must be lower-cased.
+// wanted concrete actions. Wanted actions must be lower-cased. A
+// NotAction statement grants a wanted action unless its exclusion list
+// covers it.
 func iamGrantsAny(stmts []iamAllowStmt, wanted ...string) bool {
 	for _, s := range stmts {
-		for _, g := range s.actions {
-			for _, w := range wanted {
-				if iamActionCovers(g, w) {
-					return true
-				}
+		for _, w := range wanted {
+			if s.n.grantsAction(w) {
+				return true
 			}
 		}
 	}
@@ -160,28 +69,178 @@ func iamGrantsAny(stmts []iamAllowStmt, wanted ...string) bool {
 }
 
 // iamGrantsOnStar reports whether any statement grants (covers) any of the
-// wanted actions on Resource "*".
+// wanted actions on Resource "*". A NotResource statement grants on "*"
+// unless its exclusion list covers "*" itself.
 func iamGrantsOnStar(stmts []iamAllowStmt, wanted ...string) bool {
 	for _, s := range stmts {
-		onStar := false
-		for _, r := range s.resources {
-			if strings.TrimSpace(r) == "*" {
-				onStar = true
-				break
-			}
-		}
-		if !onStar {
+		if !s.n.grantsOnStar() {
 			continue
 		}
-		for _, g := range s.actions {
-			for _, w := range wanted {
-				if iamActionCovers(g, w) {
-					return true
-				}
+		for _, w := range wanted {
+			if s.n.grantsAction(w) {
+				return true
 			}
 		}
 	}
 	return false
+}
+
+// iamGrantsOnClass reports whether any statement grants any of the wanted
+// actions on the whole resource class described by classGlob (e.g.
+// iamRoleARNClass for iam:PassRole, iamS3BucketARNClass for the S3
+// exfiltration pair). A NotResource statement grants on the class unless
+// an exclusion pattern covers the class — so excluding every role ARN
+// silences 502, while excluding one bucket does not silence 503.
+func iamGrantsOnClass(stmts []iamAllowStmt, classGlob string, wanted ...string) bool {
+	for _, s := range stmts {
+		if !s.n.grantsOnClass(classGlob) {
+			continue
+		}
+		for _, w := range wanted {
+			if s.n.grantsAction(w) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// iamGrantNotes collects the exclusion notes of the statements granting
+// any of the wanted actions, so a finding's evidence names the scope the
+// policy explicitly excludes instead of claiming it.
+func iamGrantNotes(stmts []iamAllowStmt, wanted ...string) string {
+	var notes []string
+	seen := map[string]bool{}
+	for _, s := range stmts {
+		grants := false
+		for _, w := range wanted {
+			if s.n.grantsAction(w) {
+				grants = true
+				break
+			}
+		}
+		if !grants {
+			continue
+		}
+		if note := s.n.exclusionNote(); note != "" && !seen[note] {
+			seen[note] = true
+			notes = append(notes, note)
+		}
+	}
+	return strings.Join(notes, "; ")
+}
+
+// iamGrantNotesOnClass is iamGrantNotes restricted to statements granting
+// on the given resource class.
+func iamGrantNotesOnClass(stmts []iamAllowStmt, classGlob string, wanted ...string) string {
+	var notes []string
+	seen := map[string]bool{}
+	for _, s := range stmts {
+		if !s.n.grantsOnClass(classGlob) {
+			continue
+		}
+		grants := false
+		for _, w := range wanted {
+			if s.n.grantsAction(w) {
+				grants = true
+				break
+			}
+		}
+		if !grants {
+			continue
+		}
+		if note := s.n.exclusionNote(); note != "" && !seen[note] {
+			seen[note] = true
+			notes = append(notes, note)
+		}
+	}
+	return strings.Join(notes, "; ")
+}
+
+// iam504Witnesses are representative IAM permissions-management actions.
+// A NotAction statement grants a management action unless its exclusion
+// list covers every witness family — i.e. unless it genuinely grants no
+// IAM write action. Positive statements are checked pattern-by-pattern
+// with iamIsPermissionsMgmt instead (see findMgmtGrant).
+var iam504Witnesses = []string{
+	"iam:putuserpolicy",
+	"iam:createpolicy",
+	"iam:deleteuser",
+	"iam:attachrolepolicy",
+	"iam:updateuser",
+}
+
+// findMgmtGrant reports whether the statement grants an IAM permissions
+// management action on "*", returning the matched action (the granted
+// pattern for positive statements, the first granted witness action for
+// NotAction statements) and the statement's exclusion note.
+// Positive statements are tested pattern-by-pattern; NotAction
+// statements are tested against representative witness actions.
+func (s iamAllowStmt) findMgmtGrant() (string, string) {
+	if !s.n.grantsOnStar() {
+		return "", ""
+	}
+	if s.n.hasAction {
+		for _, a := range s.n.actions {
+			if iamIsPermissionsMgmt(a) {
+				return a, s.n.exclusionNote()
+			}
+		}
+		return "", ""
+	}
+	if s.n.hasNotAction {
+		for _, w := range iam504Witnesses {
+			if s.n.grantsAction(w) {
+				return w, s.n.exclusionNote()
+			}
+		}
+	}
+	return "", ""
+}
+
+// iam505Witnesses are representative unconstrained write actions across
+// services, used the same way as iam504Witnesses for NotAction
+// statements.
+var iam505Witnesses = []string{
+	"s3:putobject",
+	"ec2:terminateinstances",
+	"rds:deletedbinstance",
+	"lambda:updatefunctioncode",
+	"dynamodb:deleteitem",
+}
+
+// findWriteGrant reports whether the statement grants an unconstrained
+// write action on "*", returning the matched action and the statement's
+// exclusion note (see findMgmtGrant).
+func (s iamAllowStmt) findWriteGrant() (string, string) {
+	if !s.n.grantsOnStar() {
+		return "", ""
+	}
+	if s.n.hasAction {
+		for _, a := range s.n.actions {
+			if iamIsUnconstrainedWrite(a) {
+				return a, s.n.exclusionNote()
+			}
+		}
+		return "", ""
+	}
+	if s.n.hasNotAction {
+		for _, w := range iam505Witnesses {
+			if s.n.grantsAction(w) {
+				return w, s.n.exclusionNote()
+			}
+		}
+	}
+	return "", ""
+}
+
+// withNote appends a parenthesized exclusion note to a finding's Actual
+// evidence string when the grant came via NotAction/NotResource.
+func withNote(actual, note string) string {
+	if note == "" {
+		return actual
+	}
+	return actual + " (" + note + ")"
 }
 
 // iamPrivilegeAppliesTo is the shared AppliesTo for the Tier 1 rules.
@@ -265,8 +324,10 @@ func (r iamPrivilegeEscalation) Check(res ir.Resource) []ir.Finding {
 		return nil
 	}
 	if iamGrantsAny(stmts, iam501Authoring...) && iamGrantsAny(stmts, iam501Attachment...) {
+		both := append(append([]string{}, iam501Authoring...), iam501Attachment...)
 		return []ir.Finding{iamPrivilegeFinding(r, res, span,
-			"Allow statements grant policy-authoring and policy-attachment actions",
+			withNote("Allow statements grant policy-authoring and policy-attachment actions",
+				iamGrantNotes(stmts, both...)),
 			"separate policy authoring from attachment; scope both to least privilege")}
 	}
 	return nil
@@ -319,9 +380,17 @@ func (r iamPassRoleEscalation) Check(res ir.Resource) []ir.Finding {
 	if !ok {
 		return nil
 	}
-	if iamGrantsOnStar(stmts, "iam:passrole") && iamGrantsAny(stmts, iam502Primitives...) {
+	if iamGrantsOnClass(stmts, iamRoleARNClass, "iam:passrole") && iamGrantsAny(stmts, iam502Primitives...) {
+		note := iamGrantNotesOnClass(stmts, iamRoleARNClass, "iam:passrole")
+		if prim := iamGrantNotes(stmts, iam502Primitives...); prim != "" {
+			if note != "" {
+				note += "; " + prim
+			} else {
+				note = prim
+			}
+		}
 		return []ir.Finding{iamPrivilegeFinding(r, res, span,
-			"Allow statements grant iam:PassRole on \"*\" with a compute-launch primitive",
+			withNote("Allow statements grant iam:PassRole on \"*\" with a compute-launch primitive", note),
 			"scope iam:PassRole to specific role ARNs")}
 	}
 	return nil
@@ -371,10 +440,14 @@ func (r iamDataExfiltration) Check(res ir.Resource) []ir.Finding {
 	}
 	for _, pair := range iam503Pairs {
 		all := true
+		var note string
 		for _, a := range pair.actions {
 			var granted bool
 			if pair.requireStar {
-				granted = iamGrantsOnStar(stmts, a)
+				// S3 data-plane actions act on buckets: the grant must
+				// cover the bucket class, so a NotResource that excludes
+				// every bucket silences the pair.
+				granted = iamGrantsOnClass(stmts, iamS3BucketARNClass, a)
 			} else {
 				granted = iamGrantsAny(stmts, a)
 			}
@@ -384,8 +457,13 @@ func (r iamDataExfiltration) Check(res ir.Resource) []ir.Finding {
 			}
 		}
 		if all {
+			if pair.requireStar {
+				note = iamGrantNotesOnClass(stmts, iamS3BucketARNClass, pair.actions...)
+			} else {
+				note = iamGrantNotes(stmts, pair.actions...)
+			}
 			return []ir.Finding{iamPrivilegeFinding(r, res, span,
-				"Allow statements grant exfiltration pair "+pair.label,
+				withNote("Allow statements grant exfiltration pair "+pair.label, note),
 				"scope data-plane actions to specific resources")}
 		}
 	}
@@ -460,22 +538,10 @@ func (r iamPermissionsMgmt) Check(res ir.Resource) []ir.Finding {
 		return nil
 	}
 	for _, s := range stmts {
-		onStar := false
-		for _, rs := range s.resources {
-			if strings.TrimSpace(rs) == "*" {
-				onStar = true
-				break
-			}
-		}
-		if !onStar {
-			continue
-		}
-		for _, a := range s.actions {
-			if iamIsPermissionsMgmt(a) {
-				return []ir.Finding{iamPrivilegeFinding(r, res, span,
-					"Allow statement grants IAM management action \""+a+"\" on \"*\"",
-					"scope IAM management actions to specific identities")}
-			}
+		if a, note := s.findMgmtGrant(); a != "" {
+			return []ir.Finding{iamPrivilegeFinding(r, res, span,
+				withNote("Allow statement grants IAM management action \""+a+"\" on \"*\"", note),
+				"scope IAM management actions to specific identities")}
 		}
 	}
 	return nil
@@ -542,22 +608,10 @@ func (r iamWriteNoConstraints) Check(res ir.Resource) []ir.Finding {
 		return nil
 	}
 	for _, s := range stmts {
-		onStar := false
-		for _, rs := range s.resources {
-			if strings.TrimSpace(rs) == "*" {
-				onStar = true
-				break
-			}
-		}
-		if !onStar {
-			continue
-		}
-		for _, a := range s.actions {
-			if iamIsUnconstrainedWrite(a) {
-				return []ir.Finding{iamPrivilegeFinding(r, res, span,
-					"Allow statement grants write action \""+a+"\" on \"*\"",
-					"scope write actions to specific resources")}
-			}
+		if a, note := s.findWriteGrant(); a != "" {
+			return []ir.Finding{iamPrivilegeFinding(r, res, span,
+				withNote("Allow statement grants write action \""+a+"\" on \"*\"", note),
+				"scope write actions to specific resources")}
 		}
 	}
 	return nil

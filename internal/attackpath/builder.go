@@ -15,6 +15,16 @@ type Builder struct {
 	resources []ir.Resource
 	byAddr    map[string]ir.Resource
 	graph     *graph.Graph
+	// roleNames indexes IAM roles by Terraform label and by AWS `name`
+	// attribute, so name-based role resolution is O(1) instead of a full
+	// scan per lookup. Built once in NewBuilder.
+	roleNames map[string][]string
+	// roleDocsCache / workloadRolesCache memoize the role/policy
+	// resolution shared by findIAMChains and findIAMReachLinks.
+	roleDocsCache       map[string][]rolePolicyDoc
+	roleDocsCached      bool
+	workloadRolesCache  map[string]string
+	workloadRolesCached bool
 }
 
 // NewBuilder creates a chain builder over the given resources.
@@ -25,10 +35,33 @@ func NewBuilder(resources []ir.Resource) *Builder {
 			byAddr[r.Address()] = r
 		}
 	}
+	roleNames := make(map[string][]string)
+	for _, r := range resources {
+		if r.Type != "aws_iam_role" {
+			continue
+		}
+		addName := func(n string) {
+			n = strings.Trim(n, `"`)
+			if n == "" {
+				return
+			}
+			for _, a := range roleNames[n] {
+				if a == r.Address() {
+					return
+				}
+			}
+			roleNames[n] = append(roleNames[n], r.Address())
+		}
+		addName(r.Name)
+		if v, ok := r.Attributes["name"]; ok {
+			addName(rawString(v))
+		}
+	}
 	return &Builder{
 		resources: resources,
 		byAddr:    byAddr,
 		graph:     graph.Build(resources),
+		roleNames: roleNames,
 	}
 }
 
@@ -330,71 +363,35 @@ type IAMChain struct {
 	Actions  []string // privileged actions granted
 }
 
-// findIAMChains traces aws_iam_role → aws_iam_policy (via
-// aws_iam_role_policy_attachment or inline) → aws_instance /
-// aws_lambda_function (via iam_instance_profile / role).
+// findIAMChains traces workload → role → policy privilege paths, using
+// the shared role/policy resolution (attachments, inline policies,
+// aws_iam_policy_attachment roles lists, and managed AdministratorAccess).
+// Only policies granting wildcard/sensitive actions (see policyActions)
+// produce chains: a least-privilege policy is not a privilege chain.
 func (b *Builder) findIAMChains() []IAMChain {
 	var out []IAMChain
-
-	// Map role address -> attached policy addresses.
-	rolePolicies := make(map[string][]string)
-	for _, r := range b.resources {
-		if r.Type == "aws_iam_role_policy_attachment" {
-			roleV, ok1 := getString(r, "role")
-			polV, ok2 := getString(r, "policy_arn")
-			if ok1 && ok2 {
-				roleAddr := refToAddr(rawOrRef(roleV), "aws_iam_role")
-				polAddr := refToAddr(rawOrRef(polV), "aws_iam_policy")
-				if roleAddr != "" && polAddr != "" {
-					rolePolicies[roleAddr] = append(rolePolicies[roleAddr], polAddr)
-				}
-			}
-		}
+	roleDocs := b.rolePolicyDocs()
+	workloadRoles := b.workloadRoleAddrs()
+	workloads := make([]string, 0, len(workloadRoles))
+	for w := range workloadRoles {
+		workloads = append(workloads, w)
 	}
-
-	// Map workload -> role.
-	workloadRoles := make(map[string]string)
-	for _, r := range b.resources {
-		switch r.Type {
-		case "aws_instance":
-			if v, ok := getString(r, "iam_instance_profile"); ok {
-				// Instance profile -> role is a second hop; record profile as proxy.
-				workloadRoles[r.Address()] = "profile:" + rawOrRef(v)
-			}
-		case "aws_lambda_function":
-			if v, ok := getString(r, "role"); ok {
-				if addr := refToAddr(rawOrRef(v), "aws_iam_role"); addr != "" {
-					workloadRoles[r.Address()] = addr
-				} else if u := ClassifyUncertainty(v); u != "" {
-					workloadRoles[r.Address()] = "uncertain:" + u
-				}
-			}
+	sort.Strings(workloads)
+	for _, workload := range workloads {
+		roleAddr := workloadRoles[workload]
+		role, ok1 := b.byAddr[roleAddr]
+		wl, ok2 := b.byAddr[workload]
+		if !ok1 || !ok2 {
+			continue
 		}
-	}
-
-	for workload, roleRef := range workloadRoles {
-		if strings.HasPrefix(roleRef, "uncertain:") {
-			continue // handled as uncertainty, not a chain
-		}
-		roleAddr := strings.TrimPrefix(roleRef, "profile:")
-		// For instance profiles, resolve profile -> role via graph.
-		if strings.HasPrefix(roleRef, "profile:") {
-			roleAddr = b.resolveInstanceProfileRole(roleRef[len("profile:"):])
-			if roleAddr == "" {
-				continue
-			}
-		}
-		policies := rolePolicies[roleAddr]
-		for _, polAddr := range policies {
-			actions := b.policyActions(polAddr)
+		for _, doc := range roleDocs[roleAddr] {
+			actions := policyActionsFromDoc(doc.doc)
 			if len(actions) == 0 {
 				continue
 			}
-			role, ok1 := b.byAddr[roleAddr]
-			pol, ok2 := b.byAddr[polAddr]
-			wl, ok3 := b.byAddr[workload]
-			if !ok1 || !ok2 || !ok3 {
-				continue
+			detail := "IAM policy grants: " + strings.Join(actions, ", ")
+			if doc.doc == adminPolicyDoc {
+				detail += " (AWS-managed AdministratorAccess)"
 			}
 			out = append(out, IAMChain{
 				Role: Hop{
@@ -405,10 +402,10 @@ func (b *Builder) findIAMChains() []IAMChain {
 					Confidence: ConfidenceHigh,
 				},
 				Policy: Hop{
-					Resource:   polAddr,
+					Resource:   doc.addr,
 					Kind:       KindIdentity,
-					Detail:     "IAM policy grants: " + strings.Join(actions, ", "),
-					Evidence:   ir.Evidence{Attribute: "policy", Span: pol.Span, Actual: strings.Join(actions, ",")},
+					Detail:     detail,
+					Evidence:   doc.evidence,
 					Confidence: ConfidenceHigh,
 				},
 				Workload: Hop{
@@ -487,7 +484,13 @@ func (b *Builder) policyActions(polAddr string) []string {
 	if !ok {
 		return nil
 	}
-	raw := rawString(v)
+	return policyActionsFromDoc(rawString(v))
+}
+
+// policyActionsFromDoc is the testable core of policyActions: it scans a
+// policy JSON document for wildcard or sensitive actions literally present
+// in the document text. This is a heuristic scan, not a full IAM parser.
+func policyActionsFromDoc(raw string) []string {
 	// Look for wildcard or sensitive actions in the JSON document.
 	// This is a heuristic scan, not a full IAM parser: it only reports
 	// actions literally present in the document text.
@@ -510,10 +513,33 @@ func (b *Builder) policyActions(polAddr string) []string {
 }
 
 // sortedResources returns resources in deterministic address order.
+// Stable: two resources sharing one address keep their input order, so
+// dedupedResources ("first wins") resolves the same way every run.
 func (b *Builder) sortedResources() []ir.Resource {
 	sorted := append([]ir.Resource(nil), b.resources...)
-	sort.Slice(sorted, func(i, j int) bool {
+	sort.SliceStable(sorted, func(i, j int) bool {
 		return sorted[i].Address() < sorted[j].Address()
 	})
 	return sorted
+}
+
+// dedupedResources returns sorted resources with duplicate addresses
+// collapsed (first wins) — the same view the graph and byAddr use.
+// IAM resolution MUST use this, not sortedResources: two files can
+// declare the same address (e.g. two demo scenarios both defining
+// aws_iam_role.demo), and merging attributes across the duplicates
+// would invent a Frankenstein role — open trust from one file,
+// AdministratorAccess from the other — that exists in neither. An
+// ambiguous address contributes its first resource only, never a merge.
+func (b *Builder) dedupedResources() []ir.Resource {
+	seen := make(map[string]bool, len(b.resources))
+	var out []ir.Resource
+	for _, r := range b.sortedResources() {
+		if seen[r.Address()] {
+			continue
+		}
+		seen[r.Address()] = true
+		out = append(out, r)
+	}
+	return out
 }

@@ -3,6 +3,19 @@
 **Date:** 2026-10-11
 **Status:** Complete
 
+> **Update (2026-11-25, benchmark authority, SOC #18):** this report
+> records the **Oct-11 pre-FP-fix run** (326 rules, any-finding
+> standard): Aegis P=0.700 / F1=0.824, FP=60. Those numbers were true
+> for that run and are kept as history below. On Oct 12 the FP fixes
+> landed (commit `0a5bb41`, 698 rules) and the any-standard FP became
+> genuinely 0; on 2026-11-25 `benchmark/heldout_results.json` was
+> regenerated from the current build (1,148 rules) under the medium+
+> standard — Aegis TP=140 FP=0 FN=0 TN=60, P=R=F1=1.000; Checkov
+> unchanged at TP=140 FP=60, P=0.700, F1=0.824. The stale pre-fix
+> snapshots `benchmark/detect_results.json` and
+> `benchmark/heldout_severity_results.json` were deleted. Current
+> numbers and the single authority per corpus: `docs/BENCHMARKS.md`.
+
 ## Methodology
 
 ### Held-Out Corpus
@@ -85,4 +98,4 @@
 
 On this held-out corpus, **Aegis matches Checkov exactly on detection** (identical precision, recall, F1) while running **~520x faster**. Neither tool achieves the 95% precision gate at project level — both are noisy on hygiene. Aegis's differentiators (attack paths, speed, unique rule classes) don't show in these aggregate numbers but were validated separately.
 
-This is a defensible, reproducible result. Raw data: `benchmark/heldout_results.json`, `benchmark/heldout_severity_results.json`.
+This is a defensible, reproducible result for the Oct-11 pre-fix run. Raw data: `benchmark/heldout_results.json` (regenerated 2026-11-25 under the medium+ standard; see `docs/BENCHMARKS.md`). The pre-fix severity breakdown formerly in `benchmark/heldout_severity_results.json` was deleted with that file — it was an Oct-11 snapshot with no generator.

@@ -102,6 +102,7 @@ shadow → gate → cutover adoption path:
 ./aegis scan ./my-infra --format=json --fail-on=high      # CI mode
 ./aegis scan ./my-infra --attack-paths                    # evidence-backed kill chains
 ./aegis scan ./my-infra --format=sarif > aegis.sarif      # GitHub code scanning
+./aegis scan ./my-infra --sbom spdx-json                # SPDX 2.3 dependency inventory (see docs/SBOM.md)
 ./aegis fix ./my-infra                                    # safe fixes (dry run by default)
 ./aegis quality-gate                                      # release gates: precision / recall / perf
 ```
@@ -186,6 +187,10 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 - **Suppressions & baselines** — `# aegis:ignore=RULE-ID`, stable baseline files for CI
 - **YAML custom rules** — user-defined checks without writing Go
 - **SARIF / JSON / text** output; SARIF chunking for GitHub code scanning
+- **SIEM/SOAR webhook** (`--webhook`) — POST the JSON report to an HTTPS endpoint after a scan; see [docs/WEBHOOK.md](docs/WEBHOOK.md)
+- **SBOM generation** (`--sbom spdx-json|cyclonedx-json`) — SPDX 2.3 /
+  CycloneDX 1.6 dependency inventory of the scanned project
+  (providers, modules, base images); see [docs/SBOM.md](docs/SBOM.md)
 - **Completeness auditing** — skipped, oversize and unreadable files are reported, never silently dropped
 
 ## Scope — what Aegis is and isn't
@@ -208,6 +213,7 @@ See [docs/PULUMI.md](docs/PULUMI.md) and [docs/LIMITATIONS.md](docs/LIMITATIONS.
 - [Coverage matrix](docs/COVERAGE_MATRIX.md) — per-service rule inventory
 - [Architecture](docs/ARCHITECTURE.md) · [CI integration](docs/CI_INTEGRATION.md) · [Baselines](docs/BASELINES.md)
 - [Compliance & waivers](docs/compliance.md) — framework mappings, posture reporting, HTML attestation, expiring waivers
+- [SIEM/SOAR webhook](docs/WEBHOOK.md) — push scan results to an HTTPS endpoint after a scan
 - [Attack paths](docs/PHASE3_ATTACK_PATHS.md) · [Production hardening](docs/PHASE4_PRODUCTION.md)
 - [Final verdict](docs/FINAL_VERDICT.md) — the honest comparison
 - Release notes: [v2.0.0](docs/audit/16_RELEASE_NOTES_v2.0.0.md) · [v1.0.0](docs/RELEASE_NOTES_v1.0.0.md)
@@ -225,6 +231,7 @@ internal/qualitygate/ release-blocking precision/recall/perf gates
 internal/remediation/ safe auto-fix with IAM/networking blocklist
 internal/graph/       resource relationship graph
 internal/report/      text / JSON / SARIF renderers (secrets redacted)
+internal/webhook/     SIEM/SOAR webhook delivery (HTTPS, Bearer, bounded retry)
 benchmark/            held-out corpus generator + raw results
 docs/                 coverage matrix, validation, release notes
 examples/             sample projects and workflows
