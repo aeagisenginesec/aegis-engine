@@ -102,6 +102,7 @@ shadow → gate → cutover adoption path:
 ./aegis scan ./my-infra --format=json --fail-on=high      # CI mode
 ./aegis scan ./my-infra --attack-paths                    # evidence-backed kill chains
 ./aegis scan ./my-infra --format=sarif > aegis.sarif      # GitHub code scanning
+./aegis scan ./my-infra --sbom spdx-json                # SPDX 2.3 dependency inventory (see docs/SBOM.md)
 ./aegis fix ./my-infra                                    # safe fixes (dry run by default)
 ./aegis quality-gate                                      # release gates: precision / recall / perf
 ```
@@ -186,6 +187,9 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 - **Suppressions & baselines** — `# aegis:ignore=RULE-ID`, stable baseline files for CI
 - **YAML custom rules** — user-defined checks without writing Go
 - **SARIF / JSON / text** output; SARIF chunking for GitHub code scanning
+- **SBOM generation** (`--sbom spdx-json|cyclonedx-json`) — SPDX 2.3 /
+  CycloneDX 1.6 dependency inventory of the scanned project
+  (providers, modules, base images); see [docs/SBOM.md](docs/SBOM.md)
 - **Completeness auditing** — skipped, oversize and unreadable files are reported, never silently dropped
 
 ## Scope — what Aegis is and isn't
