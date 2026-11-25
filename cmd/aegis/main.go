@@ -10,6 +10,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -41,6 +42,7 @@ import (
 	"aegis/internal/rules/custom"
 	"aegis/internal/semantics"
 	"aegis/internal/version"
+	"aegis/internal/webhook"
 )
 
 // ruleRunner is the interface the CLI codes against; rules.Registry
@@ -53,7 +55,7 @@ type ruleRunner interface {
 const usageText = `aegis — Infrastructure-as-Code security scanner
 
 Usage:
-  aegis scan <dir|file> [--format=text|json|sarif|html] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW[,FW...]|all] [--config=aegis.yaml] [--exclude=globs]
+  aegis scan <dir|file> [--format=text|json|sarif|html] [--rules=PACKS] [--advisories=file] [--fail-on=critical|high|medium|low] [--baseline=file] [--baseline-out=file] [--strict] [--compliance=FW[,FW...]|all] [--config=aegis.yaml] [--exclude=globs] [--webhook=https://...] [--webhook-secret=TOKEN] [--webhook-header="Name: value"] [--webhook-timeout=10] [--webhook-attempts=3] [--webhook-allow-http] [--webhook-dry-run] [--webhook-fail-on-error]
   aegis fix  <dir> [--apply] [--rule=RULEID] [--format=text|json] [--force]
   aegis serve [--addr=127.0.0.1:8734] [--auth-token=TOKEN]
   aegis quality-gate [--format=text|json] [--bench-dir=DIR] [--corpus-dir=DIR]
@@ -121,6 +123,30 @@ Flags:
   --auth-token serve: require "Authorization: Bearer TOKEN" on /v1/scan
                (or set AEGIS_SERVE_TOKEN); required in practice whenever
                serve binds a non-loopback address
+  --webhook    scan: POST the scan result (same JSON envelope as
+               --format=json, secrets redacted) to an HTTPS webhook
+               endpoint after the scan completes, for SIEM/SOAR ingestion.
+               The local report is always written first; a failed delivery
+               never loses it. See docs/WEBHOOK.md.
+  --webhook-secret scan: Bearer token for the webhook endpoint (or set
+               AEGIS_WEBHOOK_SECRET). Never printed or logged.
+  --webhook-header scan: extra header "Name: value" (repeatable).
+               "Authorization" is rejected here — use --webhook-secret.
+  --webhook-timeout scan: per-attempt delivery timeout in seconds
+               (default 10). A slow endpoint can never hang a scan.
+  --webhook-attempts scan: total delivery attempts, 1–10 (default 3);
+               5xx/429 and transport errors are retried with exponential
+               backoff (500ms, 1s, ...); 4xx is not retried
+  --webhook-allow-http scan: allow a plain-http:// webhook URL. Only for
+               loopback/lab receivers — findings cross the wire in
+               cleartext over HTTP, so HTTPS is the default and the
+               opt-out must be explicit
+  --webhook-dry-run scan: print what would be sent (endpoint, headers by
+               name only, payload size and a redacted preview) without
+               sending anything
+  --webhook-fail-on-error scan: exit 2 when delivery fails. Without it,
+               a failed delivery is a stderr warning and the exit code
+               still reflects the scan findings only
 
 Exit codes:
   0  scan clean (or below --fail-on threshold) / fix dry run
@@ -576,6 +602,39 @@ func severityRank(s ir.Severity) int {
 	}
 }
 
+// headerList is a repeatable flag.Value collecting --webhook-header
+// "Name: value" pairs. It validates the shape at parse time so a
+// malformed header fails fast, before the scan runs.
+type headerList struct {
+	values map[string]string
+	set    bool
+}
+
+func (h *headerList) String() string {
+	if h == nil || len(h.values) == 0 {
+		return ""
+	}
+	var parts []string
+	for k, v := range h.values {
+		parts = append(parts, k+": "+v)
+	}
+	sort.Strings(parts)
+	return strings.Join(parts, ", ")
+}
+
+func (h *headerList) Set(s string) error {
+	name, value, ok := strings.Cut(s, ":")
+	if !ok || strings.TrimSpace(name) == "" {
+		return fmt.Errorf("webhook header %q must be \"Name: value\"", s)
+	}
+	if h.values == nil {
+		h.values = map[string]string{}
+	}
+	h.values[strings.TrimSpace(name)] = strings.TrimSpace(value)
+	h.set = true
+	return nil
+}
+
 // failOnValue is a flag.Value that records whether --fail-on was passed,
 // so an explicit empty value (--fail-on=) is a usage error rather than
 // silently meaning "unset".
@@ -673,11 +732,50 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 	attackPaths := fs.Bool("attack-paths", false, "")
 	maxFileSize := fs.Int64("max-file-size", 0, "")
 	timeoutSecs := fs.Int("timeout", 0, "")
+	webhookURL := fs.String("webhook", "", "")
+	webhookSecret := fs.String("webhook-secret", "", "")
+	var webhookHeaders headerList
+	fs.Var(&webhookHeaders, "webhook-header", "")
+	webhookTimeout := fs.Int("webhook-timeout", 10, "")
+	webhookAttempts := fs.Int("webhook-attempts", 3, "")
+	webhookAllowHTTP := fs.Bool("webhook-allow-http", false, "")
+	webhookDryRun := fs.Bool("webhook-dry-run", false, "")
+	webhookFailOnError := fs.Bool("webhook-fail-on-error", false, "")
 	strict := fs.Bool("strict", false, "fail with exit 2 if any file fails to parse")
 	var failOn failOnValue
 	fs.Var(&failOn, "fail-on", "")
 	if err := fs.Parse(flagArgs); err != nil {
 		return 2
+	}
+	// Webhook: validate the endpoint BEFORE scanning so a bad URL fails
+	// fast (exit 2) instead of after a full scan. A secret set without
+	// an endpoint is a usage error, not something to silently ignore.
+	webhookSecretSet := *webhookSecret != "" || os.Getenv("AEGIS_WEBHOOK_SECRET") != ""
+	webhookOptsSet := webhookSecretSet || webhookHeaders.set || *webhookDryRun || *webhookAllowHTTP || *webhookFailOnError || *webhookTimeout != 10 || *webhookAttempts != 3
+	if *webhookURL == "" && webhookOptsSet {
+		fmt.Fprintf(stderr, "aegis: --webhook-secret/--webhook-header/--webhook-dry-run/--webhook-allow-http/--webhook-fail-on-error/--webhook-timeout/--webhook-attempts require --webhook <url>\n")
+		return 2
+	}
+	var webhookCfg webhook.Config
+	if *webhookURL != "" {
+		secret := *webhookSecret
+		if secret == "" {
+			secret = os.Getenv("AEGIS_WEBHOOK_SECRET")
+		}
+		webhookCfg = webhook.Config{
+			URL:         *webhookURL,
+			Secret:      secret,
+			Headers:     webhookHeaders.values,
+			Timeout:     time.Duration(*webhookTimeout) * time.Second,
+			MaxAttempts: *webhookAttempts,
+			AllowHTTP:   *webhookAllowHTTP,
+			DryRun:      *webhookDryRun,
+			FailOnError: *webhookFailOnError,
+		}
+		if err := webhookCfg.Validate(); err != nil {
+			fmt.Fprintf(stderr, "aegis: %v\n", err)
+			return 2
+		}
 	}
 	// --max-file-size overrides the discovery per-file cap for this run.
 	if *maxFileSize > 0 {
@@ -926,6 +1024,15 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "aegis: report error: %v\n", werr)
 		return 2
 	}
+	// Webhook delivery happens AFTER the local report is written, so a
+	// failed delivery can never lose the local result. The payload is
+	// the same JSON envelope as --format=json (same shape, same
+	// redaction), regardless of the local --format.
+	if *webhookURL != "" {
+		if code := deliverWebhook(webhookCfg, res, stderr); code != 0 {
+			return code
+		}
+	}
 	// --strict: fail if any file could not be parsed (incomplete scan)
 	if *strict && !res.Completeness.Complete() {
 		fmt.Fprintf(stderr, "aegis: strict mode: %d file(s) failed to parse\n",
@@ -937,6 +1044,56 @@ func runScan(target string, flagArgs []string, stdout, stderr io.Writer) int {
 			return 1
 		}
 	}
+	return 0
+}
+
+// deliverWebhook sends the scan result to the configured webhook
+// endpoint. Dry-run prints what would be sent (endpoint, header names
+// only, payload size and a redacted preview) without sending anything.
+// On failure it warns on stderr and returns 0 — the local report is
+// already written and the scan exit code still reflects the findings —
+// unless FailOnError is set, in which case it returns 2. The secret is
+// never printed here: dry-run shows header names only, and delivery
+// errors never contain it.
+func deliverWebhook(cfg webhook.Config, res ir.ScanResult, stderr io.Writer) int {
+	payload, err := webhook.Payload(res)
+	if err != nil {
+		fmt.Fprintf(stderr, "aegis: webhook: %v\n", err)
+		if cfg.FailOnError {
+			return 2
+		}
+		return 0
+	}
+	if cfg.DryRun {
+		fmt.Fprintf(stderr, "aegis: webhook dry-run — would POST %d bytes to %s\n", len(payload), cfg.URL)
+		fmt.Fprintf(stderr, "aegis: webhook dry-run — headers: Content-Type: application/json")
+		if cfg.Secret != "" {
+			fmt.Fprintf(stderr, ", Authorization: Bearer ***")
+		}
+		for name := range cfg.Headers {
+			fmt.Fprintf(stderr, ", %s: ***", name)
+		}
+		fmt.Fprintf(stderr, "\n")
+		const previewLen = 500
+		preview := payload
+		if len(preview) > previewLen {
+			preview = preview[:previewLen]
+		}
+		fmt.Fprintf(stderr, "aegis: webhook dry-run — payload preview (redacted):\n%s\n", preview)
+		return 0
+	}
+	// No outer context deadline: each attempt is bounded by the
+	// per-attempt Timeout in the webhook client, attempts are bounded
+	// by MaxAttempts, and backoff is bounded (500ms doubling). The
+	// total wait is therefore bounded and a scan can never hang here.
+	if err := webhook.Deliver(context.Background(), cfg, payload); err != nil {
+		fmt.Fprintf(stderr, "aegis: warning: webhook delivery failed: %v — local results unaffected\n", err)
+		if cfg.FailOnError {
+			return 2
+		}
+		return 0
+	}
+	fmt.Fprintf(stderr, "aegis: webhook delivered: %d findings to %s\n", len(res.Findings), cfg.URL)
 	return 0
 }
 
