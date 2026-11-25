@@ -13,7 +13,7 @@
 
 <p align="center">
   <b>Infrastructure-as-Code security scanner — deterministic, evidence-backed,<br>
-  and ~148× faster than Trivy on the R4 evaluation sweep.</b>
+  and 571× faster than Checkov on the R7 blind evaluation.</b>
 </p>
 
 Aegis scans Terraform, CloudFormation, ARM, Bicep, Kubernetes manifests,
@@ -26,12 +26,11 @@ from the internet to your data stores.
 
 ## Why Aegis
 
-- 🎯 **Measured accuracy, not marketing.** On the frozen R4 ground truth
-  (136 adjudicated concepts, 210 projects): **precision 1.000, recall 1.000** —
-  the corpus is fully solved. On the *blind* R5 set the honest number is
-  recall 0.555, and the gap is published, not hidden (see below).
-- ⚡ **Absurdly fast.** The 210-project R4 sweep finishes in **2.2 s**
-  (Trivy: 324.9 s). A 1.7M-line fixture yields **1,003,677 findings in ~2 minutes**.
+- 🎯 **Measured accuracy, not marketing.** On the fresh blind R7 set
+  (151-concept ground truth, 210 *new* projects): **F1 0.925, recall 0.861**
+  vs Checkov's 0.530 / 0.361 — leading on all 8 formats and all 4 providers.
+- ⚡ **Absurdly fast.** The 210-project R7 sweep runs at **0.010 s median**
+  per project (Checkov: 5.92 s). A 1.7M-line fixture yields **1,003,677 findings in ~2 minutes**.
 - 🕸️ **Attack paths, not just findings.** `INTERNET → SG(0.0.0.0/0) → EC2 → IAM role → RDS`,
   every hop cited with evidence; `[UNCERTAIN]` markers instead of guesses.
 - 🔁 **Deterministic.** Identical input → byte-identical output, every run.
@@ -136,16 +135,6 @@ Every finding carries the rule ID, exact location, the evidence that fired it,
 what was expected instead, compliance mappings, and a remediation path.
 
 ## Accuracy — measured, with the receipts
-
-**R4 blind evaluation** (frozen 136-concept ground truth, 210 projects, same
-pipeline for every tool):
-
-| Metric | Aegis 2.1.0 | Checkov | KICS | Trivy |
-|--------|------------:|--------:|-----:|------:|
-| Precision | **1.000** | — | — | 0.469 |
-| Recall | **1.000** | — | — | 0.199 |
-| F1 | **1.000** | 0.331 | 0.371 | 0.279 |
-| Sweep wall time (210 projects) | **2.2 s** | — | — | 324.9 s |
 
 **R7 blind evaluation** (v2.4.0, frozen 151-concept ground truth, 210 *new*
 projects, same pipeline for every tool — the gain from the R6 gap fixes
