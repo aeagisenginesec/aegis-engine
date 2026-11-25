@@ -419,6 +419,29 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 			attrs[toSnake(k)] = p.value(nodeField(props, k), span)
 		}
 	}
+	// Promote nested network.publicNetworkAccess to the top level for
+	// PostgreSQL flexible servers (same promotion as the ARM adapter,
+	// arm.go: promote network.publicNetworkAccess): azure-native nests
+	// it as properties.network.publicNetworkAccess, while the TF
+	// attribute (and AEGIS-AZURE-169) is the flat
+	// public_network_access_enabled. Without this the property was
+	// invisible and AZURE-169 fired on "absence" even when the program
+	// explicitly disabled public network access. (Nested keys are
+	// already snake_cased by value(), so only public_network_access
+	// needs checking here.)
+	if tfType == "azurerm_postgresql_flexible_server" {
+		if _, hasEnabled := attrs["public_network_access_enabled"]; !hasEnabled {
+			if _, hasPlain := attrs["public_network_access"]; !hasPlain {
+				if net, ok := attrs["network"]; ok {
+					if m, ok := net.AsMap(); ok {
+						if ev, ok := m["public_network_access"]; ok {
+							attrs["public_network_access"] = ev
+						}
+					}
+				}
+			}
+		}
+	}
 	// publicNetworkAccess is an enum in Pulumi azure-native
 	// ("Enabled"/"Disabled"); the rules expect the boolean
 	// public_network_access_enabled. Convert for every Azure type
@@ -556,6 +579,17 @@ func (p *parser) value(n *yaml.Node, span ir.Span) ir.Value {
 		// Single-key fn::* mapping = Pulumi intrinsic function call.
 		keys := sortedKeys(n)
 		if len(keys) == 1 && strings.HasPrefix(keys[0], "fn::") {
+			// fn::toJSON over a statically-known argument is resolvable:
+			// it just renders its argument as a JSON string (the idiom
+			// Pulumi YAML uses for IAM/S3/SQS policy documents). Resolve
+			// it so policy rules can read the document; anything else
+			// unresolvable inside the argument still yields Unknown
+			// (see toJSONString). All other intrinsics stay unknown.
+			if keys[0] == "fn::toJSON" {
+				if s, ok := p.toJSONString(nodeField(n, keys[0]), span); ok {
+					return ir.Value{Raw: s, Known: true, Span: span}
+				}
+			}
 			p.diags = append(p.diags, ir.Diagnostic{
 				Level:   "warning",
 				Message: fmt.Sprintf("pulumi: intrinsic %q is not statically resolvable; treated as unknown", keys[0]),
@@ -744,11 +778,31 @@ func flattenNestedProperties(attrs map[string]ir.Value, attr string) {
 	}
 }
 
+// toJSONString renders a statically-known YAML value as a JSON string.
+// It reports false when the value itself is unknown (e.g. it contains an
+// fn::invoke result), so the caller can fall back to Unknown. Unresolvable
+// leaves inside an otherwise known value render as "" (see plainValue).
+func (p *parser) toJSONString(n *yaml.Node, span ir.Span) (string, bool) {
+	v := p.value(n, span)
+	if !v.Known {
+		return "", false
+	}
+	plain, ok := plainValue(v)
+	if !ok {
+		return "", false
+	}
+	b, err := json.Marshal(plain)
+	if err != nil {
+		return "", false
+	}
+	return string(b), true
+}
+
 // stringifyPolicyDoc renders a Pulumi policy-document mapping as a JSON
 // string. Keys stay snake_cased (the policy parsers match keys
-// case-insensitively); values are the literal scalars/lists/maps. Any
-// unresolved (Unknown) value aborts the conversion so no fabricated
-// document content is produced.
+// case-insensitively); values are the literal scalars/lists/maps.
+// Unresolvable leaves render as "" (see plainValue) so the known parts of
+// the document — Effect, Principal, Action — stay analyzable.
 func stringifyPolicyDoc(m map[string]ir.Value) (string, bool) {
 	plain, ok := plainValue(ir.Value{Raw: m, Known: true})
 	if !ok {
@@ -765,7 +819,15 @@ func stringifyPolicyDoc(m map[string]ir.Value) (string, bool) {
 // marshalling. Unknown values abort the conversion.
 func plainValue(v ir.Value) (any, bool) {
 	if !v.Known {
-		return nil, false
+		// Unresolvable leaf (a ${...} reference or intrinsic result):
+		// render as "" instead of aborting the whole document. The
+		// idiomatic Pulumi policy writes Resource: ${bucket.arn}, so
+		// aborting silently dropped every policy that references its own
+		// resource (R6 r6110 sqs-public-policy). "" matches no public or
+		// wildcard pattern, so no finding can be fabricated from an
+		// unknown value — a policy whose Principal itself is unknown
+		// still reads as non-public.
+		return "", true
 	}
 	switch t := v.Raw.(type) {
 	case map[string]ir.Value:
