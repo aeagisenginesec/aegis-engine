@@ -46,36 +46,12 @@ func parseIAMAllowStatements(doc string) []iamAllowStmt {
 	return out
 }
 
-// iamActionCovers reports whether a granted action pattern (which may
-// contain "*") covers a concrete wanted action. Both are matched
-// case-insensitively; wanted must already be lower-cased.
-func iamActionCovers(granted, wanted string) bool {
-	return iamGlobMatch(granted, wanted, true)
-}
-
 // iamGrantsAny reports whether any statement grants (covers) any of the
 // wanted concrete actions. Wanted actions must be lower-cased. A
 // NotAction statement grants a wanted action unless its exclusion list
 // covers it.
 func iamGrantsAny(stmts []iamAllowStmt, wanted ...string) bool {
 	for _, s := range stmts {
-		for _, w := range wanted {
-			if s.n.grantsAction(w) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// iamGrantsOnStar reports whether any statement grants (covers) any of the
-// wanted actions on Resource "*". A NotResource statement grants on "*"
-// unless its exclusion list covers "*" itself.
-func iamGrantsOnStar(stmts []iamAllowStmt, wanted ...string) bool {
-	for _, s := range stmts {
-		if !s.n.grantsOnStar() {
-			continue
-		}
 		for _, w := range wanted {
 			if s.n.grantsAction(w) {
 				return true

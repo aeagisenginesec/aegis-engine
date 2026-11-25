@@ -676,7 +676,7 @@ func expansionVar(v string) string {
 	}
 	// $VAR form: the whole remainder must be a bare name.
 	for _, c := range rest {
-		if !((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_') {
+		if c != '_' && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z') && (c < '0' || c > '9') {
 			return ""
 		}
 	}

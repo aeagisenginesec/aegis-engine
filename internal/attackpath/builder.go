@@ -366,7 +366,7 @@ type IAMChain struct {
 // findIAMChains traces workload → role → policy privilege paths, using
 // the shared role/policy resolution (attachments, inline policies,
 // aws_iam_policy_attachment roles lists, and managed AdministratorAccess).
-// Only policies granting wildcard/sensitive actions (see policyActions)
+// Only policies granting wildcard/sensitive actions (see policyActionsFromDoc)
 // produce chains: a least-privilege policy is not a privilege chain.
 func (b *Builder) findIAMChains() []IAMChain {
 	var out []IAMChain
@@ -471,20 +471,6 @@ func (b *Builder) resolveInstanceProfileRole(profileRef string) string {
 		}
 	}
 	return ""
-}
-
-// policyActions extracts Allow actions from an aws_iam_policy document.
-// Returns nil if the policy cannot be parsed (never invents actions).
-func (b *Builder) policyActions(polAddr string) []string {
-	pol, ok := b.byAddr[polAddr]
-	if !ok {
-		return nil
-	}
-	v, ok := getString(pol, "policy")
-	if !ok {
-		return nil
-	}
-	return policyActionsFromDoc(rawString(v))
 }
 
 // policyActionsFromDoc is the testable core of policyActions: it scans a

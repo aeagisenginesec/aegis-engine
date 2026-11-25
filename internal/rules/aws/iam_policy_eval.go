@@ -285,12 +285,6 @@ func (n *iamNormalizedStmt) notActionIsAdmin() bool {
 	return true
 }
 
-// hasExclusions reports whether the statement uses NotAction or
-// NotResource.
-func (n *iamNormalizedStmt) hasExclusions() bool {
-	return n.hasNotAction || n.hasNotResource
-}
-
 // exclusionNote renders the statement's exclusions for finding evidence,
 // so a finding never claims a scope the policy explicitly excludes.
 // Returns "" when the statement has no exclusions.

@@ -209,7 +209,7 @@ func Deliver(ctx context.Context, cfg Config, payload []byte) error {
 		// Drain (capped) and close so the connection can be reused;
 		// the body itself is never logged or returned.
 		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, maxResponseBody))
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 			return nil

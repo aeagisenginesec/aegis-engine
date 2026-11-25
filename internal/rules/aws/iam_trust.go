@@ -80,7 +80,7 @@ func checkRoleOpenTrust(r ir.Resource) []ir.Finding {
 	return nil
 }
 
-// trustPolicyOpenToAnyone parses a trust-policy JSON document and reports
+// trustPolicyOpenToAnyoneNote parses a trust-policy JSON document and reports
 // whether any Allow statement grants Principal "*". A statement carrying a
 // Condition is skipped: the condition may legitimately scope the wildcard
 // (e.g. aws:PrincipalOrgID), so we cannot prove it is open. A statement
@@ -88,15 +88,9 @@ func checkRoleOpenTrust(r ir.Resource) []ir.Finding {
 // it (see iam_policy_eval.go); a statement with no action element at all
 // keeps the historical behavior of counting as a grant. Malformed JSON
 // or unexpected shapes yield false (cannot decide -> no finding).
-func trustPolicyOpenToAnyone(doc string) bool {
-	_, open := trustPolicyOpenToAnyoneNote(doc)
-	return open
-}
-
-// trustPolicyOpenToAnyoneNote is trustPolicyOpenToAnyone plus the
-// exclusion note of the granting statement ("" when the grant uses plain
-// Action), so the finding's evidence names the scope the policy
-// explicitly excludes.
+// The returned string is the exclusion note of the granting statement
+// ("" when the grant uses plain Action), so the finding's evidence names
+// the scope the policy explicitly excludes.
 func trustPolicyOpenToAnyoneNote(doc string) (string, bool) {
 	for _, s := range policyStatements(doc) {
 		if lookupMapFold(s, "Condition") != nil {

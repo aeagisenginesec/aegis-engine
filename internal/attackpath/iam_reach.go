@@ -562,9 +562,7 @@ func (b *Builder) computeRolePolicyDocs() map[string][]rolePolicyDoc {
 		case "aws_iam_policy_attachment":
 			var roles []string
 			if v, ok := r.Attributes["roles"]; ok {
-				for _, item := range asStringList(v) {
-					roles = append(roles, item)
-				}
+				roles = append(roles, asStringList(v)...)
 				// asStringList misses ref items in unknown lists; walk raw.
 				if l, ok := v.Raw.([]ir.Value); ok {
 					for _, item := range l {
