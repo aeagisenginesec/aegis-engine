@@ -11,3 +11,12 @@ from every code scanner wired into this repo (see `.semgrepignore`,
 `.snyk`, `.github/codeql/codeql-config.yml`, and the SonarCloud
 exclusions in `.github/workflows/sonar.yml`) precisely so that
 findings reported on the *product* stay meaningful.
+
+## Benchmark authority
+
+Project-level detection is measured on **medium+ findings only**
+(low/info hygiene excluded) — see `docs/BENCHMARKS.md` for the single
+authority per corpus, the SOC #18 resolution, and how to regenerate
+each results file. Never quote a `*_results.json` number without its
+`_meta` standard, and never restore a deleted results file: the guard
+test `cmd/aegis/benchmark_authority_test.go` fails if one reappears.
