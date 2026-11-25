@@ -569,10 +569,18 @@ var remediationDB = map[string]remediationEntry{
 		},
 	},
 	"AEGIS-AWS-104": {
-		fix: "Break the public exfiltration path. Make the S3 bucket private (see AEGIS-AWS-003\n" +
-			"fix), remove the overly permissive IAM policy (see AEGIS-AWS-006 fix), and\n" +
-			"ensure the compute role cannot reach public buckets. Treat this as an active\n" +
-			"incident path: audit CloudTrail for `s3:GetObject` calls from the affected role.",
+		fix: "Break the public S3 exfiltration path in this order:\n" +
+			"1. CONTAIN (minutes): enable all four public-access-block settings on the bucket\n" +
+			"(`block_public_acls`, `block_public_policy`, `ignore_public_acls`,\n" +
+			"`restrict_public_buckets`), and delete the `Principal \"*\"` statement granting\n" +
+			"`s3:GetObject` from the bucket policy named in the finding's path (or set the\n" +
+			"bucket ACL to `private` if the grant came from an ACL).\n" +
+			"2. AUDIT (same day): this is an active incident path — check CloudTrail for\n" +
+			"`s3:GetObject` calls on this bucket and S3 access logs for anonymous reads, and\n" +
+			"list what was read.\n" +
+			"3. RECOVER: if sensitive objects were accessed, rotate any credentials or secrets\n" +
+			"stored in the bucket and notify data owners.\n" +
+			"4. VERIFY: re-run `aegis scan` and confirm AEGIS-AWS-104 is gone.",
 		refs: []string{
 			"https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html",
 			"https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege",
@@ -627,13 +635,43 @@ var remediationDB = map[string]remediationEntry{
 		},
 	},
 	"AEGIS-AWS-629": {
-		fix: "Break the kill chain at the cheapest hop. Recommended order:\n" +
-			"1. Close the entry point (restrict the security group / remove public ingress).\n" +
-			"2. Scope the IAM role to least privilege (see AEGIS-AWS-006 fix).\n" +
-			"3. Move the data store to private subnets with no public route.\n" +
+		fix: "Break the kill chain at the cheapest hop. Work through the hops in the finding's\n" +
+			"path in order:\n" +
+			"1. If the bridge is the NETWORK (the path runs through a security group or load\n" +
+			"balancer): close the entry point — remove the `0.0.0.0/0` ingress rule from the\n" +
+			"entry security group, or make the load balancer internal (`internal = true`).\n" +
+			"2. If the bridge is IAM (the path shows an IAM-reachability hop and no network\n" +
+			"edge): scope the policy first — replace the wildcard actions (`s3:*`, `*`) and\n" +
+			"wildcard resources (`*`) on the named policy with the exact actions and ARNs the\n" +
+			"workload needs, and remove `AdministratorAccess` from any workload role.\n" +
+			"3. Move the data store to private subnets with no public route\n" +
+			"(`publicly_accessible = false` for RDS).\n" +
+			"4. Audit before closing: check CloudTrail for the role's data-plane calls\n" +
+			"(`s3:GetObject`, `dynamodb:GetItem`, `rds-db:connect`) from unexpected IPs, and\n" +
+			"rotate credentials the workload could have read.\n" +
 			"Re-run `aegis scan --attack-paths` to confirm the chain is gone.",
 		refs: []string{
 			"https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html",
+			"https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege",
+		},
+	},
+	"AEGIS-AWS-630": {
+		fix: "Scope the privilege chain in this order:\n" +
+			"1. Read the granted actions from the finding's path (role → policy → workload) —\n" +
+			"those are the actions the workload inherits.\n" +
+			"2. Replace wildcard and sensitive actions (`*`, `s3:*`, `iam:*`,\n" +
+			"`sts:AssumeRole`, `iam:PassRole`) on the named policy with the exact actions and\n" +
+			"ARNs the workload needs.\n" +
+			"3. Split privilege: move `iam:PassRole` / `sts:AssumeRole` out of the runtime role\n" +
+			"into a separate, human-gated deployment role, and scope `iam:PassRole` to the\n" +
+			"single role ARN being passed.\n" +
+			"4. Verify with IAM Access Analyzer policy generation from CloudTrail history, then\n" +
+			"re-run `aegis scan` and confirm AEGIS-AWS-630 is gone.\n" +
+			"5. Audit: check CloudTrail for the role's past use of the removed actions from\n" +
+			"unexpected IPs.",
+		refs: []string{
+			"https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege",
+			"https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html",
 		},
 	},
 	"AEGIS-GCP-001": {
@@ -816,6 +854,44 @@ var remediationDB = map[string]remediationEntry{
 			"}\n" +
 			"Access the database via a bastion host, VPN, or SSM port forwarding — never directly.",
 		refs: []string{
+			"https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.html",
+		},
+	},
+	"AEGIS-AWS-103": {
+		fix: "Break the public RDS path in this order:\n" +
+			"1. Set `publicly_accessible = false` on the RDS instance in the finding and move\n" +
+			"it to private subnets (`db_subnet_group_name` pointing at a subnet group with no\n" +
+			"public route).\n" +
+			"2. Remove the `0.0.0.0/0` ingress rule from the security group named in the\n" +
+			"finding's path — restrict it to the application tier's security group or trusted\n" +
+			"CIDRs.\n" +
+			"3. Audit before closing the incident: check CloudTrail and the database logs for\n" +
+			"connections from unexpected IPs, and rotate the database credentials if any\n" +
+			"unknown connection succeeded.\n" +
+			"4. Re-run `aegis scan` and confirm AEGIS-AWS-103 is gone; reach the database only\n" +
+			"via a bastion host, VPN, or SSM port forwarding.",
+		refs: []string{
+			"https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.html",
+			"https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html",
+		},
+	},
+	"AEGIS-AWS-105": {
+		fix: "Break the multi-hop path hop by hop, cheapest first:\n" +
+			"1. Close the entry: remove the `0.0.0.0/0` ingress rule from the entry security\n" +
+			"group named first in the finding's path.\n" +
+			"2. Break the middle link: in the second security group, remove the ingress rule\n" +
+			"whose source is the entry security group (or the EC2 stepping stone's group) — a\n" +
+			"database tier must never accept traffic from a public-facing tier's group.\n" +
+			"3. Isolate the stepping stone: if the path runs through an EC2 instance, remove\n" +
+			"the shared security group, enforce IMDSv2 (`http_tokens = \"required\"`), and\n" +
+			"patch the instance — assume it is compromised until proven otherwise.\n" +
+			"4. Move the database: set `publicly_accessible = false` on the RDS instance and\n" +
+			"place it in private subnets.\n" +
+			"5. Audit: check VPC flow logs and CloudTrail for traffic along the reported hops,\n" +
+			"and rotate database credentials if the path was ever reachable.\n" +
+			"6. Re-run `aegis scan` and confirm AEGIS-AWS-105 is gone.",
+		refs: []string{
+			"https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html",
 			"https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.html",
 		},
 	},
