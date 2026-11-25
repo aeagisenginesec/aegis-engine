@@ -408,12 +408,28 @@ resource stg 'Microsoft.Storage/storageAccounts@2023-01-01' = [for n in names: {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// One resource per element, with the loop variable substituted.
-	if len(res) != 2 {
-		t.Fatalf("for-loop should expand to 2 resources, got %d", len(res))
+	// One resource per element, with the loop variable substituted, plus
+	// one arm_parameter resource for the `names` parameter default.
+	if len(res) != 3 {
+		t.Fatalf("for-loop should expand to 2 resources + 1 arm_parameter, got %d", len(res))
+	}
+	var paramSeen bool
+	for _, r := range res {
+		if r.Type == "arm_parameter" {
+			paramSeen = true
+			if r.Name != "names" {
+				t.Fatalf("arm_parameter name = %q, want names", r.Name)
+			}
+		}
+	}
+	if !paramSeen {
+		t.Fatalf("expected an arm_parameter resource for the names parameter")
 	}
 	names := map[string]bool{}
 	for _, r := range res {
+		if r.Type == "arm_parameter" {
+			continue // parameter emission, not a loop expansion
+		}
 		names[r.Name] = true
 		v, ok := r.Attributes["allow_blob_public_access"]
 		if !ok {

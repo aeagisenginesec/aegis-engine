@@ -148,7 +148,10 @@ spec:
     image: nginx:1.25.3
     securityContext: {seccompProfile: {type: Unconfined}}
 `
-	mustFire(t, unconfined, "AEGIS-K8S-029", 1)
+	// Explicit Unconfined belongs to K8S-017 alone: 029 stays quiet,
+	// 017 still fires exactly once.
+	mustFire(t, unconfined, "AEGIS-K8S-029", 0)
+	mustFire(t, unconfined, "AEGIS-K8S-017", 1)
 
 	podUnconfined := `apiVersion: v1
 kind: Pod
@@ -158,7 +161,8 @@ spec:
   containers:
   - {name: app, image: nginx:1.25.3}
 `
-	mustFire(t, podUnconfined, "AEGIS-K8S-029", 1) // inherited Unconfined
+	mustFire(t, podUnconfined, "AEGIS-K8S-029", 0) // inherited Unconfined: 017 owns it
+	mustFire(t, podUnconfined, "AEGIS-K8S-017", 1)
 
 	runtimeDefault := `apiVersion: v1
 kind: Pod
@@ -547,4 +551,100 @@ spec:
 		mustFire(t, src, id, 1)
 	}
 	mustFireAll(t, src, "AEGIS-K8S-031", 1)
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-K8S-033: container adds SYS_ADMIN Linux capability
+// ---------------------------------------------------------------------------
+
+func TestK8S033(t *testing.T) {
+	sysAdmin := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25.3
+    securityContext:
+      capabilities: {add: [SYS_ADMIN]}
+`
+	mustFire(t, sysAdmin, "AEGIS-K8S-033", 1)
+
+	lower := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25.3
+    securityContext:
+      capabilities: {add: [sys_admin, NET_RAW]}
+`
+	mustFire(t, lower, "AEGIS-K8S-033", 1)
+
+	// Adding SYS_ADMIN after dropping ALL still leaves SYS_ADMIN.
+	dropAll := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25.3
+    securityContext:
+      capabilities: {add: [SYS_ADMIN], drop: [ALL]}
+`
+	mustFire(t, dropAll, "AEGIS-K8S-033", 1)
+
+	// Exact token match: SYS_ADMINISTRATOR must not fire.
+	substring := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25.3
+    securityContext:
+      capabilities: {add: [SYS_ADMINISTRATOR]}
+`
+	mustFire(t, substring, "AEGIS-K8S-033", 0)
+
+	// Drop-only: SYS_ADMIN never added.
+	dropOnly := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25.3
+    securityContext:
+      capabilities: {drop: [SYS_ADMIN]}
+`
+	mustFire(t, dropOnly, "AEGIS-K8S-033", 0)
+
+	// No capabilities at all.
+	plain := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  containers:
+  - {name: app, image: nginx:1.25.3}
+`
+	mustFire(t, plain, "AEGIS-K8S-033", 0)
+
+	// Two containers, one with SYS_ADMIN: exactly one finding.
+	two := `apiVersion: v1
+kind: Pod
+metadata: {name: app}
+spec:
+  containers:
+  - name: sidecar
+    image: nginx:1.25.3
+    securityContext:
+      capabilities: {add: [SYS_ADMIN]}
+  - name: app
+    image: nginx:1.25.3
+    securityContext:
+      capabilities: {add: [NET_RAW]}
+`
+	mustFire(t, two, "AEGIS-K8S-033", 1)
 }

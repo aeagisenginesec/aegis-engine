@@ -397,12 +397,17 @@ template:
         bucket: ${bucketName}
         acl: public-read
 `)
-	if len(rs) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(rs))
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 resources (bucket + pulumi_config), got %d", len(rs))
 	}
 	r := rs[0]
 	if r.Type != "aws_s3_bucket" {
 		t.Errorf("type = %q, want aws_s3_bucket", r.Type)
+	}
+	// template.configuration defaults are also emitted as a
+	// pulumi_config resource (SC-010 surface).
+	if rs[1].Type != "pulumi_config" || rs[1].Name != "bucketName" {
+		t.Errorf("rs[1] = %s %s, want pulumi_config bucketName", rs[1].Type, rs[1].Name)
 	}
 	// ${bucketName} must resolve against template.configuration defaults.
 	if s, ok := attrString(t, r, "bucket"); !ok || s != "my-data" {
@@ -584,11 +589,14 @@ template:
       properties:
         bucket: ${bucketName}
 `)
-	if len(rs) != 1 {
-		t.Fatalf("expected 1 resource, got %d", len(rs))
+	if len(rs) != 2 {
+		t.Fatalf("expected 2 resources (bucket + pulumi_config), got %d", len(rs))
 	}
 	if s, ok := attrString(t, rs[0], "bucket"); !ok || s != "my-data" {
 		t.Errorf("bucket = %q, %v; want my-data", s, ok)
+	}
+	if rs[1].Type != "pulumi_config" || rs[1].Name != "bucketName" {
+		t.Errorf("rs[1] = %s %s, want pulumi_config bucketName", rs[1].Type, rs[1].Name)
 	}
 }
 
@@ -814,9 +822,16 @@ template:
 	}
 }
 
-// 24. Parity (item 2): a policy with an unresolved reference is NOT
-// stringified (its Unknown part must not become fabricated JSON).
-func TestPolicyWithUnknownNotStringified(t *testing.T) {
+// 24. Parity (item 2), REVISED Phase B: a policy with an unresolved
+// reference IS stringified, with the unknown leaf rendered as "".
+// The original pin (never stringify when any part is Unknown, "so nothing
+// is fabricated") silently dropped every policy whose Resource is the
+// idiomatic ${resource.arn} reference — R6 r6110 sqs-public-policy, a
+// Principal "*" Allow statement no rule ever saw. "" matches no public or
+// wildcard pattern, so no finding can be fabricated from an unknown value
+// (see TestPhaseBUnknownPrincipalNotPublic); the known parts of the
+// document (Effect, Principal, Action) stay analyzable.
+func TestPolicyWithUnknownStringified(t *testing.T) {
 	rs, _ := parse(t, "Pulumi.yaml", `
 name: s3pol
 runtime: yaml
@@ -841,8 +856,15 @@ template:
 	if !ok {
 		t.Fatalf("policy attribute missing")
 	}
-	if _, isMap := v.Raw.(map[string]ir.Value); !isMap {
-		t.Errorf("policy with Unknown content was stringified; want mapping left intact")
+	s, isStr := v.Raw.(string)
+	if !isStr {
+		t.Fatalf("policy with Unknown leaf was left as %T; want a JSON string with the unknown leaf rendered as \"\"", v.Raw)
+	}
+	if !strings.Contains(s, `"principal":"*"`) || !strings.Contains(s, `"effect":"Allow"`) {
+		t.Errorf("stringified policy lost known content: %s", s)
+	}
+	if !strings.Contains(s, `"resource":""`) {
+		t.Errorf("unknown Resource leaf must render as \"\", got: %s", s)
 	}
 }
 

@@ -265,8 +265,8 @@ func TestAppliesTo(t *testing.T) {
 
 func TestRuleIDs(t *testing.T) {
 	rules := Rules()
-	if len(rules) != 32 {
-		t.Fatalf("got %d rules, want 32", len(rules))
+	if len(rules) != 33 {
+		t.Fatalf("got %d rules, want 33", len(rules))
 	}
 	for i, rule := range rules {
 		want := "AEGIS-K8S-" + zeroPad3(i+1)

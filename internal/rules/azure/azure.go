@@ -46,6 +46,7 @@ func Rules() []ir.Rule {
 	rules = append(rules, Azure20Rules()...) // AEGIS-AZURE-282..297
 	rules = append(rules, Azure21Rules()...) // AEGIS-AZURE-298..313
 	rules = append(rules, Azure22Rules()...) // AEGIS-AZURE-314
+	rules = append(rules, Azure23Rules()...) // AEGIS-AZURE-315..316
 	return rules
 }
 

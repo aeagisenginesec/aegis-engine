@@ -21,6 +21,53 @@ func TestSGIngress_OpenCIDRFires(t *testing.T) {
 	}
 }
 
+func TestSGIngress_EvidenceIncludesPortRange(t *testing.T) {
+	// Single port.
+	sg := res("aws_security_group", "web", map[string]ir.Value{
+		"ingress": blks(3, blk("cidr_blocks", strList(4, "0.0.0.0/0"), "from_port", knum(3389, 4), "to_port", knum(3389, 4), "protocol", ks("tcp", 4))),
+	})
+	f := runRule(sgOpenIngress{}, sg)
+	if len(f) != 1 || f[0].Evidence.Actual != "0.0.0.0/0 to port 3389" {
+		t.Fatalf("single-port evidence: got %+v", f)
+	}
+	// Port range.
+	sg = res("aws_security_group", "web", map[string]ir.Value{
+		"ingress": blks(3, blk("cidr_blocks", strList(4, "0.0.0.0/0"), "from_port", knum(8000, 4), "to_port", knum(9000, 4), "protocol", ks("tcp", 4))),
+	})
+	f = runRule(sgOpenIngress{}, sg)
+	if len(f) != 1 || f[0].Evidence.Actual != "0.0.0.0/0 to ports 8000-9000" {
+		t.Fatalf("range evidence: got %+v", f)
+	}
+	// All ports via protocol -1 (from/to conventionally 0).
+	sg = res("aws_security_group", "web", map[string]ir.Value{
+		"ingress": blks(3, blk("cidr_blocks", strList(4, "0.0.0.0/0"), "from_port", knum(0, 4), "to_port", knum(0, 4), "protocol", ks("-1", 4))),
+	})
+	f = runRule(sgOpenIngress{}, sg)
+	if len(f) != 1 || f[0].Evidence.Actual != "0.0.0.0/0 to all ports" {
+		t.Fatalf("all-ports evidence: got %+v", f)
+	}
+	// Standalone rule with ports.
+	r := res("aws_security_group_rule", "ssh", map[string]ir.Value{
+		"type":        ks("ingress", 2),
+		"cidr_blocks": strList(3, "0.0.0.0/0"),
+		"from_port":   knum(22, 3),
+		"to_port":     knum(22, 3),
+		"protocol":    ks("tcp", 3),
+	})
+	f = runRule(sgOpenIngress{}, r)
+	if len(f) != 1 || f[0].Evidence.Actual != "0.0.0.0/0 to port 22" {
+		t.Fatalf("standalone-rule evidence: got %+v", f)
+	}
+	// Ports unresolved: evidence stays the bare CIDR.
+	sg = res("aws_security_group", "web", map[string]ir.Value{
+		"ingress": blks(3, blk("cidr_blocks", strList(4, "0.0.0.0/0"), "from_port", ku(4), "to_port", ku(4))),
+	})
+	f = runRule(sgOpenIngress{}, sg)
+	if len(f) != 1 || f[0].Evidence.Actual != "0.0.0.0/0" {
+		t.Fatalf("unknown-ports evidence: got %+v", f)
+	}
+}
+
 func TestSGIngress_RestrictedOK(t *testing.T) {
 	sg := res("aws_security_group", "web", map[string]ir.Value{
 		"ingress": blks(3, blk("cidr_blocks", strList(4, "10.0.0.0/8"))),

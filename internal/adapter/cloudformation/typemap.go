@@ -79,6 +79,7 @@ var cfnToTF = map[string]string{
 	"AWS::Route53::RecordSet":       "aws_route53_record",
 	"AWS::CloudFront::Distribution": "aws_cloudfront_distribution",
 	"AWS::ApiGateway::RestApi":      "aws_api_gateway_rest_api",
+	"AWS::ApiGateway::Method":       "aws_api_gateway_method",
 	"AWS::ApiGateway::Stage":        "aws_api_gateway_stage",
 	"AWS::ApiGatewayV2::Api":        "aws_apigatewayv2_api",
 	"AWS::ApiGatewayV2::Stage":      "aws_apigatewayv2_stage",
@@ -107,7 +108,9 @@ var cfnToTF = map[string]string{
 	// Messaging
 	"AWS::SNS::Topic":        "aws_sns_topic",
 	"AWS::SNS::Subscription": "aws_sns_topic_subscription",
+	"AWS::SNS::TopicPolicy":  "aws_sns_topic_policy",
 	"AWS::SQS::Queue":        "aws_sqs_queue",
+	"AWS::SQS::QueuePolicy":  "aws_sqs_queue_policy",
 
 	// Storage
 	"AWS::EFS::FileSystem":     "aws_efs_file_system",
@@ -139,7 +142,8 @@ var cfnToTF = map[string]string{
 	"AWS::AppSync::GraphQLApi":         "aws_appsync_graphql_api",
 
 	// API / containers registry
-	"AWS::ECR::Repository": "aws_ecr_repository",
+	"AWS::ECR::Repository":       "aws_ecr_repository",
+	"AWS::ECR::RepositoryPolicy": "aws_ecr_repository_policy",
 
 	// Auto scaling
 	"AWS::AutoScaling::AutoScalingGroup":          "aws_autoscaling_group",

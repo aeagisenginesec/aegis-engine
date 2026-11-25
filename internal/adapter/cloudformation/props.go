@@ -22,6 +22,9 @@ var specialConverters = map[string]specialConverter{
 	"AWS::IAM::Policy":                   convertIAMPolicy,
 	"AWS::IAM::ManagedPolicy":            convertIAMManagedPolicy,
 	"AWS::IAM::User":                     convertIAMUser,
+	"AWS::SQS::QueuePolicy":              convertSQSPolicy,
+	"AWS::SNS::TopicPolicy":              convertSNSPolicy,
+	"AWS::ECR::RepositoryPolicy":         convertECRPolicy,
 	"AWS::KMS::Key":                      convertKMSKey,
 	"AWS::EC2::SecurityGroup":            convertSecurityGroup,
 	"AWS::EC2::Instance":                 convertEC2Instance,
@@ -68,6 +71,9 @@ var propertyRenames = map[string]map[string]string{
 	},
 	"AWS::Lambda::Url": {
 		"AuthType": "authorization_type",
+	},
+	"AWS::ApiGateway::Method": {
+		"AuthorizationType": "authorization",
 	},
 	"AWS::EC2::SecurityGroup": {
 		"GroupName":        "name",
@@ -411,6 +417,54 @@ func convertIAMUser(t *template, logicalID, tfType string, attrs map[string]ir.V
 		delete(attrs, "policies")
 	}
 	return attrs, companions
+}
+
+// convertPolicyDocToPolicy maps a policy-document property (mapping or
+// JSON string) to the Terraform-style `policy` JSON-string attribute the
+// public-principal rules read. Unresolvable leaves (e.g. !GetAtt in
+// Resource) render as "" via the lenient encoder instead of aborting the
+// document: the check only reads Effect/Principal, so a blanked Resource
+// loses nothing. The generic snake_case conversion would mangle the
+// document keys (Statement -> statement); the lenient encoder preserves
+// casing like the IAM converters do.
+func convertPolicyDocToPolicy(t *template, attrs map[string]ir.Value, def *yaml.Node, cfnKey string) {
+	props := mappingGet(def, "Properties")
+	if props == nil {
+		return
+	}
+	pd := mappingGet(props, cfnKey)
+	if pd == nil {
+		return
+	}
+	if pd.Kind == yaml.ScalarNode {
+		// Already a JSON string (e.g. ECR PolicyText as a string).
+		if s, ok := t.resolveString(pd); ok {
+			attrs["policy"] = ir.Value{Raw: s, Known: true, Span: nodeSpan(t.path, pd)}
+		}
+	} else {
+		attrs["policy"] = jsonStringPreserveCaseLenient(t.path, pd, t)
+	}
+	delete(attrs, snakeCase(cfnKey))
+}
+
+// convertSQSPolicy maps PolicyDocument -> policy (JSON string).
+func convertSQSPolicy(t *template, logicalID, tfType string, attrs map[string]ir.Value, def *yaml.Node) (map[string]ir.Value, []ir.Resource) {
+	convertPolicyDocToPolicy(t, attrs, def, "PolicyDocument")
+	return attrs, nil
+}
+
+// convertSNSPolicy maps PolicyDocument -> policy (JSON string).
+func convertSNSPolicy(t *template, logicalID, tfType string, attrs map[string]ir.Value, def *yaml.Node) (map[string]ir.Value, []ir.Resource) {
+	convertPolicyDocToPolicy(t, attrs, def, "PolicyDocument")
+	return attrs, nil
+}
+
+// convertECRPolicy maps PolicyText -> policy (JSON string). CFN declares
+// PolicyText as a JSON string, but templates also emit it as a mapping;
+// both shapes are accepted.
+func convertECRPolicy(t *template, logicalID, tfType string, attrs map[string]ir.Value, def *yaml.Node) (map[string]ir.Value, []ir.Resource) {
+	convertPolicyDocToPolicy(t, attrs, def, "PolicyText")
+	return attrs, nil
 }
 
 // convertKMSKey maps KeyPolicy (map) -> policy (JSON string).

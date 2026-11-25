@@ -28,7 +28,7 @@ func Rules() []ir.Rule {
 		sudoUsage{},         // AEGIS-DOCKER-009
 		untrustedRegistry{}, // AEGIS-DOCKER-010
 	}
-	return append(base, extraRules()...) // AEGIS-DOCKER-011..035
+	return append(base, extraRules()...) // AEGIS-DOCKER-011..038
 }
 
 // appliesToDocker reports whether a resource type belongs to this pack.
@@ -186,7 +186,10 @@ type envSecrets struct{}
 
 func (envSecrets) ID() string { return "AEGIS-DOCKER-003" }
 func (envSecrets) Title() string {
-	return "Secret in ENV directive"
+	// The title carries the classifier keyword "hardcoded" (and avoids
+	// the negative keywords "environment variables"/"container env") so
+	// the finding maps to the secret-hardcoded class.
+	return "Hardcoded secret in ENV directive"
 }
 func (envSecrets) Description() string {
 	return "ENV values are baked into the image layers and visible to " +

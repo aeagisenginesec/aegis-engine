@@ -11,13 +11,14 @@
 package gcp
 
 import (
+	"encoding/json"
 	"regexp"
 	"strings"
 
 	"aegis/internal/ir"
 )
 
-// GCP9Rules returns GCP expansion rules 263..294 in ID order.
+// GCP9Rules returns GCP expansion rules 263..295 in ID order.
 func GCP9Rules() []ir.Rule {
 	return []ir.Rule{
 		apiGatewayNoManagedConfig{},        // AEGIS-GCP-263
@@ -46,6 +47,7 @@ func GCP9Rules() []ir.Rule {
 		metadataItemOSLoginDisabled{},      // AEGIS-GCP-292
 		instanceMetadataSecret{},           // AEGIS-GCP-293
 		instanceEOLImage{},                 // AEGIS-GCP-294
+		cloudFunctionPublicInvoker{},       // AEGIS-GCP-295
 	}
 }
 
@@ -1224,4 +1226,112 @@ func eolImageFamily(img string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-GCP-295: Cloud Function invoker granted to allUsers
+// ---------------------------------------------------------------------------
+// Mirrors AEGIS-GCP-097 (Cloud Run public invocation) for Cloud Functions:
+// an IAM member/binding/policy granting roles/cloudfunctions.invoker to
+// allUsers or allAuthenticatedUsers makes the function publicly
+// invocable. Scoped to invoker grants: a binding that grants allUsers
+// any role on the function is public by construction, but the invoker
+// role is the R6-proven shape and the narrowest defensible condition.
+type cloudFunctionPublicInvoker struct{}
+
+func (cloudFunctionPublicInvoker) ID() string { return "AEGIS-GCP-295" }
+func (cloudFunctionPublicInvoker) Title() string {
+	return "Cloud Function invoker granted to allUsers"
+}
+func (cloudFunctionPublicInvoker) Description() string {
+	return "google_cloudfunctions_function_iam_member/binding/policy " +
+		"granting roles/cloudfunctions.invoker to allUsers or " +
+		"allAuthenticatedUsers exposes the function to anonymous " +
+		"invocation. Restrict invoker to specific service accounts or " +
+		"users."
+}
+func (cloudFunctionPublicInvoker) Severity() ir.Severity { return ir.SeverityHigh }
+
+func (cloudFunctionPublicInvoker) AppliesTo(resType string) bool {
+	switch resType {
+	case "google_cloudfunctions_function_iam_member",
+		"google_cloudfunctions_function_iam_binding",
+		"google_cloudfunctions_function_iam_policy",
+		"google_cloudfunctions2_function_iam_member",
+		"google_cloudfunctions2_function_iam_binding",
+		"google_cloudfunctions2_function_iam_policy":
+		return true
+	}
+	return false
+}
+
+// isPublicIAMMember reports whether m is a public IAM member.
+func isPublicIAMMember(m string) bool {
+	switch strings.ToLower(strings.TrimSpace(m)) {
+	case "allusers", "allauthenticatedusers":
+		return true
+	}
+	return false
+}
+
+// isCloudFunctionInvokerRole reports whether role is the Cloud Functions
+// invoker role (v1 or v2 naming).
+func isCloudFunctionInvokerRole(role string) bool {
+	return strings.Contains(strings.ToLower(strings.TrimSpace(role)), "cloudfunctions.invoker")
+}
+
+func (s cloudFunctionPublicInvoker) Check(r ir.Resource) []ir.Finding {
+	// iam_policy: the grant lives in the policy_data JSON document
+	// (bindings[].role + bindings[].members). Walk it structurally so a
+	// mere mention of allUsers outside a binding cannot fire.
+	if strings.HasSuffix(r.Type, "_iam_policy") {
+		return s.checkPolicyData(r)
+	}
+	role, _, present, known := getString(r, "role")
+	if !present || !known {
+		return nil // role unresolved: cannot decide
+	}
+	if !isCloudFunctionInvokerRole(role) {
+		return nil
+	}
+	if m, span, ok := iamBindingHasPublicMember(r); ok {
+		return []ir.Finding{mkFinding(s, r, "members", span,
+			m, "remove public invokers")}
+	}
+	member, span, p, k := getString(r, "member")
+	if p && k && isPublicIAMMember(member) {
+		return []ir.Finding{mkFinding(s, r, "member", span,
+			member, "remove public invoker")}
+	}
+	return nil
+}
+
+// checkPolicyData parses the policy_data JSON document and fires when an
+// invoker binding grants a public member.
+func (s cloudFunctionPublicInvoker) checkPolicyData(r ir.Resource) []ir.Finding {
+	doc, span, present, known := getString(r, "policy_data")
+	if !present || !known || strings.TrimSpace(doc) == "" {
+		return nil
+	}
+	var parsed struct {
+		Bindings []struct {
+			Role    string   `json:"role"`
+			Members []string `json:"members"`
+		} `json:"bindings"`
+	}
+	if err := json.Unmarshal([]byte(doc), &parsed); err != nil {
+		return nil // not a parseable policy document: cannot decide
+	}
+	for _, b := range parsed.Bindings {
+		if !isCloudFunctionInvokerRole(b.Role) {
+			continue
+		}
+		for _, m := range b.Members {
+			if isPublicIAMMember(m) {
+				return []ir.Finding{mkFinding(s, r, "policy_data", span,
+					m, "remove public invokers")}
+			}
+		}
+	}
+	return nil
 }

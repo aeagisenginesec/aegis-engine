@@ -31,7 +31,7 @@ func Rules() []ir.Rule {
 		privilegeEscalation{}, // AEGIS-K8S-003
 	}
 	rules = append(rules, K8s2Rules()...) // AEGIS-K8S-004..027
-	return append(rules, K8s3Rules()...)  // AEGIS-K8S-028..032
+	return append(rules, K8s3Rules()...)  // AEGIS-K8S-028..033
 }
 
 // appliesTo reports whether a resource type belongs to this pack.

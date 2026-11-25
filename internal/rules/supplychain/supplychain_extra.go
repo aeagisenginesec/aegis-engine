@@ -18,7 +18,7 @@ import (
 	"aegis/internal/ir"
 )
 
-// supplyChainExtraRules returns AEGIS-SC-002 through AEGIS-SC-009 in ID order.
+// supplyChainExtraRules returns AEGIS-SC-002 through AEGIS-SC-010 in ID order.
 func supplyChainExtraRules() []ir.Rule {
 	return []ir.Rule{
 		lambdaPublicECRImage{},
@@ -29,6 +29,7 @@ func supplyChainExtraRules() []ir.Rule {
 		externalDataSource{},
 		userDataHTTPDownload{},
 		lambdaLayerUnknownAccount{},
+		pulumiConfigSecret{},
 	}
 }
 
@@ -554,4 +555,90 @@ func (lambdaLayerUnknownAccount) Check(r ir.Resource) []ir.Finding {
 		return out[i].Evidence.Actual < out[j].Evidence.Actual
 	})
 	return out
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-SC-010: Hardcoded secret in Pulumi stack config
+// ---------------------------------------------------------------------------
+// The Pulumi adapter emits config: entries as pulumi_config resources
+// (plaintext `value:` only — `secure:` ciphertext is skipped at
+// emission because Pulumi encrypts it by construction). Mirrors
+// AEGIS-AWS-857: fire when the config key's suffix is secret-like AND
+// the value is a non-empty literal, skipping placeholder defaults and
+// secret-reference values. The secret value is never shown in findings.
+
+type pulumiConfigSecret struct{}
+
+func (pulumiConfigSecret) ID() string { return "AEGIS-SC-010" }
+func (pulumiConfigSecret) Title() string {
+	return "Hardcoded secret in Pulumi stack config"
+}
+func (pulumiConfigSecret) Description() string {
+	return "A Pulumi stack config entry with a secret-like key " +
+		"(dbPassword, apiKey, password, secret, token) and a hardcoded " +
+		"plaintext value bakes the credential into version control. " +
+		"Use Pulumi secret config (secure: values) or inject via a " +
+		"secrets manager. The secret value is never included in findings."
+}
+func (pulumiConfigSecret) Severity() ir.Severity { return ir.SeverityHigh }
+
+func (pulumiConfigSecret) AppliesTo(resType string) bool {
+	return resType == "pulumi_config"
+}
+
+// pulumiSecretLikeKey reports whether a Pulumi config key suggests a
+// secret. Keys are usually "project:key" — only the suffix after the
+// last colon is judged, so a project name cannot trigger the rule.
+func pulumiSecretLikeKey(key string) bool {
+	suffix := key
+	if i := strings.LastIndex(key, ":"); i >= 0 {
+		suffix = key[i+1:]
+	}
+	lower := strings.ToLower(suffix)
+	for _, hint := range []string{
+		"password", "passwd", "pwd", "secret", "token", "apikey", "api_key",
+		"private_key", "credential",
+	} {
+		if strings.Contains(lower, hint) {
+			return true
+		}
+	}
+	return false
+}
+
+func (pulumiConfigSecret) Check(r ir.Resource) []ir.Finding {
+	rule := pulumiConfigSecret{}
+	key, _, ok := strAttr(r, "key")
+	if !ok || !pulumiSecretLikeKey(key) {
+		return nil
+	}
+	val, vspan, ok := strAttr(r, "value")
+	if !ok || strings.TrimSpace(val) == "" {
+		return nil // unresolved or empty value: silent
+	}
+	// Skip values that look like secret-manager references.
+	lower := strings.ToLower(val)
+	for _, safe := range []string{"vault", "keyvault", "secretsmanager", "ssm", "resolve", "arn:"} {
+		if strings.Contains(lower, safe) {
+			return nil
+		}
+	}
+	// Skip obvious placeholder values.
+	switch lower {
+	case "changeme", "change_me", "example", "test", "xxx", "xxxx", "dummy", "placeholder":
+		return nil
+	}
+	return []ir.Finding{{
+		RuleID:      rule.ID(),
+		Title:       rule.Title(),
+		Description: rule.Description(),
+		Severity:    rule.Severity(),
+		Resource:    r.Address(),
+		Evidence: ir.Evidence{
+			Attribute: "value",
+			Span:      evSpan(vspan, r.Span),
+			Actual:    "[REDACTED: plaintext value for secret-like config key '" + key + "']",
+			Expected:  "Pulumi secret config (secure: value) or secrets-manager injection",
+		},
+	}}
 }

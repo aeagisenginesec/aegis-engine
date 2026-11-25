@@ -222,7 +222,47 @@ func BuildResources(path string, tmpl map[string]any) ([]ir.Resource, []ir.Diagn
 	out = foldQueueServices(out, t)
 	out = translateStorageBlocks(out)
 	out = translateVNetDNS(out)
+	// Emit template parameters with known defaults as arm_parameter
+	// resources (mirroring the CFN adapter's cfn_parameter emission), so
+	// rules can flag hardcoded secret defaults (AEGIS-AZURE-316). The
+	// same path serves ARM JSON templates and Bicep, which is translated
+	// to an ARM-equivalent template before reaching this function.
+	// Parameters without defaults (or with unresolved defaults) are
+	// skipped: there is nothing baked into the template to flag.
+	out = append(out, emitArmParameters(t)...)
 	return out, t.diags
+}
+
+// emitArmParameters converts template parameters with known defaults into
+// arm_parameter resources, in sorted name order for determinism.
+func emitArmParameters(t *template) []ir.Resource {
+	if len(t.params) == 0 {
+		return nil
+	}
+	names := make([]string, 0, len(t.params))
+	for name := range t.params {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var out []ir.Resource
+	for _, name := range names {
+		pd := t.params[name]
+		if !pd.def.Known {
+			continue
+		}
+		attrs := map[string]ir.Value{"default": pd.def}
+		if pd.rawType != "" {
+			attrs["type"] = ir.Value{Raw: pd.rawType, Known: true, Span: pd.def.Span}
+		}
+		out = append(out, ir.Resource{
+			Type:       "arm_parameter",
+			Name:       name,
+			Provider:   "azure",
+			Attributes: attrs,
+			Span:       pd.def.Span,
+		})
+	}
+	return out
 }
 
 func (t *template) diag(level, msg string) {
@@ -1069,13 +1109,14 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 		}
 	}
 	// Promote nested network.publicNetworkAccess to the top level for
-	// PostgreSQL flexible servers. ARM nests it as
+	// PostgreSQL and MySQL flexible servers. ARM nests it as
 	// properties.network.publicNetworkAccess, while the TF attribute
-	// (and AEGIS-AZURE-169) is the flat public_network_access_enabled.
+	// (and AEGIS-AZURE-169/315) is the flat public_network_access_enabled.
 	// Without this promotion the property was invisible to the rules,
 	// so AZURE-169 fired on "absence" even when the template explicitly
 	// set publicNetworkAccess to "Disabled" (17 of 18 R5 firings).
-	if res.Type == "azurerm_postgresql_flexible_server" {
+	if res.Type == "azurerm_postgresql_flexible_server" ||
+		res.Type == "azurerm_mysql_flexible_server" {
 		_, hasEnabled := res.Attributes["public_network_access_enabled"]
 		_, hasPlain := res.Attributes["public_network_access"]
 		if !hasEnabled && !hasPlain {
@@ -1113,6 +1154,38 @@ func (c *evalCtx) mapResource(res ir.Resource, rdm map[string]any) {
 			res.Attributes["public_network_access_enabled"] = ir.Value{Raw: true, Known: true, Span: v.Span}
 		case "Disabled":
 			res.Attributes["public_network_access_enabled"] = ir.Value{Raw: false, Known: true, Span: v.Span}
+		}
+	}
+	// Promote nested osProfile.linuxConfiguration.
+	// disablePasswordAuthentication to the top level for Linux VMs. ARM
+	// nests it as properties.osProfile.linuxConfiguration.
+	// disablePasswordAuthentication, while the TF attribute (and
+	// AEGIS-AZURE-024) is the flat disable_password_authentication.
+	// Only Linux VMs carry linuxConfiguration; Windows VMs use
+	// windowsConfiguration and never match this promotion.
+	if res.Type == "azurerm_virtual_machine" {
+		if _, exists := res.Attributes["disable_password_authentication"]; !exists {
+			if osProfile, ok := res.Attributes["os_profile"]; ok {
+				if m, ok := osProfile.AsMap(); ok {
+					for _, lcKey := range []string{"linux_configuration", "linuxConfiguration"} {
+						lc, ok := m[lcKey]
+						if !ok {
+							continue
+						}
+						lcm, ok := lc.AsMap()
+						if !ok {
+							continue
+						}
+						for _, dpaKey := range []string{"disable_password_authentication", "disablePasswordAuthentication"} {
+							if dpa, ok := lcm[dpaKey]; ok {
+								res.Attributes["disable_password_authentication"] = dpa
+								break
+							}
+						}
+						break
+					}
+				}
+			}
 		}
 	}
 	// Flatten ARM securityRules: [{name, properties: {access, ...}}]

@@ -201,7 +201,10 @@ func knownComposeServiceKey(k string) bool {
 	return false
 }
 
-// servicePorts returns published port specs as strings.
+// servicePorts returns published port specs as strings. Short syntax
+// ([HOST:]CONTAINER) is passed through verbatim; long syntax
+// ({target:, published:, ...}) contributes the container port (target:)
+// as a bare spec — a published port in either form exposes the service.
 func servicePorts(svc *yaml.Node) []string {
 	n := mappingGet(svc, "ports")
 	if n == nil || n.Kind != yaml.SequenceNode {
@@ -209,8 +212,15 @@ func servicePorts(svc *yaml.Node) []string {
 	}
 	var out []string
 	for _, item := range n.Content {
-		if s := nodeString(item); s != "" {
-			out = append(out, s)
+		switch item.Kind {
+		case yaml.ScalarNode:
+			if s := nodeString(item); s != "" {
+				out = append(out, s)
+			}
+		case yaml.MappingNode:
+			if tgt := mappingScalar(item, "target"); tgt != "" {
+				out = append(out, tgt)
+			}
 		}
 	}
 	return out

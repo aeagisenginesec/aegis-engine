@@ -15,8 +15,8 @@ func TestPack_HasExpectedRulesWithUniqueIDs(t *testing.T) {
 	// - 2 AWS-547/840 (R4 Sprint-2 FP closure; duplicates of 308/329).
 	// - 3 AWS-418/811/812 (R4 Sprint-2 FP closure; OpenSearch duplicates
 	//   of 523/623).
-	if len(rules) != 470 {
-		t.Fatalf("expected 476 rules, got %d", len(rules))
+	if len(rules) != 471 {
+		t.Fatalf("expected 471 rules, got %d", len(rules))
 	}
 	seen := map[string]bool{}
 	var prev string

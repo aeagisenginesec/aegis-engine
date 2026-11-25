@@ -286,15 +286,15 @@ func TestSC009_DedupesAccounts(t *testing.T) {
 // Pack wiring
 // ---------------------------------------------------------------------------
 
-func TestSupplyChainPackHasNineRules(t *testing.T) {
+func TestSupplyChainPackHasTenRules(t *testing.T) {
 	rs := Rules()
-	if len(rs) != 9 {
-		t.Fatalf("Rules() returned %d rules, want 9", len(rs))
+	if len(rs) != 10 {
+		t.Fatalf("Rules() returned %d rules, want 10", len(rs))
 	}
 	want := []string{
 		"AEGIS-SC-001", "AEGIS-SC-002", "AEGIS-SC-003", "AEGIS-SC-004",
 		"AEGIS-SC-005", "AEGIS-SC-006", "AEGIS-SC-007", "AEGIS-SC-008",
-		"AEGIS-SC-009",
+		"AEGIS-SC-009", "AEGIS-SC-010",
 	}
 	for i, id := range want {
 		if rs[i].ID() != id {
@@ -326,4 +326,60 @@ func TestSupplyChainExtraRulesDeterministic(t *testing.T) {
 			t.Errorf("non-deterministic: %+v vs %+v", f1[i], f2[i])
 		}
 	}
+}
+
+// ---------------------------------------------------------------------------
+// AEGIS-SC-010: Hardcoded secret in Pulumi stack config
+// ---------------------------------------------------------------------------
+
+func TestSC010_PulumiConfigSecretFires(t *testing.T) {
+	r := scRes("pulumi_config", "shop:dbPassword", map[string]ir.Value{
+		"key":   strVal("shop:dbPassword"),
+		"value": strVal("hunter2"),
+	})
+	f := expectFindings(t, pulumiConfigSecret{}, []ir.Resource{r}, 1, "AEGIS-SC-010")
+	if f[0].Evidence.Actual == "hunter2" {
+		t.Fatalf("secret value must be redacted in evidence: %q", f[0].Evidence.Actual)
+	}
+}
+
+func TestSC010_SecretSuffixAfterColon(t *testing.T) {
+	// The secret-like check applies to the key suffix after the last ':'.
+	r := scRes("pulumi_config", "shop:apiKey", map[string]ir.Value{
+		"key":   strVal("shop:apiKey"),
+		"value": strVal("ak_live_abc"),
+	})
+	expectFindings(t, pulumiConfigSecret{}, []ir.Resource{r}, 1, "AEGIS-SC-010")
+}
+
+func TestSC010_NonSecretKeyQuiet(t *testing.T) {
+	r := scRes("pulumi_config", "shop:region", map[string]ir.Value{
+		"key":   strVal("shop:region"),
+		"value": strVal("us-east-1"),
+	})
+	expectFindings(t, pulumiConfigSecret{}, []ir.Resource{r}, 0, "AEGIS-SC-010")
+}
+
+func TestSC010_PlaceholderQuiet(t *testing.T) {
+	r := scRes("pulumi_config", "shop:dbPassword", map[string]ir.Value{
+		"key":   strVal("shop:dbPassword"),
+		"value": strVal("changeme"),
+	})
+	expectFindings(t, pulumiConfigSecret{}, []ir.Resource{r}, 0, "AEGIS-SC-010")
+}
+
+func TestSC010_SecretRefQuiet(t *testing.T) {
+	r := scRes("pulumi_config", "shop:dbPassword", map[string]ir.Value{
+		"key":   strVal("shop:dbPassword"),
+		"value": strVal("arn:aws:secretsmanager:us-east-1:123456789012:secret:db"),
+	})
+	expectFindings(t, pulumiConfigSecret{}, []ir.Resource{r}, 0, "AEGIS-SC-010")
+}
+
+func TestSC010_EmptyValueQuiet(t *testing.T) {
+	r := scRes("pulumi_config", "shop:dbPassword", map[string]ir.Value{
+		"key":   strVal("shop:dbPassword"),
+		"value": strVal(""),
+	})
+	expectFindings(t, pulumiConfigSecret{}, []ir.Resource{r}, 0, "AEGIS-SC-010")
 }

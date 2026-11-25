@@ -55,11 +55,15 @@ var _ ir.Adapter = Adapter{}
 func (Adapter) Name() string { return "pulumi" }
 
 // Handles reports whether this adapter parses the given path: only files
-// literally named Pulumi.yaml / Pulumi.yml (any case). It must be consulted
-// before the manifests adapter, which claims every .yaml file.
+// literally named Pulumi.yaml / Pulumi.yml (any case), plus stack config
+// files Pulumi.<stack>.yaml / Pulumi.<stack>.yml (which carry config:
+// only — their plaintext secrets are still scannable). It must be
+// consulted before the manifests adapter, which claims every .yaml file.
 func (Adapter) Handles(path string) bool {
 	base := strings.ToLower(filepath.Base(path))
-	return base == "pulumi.yaml" || base == "pulumi.yml"
+	// Pulumi.yaml, Pulumi.yml, and Pulumi.<stack>.yaml/.yml.
+	return strings.HasPrefix(base, "pulumi.") &&
+		(strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml"))
 }
 
 // Parse converts a Pulumi.yaml program into IR resources. A document without
@@ -105,7 +109,10 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 	// has no resources: section, so without this check it scans as
 	// "0 findings" with nothing explaining that the program's language is
 	// not analyzed. Detect it and say so explicitly instead of staying
-	// silent.
+	// silent. Stack config is still emitted on this path: the config
+	// values ARE analyzable even when the program is not.
+	p.collectVars(root, prog)
+	configs := p.configResources(root, prog)
 	if lang, files := detectUnanalyzedProgram(root, prog, path); lang != "" {
 		msg := fmt.Sprintf("pulumi: %s is a Pulumi %s program; program files are not analyzed — scan results do not cover this program's resources", path, lang)
 		if len(files) > 0 {
@@ -116,17 +123,20 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 			Message: msg,
 			Span:    ir.Span{File: path},
 		})
-		return nil, p.diags, nil
+		return configs, p.diags, nil
 	}
-	p.collectVars(prog)
 	resNode := nodeField(prog, "resources")
 	if resNode == nil || resNode.Kind != yaml.MappingNode {
+		msg := fmt.Sprintf("pulumi: %s has no resources: section; nothing to scan", path)
+		if len(configs) > 0 {
+			msg = fmt.Sprintf("pulumi: %s has no resources: section; only stack config scanned", path)
+		}
 		p.diags = append(p.diags, ir.Diagnostic{
 			Level:   "warning",
-			Message: fmt.Sprintf("pulumi: %s has no resources: section; nothing to scan", path),
+			Message: msg,
 			Span:    ir.Span{File: path},
 		})
-		return nil, p.diags, nil
+		return configs, p.diags, nil
 	}
 	var out []ir.Resource
 	names := sortedKeys(resNode)
@@ -154,6 +164,7 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 		}
 		out = append(out, p.resource(name, rn))
 	}
+	out = append(out, configs...)
 	return out, p.diags, nil
 }
 
@@ -353,40 +364,56 @@ type parser struct {
 const maxPulumiWork = 20000000
 
 // collectVars indexes variables: and configuration: defaults for ${...}
-// reference resolution.
-func (p *parser) collectVars(root *yaml.Node) {
+// reference resolution. prog is the program node (root, or the
+// template:-nested node); root is the document root. In the template
+// layout, config: may live at the document root while resources: live
+// under template: — both are indexed, with the root winning on a
+// duplicate key as the canonical location.
+func (p *parser) collectVars(root, prog *yaml.Node) {
 	p.vars = map[string]*yaml.Node{}
 	p.resourceNames = map[string]bool{}
 	p.resourceTypes = map[string]string{}
-	if v := nodeField(root, "variables"); v != nil && v.Kind == yaml.MappingNode {
-		for _, k := range sortedKeys(v) {
-			p.vars[k] = nodeField(v, k)
-		}
-	}
-	collectConfig := func(c *yaml.Node) {
-		for _, k := range sortedKeys(c) {
-			cn := nodeField(c, k)
-			if cn == nil {
-				continue
+	collectVarsAndConfig := func(n *yaml.Node) {
+		if v := nodeField(n, "variables"); v != nil && v.Kind == yaml.MappingNode {
+			for _, k := range sortedKeys(v) {
+				p.vars[k] = nodeField(v, k)
 			}
-			if cn.Kind == yaml.MappingNode {
-				// {type:, default:, secret:} form.
-				if d := nodeField(cn, "default"); d != nil {
-					p.vars[k] = d
+		}
+		collectConfig := func(c *yaml.Node) {
+			for _, k := range sortedKeys(c) {
+				cn := nodeField(c, k)
+				if cn == nil {
+					continue
 				}
-				// secret without default: stays unknown (absent from vars).
-			} else {
-				p.vars[k] = cn
+				if cn.Kind == yaml.MappingNode {
+					// {value:, secret:} form (Pulumi.yaml config:) and
+					// {type:, default:, secret:} form (configuration:
+					// declarations). The value: entry is the actual
+					// value; default: is the declaration default.
+					if v := nodeField(cn, "value"); v != nil {
+						p.vars[k] = v
+					} else if d := nodeField(cn, "default"); d != nil {
+						p.vars[k] = d
+					}
+					// secret without value/default: stays unknown
+					// (absent from vars).
+				} else {
+					p.vars[k] = cn
+				}
 			}
 		}
+		if c := nodeField(n, "configuration"); c != nil && c.Kind == yaml.MappingNode {
+			collectConfig(c)
+		} else if c := nodeField(n, "config"); c != nil && c.Kind == yaml.MappingNode {
+			// Modern Pulumi YAML reference uses config: instead of configuration:.
+			collectConfig(c)
+		}
 	}
-	if c := nodeField(root, "configuration"); c != nil && c.Kind == yaml.MappingNode {
-		collectConfig(c)
-	} else if c := nodeField(root, "config"); c != nil && c.Kind == yaml.MappingNode {
-		// Modern Pulumi YAML reference uses config: instead of configuration:.
-		collectConfig(c)
+	collectVarsAndConfig(prog)
+	if prog != root {
+		collectVarsAndConfig(root)
 	}
-	if r := nodeField(root, "resources"); r != nil && r.Kind == yaml.MappingNode {
+	if r := nodeField(prog, "resources"); r != nil && r.Kind == yaml.MappingNode {
 		for _, k := range sortedKeys(r) {
 			p.resourceNames[k] = true
 			// Record canonical type for Ref qualification.
@@ -399,6 +426,90 @@ func (p *parser) collectVars(root *yaml.Node) {
 			}
 		}
 	}
+}
+
+// configValueNode returns the plaintext value node for one config entry:
+// the scalar itself, or the `value:` / `default:` field of a mapping.
+// Returns nil for `secure:` ciphertext entries (encrypted by
+// construction) and declarations without a value.
+func configValueNode(cn *yaml.Node) *yaml.Node {
+	if cn.Kind == yaml.ScalarNode {
+		return cn
+	}
+	if cn.Kind != yaml.MappingNode {
+		return nil
+	}
+	if s := nodeField(cn, "secure"); s != nil {
+		return nil
+	}
+	if v := nodeField(cn, "value"); v != nil {
+		return v
+	}
+	if d := nodeField(cn, "default"); d != nil {
+		return d
+	}
+	return nil
+}
+
+// configResources emits pulumi_config resources for plaintext config
+// entries (Pulumi.yaml inline config: and Pulumi.<stack>.yaml stack
+// config), mirroring the CFN adapter's cfn_parameter emission so rules
+// can flag hardcoded secrets (AEGIS-SC-010). Entries whose value cannot
+// be resolved to a known non-empty scalar are skipped: there is nothing
+// literal to flag. Config may live at the document root, under
+// template:, or both; a key present in both is emitted once, with the
+// root (canonical location) winning.
+func (p *parser) configResources(root, prog *yaml.Node) []ir.Resource {
+	seen := map[string]bool{}
+	var out []ir.Resource
+	emit := func(c *yaml.Node) {
+		if c == nil || c.Kind != yaml.MappingNode {
+			return
+		}
+		for _, key := range sortedKeys(c) {
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			cn := nodeField(c, key)
+			if cn == nil {
+				continue
+			}
+			valNode := configValueNode(cn)
+			if valNode == nil {
+				continue
+			}
+			v := p.value(valNode, p.spanOf(valNode, p.path))
+			s, ok := v.AsString()
+			if !ok || strings.TrimSpace(s) == "" {
+				continue
+			}
+			out = append(out, ir.Resource{
+				Type:     "pulumi_config",
+				Name:     key,
+				Provider: "pulumi",
+				Attributes: map[string]ir.Value{
+					"key":   {Raw: key, Known: true, Span: p.spanOf(cn, p.path)},
+					"value": {Raw: s, Known: true, Span: v.Span},
+				},
+				Span: p.spanOf(cn, p.path),
+			})
+		}
+	}
+	configNode := func(n *yaml.Node) *yaml.Node {
+		if c := nodeField(n, "configuration"); c != nil && c.Kind == yaml.MappingNode {
+			return c
+		}
+		if c := nodeField(n, "config"); c != nil && c.Kind == yaml.MappingNode {
+			return c
+		}
+		return nil
+	}
+	emit(configNode(root))
+	if prog != root {
+		emit(configNode(prog))
+	}
+	return out
 }
 
 // resource converts one named resource entry to an IR resource.
@@ -417,6 +528,29 @@ func (p *parser) resource(name string, rn *yaml.Node) ir.Resource {
 	if props := nodeField(rn, "properties"); props != nil && props.Kind == yaml.MappingNode {
 		for _, k := range sortedKeys(props) {
 			attrs[toSnake(k)] = p.value(nodeField(props, k), span)
+		}
+	}
+	// Promote nested network.publicNetworkAccess to the top level for
+	// PostgreSQL flexible servers (same promotion as the ARM adapter,
+	// arm.go: promote network.publicNetworkAccess): azure-native nests
+	// it as properties.network.publicNetworkAccess, while the TF
+	// attribute (and AEGIS-AZURE-169) is the flat
+	// public_network_access_enabled. Without this the property was
+	// invisible and AZURE-169 fired on "absence" even when the program
+	// explicitly disabled public network access. (Nested keys are
+	// already snake_cased by value(), so only public_network_access
+	// needs checking here.)
+	if tfType == "azurerm_postgresql_flexible_server" {
+		if _, hasEnabled := attrs["public_network_access_enabled"]; !hasEnabled {
+			if _, hasPlain := attrs["public_network_access"]; !hasPlain {
+				if net, ok := attrs["network"]; ok {
+					if m, ok := net.AsMap(); ok {
+						if ev, ok := m["public_network_access"]; ok {
+							attrs["public_network_access"] = ev
+						}
+					}
+				}
+			}
 		}
 	}
 	// publicNetworkAccess is an enum in Pulumi azure-native
@@ -556,6 +690,17 @@ func (p *parser) value(n *yaml.Node, span ir.Span) ir.Value {
 		// Single-key fn::* mapping = Pulumi intrinsic function call.
 		keys := sortedKeys(n)
 		if len(keys) == 1 && strings.HasPrefix(keys[0], "fn::") {
+			// fn::toJSON over a statically-known argument is resolvable:
+			// it just renders its argument as a JSON string (the idiom
+			// Pulumi YAML uses for IAM/S3/SQS policy documents). Resolve
+			// it so policy rules can read the document; anything else
+			// unresolvable inside the argument still yields Unknown
+			// (see toJSONString). All other intrinsics stay unknown.
+			if keys[0] == "fn::toJSON" {
+				if s, ok := p.toJSONString(nodeField(n, keys[0]), span); ok {
+					return ir.Value{Raw: s, Known: true, Span: span}
+				}
+			}
 			p.diags = append(p.diags, ir.Diagnostic{
 				Level:   "warning",
 				Message: fmt.Sprintf("pulumi: intrinsic %q is not statically resolvable; treated as unknown", keys[0]),
@@ -744,11 +889,31 @@ func flattenNestedProperties(attrs map[string]ir.Value, attr string) {
 	}
 }
 
+// toJSONString renders a statically-known YAML value as a JSON string.
+// It reports false when the value itself is unknown (e.g. it contains an
+// fn::invoke result), so the caller can fall back to Unknown. Unresolvable
+// leaves inside an otherwise known value render as "" (see plainValue).
+func (p *parser) toJSONString(n *yaml.Node, span ir.Span) (string, bool) {
+	v := p.value(n, span)
+	if !v.Known {
+		return "", false
+	}
+	plain, ok := plainValue(v)
+	if !ok {
+		return "", false
+	}
+	b, err := json.Marshal(plain)
+	if err != nil {
+		return "", false
+	}
+	return string(b), true
+}
+
 // stringifyPolicyDoc renders a Pulumi policy-document mapping as a JSON
 // string. Keys stay snake_cased (the policy parsers match keys
-// case-insensitively); values are the literal scalars/lists/maps. Any
-// unresolved (Unknown) value aborts the conversion so no fabricated
-// document content is produced.
+// case-insensitively); values are the literal scalars/lists/maps.
+// Unresolvable leaves render as "" (see plainValue) so the known parts of
+// the document — Effect, Principal, Action — stay analyzable.
 func stringifyPolicyDoc(m map[string]ir.Value) (string, bool) {
 	plain, ok := plainValue(ir.Value{Raw: m, Known: true})
 	if !ok {
@@ -765,7 +930,15 @@ func stringifyPolicyDoc(m map[string]ir.Value) (string, bool) {
 // marshalling. Unknown values abort the conversion.
 func plainValue(v ir.Value) (any, bool) {
 	if !v.Known {
-		return nil, false
+		// Unresolvable leaf (a ${...} reference or intrinsic result):
+		// render as "" instead of aborting the whole document. The
+		// idiomatic Pulumi policy writes Resource: ${bucket.arn}, so
+		// aborting silently dropped every policy that references its own
+		// resource (R6 r6110 sqs-public-policy). "" matches no public or
+		// wildcard pattern, so no finding can be fabricated from an
+		// unknown value — a policy whose Principal itself is unknown
+		// still reads as non-public.
+		return "", true
 	}
 	switch t := v.Raw.(type) {
 	case map[string]ir.Value:
