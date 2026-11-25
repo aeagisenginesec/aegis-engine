@@ -133,7 +133,7 @@ func (Adapter) Parse(path string, src []byte) ([]ir.Resource, []ir.Diagnostic, e
 		maintainer          bool
 		maintainerSpan      ir.Span
 		copySources         []ir.Value
-		copyFromSources      []ir.Value // []Value of map[string]ir.Value{source, from, span} for COPY --from=<stage>
+		copyFromSources     []ir.Value // []Value of map[string]ir.Value{source, from, span} for COPY --from=<stage>
 		copyChown           bool
 		cmdShellForm        bool
 		entrypointShellForm bool

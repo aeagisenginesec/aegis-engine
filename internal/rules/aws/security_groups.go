@@ -185,6 +185,7 @@ func attachedSecurityGroups(resources []ir.Resource) map[string]bool {
 	}
 	return attached
 }
+
 // portRangeSuffix formats a known from/to port pair for evidence:
 // " to port 3389" for a single port, " to ports 8000-9000" for a
 // range, " to all ports" for 0-65535. Returns "" when the ports are
@@ -255,8 +256,8 @@ func checkSGBlocks(r ir.Resource, blockName string, rule ir.Rule) []ir.Finding {
 					// Port range included so a scorer (and a human)
 					// can tell an admin-port open ingress from any
 					// other open ingress; absent when unknown.
-					Actual:    worldCIDR + portSuffixForBlock(b),
-					Expected:  "restricted source CIDR ranges",
+					Actual:   worldCIDR + portSuffixForBlock(b),
+					Expected: "restricted source CIDR ranges",
 				},
 			})
 		}
@@ -299,8 +300,8 @@ func checkRuleCIDRs(r ir.Resource, attr string, rule ir.Rule) []ir.Finding {
 				Attribute: attr,
 				Span:      evidenceSpan(v.Span, r.Span),
 				// Port range included (see checkSGBlocks).
-				Actual:    worldCIDR + portSuffixForResource(r),
-				Expected:  "restricted CIDR ranges",
+				Actual:   worldCIDR + portSuffixForResource(r),
+				Expected: "restricted CIDR ranges",
 			},
 		}}
 	}
