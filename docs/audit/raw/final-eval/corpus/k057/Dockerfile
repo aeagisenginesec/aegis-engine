@@ -7,7 +7,7 @@ WORKDIR /src
 COPY . .
 RUN go build -o /bin/svc ./cmd/svc
 
-FROM alpine:3.20.2
+FROM alpine:3.21
 
 RUN adduser -D -u 10001 appuser
 

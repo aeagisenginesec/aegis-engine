@@ -1,4 +1,4 @@
-FROM alpine:3.20.2
+FROM alpine:3.21
 
 RUN apk add --no-cache nginx \
     && mkdir -p /run/nginx /var/www/html

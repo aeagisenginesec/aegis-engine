@@ -1,4 +1,4 @@
-FROM debian:bookworm-20240904-slim
+FROM debian:bookworm-20261123-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends dumb-init \

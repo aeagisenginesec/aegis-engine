@@ -6,7 +6,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /bin/api ./cmd/api
 
-FROM alpine:3.20.2
+FROM alpine:3.21
 
 RUN apk add --no-cache ca-certificates curl busybox-extras strace tcpdump \
     && adduser -D -u 10001 appuser

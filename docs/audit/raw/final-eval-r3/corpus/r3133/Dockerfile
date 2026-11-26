@@ -1,4 +1,4 @@
-FROM python:3.11.9-slim-bookworm
+FROM python:3.15.2-slim-bookworm
 RUN apt-get update && apt-get install -y curl git strace
 WORKDIR /app
 COPY --chown=app:app . .
