@@ -7,7 +7,7 @@ RUN git clone https://oauth2:${GIT_TOKEN}@github.com/example/private-repo.git . 
     && npm ci \
     && npm run build
 
-FROM nginx:1.27
+FROM nginx:1.31.10
 
 ENV DEPLOY_KEY="d3pl0y-s3cr3t-k3y-2024"
 
