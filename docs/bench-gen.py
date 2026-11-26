@@ -10,8 +10,9 @@ import os
 import random
 import shutil
 import sys
+import tempfile
 
-OUT = sys.argv[1] if len(sys.argv) > 1 else "/tmp/aegis-bigbench"
+OUT = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp(prefix="aegis-bigbench-")
 NFILES = int(sys.argv[2]) if len(sys.argv) > 2 else 500
 RES_PER_FILE = 6
 

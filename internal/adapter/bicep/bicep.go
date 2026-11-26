@@ -139,7 +139,7 @@ func (p *parser) parse() (map[string]any, []ir.Diagnostic) {
 	p.loopScope = map[string]any{}
 	tmpl := map[string]any{
 		"$schema":        "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-		"contentVersion": "1.0.0.0",
+		"contentVersion": "1.0.0.0", // NOSONAR - ARM template version literal, not an IP address (S1313 false positive)
 		"parameters":     map[string]any{},
 		"variables":      map[string]any{},
 		"resources":      []any{},
