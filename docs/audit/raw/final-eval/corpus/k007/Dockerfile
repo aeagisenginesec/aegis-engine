@@ -1,4 +1,4 @@
-FROM node:20.14.0-alpine3.20
+FROM node:22.23.5-alpine
 
 ARG NPM_TOKEN
 ENV NPM_TOKEN=${NPM_TOKEN}

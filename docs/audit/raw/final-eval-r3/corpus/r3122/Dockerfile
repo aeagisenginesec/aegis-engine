@@ -1,4 +1,4 @@
-FROM python:3.11.9-slim-bookworm
+FROM python:3.15.2-slim-bookworm
 WORKDIR /app
 COPY . .
 RUN useradd -m app && chown -R app /app
