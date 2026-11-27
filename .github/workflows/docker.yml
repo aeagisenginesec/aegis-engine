@@ -39,12 +39,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    outputs:
-      # The tags this run actually published (semver tags on release
-      # refs, just :latest on branch dispatches) — the Snyk scan job
-      # consumes this so it always scans the image THIS run built,
-      # whatever ref triggered it.
-      image_tags: ${{ steps.meta.outputs.tags }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -112,14 +106,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Scan the image this run just published: the first tag from
-      # the build job's metadata (a version tag on release refs,
-      # :latest on branch dispatches).
-      - name: Pull the image just published
-        env:
-          IMAGE_TAGS: ${{ needs.image.outputs.image_tags }}
+      # Scan the image this run just published. The ref is resolved
+      # here instead of passed as a job output: GitHub skips job
+      # outputs it suspects may contain a secret, which left the Snyk
+      # job with an empty ref and an "invalid reference format"
+      # failure (Docker #19).
+      - name: Resolve + pull the image just published
         run: |
-          IMAGE_REF="$(printf '%s\n' "$IMAGE_TAGS" | head -n1)"
+          if [ -n "${{ inputs.version }}" ]; then
+            IMAGE_REF="ghcr.io/${{ github.repository }}:${{ inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            IMAGE_REF="ghcr.io/${{ github.repository }}:${{ github.ref_name }}"
+          else
+            IMAGE_REF="ghcr.io/${{ github.repository }}:latest"
+          fi
           echo "IMAGE_REF=$IMAGE_REF" >> "$GITHUB_ENV"
           docker pull --platform linux/amd64 "$IMAGE_REF"
 
