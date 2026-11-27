@@ -83,10 +83,15 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
+          # docs/bench-gen.py is a docs-time corpus generator (Python) with
+          # no test harness, and Go coverage can never cover Python lines —
+          # so it is out of the coverage metric only. Bugs, vulnerabilities
+          # and code smells on it are still analysed.
           args: >
             -Dsonar.organization=aeagisenginesec
             -Dsonar.projectKey=aeagisenginesec_aegis-engine
             -Dsonar.exclusions=benchmark/**,docs/audit/raw/**,**/testdata/**,tests/demos/**,tests/fixtures/**,demo/**
             -Dsonar.go.coverage.reportPaths=coverage.out
             -Dsonar.cpd.exclusions=internal/rules/compliance.go
+            -Dsonar.coverage.exclusions=docs/bench-gen.py
             -Dsonar.qualitygate.wait=true
