@@ -75,20 +75,21 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
-          # NOT go-version-file: go.mod's bare "go 1.26.0" would pin the
-          # .0 release, which predates the go1.26.1+ stdlib security
+          # NOT go-version-file: go.mod's bare "go 1.27.0" would pin the
+          # .0 release, which predates the go1.27.1+ stdlib security
           # fixes (run #1 failed with 23 reachable stdlib vulns that a
-          # patched toolchain does not have). "1.26.x" takes the newest
+          # patched toolchain does not have). "1.27.x" takes the newest
           # patch the runner manifest knows, and go.mod's
-          # `toolchain go1.26.10` line then pins exactly 1.26.10 for
+          # `toolchain go1.27.4` line then pins exactly 1.27.4 for
           # every go command in the module (the runner manifest lagged
           # at 1.26.9 in run #7 — one vuln short).
-          go-version: "1.26.x"
+          go-version: "1.27.x"
           cache: true
 
       - name: Run govulncheck
         run: |
-          go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
+          # Pinned to v1.4.0: v1.1.4's bundled x/tools v0.29.0 panics on Go 1.27 ("unexpected expr: *ast.KeyValueExpr" in the SSA builder) and exits 1 without a verdict. v1.4.0 (x/tools v0.46.0) runs clean on the 1.27 toolchain.
+          go run golang.org/x/vuln/cmd/govulncheck@v1.4.0 ./...
 
   semgrep:
     name: Semgrep
@@ -145,7 +146,7 @@ jobs:
         with:
           # Snyk's gomod support shells out to the go tool (a missing
           # go binary is a hard CLI error, observed locally).
-          go-version: "1.26.x"
+          go-version: "1.27.x"
           cache: true
 
       # Pinned CLI — the same version as the owner's authenticated
