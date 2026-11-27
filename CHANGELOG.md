@@ -15,7 +15,7 @@ All notable changes to Aegis are documented here. The format is based on
   or behaviour changes; CI/CD pins updated across all workflows and
   the Dockerfile.
 
-  ## [2.4.0] — 2026-11-25
+## [2.4.0] — 2026-11-25
 
 ### Added
 
