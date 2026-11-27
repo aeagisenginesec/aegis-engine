@@ -1,7 +1,8 @@
-# Publish the Aegis container image to GHCR whenever a GitHub Release is
-# published or a version tag is pushed (the release workflow owns the
-# binaries; this owns the image). Also runnable manually against any ref
-# via workflow_dispatch.
+# Publish the Aegis container image to GHCR and Docker Hub whenever a
+# GitHub Release is published or a version tag is pushed (the release
+# workflow owns the binaries; this owns the image). Also runnable manually
+# against any ref via workflow_dispatch — pass `version` (e.g. 2.4.0) to
+# (re)publish that version tag on both registries.
 #
 # Why BOTH triggers: releases created by a workflow's GITHUB_TOKEN (ours
 # are, via release.yml) do not emit events that trigger other workflows
@@ -10,8 +11,9 @@
 # trigger below is the one that actually carries releases; the release
 # trigger remains for releases published manually in the UI.
 #
-# Tags pushed: the release tag (e.g. v2.1.1), the bare version (2.1.1),
-# and `latest`. Architectures: linux/amd64 + linux/arm64.
+# Tags pushed: the release tag (e.g. v2.4.0), the bare version (2.4.0),
+# and `latest`, on both ghcr.io and docker.io/aeagisenginesec.
+# Architectures: linux/amd64 + linux/arm64.
 
 name: Docker
 
@@ -21,6 +23,11 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to publish (e.g. 2.4.0) — also publishes v<version> and latest"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -54,14 +61,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to Docker Hub
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Image metadata
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: |
+            ghcr.io/${{ github.repository }}
+            docker.io/aeagisenginesec/aegis-engine
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern=v{{version}}
+            type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
+            type=raw,value=v${{ inputs.version }},enable=${{ inputs.version != '' }}
             type=raw,value=latest
 
       - name: Build + push
