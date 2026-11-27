@@ -14,13 +14,14 @@ All notable changes to Aegis are documented here. The format is based on
   clean (built on golang:1.26-alpine, which carries 1.26.11). No rule
   or behaviour changes; CI/CD pins updated across all workflows and
   the Dockerfile.
+
   ## [2.4.0] — 2026-11-25
 
 ### Added
 
 - **SBOM generation for scanned projects (`--sbom`).**
   `aegis scan --sbom spdx-json|cyclonedx-json <dir>` writes a dependency
-  ventory alongside the findings report: SPDX 2.3 JSON (primary) or
+  inventory alongside the findings report: SPDX 2.3 JSON (primary) or
   CycloneDX 1.6 JSON. Covers Terraform `required_providers` + module
   sources (with versions where pinned), Dockerfile base images, and
   Compose service images — direct references only, no transitive
