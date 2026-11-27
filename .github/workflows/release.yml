@@ -74,9 +74,19 @@ jobs:
 
       - name: Publish GitHub Release
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "Aegis $GITHUB_REF_NAME" \
-            --generate-notes \
-            dist/*
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists — uploading assets into it"
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --title "Aegis $GITHUB_REF_NAME" \
+              --generate-notes \
+              dist/*
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Move v2 tag to this release
+        run: |
+          git tag -f v2 "$GITHUB_REF_NAME"
+          git push origin v2 --force
