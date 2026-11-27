@@ -3,13 +3,24 @@
 All notable changes to Aegis are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.4.0] — 2026-11-25
+## [2.4.1] — 2026-11-27
+
+### Security
+
+- **Go 1.26 → 1.27 (toolchain 1.27.4).** Closes GO-2026-6859 (net/http
+  MaxBytesReader header race, reachable via the serve command and the
+  SIEM/SOAR webhook), present in the Go 1.26.10 stdlib the v2.4.0
+  binaries were built with. The v2.4.0 container image was already
+  clean (built on golang:1.26-alpine, which carries 1.26.11). No rule
+  or behaviour changes; CI/CD pins updated across all workflows and
+  the Dockerfile.
+  ## [2.4.0] — 2026-11-25
 
 ### Added
 
 - **SBOM generation for scanned projects (`--sbom`).**
   `aegis scan --sbom spdx-json|cyclonedx-json <dir>` writes a dependency
-  inventory alongside the findings report: SPDX 2.3 JSON (primary) or
+  ventory alongside the findings report: SPDX 2.3 JSON (primary) or
   CycloneDX 1.6 JSON. Covers Terraform `required_providers` + module
   sources (with versions where pinned), Dockerfile base images, and
   Compose service images — direct references only, no transitive
