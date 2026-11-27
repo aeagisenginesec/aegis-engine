@@ -7,7 +7,7 @@
   <a href="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml"><img src="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml/badge.svg" alt="Aegis Release CI"></a>
   <img src="https://img.shields.io/badge/rules-1148%20active-000000" alt="1,148 active rules">
   <img src="https://img.shields.io/badge/R7%20F1-0.925-000000" alt="R7 blind evaluation F1 0.925">
-  <img src="https://img.shields.io/badge/go-1.26-000000" alt="Go 1.26">
+  <img src="https://img.shields.io/badge/go-1.27-000000" alt="Go 1.27">
   <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macOS%20%7C%20windows-lightgrey" alt="Platforms">
   <img src="https://img.shields.io/badge/license-MIT-000000" alt="MIT license">
 </p>
@@ -23,7 +23,7 @@ directory or a single file. It builds a resource relationship graph across
 your estate and reports misconfigurations with file-and-line evidence —
 including full **attack paths** from the internet to your data stores.
 
-**Latest release: v2.4.0** (2026-11-25) — **1,148 active rules**, Go 1.26,
+**Latest release: v2.4.1** (2026-11-27) — **1,148 active rules**, Go 1.27,
 Linux / macOS / Windows binaries plus a GHCR container image. See
 [What's new in v2.4.0](#whats-new-in-v240) below.
 
@@ -93,7 +93,7 @@ docker run --rm -v "$PWD:/src" ghcr.io/aeagisenginesec/aegis-engine:v2.4.0 scan 
 # Podman works the same way: podman run --rm -v "$PWD:/src" ghcr.io/aeagisenginesec/aegis-engine:v2.4.0 scan /src
 ```
 
-**Or build from source** (Go 1.26+):
+**Or build from source** (Go 1.27+):
 
 ```bash
 go build -o aegis ./cmd/aegis
@@ -306,5 +306,5 @@ examples/             sample projects and workflows
 ```
 
 <p align="center">
-  <sub>Built with Go 1.26 · Deterministic by design · Every claim in this README is measured — see <a href="docs/audit/32_FINAL_EVAL_R7_REPORT.md">the audit record</a>.</sub>
+  <sub>Built with Go 1.27 · Deterministic by design · Every claim in this README is measured — see <a href="docs/audit/32_FINAL_EVAL_R7_REPORT.md">the audit record</a>.</sub>
 </p>
