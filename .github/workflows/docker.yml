@@ -111,10 +111,15 @@ jobs:
       # outputs it suspects may contain a secret, which left the Snyk
       # job with an empty ref and an "invalid reference format"
       # failure (Docker #19).
+      # The dispatch `version` input reaches the shell only through the
+      # INPUT_VERSION env var — interpolating ${{ inputs.version }}
+      # directly in a run block is a script injection (Sonar S7630).
       - name: Resolve + pull the image just published
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            IMAGE_REF="ghcr.io/${{ github.repository }}:${{ inputs.version }}"
+          if [ -n "$INPUT_VERSION" ]; then
+            IMAGE_REF="ghcr.io/${{ github.repository }}:$INPUT_VERSION"
           elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
             IMAGE_REF="ghcr.io/${{ github.repository }}:${{ github.ref_name }}"
           else
