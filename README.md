@@ -6,9 +6,10 @@
   <a href="https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.4.0"><img src="https://img.shields.io/badge/release-v2.4.0-000000" alt="Release v2.4.0"></a>
   <a href="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml"><img src="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml/badge.svg" alt="Aegis Release CI"></a>
   <img src="https://img.shields.io/badge/rules-1148%20active-000000" alt="1,148 active rules">
-  <img src="https://img.shields.io/badge/go-1.26-00ADD8" alt="Go 1.26">
+  <img src="https://img.shields.io/badge/R7%20F1-0.925-000000" alt="R7 blind evaluation F1 0.925">
+  <img src="https://img.shields.io/badge/go-1.26-000000" alt="Go 1.26">
   <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macOS%20%7C%20windows-lightgrey" alt="Platforms">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license">
+  <img src="https://img.shields.io/badge/license-MIT-000000" alt="MIT license">
 </p>
 
 <p align="center">
@@ -17,12 +18,39 @@
 </p>
 
 Aegis scans Terraform, CloudFormation, ARM, Bicep, Kubernetes manifests,
-Dockerfiles, docker-compose, Pulumi YAML and Terraform plan JSON. It builds a
-resource relationship graph across your whole estate and reports
-misconfigurations with file-and-line evidence — including full **attack paths**
-from the internet to your data stores.
+Dockerfiles, docker-compose, Pulumi YAML and Terraform plan JSON — a whole
+directory or a single file. It builds a resource relationship graph across
+your estate and reports misconfigurations with file-and-line evidence —
+including full **attack paths** from the internet to your data stores.
+
+**Latest release: v2.4.0** (2026-11-25) — **1,148 active rules**, Go 1.26,
+Linux / macOS / Windows binaries plus a GHCR container image. See
+[What's new in v2.4.0](#whats-new-in-v240) below.
 
 ---
+
+## What's new in v2.4.0
+
+- **SBOM generation (`--sbom`).** `aegis scan --sbom spdx-json|cyclonedx-json`
+  writes a dependency inventory alongside the findings report: SPDX 2.3 or
+  CycloneDX 1.6. Covers Terraform `required_providers` + module sources
+  (with versions where pinned), Dockerfile base images and Compose service
+  images — direct references only, no transitive resolution, no registry
+  lookups. See [docs/SBOM.md](docs/SBOM.md).
+- **IAM negative-logic evaluation.** Statements using `NotAction` /
+  `NotResource` are no longer silently skipped. A broad grant such as
+  `NotAction: ["iam:DeleteUser"]` on `*` is now treated as the near-admin
+  grant it is, with the exclusion carried in the finding's evidence.
+- **IAM kill-chain links.** Lambda/EC2 roles with over-broad grants and
+  open trust relationships are linked to in-scope data stores —
+  evidence-backed, no invented hops — with ordered remediation steps
+  (contain → audit → recover → verify).
+- **Benchmark-file authority.** Release gates can be driven from a
+  benchmark file, so a release cannot ship on stale numbers.
+- **SIEM/SOAR webhook (`--webhook`).** POST the JSON report to an HTTPS
+  endpoint after a scan. See [docs/WEBHOOK.md](docs/WEBHOOK.md).
+
+Full list: [CHANGELOG.md](CHANGELOG.md).
 
 ## Why Aegis
 
@@ -58,6 +86,13 @@ chmod +x aegis-linux-amd64
 ./aegis-linux-amd64 doctor        # aegis 2.4.0 — 1,148 rules loaded
 ```
 
+**Or run the container image** (published to GHCR on every release):
+
+```bash
+docker run --rm -v "$PWD:/src" ghcr.io/aeagisenginesec/aegis-engine:v2.4.0 scan /src
+# Podman works the same way: podman run --rm -v "$PWD:/src" ghcr.io/aeagisenginesec/aegis-engine:v2.4.0 scan /src
+```
+
 **Or build from source** (Go 1.26+):
 
 ```bash
@@ -86,26 +121,46 @@ jobs:
           fail-on: high        # critical | high | medium | low | none
 ```
 
-The Action downloads the pinned Aegis release, verifies its SHA-256
-against the published `SHA256SUMS.txt`, scans, and uploads SARIF.
-Baselines (`--baseline-out` once, commit the file, pass
-`baseline: aegis-baseline.json`) suppress known debt so the gate only
-fires on new findings. Full guide, inputs and the phased
-shadow → gate → cutover adoption path:
+| Input | Default | Meaning |
+|-------|---------|---------|
+| `path` | `.` | Directory to scan |
+| `version` | `v2.4.0` | Aegis release to run (downloaded and SHA-256 verified) |
+| `fail-on` | `high` | Lowest severity that fails the job |
+| `baseline` | — | Baseline file from a previous `--baseline-out` run |
+| `upload-sarif` | `true` | Upload SARIF to code scanning |
+| `args` | — | Extra arguments passed verbatim to `aegis scan` |
+
+Outputs: `sarif-file` (absolute path of the SARIF report) and `findings`
+(total findings after baseline suppression). The Action downloads the
+pinned Aegis release, verifies its SHA-256 against the published
+`SHA256SUMS.txt`, scans, and uploads SARIF. Baselines (`--baseline-out`
+once, commit the file, pass `baseline: aegis-baseline.json`) suppress known
+debt so the gate only fires on new findings. Full guide, inputs and the
+phased shadow → gate → cutover adoption path:
 [docs/github-actions.md](docs/github-actions.md).
 
 ## Quick start
 
 ```bash
 ./aegis scan ./my-infra                                   # text report
+./aegis scan main.tf                                      # a single file also works
 ./aegis scan ./my-infra --format=json --fail-on=high      # CI mode
 ./aegis scan ./my-infra --attack-paths                    # evidence-backed kill chains
 ./aegis scan ./my-infra --format=sarif > aegis.sarif      # GitHub code scanning
+./aegis scan ./my-infra --format=html > report.html        # standalone attestation report
+./aegis scan ./my-infra --compliance=all                  # posture per framework
 ./aegis scan ./my-infra --sbom spdx-json                # SPDX 2.3 dependency inventory (see docs/SBOM.md)
 ./aegis scan ./my-infra --webhook https://siem.example.com/hook  # POST the JSON report to SIEM/SOAR (see docs/WEBHOOK.md)
 ./aegis fix ./my-infra                                    # safe fixes (dry run by default)
+./aegis serve                                             # HTTP API on 127.0.0.1:8734
 ./aegis quality-gate                                      # release gates: precision / recall / perf
+./aegis doctor                                            # self-check: version, 1,148 rules, smoke tests
 ```
+
+`aegis serve` exposes `POST /v1/scan` (scan files sent as JSON) and
+`GET /v1/health`, binds loopback by default, and takes a Bearer token
+(`--auth-token`, or `AEGIS_SERVE_TOKEN`) — required in practice whenever
+it binds a non-loopback address.
 
 ### What a finding looks like
 
@@ -175,7 +230,8 @@ Methodology: [R7 evaluation protocol](docs/audit/31_EVAL_R7_PROTOCOL.md) ·
 | **Rule packs** | AWS, Azure, GCP, Alibaba, OCI, Kubernetes, Docker, Compose, supply-chain, Terraform-generic, custom YAML rules |
 | **Mappings** | CIS AWS 1.5 · CIS Azure 2.1 · CIS GCP 1.3 · CIS Kubernetes 1.8 · CIS Docker 1.6 · NIST 800-53 · PCI DSS 4.0 · ISO 27001 · SOC 2 · HIPAA |
 
-Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
+**1,148 active detection rules** across those packs. Full per-service
+inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 
 ## Features
 
@@ -188,14 +244,22 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 - **Secret taint tracking** — user data, tags, outputs, variable defaults; values redacted in all output
 - **Quality gates** (`quality-gate`) — precision/recall/coverage/perf checks that block releases
 - **Safe remediation** (`fix`) — dry-run default, minimal diffs, re-parse validation; IAM and security groups never auto-patched without `--force`; attack-path findings get ordered SOC steps (contain → audit → recover → verify)
-- **Suppressions & baselines** — `# aegis:ignore=RULE-ID`, stable baseline files for CI
-- **YAML custom rules** — user-defined checks without writing Go
-- **SARIF / JSON / text** output; SARIF chunking for GitHub code scanning
+- **Suppressions & baselines** — `# aegis:ignore=RULE-ID`, stable baseline files for CI, expiring waivers (`--waiver-reason/--waiver-owner/--waiver-expires`)
+- **YAML custom rules** — user-defined checks without writing Go (`--custom-rules`)
+- **SARIF / JSON / text / HTML** output; SARIF chunking for GitHub code scanning, stable fingerprints and compliance tags per result
 - **SIEM/SOAR webhook** (`--webhook`) — POST the JSON report to an HTTPS endpoint after a scan; see [docs/WEBHOOK.md](docs/WEBHOOK.md)
 - **SBOM generation** (`--sbom spdx-json|cyclonedx-json`) — SPDX 2.3 /
   CycloneDX 1.6 dependency inventory of the scanned project
   (providers, modules, base images); see [docs/SBOM.md](docs/SBOM.md)
+- **HTTP API** (`serve`) — `POST /v1/scan`, `GET /v1/health`, loopback by
+  default, Bearer-token auth for non-loopback binds
+- **Compliance posture** (`--compliance`) — per-control pass/fail for one
+  framework or `all` (10 frameworks), plus a standalone HTML attestation
+  report with `--format=html`
 - **Completeness auditing** — skipped, oversize and unreadable files are reported, never silently dropped
+- **Project config** — `aegis.yaml` with severity overrides and excluded
+  rules; `--exclude` globs, `--strict` parse-failure mode, `--timeout` and
+  `--max-file-size` (10 MB default) guards
 
 ## What's next
 
@@ -218,6 +282,7 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 - [SBOM generation](docs/SBOM.md) — SPDX 2.3 / CycloneDX 1.6 dependency inventory of the scanned project
 - [Attack paths](docs/PHASE3_ATTACK_PATHS.md) · [Production hardening](docs/PHASE4_PRODUCTION.md)
 - [Final verdict](docs/FINAL_VERDICT.md) — the honest comparison
+- [Checkov comparison](docs/CHECKOV_COMPARISON.md) — head-to-head detail
 - Release notes: [v2.4.0](https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.4.0) · [v2.0.0](docs/audit/16_RELEASE_NOTES_v2.0.0.md) · [v1.0.0](docs/RELEASE_NOTES_v1.0.0.md)
 
 ## Project layout
@@ -232,7 +297,7 @@ internal/attackpath/  kill-chain builder with uncertainty handling
 internal/qualitygate/ release-blocking precision/recall/perf gates
 internal/remediation/ safe auto-fix with IAM/networking blocklist
 internal/graph/       resource relationship graph
-internal/report/      text / JSON / SARIF renderers (secrets redacted)
+internal/report/      text / JSON / SARIF / HTML renderers (secrets redacted)
 internal/webhook/     SIEM/SOAR webhook delivery (HTTPS, Bearer, bounded retry)
 internal/sbom/        SBOM generation (SPDX 2.3 / CycloneDX 1.6)
 benchmark/            held-out corpus generator + raw results
