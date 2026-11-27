@@ -3,9 +3,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.4.0"><img src="https://img.shields.io/badge/release-v2.4.0-a855f7" alt="Release v2.4.0"></a>
+  <a href="https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.4.0"><img src="https://img.shields.io/badge/release-v2.4.0-000000" alt="Release v2.4.0"></a>
   <a href="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml"><img src="https://github.com/aeagisenginesec/aegis-engine/actions/workflows/ci.yml/badge.svg" alt="Aegis Release CI"></a>
-  <img src="https://img.shields.io/badge/rules-1148%20active-7c3aed" alt="1,148 active rules">
+  <img src="https://img.shields.io/badge/rules-1148%20active-000000" alt="1,148 active rules">
   <img src="https://img.shields.io/badge/go-1.26-00ADD8" alt="Go 1.26">
   <img src="https://img.shields.io/badge/platforms-linux%20%7C%20macOS%20%7C%20windows-lightgrey" alt="Platforms">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license">
@@ -209,7 +209,7 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 
 ## Docs
 
-- [Evaluation record](docs/audit/32_FINAL_EVAL_R7_REPORT.md) — R7 blind eval (v2.4.0) · [R6 blind eval](docs/audit/28_FINAL_EVAL_R6_REPORT.md) · [final state (v2.1.0 closeout)](docs/audit/26_AEGIS_FINAL_STATE.md)
+- [Evaluation record](docs/audit/32_FINAL_EVAL_R7_REPORT.md) — R7 blind eval (v2.4.0) · [R6 blind eval](docs/audit/28_FINAL_EVAL_R6_REPORT.md) · [final state (v2.1.0 closeout, historical)](docs/audit/26_AEGIS_FINAL_STATE.md)
 - [Changelog](CHANGELOG.md) — what changed in every release
 - [Coverage matrix](docs/COVERAGE_MATRIX.md) — per-service rule inventory
 - [Architecture](docs/ARCHITECTURE.md) · [CI integration](docs/CI_INTEGRATION.md) · [Baselines](docs/BASELINES.md)
@@ -218,7 +218,7 @@ Full per-service inventory: [docs/COVERAGE_MATRIX.md](docs/COVERAGE_MATRIX.md)
 - [SBOM generation](docs/SBOM.md) — SPDX 2.3 / CycloneDX 1.6 dependency inventory of the scanned project
 - [Attack paths](docs/PHASE3_ATTACK_PATHS.md) · [Production hardening](docs/PHASE4_PRODUCTION.md)
 - [Final verdict](docs/FINAL_VERDICT.md) — the honest comparison
-- Release notes: [v2.0.0](docs/audit/16_RELEASE_NOTES_v2.0.0.md) · [v1.0.0](docs/RELEASE_NOTES_v1.0.0.md)
+- Release notes: [v2.4.0](https://github.com/aeagisenginesec/aegis-engine/releases/tag/v2.4.0) · [v2.0.0](docs/audit/16_RELEASE_NOTES_v2.0.0.md) · [v1.0.0](docs/RELEASE_NOTES_v1.0.0.md)
 
 ## Project layout
 
@@ -241,5 +241,5 @@ examples/             sample projects and workflows
 ```
 
 <p align="center">
-  <sub>Built with Go 1.26 · Deterministic by design · Every claim in this README is measured — see <a href="docs/audit/26_AEGIS_FINAL_STATE.md">the audit record</a>.</sub>
+  <sub>Built with Go 1.26 · Deterministic by design · Every claim in this README is measured — see <a href="docs/audit/32_FINAL_EVAL_R7_REPORT.md">the audit record</a>.</sub>
 </p>
